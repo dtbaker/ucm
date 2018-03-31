@@ -1,0 +1,297 @@
+
+/** BORING STUFF: */
+
+	html, body, #holder {
+		min-height: 100%; width: 100%; height: 100%;
+	}
+	html>body, html>body #holder {
+		height: auto;
+	}
+
+	body {
+		margin: 0;
+		padding:0;
+		line-height:1.5em;
+	}
+	#holder {
+		position: absolute; top: 0; left: 0;
+	}
+	#header {
+		border: none;
+		text-align:left;
+		/*width:1250px;*/
+		margin-left:auto;
+		margin-right:auto;
+	}
+	#header_logo{
+		float:left;
+	}
+
+	#profile_info{
+		float:right;
+		width:259px;
+		height:53px;
+		padding:10px 10px 0 10px;
+        text-align: right;
+	}
+		#profile_info p{
+			line-height:13px; margin:0; padding:0;
+		}
+		#profile_info a{
+			
+		}
+		#profile_info .date{
+			/*color:#666;*/
+		}
+
+    #quick_search_box{
+        /*position: absolute;
+        margin-left:1135px;*/
+        padding: 7px 14px 1px 14px;
+        border-style: solid;
+        border-width: 1px;
+        border-bottom: none;
+        margin: 0 0 0 4px;
+        color: white;
+        font: 14px verdana,helvetica,arial,sans-serif;
+        text-decoration: none;
+        height: 25px;
+        background: #A7A5A5;
+        width: 125px;
+        -moz-border-radius: 6px 6px 0 0;
+        -webkit-border-top-right-radius: 6px;
+        -webkit-border-top-left-radius: 6px;
+        -khtml-border-top-right-radius: 6px;
+        -khtml-border-top-left-radius: 6px;
+        border-top-right-radius: 6px;
+        border-top-left-radius: 6px;
+    }
+        #quick_search_placeholder{
+            border: 0;
+            position: absolute;
+            z-index: 2;
+            font-family: Arial;
+            font-size: 13px;
+            padding: 3px;
+            height: 14px;
+            width:120px;
+            background: #FFF;
+            color: #ccc;
+        }
+        #ajax_search_text{
+            position: absolute;
+            z-index: 4;
+            border: 0;
+            font-size:13px;
+            padding: 3px;
+            height: 14px;
+            width:120px;
+            background: transparent;
+        }
+        #ajax_search_result{
+            border: 1px solid #CCC;
+            padding: 5px;
+            background: #EFEFEF;
+            position: absolute;
+            margin-left: -200px;
+            display: none;
+            width: 331px;
+            margin-top: 24px;
+            z-index: 400;
+            font-size:10px;
+        }
+        #ajax_search_result ul{
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+        #ajax_search_result ul li{
+            list-style: none;
+            margin: 0;
+            padding: 4px 0 4px 0;
+        }
+
+	#main_menu{
+		/*width:1294px !important;*/
+		margin:0 auto;
+	}
+	#page_middle{
+		background-color:#FFFFFF;
+		margin:0px auto 25px;
+		/*padding:5px 10px 10px 10px;*/
+		/*width:1270px !important;*/
+		min-height:500px;
+	}
+
+
+    #page_middle>.content{
+        border-top-style: solid;
+        border-top-width: 1px;
+    }
+	.content {
+		padding: 5px 10px;
+		height: auto;
+		background-color:#FFFFFF;
+	}
+    /* for template print out */
+    .pretty_content_wrap{
+        margin:20px auto;
+        padding:20px;
+        background: #FFF;
+        border:1px solid #CCC;
+        border-radius: 10px;
+        width: 855px;
+    }
+
+	#footer {
+		clear: both;
+		bottom: 0;
+		left: 0;
+		color:#FFF;
+		border: none;
+		padding: 6px 0;
+		width: 100%;
+		text-align:center;
+		font-family:Verdana, Arial, Helvetica,
+		sans-serif;
+		font-size:11px;
+	}
+    #footer a{
+        color: #FFF;
+    }
+	/* hide from Mac IE5 */
+	/* \*/
+	#footer {position: absolute; }
+	/* */
+	/* Change in Opera 5+ (and some others) */
+	html>body div#footer {
+	    /*position: static;*/
+	}
+	/* Change back in everything except Opera 5 and 6, still hiding from Mac IE5 */
+	/* \*/
+	head:first-child+body div#footer {
+	    position: absolute;
+	}
+	/* */
+
+
+	h4{
+		margin:4px; padding:0px;
+	}
+	a,
+	a:link,
+	a:visited,
+    .ui-widget-content a{
+		text-decoration:none;
+		color:#0033FF;
+	}
+	a:hover,
+    .ui-widget-content a:hover{
+		text-decoration:underline;
+		color:#0033FF;
+	}
+
+
+	.tableclass .width1{
+		width:100px;
+	}
+	.tableclass .extra_field{
+		width:100%;
+        text-align: right;
+	}
+	.tableclass .width2{
+		width:170px;
+	}
+	.tableclass .width3{
+		width:120px;
+	}
+
+
+	.tableclass td{
+		padding:0.3em 5px;
+		font-size:12px;
+	}
+	.tableclass tbody th{
+		padding:0.3em 5px;
+		font-size:12px;
+		text-align:right;
+		vertical-align:top;
+        font-weight: normal;
+	}
+	.tableclass_form thead th,
+	.tableclass_rows thead th{
+		padding:0.3em 5px;
+		font-size:12px;
+		border:1px solid #000;
+		font-weight:normal;
+		background:#535353;
+		text-align:left;
+		color:#FFF;
+	}
+
+
+a:hover img.left{
+    border-color: #22303D;
+    background: #22303D;
+}
+h2 {
+    /*color: #333333;
+    background: #EEE;
+    border:1px solid #cbcbcb;
+    font-size:19px;*/
+    margin: 4px 0 15px 0;
+    padding:8px 8px 10px 8px;
+    font-weight:normal;
+}
+h2 span.title {
+}
+h2 span.title span.highlight{
+    color:#9e100f;
+    font-weight:bold;
+}
+h2 span.button {
+    font-size:12px;
+    margin-top:-2px;
+    float:right;
+}
+
+h3 {
+    margin: 0 !important;
+    text-shadow: white 0 1px 0;
+    -moz-border-radius: 6px 6px 0 0;
+    -webkit-border-top-right-radius: 6px;
+    -webkit-border-top-left-radius: 6px;
+    -khtml-border-top-right-radius: 6px;
+    -khtml-border-top-left-radius: 6px;
+    border-top-right-radius: 6px;
+    border-top-left-radius: 6px;
+    padding:9px 0 24px 9px !important;
+    height:17px !important;
+    font-weight:normal !important;
+    clear:both !important;
+    border: 0 !important;
+    line-height:1;
+}
+h3 span.title {
+}
+h3 span.title span.highlight{
+    color:#9e100f;
+    font-weight:bold;
+}
+h3 span.button {
+    font-size:9px;
+    margin-top:-2px;
+    float:right;
+}
+
+
+.column_holder3{
+
+}
+.column_holder3 .column{
+    float:left;
+    width:33%;
+}
+.date_field{
+    width: 67px;
+}

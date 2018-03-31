@@ -1,0 +1,26 @@
+{
+  "title": "Products",
+  "description": "Products can easily be added to a Quote, Job or Invoice. ",
+  "topics": [
+    {
+      "title": "Product Documentation",
+      "url": "http://ultimateclientmanager.com/support/documentation-wiki/products/",
+      "wordpress_post_id": 6245
+    },
+    {
+      "title": "Supplier/Vendor Documentation",
+      "url": "http://ultimateclientmanager.com/support/documentation-wiki/suppliers/",
+      "wordpress_post_id": 12138
+    }
+  ],
+  "api_endpoints": [
+    {
+      "endpoint": "product",
+      "method": "list",
+      "description": "List available products"
+    }
+  ],
+  "config": {
+    "product_show_category_in_tasks": "If this is set to 0 then the product category will not display when the product is added to a job/invoice task listing. Default is 1"
+  }
+}

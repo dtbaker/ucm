@@ -1,0 +1,117 @@
+body{
+    background-color: #DBF0F6;
+    background-image: url(..//images/page_bg_wood.jpg);
+    color: #666;
+}
+
+#page_middle > .content {
+    border:none;
+}
+#top_menu_pin > a {
+    background: #DBEFF5 url(../../../../plugin_pin/images/pin_small.png) no-repeat center;
+}
+.nav {
+    padding: 0 0 4px;
+    border: 0;
+    /*margin: -5px -10px 0 -10px;*/
+}
+.final_content_wrap{
+    min-height: 377px;
+    margin: 10px 4px;
+    padding: 10px;
+    border-radius: 6px;
+}
+#page_middle,
+.content{
+    padding: 0;
+    background: transparent;
+}
+.nav > ul > li > a, .nav > ul > li > a:link, .nav > ul > li > a:visited{
+}
+.menu_label{
+    text-shadow: none;
+    background: #f1fafc;
+}
+#ajax_search_text{
+    color:#0079C2;
+}
+#quick_search_box{
+    margin: 0;
+    border-radius: 6px;
+    text-decoration: none;
+    border: 1px solid #79BDE9 !important;
+    text-decoration: none;
+    margin: 0;
+    text-shadow: none;
+    padding: 7px 2px 0px 1px;
+}
+#quick_search_placeholder{
+    background: none;
+    padding: 2px 0 0 9px;
+    color:#0079C2;
+}
+.nav > ul > li > a, .nav > ul > li > a:link, .nav > ul > li > a:visited{
+}
+#page_middle .nav ul li,
+.nav > ul > li {
+    margin: 0 3px 6px 3px;
+    border: 1px solid #f1fafc !important;
+    border-radius: 6px;
+}
+.nav > ul > li > a, .nav > ul > li > a:link, .nav > ul > li > a:visited,
+.nav > ul > li > a{
+    border: 1px solid #79BDE9 !important;
+    border-radius: 6px;
+    text-decoration: none;
+    margin: 0;
+    text-shadow: 0 1px 0 #DBEFF5;
+    padding-bottom: 0;
+}
+.nav > ul > li.link_current > a, .nav > ul > li.link_current > a:link, .nav > ul > li.link_current > a:visited,
+#page_middle .nav ul li.link_current a, #page_middle .nav ul li.link_current a:link, #page_middle .nav ul li.link_current a:visited{
+    border: 1px solid #79BDE9 !important;
+    text-shadow: none;
+}
+#page_middle .nav ul li a:hover,
+.nav>ul>li>a:hover{
+    text-shadow: none;
+}
+#page_middle .nav ul{
+    padding: 5px 0 0 10px;
+}
+
+#page_middle .nav{
+    border: 0;
+}
+.tableclass_rows th{
+}
+.content_box_wheader{
+    border-left:1px solid #DFDFDF;
+    border-right:1px solid #DFDFDF;
+    border-bottom:1px solid #DFDFDF;
+    margin:-1px 0 10px 0;
+    background: #FFF;
+    padding: 7px;
+}
+h1,h2{
+    border-radius: 6px;
+}
+h1 a,h1 a:link,h1 a:visited,
+h2 a,h2 a:link,h2 a:visited,
+h3 a,h3 a:link,h3 a:visited{
+    color:#0079C2;
+}
+h2 span.button{
+    margin: -2px 4px 0 0;
+}
+
+.login_wrap{
+    width:600px;
+    margin: 0 auto;
+}
+
+.tableclass_rows thead th {
+    border: 1px solid #0079C2;
+    color: black;
+    background-color:#79BDE9;
+}

@@ -1,0 +1,32 @@
+body {
+background-color: #E7E7E7;
+color: #000000;
+background-image: none;
+font-family: Arial, Helvetica, sans-serif;
+font-size: 12px;
+}
+h2 {
+color: #414141;
+background-color: #F3F3F3;
+border: 1px solid #cbcbcb;
+font-size: 19px;
+}
+h1, h2 {
+border-radius: 6px;
+}
+h2 {
+margin: 4px 0 15px 0;
+padding: 8px 8px 10px 8px;
+font-weight: normal;
+}
+
+.tableclass_form thead > tr > th,
+.tableclass_rows thead > tr > th{
+padding: 0.3em 5px;
+font-size: 12px;
+border: 1px solid #000;
+font-weight: normal;
+background: #535353;
+text-align: left;
+color: #FFF;
+}

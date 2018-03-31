@@ -1,11 +1,10 @@
-
 <!-- /. PAGE WRAPPER  -->
 </div>
 <div class="footer">
 
 
 	<div class="row">
-		<div class="col-lg-12" >
+		<div class="col-lg-12">
 		</div>
 	</div>
 </div>
@@ -31,9 +30,9 @@
                     }
                 });
 
-                $('#main-menu a').click(function(){
+                $('#main-menu a').click(function () {
 
-                    var section = $(this).attr('href').replace('#','');
+                    var section = $(this).attr('href').replace('#', '');
                     $('div.section').removeClass('active');
                     $('div.section[data-section="' + section + '"]').addClass('active');
                     $('#main-menu a.active-link').removeClass('active-link');

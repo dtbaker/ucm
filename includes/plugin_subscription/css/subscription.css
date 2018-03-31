@@ -1,0 +1,20 @@
+.subscription{
+    padding: 4px;
+    border-bottom: 1px solid #EFEFEF;
+}
+.subscription.active{
+    border: 1px solid #390;
+    padding: 8px;
+    margin: 5px;
+}
+.subscription ul{
+    margin: 0 0 0 20px;
+    padding: 0;
+}
+.subscription ul li{
+    margin: 0;
+    padding: 0;
+}
+.next_due_date_change{
+    cursor: pointer;
+}

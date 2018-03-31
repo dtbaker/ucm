@@ -1,0 +1,11 @@
+{
+  "title": "Websites/Projects",
+  "description": "Websites/Projects sit underneat a Customer and provide a nice way to group Quotes, Jobs and Invoices together.",
+  "topics": [
+    {
+      "title": "Website Documentation",
+      "url": "http://ultimateclientmanager.com/support/documentation-wiki/websites/",
+      "wordpress_post_id": 775
+    }
+  ]
+}

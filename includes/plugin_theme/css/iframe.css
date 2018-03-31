@@ -1,0 +1,17 @@
+html,body,#holder{
+    min-height: 10px;
+    width: auto;
+    height: auto;
+}
+body{
+    background: #FFF;
+}
+/* for templtes in iframe mode */
+.pretty_content_wrap{
+    margin: 0;
+    padding: 13px;
+    background: #FFF;
+    border: 0;
+    border-radius: 0;
+    width: auto;
+}

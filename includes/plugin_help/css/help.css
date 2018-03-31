@@ -1,0 +1,5 @@
+.help_popup_wrapper,
+.help_popup_wrapper iframe{
+    width: 100%;
+    height: 60vh;
+}

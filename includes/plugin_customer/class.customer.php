@@ -1,5 +1,5 @@
 <?php
-defined('_UCM_VERSION') || die('-5');
+defined( '_UCM_VERSION' ) || die( '-5' );
 
 // (slowly) moving everything over to better OOP classes:
 
@@ -13,7 +13,7 @@ class UCMCustomer extends UCMBaseSingle {
 	public $display_name_plural = 'Customers';
 	public $db_fields = array();
 
-	public function get_billing_type(){
+	public function get_billing_type() {
 		// based on the customer billing type.
 		// this is either a vendor/supplier or a normal customer.
 		// this changes how finances are displayed in the system.
@@ -24,10 +24,10 @@ class UCMCustomer extends UCMBaseSingle {
 		 */
 		// todo: query customer_type table based on `customer_type_id` and find the billing type in there.
 
-		return $this->get('billing_type');
+		return $this->get( 'billing_type' );
 	}
 
-	public function get_portal_sections(){
+	public function get_portal_sections() {
 		return array(
 			'Contracts',
 			'Quotes',
@@ -40,19 +40,21 @@ class UCMCustomer extends UCMBaseSingle {
 		);
 	}
 
-	public function is_archived(){
-		return $this->get('archived');
+	public function is_archived() {
+		return $this->get( 'archived' );
 	}
-	public function archive(){
-		if($this->id){
-			$this->update('archived',1);
-			hook_handle_callback('customer_archived',$this->id);
+
+	public function archive() {
+		if ( $this->id ) {
+			$this->update( 'archived', 1 );
+			hook_handle_callback( 'customer_archived', $this->id );
 		}
 	}
-	public function unarchive(){
-		if($this->id){
-			$this->update('archived',0);
-			hook_handle_callback('customer_unarchived',$this->id);
+
+	public function unarchive() {
+		if ( $this->id ) {
+			$this->update( 'archived', 0 );
+			hook_handle_callback( 'customer_unarchived', $this->id );
 		}
 	}
 }

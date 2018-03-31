@@ -6,73 +6,78 @@
 // should have done this from the get go, this is a recent addition and there will be lots of code to change
 
 
-define('_ARCHIVED_SEARCH_NONARCHIVED',1);
-define('_ARCHIVED_SEARCH_ARCHIVED',2);
-define('_ARCHIVED_SEARCH_BOTH',3);
+define( '_ARCHIVED_SEARCH_NONARCHIVED', 1 );
+define( '_ARCHIVED_SEARCH_ARCHIVED', 2 );
+define( '_ARCHIVED_SEARCH_BOTH', 3 );
 
-class UCMBaseDocument extends UCMBaseSingle{
+class UCMBaseDocument extends UCMBaseSingle {
 
 	public $document_type = 'invoice'; // quote, job
 	public $enable_tax = true;
 	public $enable_task_numbers = true;
 	public $enable_tasks = true;
 
-    public function get_billing_type(){
-        // based on the customer billing type.
-	    // this is either a vendor/supplier or a normal customer.
-	    // this changes how finances are displayed in the system.
-	    /*
-	     * eg: Supplier with a $20/month subscription. The invoice is generated from the supplier to us. We pay the supplier. We record it as an expense in our system.
-	     * this needs to save the status of an invoice on a per invoice basis, incase the customer status is changed down the track.
-	     * we base the initial value of this invoice off the customer type.
-	     */
-	    return $this->get('billing_type');
-    }
+	public function get_billing_type() {
+		// based on the customer billing type.
+		// this is either a vendor/supplier or a normal customer.
+		// this changes how finances are displayed in the system.
+		/*
+		 * eg: Supplier with a $20/month subscription. The invoice is generated from the supplier to us. We pay the supplier. We record it as an expense in our system.
+		 * this needs to save the status of an invoice on a per invoice basis, incase the customer status is changed down the track.
+		 * we base the initial value of this invoice off the customer type.
+		 */
+		return $this->get( 'billing_type' );
+	}
 
-	public function default_values(){
-    	parent::default_values();
+	public function default_values() {
+		parent::default_values();
 	}
 
 
-    public function is_archived(){
-        return $this->get('archived');
-    }
-    public function archive(){
-    	if($this->id){
-    		$this->update('archived',1);
-	    }
-    }
-    public function unarchive(){
-    	if($this->id){
-    		$this->update('archived',0);
-	    }
-    }
+	public function is_archived() {
+		return $this->get( 'archived' );
+	}
 
-    public $manual_prefix = '';
-    public function set_manual_prefix( $prefix ){
-    	$this->manual_prefix = $prefix;
-    }
-    public $manual_incrementing_group_name = '';
-    public function set_incrementing_config_name( $group_name ){
-    	$this->manual_incrementing_group_name = $group_name;
-    }
+	public function archive() {
+		if ( $this->id ) {
+			$this->update( 'archived', 1 );
+		}
+	}
+
+	public function unarchive() {
+		if ( $this->id ) {
+			$this->update( 'archived', 0 );
+		}
+	}
+
+	public $manual_prefix = '';
+
+	public function set_manual_prefix( $prefix ) {
+		$this->manual_prefix = $prefix;
+	}
+
+	public $manual_incrementing_group_name = '';
+
+	public function set_incrementing_config_name( $group_name ) {
+		$this->manual_incrementing_group_name = $group_name;
+	}
 
 
-	public function get_new_document_number(){
+	public function get_new_document_number() {
 
 		$default_number = '';
 
-		if(function_exists('custom_' . $this->document_type . '_number') and $this->get('customer_id')){
-			$default_number = call_user_func( 'custom_' . $this->document_type . '_number', $this->get('customer_id') );
+		if ( function_exists( 'custom_' . $this->document_type . '_number' ) and $this->get( 'customer_id' ) ) {
+			$default_number = call_user_func( 'custom_' . $this->document_type . '_number', $this->get( 'customer_id' ) );
 		}
 
-		if( !strlen($default_number) ) {
+		if ( ! strlen( $default_number ) ) {
 
 
 			$number_prefix = '';
-			if($this->manual_prefix){
+			if ( $this->manual_prefix ) {
 				$number_prefix = $this->manual_prefix;
-			}else {
+			} else {
 				if ( $this->get( 'customer_id' ) > 0 ) {
 					// old way of doing customer default configs:
 					if ( $this->document_type == 'invoice' ) {
@@ -91,12 +96,13 @@ class UCMBaseDocument extends UCMBaseSingle{
 			}
 
 
-            // old code:
-            if( $this->document_type == 'invoice' && module_config::c('invoice_name_match_job',0) && isset($_REQUEST['job_id']) && (int)$_REQUEST['job_id']>0){
-                $job = module_job::get_job($_REQUEST['job_id']);
-                // todo: confirm tis isn't a data leak risk oh well.
-                return $number_prefix.$job['name'];
-            }
+			// old code:
+			if ( $this->document_type == 'invoice' && module_config::c( 'invoice_name_match_job', 0 ) && isset( $_REQUEST['job_id'] ) && (int) $_REQUEST['job_id'] > 0 ) {
+				$job = module_job::get_job( $_REQUEST['job_id'] );
+
+				// todo: confirm tis isn't a data leak risk oh well.
+				return $number_prefix . $job['name'];
+			}
 
 			/*if(module_config::c('invoice_name_match_job',0) && isset($_REQUEST['job_id']) && (int)$_REQUEST['job_id']>0){
                 $job = module_job::get_job($_REQUEST['job_id']);
@@ -104,9 +110,9 @@ class UCMBaseDocument extends UCMBaseSingle{
                 $invoice_number = $invoice_prefix.$job['name'];
             }*/
 
-			if($this->manual_incrementing_group_name){
+			if ( $this->manual_incrementing_group_name ) {
 				$config_key = $this->manual_incrementing_group_name;
-			}else {
+			} else {
 				if ( $this->document_type == 'invoice' ) {
 					$config_key = 'invoice_incrementing';
 				} else {
@@ -116,7 +122,7 @@ class UCMBaseDocument extends UCMBaseSingle{
 
 			$default_number = module_customer::c( $this->document_type . '_default_new_name', '', $this->get( 'customer_id' ) );
 			if ( module_customer::c( $config_key, 1, $this->get( 'customer_id' ) ) ) {
-				$document_number = module_customer::c( $config_key . '_next', 1, $this->get( 'customer_id' ) );
+				$document_number        = module_customer::c( $config_key . '_next', 1, $this->get( 'customer_id' ) );
 				$document_number_format = module_customer::c( $config_key . '_format', '', $this->get( 'customer_id' ) );
 				// $document_number could be something like ABC00001 - we try to strip the characters out so we can increment the number value.
 
@@ -125,53 +131,52 @@ class UCMBaseDocument extends UCMBaseSingle{
 				do {
 
 					$this_document_number_formatted = $this_document_number;
-					if($document_number_format){
+					if ( $document_number_format ) {
 						$this_document_number_formatted = sprintf( $document_number_format, $this_document_number );
 					}
 
 
-
-					$documents = get_multiple( $this->db_table, array( 'name' => $number_prefix.$this_document_number_formatted.$default_number ) ); //'customer_id'=>$customer_id,
+					$documents = get_multiple( $this->db_table, array( 'name' => $number_prefix . $this_document_number_formatted . $default_number ) ); //'customer_id'=>$customer_id,
 
 					if ( ! count( $documents ) ) {
 						$document_number = $this_document_number;
 					} else {
 
-                        // an invoice exists with this same number.
-                        // is it from last year?
-                        if(module_config::c( $this->document_type . '_increment_date_check','') == 'Y'){
-                            $has_year_match = false;
-                            foreach($documents as $document){
-                                if(date('Y') == date('Y',strtotime($document['date_create'] && $document['date_create'] != '0000-00-00' ? $document['date_create'] : $document['date_created'] ))){
-                                    $has_year_match = true;
-                                    break;
-                                }
-                            }
-                            if(!$has_year_match){
-                                // this invoice number is from last year, we can use it.
-                                $document_number = $this_document_number;
-                                break;
-                            }
-                        }
+						// an invoice exists with this same number.
+						// is it from last year?
+						if ( module_config::c( $this->document_type . '_increment_date_check', '' ) == 'Y' ) {
+							$has_year_match = false;
+							foreach ( $documents as $document ) {
+								if ( date( 'Y' ) == date( 'Y', strtotime( $document['date_create'] && $document['date_create'] != '0000-00-00' ? $document['date_create'] : $document['date_created'] ) ) ) {
+									$has_year_match = true;
+									break;
+								}
+							}
+							if ( ! $has_year_match ) {
+								// this invoice number is from last year, we can use it.
+								$document_number = $this_document_number;
+								break;
+							}
+						}
 
 						$this_document_number ++;
 					}
 				} while ( count( $documents ) );
 
 				// next auto worst idea ever: removing.
-//				if(module_config::c($config_key.'_next_auto',0)) {
-//					module_customer::save_config( $config_key . '_next', $document_number + 1, $this->get( 'customer_id' ) );
-//				}else{
-					module_customer::save_config( $config_key . '_next', $document_number, $this->get( 'customer_id' ) );
-//				}
+				//				if(module_config::c($config_key.'_next_auto',0)) {
+				//					module_customer::save_config( $config_key . '_next', $document_number + 1, $this->get( 'customer_id' ) );
+				//				}else{
+				module_customer::save_config( $config_key . '_next', $document_number, $this->get( 'customer_id' ) );
+				//				}
 
-				if($document_number_format){
+				if ( $document_number_format ) {
 					$document_number = sprintf( $document_number_format, $document_number );
 				}
 				$default_number = $document_number . $default_number;
-			}else{
+			} else {
 				// we base the number on a date string:
-				$document_number = date('ymd', module_invoice::$new_invoice_number_date ? strtotime(module_invoice::$new_invoice_number_date) : time());
+				$document_number = date( 'ymd', module_invoice::$new_invoice_number_date ? strtotime( module_invoice::$new_invoice_number_date ) : time() );
 
 				//$invoice_number = $invoice_prefix . date('ymd');
 				// check if this invoice number exists for this customer
@@ -179,29 +184,29 @@ class UCMBaseDocument extends UCMBaseSingle{
 				// this isn't atomic - if two invoices are created for the same customer at the same time then
 				// this probably wont work. but for this system it's fine.
 				$this_document_number = $document_number;
-				$suffix_ascii = 65; // 65 is A
-				$suffix_ascii2 = 0; // 65 is A
-				do{
-					if($suffix_ascii==91){
+				$suffix_ascii         = 65; // 65 is A
+				$suffix_ascii2        = 0; // 65 is A
+				do {
+					if ( $suffix_ascii == 91 ) {
 						// we've exhausted all invoices for today.
-						$suffix_ascii=65; // reset to A
-						if(!$suffix_ascii2){
+						$suffix_ascii = 65; // reset to A
+						if ( ! $suffix_ascii2 ) {
 							// first loop, start with A
-							$suffix_ascii2=65; // set 2nd suffix to A, work with this.
-						}else{
-							$suffix_ascii2++; // move from A to B
+							$suffix_ascii2 = 65; // set 2nd suffix to A, work with this.
+						} else {
+							$suffix_ascii2 ++; // move from A to B
 						}
 
 					}
-					$invoices = get_multiple( $this->db_table, array( 'name' => $number_prefix.$this_document_number.$default_number ) ); //'customer_id'=>$customer_id,
-					if(!count($invoices)){
+					$invoices = get_multiple( $this->db_table, array( 'name' => $number_prefix . $this_document_number . $default_number ) ); //'customer_id'=>$customer_id,
+					if ( ! count( $invoices ) ) {
 						$document_number = $this_document_number;
 						break;
-					}else{
-						$this_document_number = $document_number.($suffix_ascii2?chr($suffix_ascii2):'').chr($suffix_ascii);
+					} else {
+						$this_document_number = $document_number . ( $suffix_ascii2 ? chr( $suffix_ascii2 ) : '' ) . chr( $suffix_ascii );
 					}
-					$suffix_ascii++;
-				}while(count($invoices) && $suffix_ascii <= 91 && $suffix_ascii2 <= 90); //90 is Z
+					$suffix_ascii ++;
+				} while ( count( $invoices ) && $suffix_ascii <= 91 && $suffix_ascii2 <= 90 ); //90 is Z
 				$default_number = $document_number . $default_number;
 			}
 
@@ -213,7 +218,7 @@ class UCMBaseDocument extends UCMBaseSingle{
 
 	}
 
-	public function is_document_locked(){
+	public function is_document_locked() {
 		return false;
 	}
 
@@ -222,7 +227,7 @@ class UCMBaseDocument extends UCMBaseSingle{
 		// the options set here hook into the legacy module_job::hook_calendar_events() method for calendar display.
 
 
-		if(class_exists('module_calendar') && module_calendar::is_plugin_enabled()) {
+		if ( class_exists( 'module_calendar' ) && module_calendar::is_plugin_enabled() ) {
 
 			$fieldset_data = array(
 				'heading'  => array(
@@ -236,65 +241,67 @@ class UCMBaseDocument extends UCMBaseSingle{
 			$fieldset_data['elements']['calendar_show'] = array(
 				'title' => 'Calendar',
 				'field' => array(
-					'name' => 'calendar_show',
-					'type' => 'select',
-					'blank' => ' - Default - ',
+					'name'    => 'calendar_show',
+					'type'    => 'select',
+					'blank'   => ' - Default - ',
 					'options' => array(
 						1 => 'Show On Calendar',
 						2 => 'Hide From Calendar',
 					),
-					'value' => $this->get('calendar_show'),
+					'value'   => $this->get( 'calendar_show' ),
 				),
 			);
 			// todo: let the user choose what date to display on the calendar: Start Date, Due Date, Finished date, etc..
 
 			$fieldset_data['elements']['time_start'] = array(
-				'title' => 'Start Time',
-				'ignore' => !(class_exists('module_calendar',false) && module_config::c($this->document_type.'_show_times',1)),
-				'field' => array(
-					'type' => 'time',
-					'name' => 'time_start',
-					'value' => $this->get('time_start'),
-					'help' => 'This is the time the '.$this->document_type.' is scheduled to start.  If you have the Calendar, this is the time that will be used for the Calendar event.',
+				'title'  => 'Start Time',
+				'ignore' => ! ( class_exists( 'module_calendar', false ) && module_config::c( $this->document_type . '_show_times', 1 ) ),
+				'field'  => array(
+					'type'  => 'time',
+					'name'  => 'time_start',
+					'value' => $this->get( 'time_start' ),
+					'help'  => 'This is the time the ' . $this->document_type . ' is scheduled to start.  If you have the Calendar, this is the time that will be used for the Calendar event.',
 				),
 			);
-            $fieldset_data['elements']['time_end'] = array(
-				'title' => 'End Time',
-				'ignore' => !(class_exists('module_calendar',false) && module_config::c($this->document_type.'_show_times',1)),
-				'field' => array(
-					'type' => 'time',
-					'name' => 'time_end',
-					'value' => $this->get('time_end'),
-					'help' => 'This is the time the '.$this->document_type.' is scheduled to finish.  If you have the Calendar, this is the time that will be used for the Calendar event.',
+			$fieldset_data['elements']['time_end']   = array(
+				'title'  => 'End Time',
+				'ignore' => ! ( class_exists( 'module_calendar', false ) && module_config::c( $this->document_type . '_show_times', 1 ) ),
+				'field'  => array(
+					'type'  => 'time',
+					'name'  => 'time_end',
+					'value' => $this->get( 'time_end' ),
+					'help'  => 'This is the time the ' . $this->document_type . ' is scheduled to finish.  If you have the Calendar, this is the time that will be used for the Calendar event.',
 				),
 			);
-            // todo: permissions on who can view this calendar entry (customers, staff, everyone)
+
+			// todo: permissions on who can view this calendar entry (customers, staff, everyone)
 			return $fieldset_data;
 		}
+
 		return false;
 	}
 
 
-	public function generate_advanced_fieldset(){
+	public function generate_advanced_fieldset() {
 
 		$fieldset_data = array(
-			'id' => $this->document_type.'_advanced', // used for css and hooks
-			'heading'        => array(
+			'id'       => $this->document_type . '_advanced', // used for css and hooks
+			'heading'  => array(
 				'type'  => 'h3',
 				'title' => 'Advanced',
 			),
-			'class'          => 'tableclass tableclass_form tableclass_full',
-			'elements'       => array(),
+			'class'    => 'tableclass tableclass_form tableclass_full',
+			'elements' => array(),
 		);
 
 		// external link
-		if($this->id){
+		if ( $this->id ) {
 			$fieldset_data['elements']['customer_link'] = array(
-				'title'  => 'Customer Link',
+				'title' => 'Customer Link',
 				'field' => array(
-					'type' => 'html',
-					'value' => '<a href="' . $this->link_public( ) . '" target="_blank">' . _l( 'Click to view external link' ) . '</a>',
-					'help' => 'You can send this link to your customer and they can preview the document without logging in.',
+					'type'  => 'html',
+					'value' => '<a href="' . $this->link_public() . '" target="_blank">' . _l( 'Click to view external link' ) . '</a>',
+					'help'  => 'You can send this link to your customer and they can preview the document without logging in.',
 				),
 			);
 		}
@@ -302,11 +309,13 @@ class UCMBaseDocument extends UCMBaseSingle{
 
 		//// Print/PDF Template
 
-		foreach(array(
-			array('print','PDF Template'),
-			array('email','Email Template'),
-			array('external','External Template'),
-		) as $data) {
+		foreach (
+			array(
+				array( 'print', 'PDF Template' ),
+				array( 'email', 'Email Template' ),
+				array( 'external', 'External Template' ),
+			) as $data
+		) {
 
 			$template_type  = $data[0];
 			$template_title = $data[1];
@@ -330,7 +339,7 @@ class UCMBaseDocument extends UCMBaseSingle{
 							'options' => $other_templates,
 							'name'    => $this->document_type . '_template_' . $template_type,
 							'value'   => $current_template,
-							'blank' => ' - Default - ',
+							'blank'   => ' - Default - ',
 							'help'    => 'Choose the default ' . $template_title . '. Name your custom templates ' . $this->document_type . '_' . $template_type . '_SOMETHING for them to appear in this listing.',
 						),
 					);
@@ -339,16 +348,15 @@ class UCMBaseDocument extends UCMBaseSingle{
 		}
 
 
-
 		if ( module_customer::can_i( 'view', 'Customers' ) ) {
 
 
-			$fieldset_data['elements']['customer_id'] = array(
+			$fieldset_data['elements']['customer_id']     = array(
 				'title' => 'Customer',
 				'field' => array(
-					'type' => 'text',
+					'type'   => 'text',
 					'name'   => 'customer_id',
-					'value'  => $this->get('customer_id'),
+					'value'  => $this->get( 'customer_id' ),
 					'lookup' => array(
 						'key'         => 'customer_id',
 						'display_key' => 'customer_name',
@@ -360,17 +368,17 @@ class UCMBaseDocument extends UCMBaseSingle{
 				),
 			);
 			$fieldset_data['elements']['contact_user_id'] = array(
-				'title' => _l('Contact'),
+				'title'  => _l( 'Contact' ),
 				'fields' => array(
 					array(
-						'type' => 'text',
-						'name' => 'contact_user_id',
-						'value' => $this->get('contact_user_id'),
+						'type'   => 'text',
+						'name'   => 'contact_user_id',
+						'value'  => $this->get( 'contact_user_id' ),
 						'lookup' => array(
-							'key' => 'user_id',
+							'key'         => 'user_id',
 							'display_key' => 'name',
-							'plugin' => 'user',
-							'lookup' => 'contact_name',
+							'plugin'      => 'user',
+							'lookup'      => 'contact_name',
 							'return_link' => true,
 						),
 					)
@@ -410,15 +418,14 @@ class UCMBaseDocument extends UCMBaseSingle{
 		}
 
 
-
-		if ( class_exists( 'module_website', false ) && module_website::is_plugin_enabled() && module_website::can_i('view','Websites')) {
+		if ( class_exists( 'module_website', false ) && module_website::is_plugin_enabled() && module_website::can_i( 'view', 'Websites' ) ) {
 
 			$fieldset_data['elements']['website_id'] = array(
 				'title' => module_config::c( 'project_name_single', 'Website' ),
 				'field' => array(
-					'type' => 'text',
+					'type'   => 'text',
 					'name'   => 'website_id',
-					'value'  => $this->get('website_id'),
+					'value'  => $this->get( 'website_id' ),
 					'lookup' => array(
 						'key'         => 'website_id',
 						'display_key' => 'name',
@@ -472,7 +479,7 @@ class UCMBaseDocument extends UCMBaseSingle{
 					}
 				),
 			);*/
-		} else if ( !class_exists( 'module_website', false ) && module_config::c( 'show_ucm_ads', 1 ) ) {
+		} else if ( ! class_exists( 'module_website', false ) && module_config::c( 'show_ucm_ads', 1 ) ) {
 
 			$fieldset_data['elements']['website_id'] = array(
 				'title'  => module_config::c( 'project_name_single', 'Website' ),
@@ -483,7 +490,7 @@ class UCMBaseDocument extends UCMBaseSingle{
 		}
 
 
-		if ($this->enable_tasks &&  $this->enable_task_numbers &&  module_config::c( $this->document_type . '_show_task_numbers', 1 ) ) {
+		if ( $this->enable_tasks && $this->enable_task_numbers && module_config::c( $this->document_type . '_show_task_numbers', 1 ) ) {
 			$fieldset_data['elements'][] = array(
 				'title' => 'Task Numbers',
 				'field' => array(
@@ -494,15 +501,13 @@ class UCMBaseDocument extends UCMBaseSingle{
 						2 => _l( 'Hidden' ),
 					),
 					'name'    => 'auto_task_numbers',
-					'value'   => $this->get('auto_task_numbers'),
+					'value'   => $this->get( 'auto_task_numbers' ),
 				),
 			);
 		}
 
 
-
-
-		if($this->enable_tax) {
+		if ( $this->enable_tax ) {
 
 			$fieldset_data['elements']['tax_type'] = array(
 				'title' => 'Tax Type',
@@ -517,23 +522,23 @@ class UCMBaseDocument extends UCMBaseSingle{
 		}
 
 		$discounts_allowed = true;
-		if($this->document_type == 'job' && $this->get('deposit_job_id')){
+		if ( $this->document_type == 'job' && $this->get( 'deposit_job_id' ) ) {
 			$discounts_allowed = false;
 		}
-		if($this->document_type == 'contract'){
+		if ( $this->document_type == 'contract' ) {
 			$discounts_allowed = false;
 		}
 
-		if ($discounts_allowed) {
+		if ( $discounts_allowed ) {
 
-			$self = $this;
+			$self                                         = $this;
 			$fieldset_data['elements']['discount_amount'] = array(
 				'title'  => 'Discount Amount',
 				'fields' => array(
 					function () use ( $self ) {
 						echo $self->is_document_locked() ?
-							'<span class="currency">' . dollar( $self->get('discount_amount'), true, $self->get('currency_id') ) . '</span>' :
-							currency( '<input type="text" name="discount_amount" value="' . number_out( $self->get('discount_amount') ) . '" class="currency">' );
+							'<span class="currency">' . dollar( $self->get( 'discount_amount' ), true, $self->get( 'currency_id' ) ) . '</span>' :
+							currency( '<input type="text" name="discount_amount" value="' . number_out( $self->get( 'discount_amount' ) ) . '" class="currency">' );
 						echo ' ';
 					},
 					array(
@@ -543,30 +548,30 @@ class UCMBaseDocument extends UCMBaseSingle{
 					)
 				),
 			);
-			$fieldset_data['elements']['discount_name'] = array(
+			$fieldset_data['elements']['discount_name']   = array(
 				'title'  => 'Discount Name',
 				'fields' => array(
 					function () use ( $self ) {
 						echo $self->is_document_locked() ?
-							htmlspecialchars( $self->get('discount_description') ) :
-							'<input type="text" name="discount_description" value="' . htmlspecialchars( $self->get('discount_description') ) . '" style="width:80px;">';
+							htmlspecialchars( $self->get( 'discount_description' ) ) :
+							'<input type="text" name="discount_description" value="' . htmlspecialchars( $self->get( 'discount_description' ) ) . '" style="width:80px;">';
 					}
 				),
 			);
-			$fieldset_data['elements']['discount_type'] = array(
+			$fieldset_data['elements']['discount_type']   = array(
 				'title' => 'Discount Type',
 				'field' => array(
 					'type'    => 'select',
-					'blank' => false,
+					'blank'   => false,
 					'options' => array( '0' => _l( 'Before Tax' ), 1 => _l( 'After Tax' ) ),
 					'name'    => 'discount_type',
-					'value'   => $this->get('discount_type'),
+					'value'   => $this->get( 'discount_type' ),
 				),
 			);
 		}
 
 
-		if($this->enable_tasks) {
+		if ( $this->enable_tasks ) {
 
 			$fieldset_data['elements'][] = array(
 				'title' => 'Task Type',
@@ -586,196 +591,196 @@ class UCMBaseDocument extends UCMBaseSingle{
 
 	}
 
-	public function get_task($task_id){
-	    // return an object for this particular job task.
+	public function get_task( $task_id ) {
+		// return an object for this particular job task.
 
-    }
+	}
 
 }
 
-class UCMBaseTask extends UCMBaseSingle{
+class UCMBaseTask extends UCMBaseSingle {
 
-    public function __construct($document = false, $id = false){
+	public function __construct( $document = false, $id = false ) {
 
-        $this->document = $document;
+		$this->document = $document;
 
-        parent::__construct($id);
+		parent::__construct( $id );
 
-    }
+	}
 
-    public function load($id = false){
-    	$id = (int)$id;
+	public function load( $id = false ) {
+		$id = (int) $id;
 
-	    parent::load($id);
-    	if($id && $this->id && $this->db_details){
-		    if(is_callable('module_product::sanitise_product_name') && isset($this->db_details['default_task_type'])) {
-			    $this->db_details = module_product::sanitise_product_name( $this->db_details, $this->db_details['default_task_type'] );
-		    }
-	    }
-    }
+		parent::load( $id );
+		if ( $id && $this->id && $this->db_details ) {
+			if ( is_callable( 'module_product::sanitise_product_name' ) && isset( $this->db_details['default_task_type'] ) ) {
+				$this->db_details = module_product::sanitise_product_name( $this->db_details, $this->db_details['default_task_type'] );
+			}
+		}
+	}
 
-	public function get_fieldset_data(){
+	public function get_fieldset_data() {
 
-    	$self = $this;
+		$self = $this;
 
 
-		$hours_unit = $this->get('unitname');
-		if(!$hours_unit){
+		$hours_unit = $this->get( 'unitname' );
+		if ( ! $hours_unit ) {
 			$hours_unit = 'Hours';
 		}
 
-        $fieldset_data = array(
-            'id' => 'job_task',
-            'class' => 'tableclass tableclass_form tableclass_full',
-            'elements' => array(
-                'description' => array(
-                    'title' => _l('Description'),
-                    'fields' => array(
-                    	array(
-	                        'type' => 'text',
-	                        'name' => 'description',
-	                        'class' => 'edit_task_description',
-	                        'id' => 'task_desc_'.$self->get($self->db_id),
-	                        'autocomplete' => 'off',
-	                        'value' => $this->description,
-	                    ),
-	                    function() use ($self){
-		                    if(class_exists('module_product',false)){
-			                    module_product::print_job_task_dropdown($self->get($self->db_id),$self->get());
-		                    }
-	                    }
-                    ),
-                ),
-                'long_description' => array(
-                    'title' => _l('Details'),
-                    'field' => array(
-                        'type' => 'wysiwyg',
-                        'name' => 'long_description',
-                        'id' => 'task_long_desc_'.$self->get($self->db_id),
-                        'value' => $this->long_description,
-                    ),
-                ),
-                'hours' => array(
-                    'title' => $hours_unit,
-                    'field' => array(
-                        'type' => 'number',
-                        'name' => 'hours',
-                        'class' => 'task_dynamic_hours',
-                        'id' => 'task_hours_'.$self->get($self->db_id),
-                        'value' => $this->hours,
-                    ),
-                ),
-                'amount' => array(
-                    'title' => _l('Amount'),
-                    'field' => array(
-                        'type' => 'number',
-                        'id' => ''.$self->get($self->db_id).'taskamount',
-                        'class' => 'task_dynamic_amount',
-                        'name' => 'amount',
-                        'value' => $this->amount,
-                    ),
-                ),
-                'total' => array(
-                    'title' => _l('Total'),
-                    'field' => array(
-                        'type' => 'html',
-                        'id' => ''.$self->get($self->db_id).'tasktotal',
-                        'class' => 'task_dynamic_total',
-                        'name' => 'total',
-                        'value' => dollar('0'),
-//	                    'help' => 'This is the calculated total of this line item. Quantity x Amount.'
-                    ),
-                ),
-                'date_due' => array(
-                    'title' => _l('Date Due'),
-                    'field' => array(
-                        'type' => 'date',
-                        'name' => 'date_due',
-                        'value' => print_date($this->date_due),
-                    ),
-                ),
-                'date_done' => array(
-                    'title' => _l('Date Done'),
-                    'field' => array(
-                        'type' => 'date',
-                        'name' => 'date_done',
-                        'value' => print_date($this->date_done),
-                    ),
-                ),
+		$fieldset_data = array(
+			'id'       => 'job_task',
+			'class'    => 'tableclass tableclass_form tableclass_full',
+			'elements' => array(
+				'description'      => array(
+					'title'  => _l( 'Description' ),
+					'fields' => array(
+						array(
+							'type'         => 'text',
+							'name'         => 'description',
+							'class'        => 'edit_task_description',
+							'id'           => 'task_desc_' . $self->get( $self->db_id ),
+							'autocomplete' => 'off',
+							'value'        => $this->description,
+						),
+						function () use ( $self ) {
+							if ( class_exists( 'module_product', false ) ) {
+								module_product::print_job_task_dropdown( $self->get( $self->db_id ), $self->get() );
+							}
+						}
+					),
+				),
+				'long_description' => array(
+					'title' => _l( 'Details' ),
+					'field' => array(
+						'type'  => 'wysiwyg',
+						'name'  => 'long_description',
+						'id'    => 'task_long_desc_' . $self->get( $self->db_id ),
+						'value' => $this->long_description,
+					),
+				),
+				'hours'            => array(
+					'title' => $hours_unit,
+					'field' => array(
+						'type'  => 'number',
+						'name'  => 'hours',
+						'class' => 'task_dynamic_hours',
+						'id'    => 'task_hours_' . $self->get( $self->db_id ),
+						'value' => $this->hours,
+					),
+				),
+				'amount'           => array(
+					'title' => _l( 'Amount' ),
+					'field' => array(
+						'type'  => 'number',
+						'id'    => '' . $self->get( $self->db_id ) . 'taskamount',
+						'class' => 'task_dynamic_amount',
+						'name'  => 'amount',
+						'value' => $this->amount,
+					),
+				),
+				'total'            => array(
+					'title' => _l( 'Total' ),
+					'field' => array(
+						'type'  => 'html',
+						'id'    => '' . $self->get( $self->db_id ) . 'tasktotal',
+						'class' => 'task_dynamic_total',
+						'name'  => 'total',
+						'value' => dollar( '0' ),
+						//	                    'help' => 'This is the calculated total of this line item. Quantity x Amount.'
+					),
+				),
+				'date_due'         => array(
+					'title' => _l( 'Date Due' ),
+					'field' => array(
+						'type'  => 'date',
+						'name'  => 'date_due',
+						'value' => print_date( $this->date_due ),
+					),
+				),
+				'date_done'        => array(
+					'title' => _l( 'Date Done' ),
+					'field' => array(
+						'type'  => 'date',
+						'name'  => 'date_done',
+						'value' => print_date( $this->date_done ),
+					),
+				),
 
-            )
-        );
+			)
+		);
 
-        if( module_config::c('job_allow_staff_assignment',1) ){
-
-
-            $staff_members = module_user::get_staff_members();
-            $staff_member_rel = array();
-            foreach($staff_members as $staff_member){
-                $staff_member_rel[$staff_member['user_id']] = $staff_member['name'];
-            }
+		if ( module_config::c( 'job_allow_staff_assignment', 1 ) ) {
 
 
-            $fieldset_data['elements']['staff_ids'] = array(
-                'title' => _l('Staff'),
-                'field' => array(
-//                    'multiple' => true,
-                    'type' => 'select',
-                    'name' => 'user_id',
-                    'value' => $this->user_id,
-                    'options' => $staff_member_rel,
-                ),
-            );
-        }
-        $fieldset_data['elements']['billable'] = array(
-            'title' => _l('Billable'),
-            'field' => array(
-                'type' => 'checkbox',
-                'name' => 'billable',
-                'id' => 'billable_t_'.$self->get($self->db_id),
-                'value' => $this->billable,
-            ),
-        );
-        $fieldset_data['elements']['taxable'] = array(
-            'title' => _l('Taxable'),
-            'field' => array(
-                'type' => 'checkbox',
-                'name' => 'taxable',
-                'id' => 'taxable_t_'.$self->get($self->db_id),
-                'value' => $this->taxable,
-            ),
-        );
-        $fieldset_data['elements']['fully_completed'] = array(
-            'title' => _l('Completed'),
-            'field' => array(
-                'type' => 'checkbox',
-                'name' => 'fully_completed',
-                'value' => $this->fully_completed,
-            ),
-        );
+			$staff_members    = module_user::get_staff_members();
+			$staff_member_rel = array();
+			foreach ( $staff_members as $staff_member ) {
+				$staff_member_rel[ $staff_member['user_id'] ] = $staff_member['name'];
+			}
 
-        $types = module_job::get_task_types();
-        $types['-1'] = _l('Default (%s)',$types[$this->document->default_task_type]);
-        $fieldset_data['elements']['manual_task_type'] = array(
-            'title' => _l('Task Type'),
-            'field' => array(
-                'type' => 'select',
-                'name' => 'manual_task_type',
-                'id' => 'manual_task_type_'.$self->get($self->db_id),
-                'options' => $types,
-                'blank' => false,
-                'value' => $this->manual_task_type, // or manual_task_type_real ?
-            ),
-        );
 
-        return $fieldset_data;
+			$fieldset_data['elements']['staff_ids'] = array(
+				'title' => _l( 'Staff' ),
+				'field' => array(
+					//                    'multiple' => true,
+					'type'    => 'select',
+					'name'    => 'user_id',
+					'value'   => $this->user_id,
+					'options' => $staff_member_rel,
+				),
+			);
+		}
+		$fieldset_data['elements']['billable']        = array(
+			'title' => _l( 'Billable' ),
+			'field' => array(
+				'type'  => 'checkbox',
+				'name'  => 'billable',
+				'id'    => 'billable_t_' . $self->get( $self->db_id ),
+				'value' => $this->billable,
+			),
+		);
+		$fieldset_data['elements']['taxable']         = array(
+			'title' => _l( 'Taxable' ),
+			'field' => array(
+				'type'  => 'checkbox',
+				'name'  => 'taxable',
+				'id'    => 'taxable_t_' . $self->get( $self->db_id ),
+				'value' => $this->taxable,
+			),
+		);
+		$fieldset_data['elements']['fully_completed'] = array(
+			'title' => _l( 'Completed' ),
+			'field' => array(
+				'type'  => 'checkbox',
+				'name'  => 'fully_completed',
+				'value' => $this->fully_completed,
+			),
+		);
 
-    }
+		$types                                         = module_job::get_task_types();
+		$types['-1']                                   = _l( 'Default (%s)', $types[ $this->document->default_task_type ] );
+		$fieldset_data['elements']['manual_task_type'] = array(
+			'title' => _l( 'Task Type' ),
+			'field' => array(
+				'type'    => 'select',
+				'name'    => 'manual_task_type',
+				'id'      => 'manual_task_type_' . $self->get( $self->db_id ),
+				'options' => $types,
+				'blank'   => false,
+				'value'   => $this->manual_task_type, // or manual_task_type_real ?
+			),
+		);
 
-    public function generate_edit_fieldset(){
+		return $fieldset_data;
 
-        return module_form::generate_fieldset($this->get_fieldset_data());
+	}
 
-    }
+	public function generate_edit_fieldset() {
+
+		return module_form::generate_fieldset( $this->get_fieldset_data() );
+
+	}
 
 }

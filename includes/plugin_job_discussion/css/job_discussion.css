@@ -1,0 +1,49 @@
+.task_job_discussion.with_text{
+    width: 93px;
+}
+.task_job_discussion{
+    margin:2px 0 0 0;
+    float:right;
+    width: 12px;
+    height:11px;
+    background: url(../images/icon.png) no-repeat;
+    overflow: hidden;
+    font-size: 10px;
+    line-height: 11px;
+    display: block;
+    padding: 0 3px 3px 2px;
+    text-align: left;
+    text-decoration: none;
+    -webkit-box-sizing: content-box;
+    -moz-box-sizing: content-box;
+    box-sizing: content-box;
+}
+.task_job_discussion span{
+    display: inline-block;
+    width: 12px;
+    text-align: center;
+    margin: 0 5px 0 0;
+}
+.task_job_discussion.unseen{
+    font-weight: bold;
+}
+.task_job_discussion_holder{
+    display:none;
+}
+.task_job_discussion_comments{
+    margin: 10px;
+    border: 1px solid #CCC;
+    border-radius: 5px;
+    padding: 5px;
+    font-size: 0.9em;
+}
+.task_job_discussion_comments .info{
+    margin: -5px -5px 5px 0;
+    padding: 2px 5px 2px 5px;
+    background: #EFEFEF;
+    display: block;
+    float:right;
+}
+.task_job_discussion_comments textarea{
+    width:95%;
+}

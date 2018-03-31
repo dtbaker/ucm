@@ -1,0 +1,11 @@
+
+.tableclass th{
+
+}
+
+
+	.tableclass_rows th{
+		border:1px solid #000;
+		background:#535353;
+		color:#FFF;
+	}

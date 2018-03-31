@@ -1,0 +1,25 @@
+.table_sort_btn,
+.table_sort_btn:link,
+.table_sort_btn:visited{
+    color:#ccc;
+    font-size: 0.8em;
+    float:right;
+    background: url(../images/icons_sort.png) no-repeat 2px 7px;
+    text-indent: -999px;
+    overflow: hidden;
+    display: inline-block;
+    width: 11px;
+    height: 14px;
+    text-align: left;
+}
+.table_sort_desc,
+.table_sort_desc:link,
+.table_sort_desc:visited{
+    background-position: -26px 7px;
+}
+.table_sort_asc.current{
+    background-position: 2px -17px;
+}
+.table_sort_desc.current{
+    background-position: -26px -17px;
+}

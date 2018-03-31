@@ -1,0 +1,74 @@
+<html>
+<head>
+	<title>Email Newsletter</title>
+</head>
+<body>
+
+<!-- start email header -->
+<table border="0" cellpadding="0" cellspacing="0" width="700">
+	<tbody>
+	<tr>
+		<td align="center">
+			<p>
+				<a href="{VIEW_ONLINE}" style="color:#CCCCCC; font-size:10px;"><font color="#CCCCCC" size="small">Newsletter
+				not displaying correctly? View online.</font></a>
+			</p>
+		</td>
+	</tr>
+	</tbody>
+</table>
+<!-- end email header -->
+
+<table width="700" border="0" cellspacing="0" cellpadding="10">
+	<tbody>
+	<tr>
+		<td bgcolor="#0d2440" height="44" align="left" >
+			<span style="color:#FFFFFF; font-family:Arial, Helvetica, sans-serif; font-size:20px;">
+				{SUBJECT}
+			</span>
+		</td>
+		<td bgcolor="#0d2440" height="44" align="right">
+			<!-- start top links -->
+			<span style="color:#FFFFFF; font-family:Arial, Helvetica, sans-serif; font-size:12px;">
+				<a href="http://www.google.com" style="color:#FFFFFF; text-decoration:none;" target="_blank">Website</a>
+				&nbsp; | &nbsp;
+				<a href="{VIEW_ONLINE}" style="color:#FFFFFF; text-decoration:none;" target="_blank">View This Online</a>
+			</span>
+			<!-- end top links -->
+		</td>
+	</tr>
+	<tr>
+		<td colspan="2">
+			<!-- start email content -->
+			<table cellpadding="10" width="100%">
+				<tbody>
+				<tr>
+					<td align="left" style="font-family:arial, helvetica,sans-serif; font-size:12px;">
+						{BODY}
+					</td>
+				</tr>
+				</tbody>
+			</table>
+			<!-- end email content -->
+		</td>
+	</tr>
+	<tr>
+		<td bgcolor="#0d2440" height="5" colspan="2"></td>
+	</tr>
+	<tr>
+		<td colspan="2" align="center">
+			<font color="#999999" size="1">
+				This email was sent from
+				<a href="mailto:{FROM_EMAIL}" style="color:#999999;" color="#999999">{FROM_EMAIL}</a>
+				to
+				<a href="mailto:{EMAIL}" style="color:#999999;" color="#999999">{EMAIL}</a>
+				on {DATE}
+				|
+				<a href="{UNSUBSCRIBE}" style="color:#999999" color="#999999">Unsubscribe</a>
+			</font>
+		</td>
+	</tr>
+	</tbody>
+</table>
+</body>
+</html>

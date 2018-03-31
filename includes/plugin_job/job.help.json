@@ -1,0 +1,30 @@
+{
+  "title": "Jobs",
+  "description": "Jobs are the core part of task and time tracking. Assign tasks to staff, tick them off as completed, generate invoices.",
+  "topics": [
+    {
+      "title": "Jobs Documentation",
+      "url": "http://ultimateclientmanager.com/support/documentation-wiki/jobs/",
+      "wordpress_post_id": 769
+    },
+    {
+      "title": "Change the number of decimal places in Job task quantities (Advanced)",
+      "url": "http://ultimateclientmanager.com/support/faq-knowledge-base/faq-item/115/change-the-number-of-decimal-places-in-job-task-quantities",
+      "faq_id": 115
+    },
+    {
+      "title": "How to save Jobs/Projects/Tasks as a template for future use",
+      "url": "http://ultimateclientmanager.com/support/faq-knowledge-base/faq-item/22/how-to-save-jobsprojectstasks-as-a-template-for-future-use",
+      "faq_id": 22
+    },
+    {
+      "title": "How to create a Job deposit",
+      "url": "http://ultimateclientmanager.com/support/faq-knowledge-base/faq-item/26/how-to-create-a-job-deposit",
+      "faq_id": 26
+    }
+  ],
+  "config": {
+    "job_send_staff_task_email_automatically": "If you change this from 0 to 1 then all new job tasks created will be automatically emailed to the assigned staff member. This is similar to manually clicking the Email Staff button from the Job page.",
+    "long_description_wysiwyg": "Set this to 1 to enable WYSIWYG editor on job task description. Set it to 0 to leave it as plain text."
+  }
+}

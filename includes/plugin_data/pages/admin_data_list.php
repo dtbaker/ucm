@@ -7,23 +7,25 @@ $display_type = 'table';
 $allow_search = true;
 
 
-switch($display_type){
+switch ( $display_type ) {
 	case 'table':
-		
-		$data_types = $module->get_data_types();
-		foreach($data_types as $data_type){
-			$data_type_id = $data_type['data_type_id'];
-            if(isset($_REQUEST['data_type_id']) && $data_type_id != $_REQUEST['data_type_id'])continue;
 
-            include('admin_data_list_type.php');
+		$data_types = $module->get_data_types();
+		foreach ( $data_types as $data_type ) {
+			$data_type_id = $data_type['data_type_id'];
+			if ( isset( $_REQUEST['data_type_id'] ) && $data_type_id != $_REQUEST['data_type_id'] ) {
+				continue;
+			}
+
+			include( 'admin_data_list_type.php' );
 
 		}
-		
+
 		break;
 	case 'select':
-		
+
 		break;
 	default:
-		echo 'Display type: '.$display_type.' unknown.';
+		echo 'Display type: ' . $display_type . ' unknown.';
 		break;
 }

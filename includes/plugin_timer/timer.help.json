@@ -1,0 +1,24 @@
+{
+  "title": "Timers",
+  "description": "Timers let you time various tasks through out the system.",
+  "topics": [
+    {
+      "title": "Timer Documentation",
+      "url": "http://ultimateclientmanager.com/support/documentation-wiki/timers/",
+      "wordpress_post_id": 0
+    },
+    {
+      "title": "Timer",
+      "url": "http://ultimateclientmanager.com/feature/task-timer/",
+      "wordpress_post_id": 239
+    }
+  ],
+  "config": {
+    "timer_mode": "Set to 1 it will only allow 1 timer to be running at a time (default). Set to 2 and it will allow multiple times to be running at the same time.",
+    "timer_automatic": "Set to 1 to enable automatic timers on certain pages of the system",
+    "timer_enable_tickets": "Set to 1 it will allow timers for tickets.",
+    "timer_enable_quotes": "Set to 1 it will allow timers for quotes.",
+    "timer_enable_jobs": "Set to 1 it will allow timers for jobs and job tasks.",
+    "timer_default_billable": "Set to 1 to make all timers default to billable timers."
+  }
+}

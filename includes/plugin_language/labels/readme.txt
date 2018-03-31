@@ -1,0 +1,1 @@
+Language Translations are now performed in Settings > I8N. Please delete all these files from this folder, it should be empty.

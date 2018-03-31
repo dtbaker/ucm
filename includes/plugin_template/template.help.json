@@ -1,0 +1,11 @@
+{
+  "title": "Templates",
+  "description": "The templates section holds all the editable templates within the system. Here you can easily edit some content of the system without any programming knowledge.",
+  "topics": [
+    {
+      "title": "Template Documentation",
+      "url": "http://ultimateclientmanager.com/support/documentation-wiki/templates/",
+      "wordpress_post_id": 2129
+    }
+  ]
+}

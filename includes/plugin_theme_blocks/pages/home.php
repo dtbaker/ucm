@@ -1,0 +1,1 @@
+<!-- empty home page - widgets are managed in header_widgets.php and called in design_header.php -->

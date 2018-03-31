@@ -1,13 +1,14 @@
 <?php
 
-$table_manager                   = module_theme::new_table_manager();
+$table_manager              = module_theme::new_table_manager();
 $table_manager->table_class = 'public';
-$table_manager->row_class = 'public';
-$columns                         = array();
-$columns['contract_title']          = array(
+$table_manager->row_class   = 'public';
+$columns                    = array();
+$columns['contract_title']  = array(
 	'title'      => 'Contract Title',
 	'callback'   => function ( $contract ) {
-		?> <a href="<?php echo module_contract::link_public( $contract['contract_id'] );?>"><?php echo htmlspecialchars($contract['name']);?></a> <?php
+		?> <a
+			href="<?php echo module_contract::link_public( $contract['contract_id'] ); ?>"><?php echo htmlspecialchars( $contract['name'] ); ?></a> <?php
 	},
 	'cell_class' => 'row_action',
 );
@@ -42,8 +43,8 @@ if ( class_exists( 'module_website', false ) && module_website::is_plugin_enable
 	$columns['contract_website'] = array(
 		'title'    => module_config::c( 'project_name_single', 'Website' ),
 		'callback' => function ( $contract ) {
-			$website = module_website::get_website($contract['website_id']);
-			echo htmlspecialchars($website['name']);
+			$website = module_website::get_website( $contract['website_id'] );
+			echo htmlspecialchars( $website['name'] );
 		},
 	);
 }

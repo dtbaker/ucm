@@ -1,0 +1,102 @@
+#show_completed_tasks{
+    display: none;
+}
+.task_column{
+    
+}
+
+.task_percentage{
+    position: absolute;
+    height:18px;
+    z-index: 4;
+}
+.task_percentage_label{
+    position: absolute;
+    z-index: 3;
+    color: #CCC;
+    text-align: right;
+}
+.task_percentage_bar{
+    z-index: 2;
+    position: absolute;
+    background-color: #EFEFEF;
+    height:18px;
+}
+.task_description{
+    position: absolute;
+    margin-left: 3px;
+    z-index: 4;
+}
+.task_edit{
+    background: #c3d4ff;
+}
+
+.job_task_staff_list{
+    width:60px;
+}
+
+.edit_task_description{
+    width:90%;
+}
+.edit_task_long_description{
+    width:90%;
+    min-height: 40px;
+}
+.task_long_description{
+    display:none;
+}
+.task_long_description .edit_task_long_description{
+    margin:4px 0 0 0 !important;
+}
+.task_toggle_long_description{
+    display: inline-block;
+}
+.edit_task_order{
+    width:86%;
+    min-width:20px;
+}
+#create_invoice_button{
+    display:block;
+    text-align: center;
+}
+#create_invoice_button a{
+    margin: 10px 0;
+}
+
+.edit_task_button{
+    padding:5px 10px 0 10px;
+}
+.edit_task_options{
+    vertical-align: top;
+    white-space: nowrap;
+}
+table.tableclass tbody.job_task_wrapper tr.task_editting td  {
+vertical-align: top;
+}
+table.tableclass tbody.job_task_wrapper tr.task_editting td.percentage_edit  {
+vertical-align: middle;
+}
+
+.task_percentage_toggle{
+    cursor: pointer;
+}
+.edit_task_long_description_box .task_job_discussion{
+    position: absolute;
+    top:0;
+    right:0;
+}
+.edit_task_long_description_box .timer_task{
+    position: absolute;
+    top:20px;
+    right:0;
+    margin: 0;
+}
+.job_task_approval_box{
+    margin-top: 10px;
+    line-height: 1.3em;
+    width: 90%;
+}
+.job_task_approval_box textarea{
+    width:100%;
+    height:50px;
+}

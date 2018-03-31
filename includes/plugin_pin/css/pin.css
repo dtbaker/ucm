@@ -1,0 +1,47 @@
+.pin_title{
+    font-weight: bold;
+    border-bottom: 1px solid #CCC;
+    padding-bottom: 2px;
+    margin-bottom: 2px;
+}
+.pin_title a{
+    font-weight: normal;
+    float:right;
+    margin-left: 10px;
+}
+#top_menu_pin > a{
+    text-indent: -9999px;
+    overflow: hidden;
+    background: url(../images/pin_small.png) no-repeat center;
+    width:20px;
+}
+#top_menu_pin_options{
+    display:none;
+    position: absolute;
+    padding: 5px;
+    background: #FFF;
+    border: 1px solid #CCC;
+    margin-top: 30px;
+    min-width: 100px;
+    z-index: 400;
+}
+#top_menu_pin_options ul{
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+#top_menu_pin_options ul li{
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+.top_menu_pin_actions{
+    float:right;
+    width:32px;
+    margin-left: 5px;
+}
+.top_menu_pin_actions > a,
+.top_menu_pin_actions > a:link,
+.top_menu_pin_actions > a:visited{
+    color:#CCC;
+}

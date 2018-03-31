@@ -1,0 +1,8 @@
+.invoice_cancel{
+    text-decoration: line-through !important;
+    color: #FF0000 !important;
+}
+
+.invoice_job_name{
+    float:right;
+}

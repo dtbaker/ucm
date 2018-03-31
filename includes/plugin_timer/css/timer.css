@@ -1,0 +1,117 @@
+#timer_menu_button{
+    display: none;
+}
+#timer_menu_options{
+    display: none;
+}
+.timer_task{
+    float:right;
+    margin: 0px 3px;
+}
+.timer_counter{
+    float:right;
+    -moz-border-radius: 4px;
+    -webkit-border-radius: 4px;
+    border-radius: 4px;
+    height: 16px;
+    border: 1px solid #dddddd;
+    background: #ffffff;
+    padding: 0 2px;
+    display: block;
+}
+.timer_paused{
+    background: #EFEFEF;
+}
+.timer_hover{
+    margin-left: -22px;
+    background: #FFF;
+    position: absolute;
+    border: 1px solid #CCC;
+    padding: 5px 9px;
+    border-radius: 4px;
+    min-width: 50px;
+}
+.timer_hover .timer_title{
+    text-align: center;
+    font-weight: bold;
+    display: block;
+    border-bottom: 1px solid #CCC;
+    padding-bottom: 2px;
+    margin-bottom: 2px;
+}
+.timer_hover ul{
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+.timer_hover ul li{
+    list-style: none;
+    text-align: center;
+    padding: 2px 2px;
+}
+.timer_hover ul li a,
+.timer_hover ul li a:link,
+.timer_hover ul li a:visited{
+    display: block;
+    text-align: center;
+    border-radius: 3px;
+
+}
+
+
+#timer_menu_options{
+    display:none;
+    position: absolute;
+    padding: 5px;
+    background: #FFF;
+    border: 1px solid #CCC;
+    margin-top: 30px;
+    min-width: 150px;
+    z-index: 400;
+}
+#timer_menu_options ul{
+    display: block;
+}
+#timer_menu_options li{
+    display: list-item;
+}
+#timer_menu_options > ul{
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: none;
+}
+#timer_menu_options > ul > li{
+    list-style: none;
+    margin: 0;
+    padding:3px 0 0 0;
+    min-height: 23px;
+}
+#timer_menu_options > ul > li > a.timer_job_link{
+    background: none;
+    display: inline;
+}
+#timer_menu_options .timer_title{
+    font-weight: bold;
+    border-bottom: 1px solid #CCC;
+    padding-bottom: 2px;
+    margin-bottom: 2px;
+}
+
+
+
+
+
+
+/* new timer */
+#main_page_timer{
+    text-align: center;
+    padding:20px;
+}
+#main_page_timer .timer-clock{
+    font-size: 70px;
+    line-height: 1em;
+    height: 1em;
+    margin-bottom: 20px;
+}

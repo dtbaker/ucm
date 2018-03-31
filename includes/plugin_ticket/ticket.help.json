@@ -1,0 +1,29 @@
+{
+  "title": "Tickets",
+  "description": "Manage support tickets and inbound email",
+  "topics": [
+    {
+      "title": "Ticket Documentation",
+      "url": "http://ultimateclientmanager.com/support/documentation-wiki/support-tickets/",
+      "wordpress_post_id": 773
+    }
+  ],
+  "api_endpoints": [
+    {
+      "endpoint": "ticket",
+      "method": "list",
+      "description": "List available tickets"
+    },
+    {
+      "endpoint": "ticket",
+      "method": "message",
+      "description": "List available messages from specified tickets (ticket_ids url param, comma separated)"
+    }
+  ],
+  "config": {
+    "ticket_turn_around_days": "Number of days you expect to answer tickets in",
+    "ticket_type_id_default": "Default ticket type id",
+    "ticket_default_user_id": "Default ticket assigned staff member id",
+    "ticket_default_account_id": "Default ticket account id"
+  }
+}

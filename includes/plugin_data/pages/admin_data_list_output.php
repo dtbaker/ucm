@@ -2,17 +2,19 @@
 
 // used in main listing and search listing.
 
-if(!isset($datas))die('No data found');
+if ( ! isset( $datas ) ) {
+	die( 'No data found' );
+}
 
-$data_field_groups = $module->get_data_field_groups($data_type_id);
+$data_field_groups = $module->get_data_field_groups( $data_type_id );
 
-if(empty($embed_form) && $allow_search){
-?>
+if ( empty( $embed_form ) && $allow_search ) {
+	?>
 
 
-<form action="" method="post" id="custom_data_form">
+	<form action="" method="post" id="custom_data_form">
 
-    <?php
+	<?php
 
 	// collect a list of create/update user ids for search
 	//$search = array();
@@ -20,93 +22,93 @@ if(empty($embed_form) && $allow_search){
 	//$datas = $module->get_datas($search);
 	$create_user_ids = array();
 	$update_user_ids = array();
-	foreach($datas as $data){
-		if($data['create_user_id']){
-			$create_user_ids[$data['create_user_id']] = true;
+	foreach ( $datas as $data ) {
+		if ( $data['create_user_id'] ) {
+			$create_user_ids[ $data['create_user_id'] ] = true;
 		}
-		if($data['update_user_id']){
-			$update_user_ids[$data['update_user_id']] = true;
-		}
-	}
-	foreach($create_user_ids as $user_id => $tf){
-		$user = module_user::get_user($user_id);
-		if($user){
-			$create_user_ids[$user_id] = $user['name'].' '.$user['last_name'];
-		}else{
-			$create_user_ids[$user_id] = 'Unknown';
+		if ( $data['update_user_id'] ) {
+			$update_user_ids[ $data['update_user_id'] ] = true;
 		}
 	}
-	foreach($update_user_ids as $user_id => $tf){
-		$user = module_user::get_user($user_id);
-		if($user){
-			$update_user_ids[$user_id] = $user['name'].' '.$user['last_name'];
-		}else{
-			$update_user_ids[$user_id] = 'Unknown';
+	foreach ( $create_user_ids as $user_id => $tf ) {
+		$user = module_user::get_user( $user_id );
+		if ( $user ) {
+			$create_user_ids[ $user_id ] = $user['name'] . ' ' . $user['last_name'];
+		} else {
+			$create_user_ids[ $user_id ] = 'Unknown';
+		}
+	}
+	foreach ( $update_user_ids as $user_id => $tf ) {
+		$user = module_user::get_user( $user_id );
+		if ( $user ) {
+			$update_user_ids[ $user_id ] = $user['name'] . ' ' . $user['last_name'];
+		} else {
+			$update_user_ids[ $user_id ] = 'Unknown';
 		}
 	}
 	$update_user_ids[2] = 'Unknown';
 
-	foreach($data_field_groups as $data_field_group){
+	foreach ( $data_field_groups as $data_field_group ) {
 		$data_field_group_id = $data_field_group['data_field_group_id'];
-		$data_field_group = $module->get_data_field_group($data_field_group_id); // needed?
-		$data_fields = $module->get_data_fields($data_field_group_id);
-		foreach($data_fields as $data_field_id => $data_field){
-			if(!$data_field['searchable']){
-				unset($data_fields[$data_field_id]);
+		$data_field_group    = $module->get_data_field_group( $data_field_group_id ); // needed?
+		$data_fields         = $module->get_data_fields( $data_field_group_id );
+		foreach ( $data_fields as $data_field_id => $data_field ) {
+			if ( ! $data_field['searchable'] ) {
+				unset( $data_fields[ $data_field_id ] );
 			}
 		}
-		if($data_fields){
+		if ( $data_fields ) {
 
 			$search_bar = array(
 				'elements' => array()
 			);
-			foreach($data_fields as $data_field_id => $data_field){
+			foreach ( $data_fields as $data_field_id => $data_field ) {
 				$data_field['multiple'] = false;
-				switch($data_field['field_type']){
+				switch ( $data_field['field_type'] ) {
 					case 'auto_id':
 						$data_field['data_field_id'] = 'data_record_id';
-						$data_field['field_type'] = 'text';
+						$data_field['field_type']    = 'text';
 						break;
 					case 'created_date_time':
 						$data_field['data_field_id'] = 'created_date';
-						$data_field['field_type'] = 'date';
+						$data_field['field_type']    = 'date';
 						break;
 					case 'created_date':
 						$data_field['data_field_id'] = $data_field['field_type'];
-						$data_field['field_type'] = 'date';
+						$data_field['field_type']    = 'date';
 						break;
 					case 'created_time':
 						$data_field['data_field_id'] = $data_field['field_type'];
-						$data_field['field_type'] = 'time';
+						$data_field['field_type']    = 'time';
 						break;
 					case 'updated_date_time':
 						$data_field['data_field_id'] = 'updated_date';
-						$data_field['field_type'] = 'date';
+						$data_field['field_type']    = 'date';
 						break;
 					case 'updated_date':
 						$data_field['data_field_id'] = $data_field['field_type'];
-						$data_field['field_type'] = 'date';
+						$data_field['field_type']    = 'date';
 						break;
 					case 'updated_time':
 						$data_field['data_field_id'] = $data_field['field_type'];
-						$data_field['field_type'] = 'time';
+						$data_field['field_type']    = 'time';
 						break;
 					case 'created_by':
 						$data_field['data_field_id'] = $data_field['field_type'];
-						$data_field['field_type'] = 'select';
-						$data_field['attributes'] = $create_user_ids;
+						$data_field['field_type']    = 'select';
+						$data_field['attributes']    = $create_user_ids;
 						break;
 					case 'updated_by':
 						$data_field['data_field_id'] = $data_field['field_type'];
-						$data_field['field_type'] = 'select';
-						$data_field['attributes'] = $update_user_ids;
+						$data_field['field_type']    = 'select';
+						$data_field['attributes']    = $update_user_ids;
 						break;
 				}
-				$data_field['type'] = $data_field['field_type'];
-				$data_field['options'] = isset($data_field['attributes']) ? $data_field['attributes'] : array();
-				$data_field['name'] = 'search_field['.$data_field['data_field_id'].']';
-				$data_field['value'] = isset($_REQUEST['search_field'][$data_field['data_field_id']]) ? $_REQUEST['search_field'][$data_field['data_field_id']] : false;
-				if($data_field['type'] == 'select' && (!is_array($data_field['options'] || !count($data_field['options'])))){
+				$data_field['type']    = $data_field['field_type'];
+				$data_field['options'] = isset( $data_field['attributes'] ) ? $data_field['attributes'] : array();
+				$data_field['name']    = 'search_field[' . $data_field['data_field_id'] . ']';
+				$data_field['value']   = isset( $_REQUEST['search_field'][ $data_field['data_field_id'] ] ) ? $_REQUEST['search_field'][ $data_field['data_field_id'] ] : false;
+				if ( $data_field['type'] == 'select' && ( ! is_array( $data_field['options'] || ! count( $data_field['options'] ) ) ) ) {
 					// copied from data.php
 					$data_field['options'] = array();
 					foreach ( explode( "\n", trim( $data_field['field_data'] ) ) as $line ) {
@@ -124,10 +126,10 @@ if(empty($embed_form) && $allow_search){
 								}
 							} else {
 								$data_field['options'] = explode( "|", $line );
-								if(isset($data_field['options'][0])){
+								if ( isset( $data_field['options'][0] ) ) {
 									$new_attributes = array();
-									foreach($data_field['options'] as $aid => $a){
-										$new_attributes[$aid+1] = $a;
+									foreach ( $data_field['options'] as $aid => $a ) {
+										$new_attributes[ $aid + 1 ] = $a;
 									}
 									$data_field['options'] = $new_attributes;
 								}
@@ -135,54 +137,54 @@ if(empty($embed_form) && $allow_search){
 							break;
 						}
 					}
-				}else if($data_field['type'] == 'wysiwyg'){
+				} else if ( $data_field['type'] == 'wysiwyg' ) {
 					$data_field['type'] = 'text';
-				}else{
+				} else {
 
 				}
-				if($data_field['type'] == 'date') {
-					$data_field1 = $data_field2 = $data_field;
-					$data_field1['name'] = $data_field1['name']."[from]";
-					$data_field2['name'] = $data_field2['name']."[to]";
-					$data_field1['id'] = $data_field1['name'].'from';
-					$data_field2['id'] = $data_field2['name'].'to';
-					$data_field1['value'] = !empty($data_field['value']['from']) ? $data_field['value']['from'] : '';
-					$data_field2['value'] = !empty($data_field['value']['to']) ? $data_field['value']['to'] : '';
+				if ( $data_field['type'] == 'date' ) {
+					$data_field1              = $data_field2 = $data_field;
+					$data_field1['name']      = $data_field1['name'] . "[from]";
+					$data_field2['name']      = $data_field2['name'] . "[to]";
+					$data_field1['id']        = $data_field1['name'] . 'from';
+					$data_field2['id']        = $data_field2['name'] . 'to';
+					$data_field1['value']     = ! empty( $data_field['value']['from'] ) ? $data_field['value']['from'] : '';
+					$data_field2['value']     = ! empty( $data_field['value']['to'] ) ? $data_field['value']['to'] : '';
 					$search_bar['elements'][] = array(
-						'title' => $data_field['title'],
+						'title'  => $data_field['title'],
 						'fields' => array(
 							$data_field1,
-							_l( 'to'),
+							_l( 'to' ),
 							$data_field2
 						)
 					);
-				}else if ($data_field['type'] != 'file') {
+				} else if ( $data_field['type'] != 'file' ) {
 					$search_bar['elements'][] = array(
 						'title' => $data_field['title'],
 						'field' => $data_field
 					);
 				}
 			}
-			echo module_form::search_bar($search_bar);
+			echo module_form::search_bar( $search_bar );
 		}
 	}
 }
 
-if(isset($_REQUEST['search_field'])){
+if ( isset( $_REQUEST['search_field'] ) ) {
 	// do the search in php.
 	// because all the data is serialized/etc.. complicated.
-	foreach($datas as $data_id=>$data){
+	foreach ( $datas as $data_id => $data ) {
 		// check status
-		if(isset($_REQUEST['status']) && $_REQUEST['status']){
-			if($data['status'] != $_REQUEST['status']){
-				unset($datas[$data_id]);
+		if ( isset( $_REQUEST['status'] ) && $_REQUEST['status'] ) {
+			if ( $data['status'] != $_REQUEST['status'] ) {
+				unset( $datas[ $data_id ] );
 				continue;
 			}
 		}
 		// check create user id
-		if(isset($_REQUEST['create_user_id']) && $_REQUEST['create_user_id']){
-			if($data['create_user_id'] != $_REQUEST['create_user_id']){
-				unset($datas[$data_id]);
+		if ( isset( $_REQUEST['create_user_id'] ) && $_REQUEST['create_user_id'] ) {
+			if ( $data['create_user_id'] != $_REQUEST['create_user_id'] ) {
+				unset( $datas[ $data_id ] );
 				continue;
 			}
 		}
@@ -190,38 +192,38 @@ if(isset($_REQUEST['search_field'])){
 		$search_fields = array(); // choose which fields to search? similar to old search form.
 
 		// check searchable fields.
-		if(isset($_REQUEST['search_field']) && is_array($_REQUEST['search_field'])){
-			$data_items = $module->get_data_items($data['data_record_id']);
-			foreach($_REQUEST['search_field'] as $data_field_id => $data_field_value){
-				if( true || isset($search_fields[$data_field_id])){ // todo- choose which fields to search.
-					$settings = isset($data_items[$data_field_id]) ? @unserialize($data_items[$data_field_id]['data_field_settings']) : false;
-					if(is_array($data_field_value)){
-						if(!empty($settings['field_type']) && $settings['field_type'] == 'date'){
+		if ( isset( $_REQUEST['search_field'] ) && is_array( $_REQUEST['search_field'] ) ) {
+			$data_items = $module->get_data_items( $data['data_record_id'] );
+			foreach ( $_REQUEST['search_field'] as $data_field_id => $data_field_value ) {
+				if ( true || isset( $search_fields[ $data_field_id ] ) ) { // todo- choose which fields to search.
+					$settings = isset( $data_items[ $data_field_id ] ) ? @unserialize( $data_items[ $data_field_id ]['data_field_settings'] ) : false;
+					if ( is_array( $data_field_value ) ) {
+						if ( ! empty( $settings['field_type'] ) && $settings['field_type'] == 'date' ) {
 							// search based on date from/to
 
-							$from_date = !empty($data_field_value['from']) ? strtotime(input_date($data_field_value['from'])) : false;
-							$to_date = !empty($data_field_value['to']) ? strtotime(input_date($data_field_value['to'])) : false;
-							if($from_date || $to_date){
+							$from_date = ! empty( $data_field_value['from'] ) ? strtotime( input_date( $data_field_value['from'] ) ) : false;
+							$to_date   = ! empty( $data_field_value['to'] ) ? strtotime( input_date( $data_field_value['to'] ) ) : false;
+							if ( $from_date || $to_date ) {
 								$match = false;
-								if(!empty($data_items[$data_field_id]['data_text'])){
-									$search_date = strtotime(input_date($data_items[$data_field_id]['data_text']));
-									if($search_date){
-										if($from_date && $to_date){
-											if($search_date >= $from_date && $search_date <= $to_date){
+								if ( ! empty( $data_items[ $data_field_id ]['data_text'] ) ) {
+									$search_date = strtotime( input_date( $data_items[ $data_field_id ]['data_text'] ) );
+									if ( $search_date ) {
+										if ( $from_date && $to_date ) {
+											if ( $search_date >= $from_date && $search_date <= $to_date ) {
 												$match = true;
 											}
-										}else if ( $from_date){
-											if($search_date >= $from_date){
+										} else if ( $from_date ) {
+											if ( $search_date >= $from_date ) {
 												$match = true;
 											}
-										}else if($to_date){
-											if($search_date <= $to_date){
+										} else if ( $to_date ) {
+											if ( $search_date <= $to_date ) {
 												$match = true;
 											}
 										}
 									}
 								}
-								if(!$match){
+								if ( ! $match ) {
 									unset( $datas[ $data_id ] );
 								}
 								continue;
@@ -229,53 +231,53 @@ if(isset($_REQUEST['search_field'])){
 							}
 						}
 						$array_search = false;
-						$array_match = false;
-						foreach($data_field_value as $data_field_value_id => $data_field_value_value){
-							$data_field_value_value = trim($data_field_value_value);
+						$array_match  = false;
+						foreach ( $data_field_value as $data_field_value_id => $data_field_value_value ) {
+							$data_field_value_value = trim( $data_field_value_value );
 							// check if there's an "other" value
-							if(strtolower($data_field_value_value) == 'other' && isset($_REQUEST['other_data_field'][$data_field_id])){
-								$data_field_value_value = trim($_REQUEST['other_data_field'][$data_field_id]);
+							if ( strtolower( $data_field_value_value ) == 'other' && isset( $_REQUEST['other_data_field'][ $data_field_id ] ) ) {
+								$data_field_value_value = trim( $_REQUEST['other_data_field'][ $data_field_id ] );
 							}
 
-							if($data_field_value_value){
+							if ( $data_field_value_value ) {
 								$array_search = true;
 								// search this field!
-								$foo = @unserialize($data_items[$data_field_id]['data_text']);
-								if($foo){
-									$data_items[$data_field_id]['data_text'] = $foo;
+								$foo = @unserialize( $data_items[ $data_field_id ]['data_text'] );
+								if ( $foo ) {
+									$data_items[ $data_field_id ]['data_text'] = $foo;
 								}
-								if(isset($data_items[$data_field_id]) && is_array($data_items[$data_field_id]['data_text']) && isset($data_items[$data_field_id]['data_text'][$data_field_value_id])){
+								if ( isset( $data_items[ $data_field_id ] ) && is_array( $data_items[ $data_field_id ]['data_text'] ) && isset( $data_items[ $data_field_id ]['data_text'][ $data_field_value_id ] ) ) {
 									$array_match = true;
 								}
 							}
 						}
-						if($array_search && !$array_match){
-							unset($datas[$data_id]);
+						if ( $array_search && ! $array_match ) {
+							unset( $datas[ $data_id ] );
 							continue;
 						}
-					}else{
-						$data_field_value = trim($data_field_value);
+					} else {
+						$data_field_value = trim( $data_field_value );
 						// check if there's an "other" value
-						if(strtolower($data_field_value) == 'other' && isset($_REQUEST['other_data_field'][$data_field_id])){
-							$data_field_value = trim($_REQUEST['other_data_field'][$data_field_id]);
+						if ( strtolower( $data_field_value ) == 'other' && isset( $_REQUEST['other_data_field'][ $data_field_id ] ) ) {
+							$data_field_value = trim( $_REQUEST['other_data_field'][ $data_field_id ] );
 						}
-						if($data_field_value){
+						if ( $data_field_value ) {
 							// search this field!
-							switch($data_field_id){
+							switch ( $data_field_id ) {
 								case 'data_record_id':
-									if($data_field_value != $data['data_record_id']) {
+									if ( $data_field_value != $data['data_record_id'] ) {
 										unset( $datas[ $data_id ] );
 										continue;
 									}
 									break;
 								case 'created_date_time':
-									if(input_date($data_field_value,true) != input_date($data['date_created'],true)) {
+									if ( input_date( $data_field_value, true ) != input_date( $data['date_created'], true ) ) {
 										unset( $datas[ $data_id ] );
 										continue;
 									}
 									break;
 								case 'created_date':
-									if(input_date($data_field_value) != input_date($data['date_created'])) {
+									if ( input_date( $data_field_value ) != input_date( $data['date_created'] ) ) {
 										unset( $datas[ $data_id ] );
 										continue;
 									}
@@ -284,13 +286,13 @@ if(isset($_REQUEST['search_field'])){
 									echo 'Searching by time not supported yet.';
 									break;
 								case 'updated_date_time':
-									if(input_date($data_field_value,true) != input_date($data['date_updated'],true)) {
+									if ( input_date( $data_field_value, true ) != input_date( $data['date_updated'], true ) ) {
 										unset( $datas[ $data_id ] );
 										continue;
 									}
 									break;
 								case 'updated_date':
-									if(input_date($data_field_value) != input_date($data['date_updated'])) {
+									if ( input_date( $data_field_value ) != input_date( $data['date_updated'] ) ) {
 										unset( $datas[ $data_id ] );
 										continue;
 									}
@@ -299,28 +301,28 @@ if(isset($_REQUEST['search_field'])){
 									echo 'Searching by time not supported yet.';
 									break;
 								case 'created_by':
-									if($data_field_value != $data['create_user_id']) {
+									if ( $data_field_value != $data['create_user_id'] ) {
 										unset( $datas[ $data_id ] );
 										continue;
 									}
 									break;
 								case 'updated_by':
-									if($data_field_value != $data['update_user_id']) {
+									if ( $data_field_value != $data['update_user_id'] ) {
 										unset( $datas[ $data_id ] );
 										continue;
 									}
 									break;
 								default:
 									// search default (text and stuff)
-									if(isset($data_items[$data_field_id])) {
+									if ( isset( $data_items[ $data_field_id ] ) ) {
 										$foo = @unserialize( $data_items[ $data_field_id ]['data_text'] );
-										if(is_array($foo)){
+										if ( is_array( $foo ) ) {
 
-											if(!in_array($data_field_value, $foo)){
+											if ( ! in_array( $data_field_value, $foo ) ) {
 												unset( $datas[ $data_id ] );
 												continue;
 											}
-										}else {
+										} else {
 
 											if ( $settings && $settings['field_type'] && $settings['field_type'] == 'text' ) {
 												if ( strpos( strtolower( trim( $data_items[ $data_field_id ]['data_text'] ) ), strtolower( $data_field_value ) ) === false ) {
@@ -332,7 +334,7 @@ if(isset($_REQUEST['search_field'])){
 												continue;
 											}
 										}
-									}else{
+									} else {
 										unset( $datas[ $data_id ] );
 										continue;
 									}
@@ -347,30 +349,30 @@ if(isset($_REQUEST['search_field'])){
 
 
 $table_manager = module_theme::new_table_manager();
-$table_manager->set_id('custom_data');
-$columns = array();
+$table_manager->set_id( 'custom_data' );
+$columns         = array();
 $sortable_fields = array();
-if(isset($_REQUEST['view_all'])) {
-	$columns['parent'] = array(
+if ( isset( $_REQUEST['view_all'] ) ) {
+	$columns['parent']         = array(
 		'title'      => 'Parent',
 		'callback'   => function ( $data ) use ( $module ) {
-			foreach($module->get_data_link_keys() as $key){
-				if(isset($data['row_data'][$key]) && (int)$data['row_data'][$key] > 0){
-					switch($key){
+			foreach ( $module->get_data_link_keys() as $key ) {
+				if ( isset( $data['row_data'][ $key ] ) && (int) $data['row_data'][ $key ] > 0 ) {
+					switch ( $key ) {
 						case 'customer_id':
-							echo module_customer::link_open($data['row_data'][$key],true);
+							echo module_customer::link_open( $data['row_data'][ $key ], true );
 							break;
 						case 'job_id':
-							echo module_job::link_open($data['row_data'][$key],true);
+							echo module_job::link_open( $data['row_data'][ $key ], true );
 							break;
 						case 'invoice_id':
-							echo module_invoice::link_open($data['row_data'][$key],true);
+							echo module_invoice::link_open( $data['row_data'][ $key ], true );
 							break;
 						case 'quote_id':
-							echo module_quote::link_open($data['row_data'][$key],true);
+							echo module_quote::link_open( $data['row_data'][ $key ], true );
 							break;
 						case 'file_id':
-							echo module_file::link_open($data['row_data'][$key],true);
+							echo module_file::link_open( $data['row_data'][ $key ], true );
 							break;
 					}
 				}
@@ -384,27 +386,27 @@ if(isset($_REQUEST['view_all'])) {
 }
 
 $list_fields = array();
-foreach($data_field_groups as $data_field_group){
-	$data_fields = $module->get_data_fields($data_field_group['data_field_group_id']);
-	foreach($data_fields as $data_field){
-		if($data_field['show_list']){
-			$list_fields[$data_field['data_field_id']] = $data_field;
+foreach ( $data_field_groups as $data_field_group ) {
+	$data_fields = $module->get_data_fields( $data_field_group['data_field_group_id'] );
+	foreach ( $data_fields as $data_field ) {
+		if ( $data_field['show_list'] ) {
+			$list_fields[ $data_field['data_field_id'] ] = $data_field;
 		}
 	}
 }
 $export_fields = array();
-$first = true;
-foreach($list_fields as $data_field_id => $list_field){
-	$export_fields[$list_field['title']] = $data_field_id;
-	$columns['data'.$data_field_id] = array(
+$first         = true;
+foreach ( $list_fields as $data_field_id => $list_field ) {
+	$export_fields[ $list_field['title'] ] = $data_field_id;
+	$columns[ 'data' . $data_field_id ]    = array(
 		'title'      => $list_field['title'],
 		'callback'   => function ( $data ) use ( $module, $first, $data_field_id ) {
 
-			$value = isset($data[$data_field_id]) ? $data[$data_field_id] : 'N/A';
+			$value    = isset( $data[ $data_field_id ] ) ? $data[ $data_field_id ] : 'N/A';
 			$row_data = $data['row_data'];
 			//$value = isset($settings['field_type']) && $settings['field_type'] == 'encrypted' ? '*******' : (isset($list_data_items[$list_field['data_field_id']]) ? ($list_data_items[$list_field['data_field_id']]['data_text']) : _l('N/A'));
 			// todo: if(isset($list_data_items[$list_field['data_field_id']])) unserialize and check for array.
-			if($first) {
+			if ( $first ) {
 				?>
 				<a href="<?php echo $module->link( '', array(
 					"data_record_id" => $row_data['data_record_id'],
@@ -417,22 +419,22 @@ foreach($list_fields as $data_field_id => $list_field){
 					   'customer_id'    => $row_data['customer_id']
 				   ) ) ); ?>"><?php echo $value; ?></a>
 				<?php
-			}else{
+			} else {
 				echo $value;
 			}
 		},
 		'cell_class' => 'row_action',
 	);
 
-	$sortable_fields['data'.$data_field_id] = array(
+	$sortable_fields[ 'data' . $data_field_id ] = array(
 		'field' => $data_field_id,
 	);
-	$first = false;
+	$first                                      = false;
 }
 $table_data_output = array();
-foreach($datas as $table_row_id=>$data){
-	$table_data_output[$table_row_id] = array();
-	foreach($list_fields as $data_field_id => $list_field) {
+foreach ( $datas as $table_row_id => $data ) {
+	$table_data_output[ $table_row_id ] = array();
+	foreach ( $list_fields as $data_field_id => $list_field ) {
 		$list_data_items = $module->get_data_items( $data['data_record_id'] );
 		$settings        = @unserialize( $list_data_items[ $list_field['data_field_id'] ]['data_field_settings'] );
 		if ( ! isset( $settings['field_type'] ) ) {
@@ -525,30 +527,30 @@ foreach($datas as $table_row_id=>$data){
 					break;
 			}
 		}
-		$table_data_output[$table_row_id][$data_field_id] = $value;
-		$table_data_output[$table_row_id]['row_data'] = $data;
+		$table_data_output[ $table_row_id ][ $data_field_id ] = $value;
+		$table_data_output[ $table_row_id ]['row_data']       = $data;
 	}
 }
 
 $table_manager->enable_table_sorting(
 	array(
-		'table_id' => 'custom_data'.(int)$data_type_id,
-		'sortable'=>$sortable_fields,
+		'table_id' => 'custom_data' . (int) $data_type_id,
+		'sortable' => $sortable_fields,
 	)
 );
 
-if(module_data::can_i('view',$data_type['data_type_name'])) {
+if ( module_data::can_i( 'view', $data_type['data_type_name'] ) ) {
 	$table_manager->enable_export( array(
 		'name'   => $data_type['data_type_name'] . ' Export',
 		'fields' => $export_fields,
 	) );
 }
-$table_manager->set_columns($columns);
-$table_manager->set_rows($table_data_output);
+$table_manager->set_columns( $columns );
+$table_manager->set_rows( $table_data_output );
 $table_manager->pagination = true;
 $table_manager->print_table();
 
 
-if(empty($embed_form) && $allow_search){
+if ( empty( $embed_form ) && $allow_search ) {
 	?> </form> <?php
 }

@@ -1,38 +1,50 @@
 <?php
 
-if(!isset($rendered_field_groups))$rendered_field_groups = array();
-if(!isset($view_revision_id))$view_revision_id = false;
-if(!isset($current_revision))$current_revision = false;
-if(!isset($mode))$mode = 'view';
+if ( ! isset( $rendered_field_groups ) ) {
+	$rendered_field_groups = array();
+}
+if ( ! isset( $view_revision_id ) ) {
+	$view_revision_id = false;
+}
+if ( ! isset( $current_revision ) ) {
+	$current_revision = false;
+}
+if ( ! isset( $mode ) ) {
+	$mode = 'view';
+}
 
-if($current_revision &&  $view_revision_id){
+if ( $current_revision && $view_revision_id ) {
 	// user wants a custom revision, we pull out the custom $data_field_groups
 	// and we tell the form layout to use the serialized cached field layout information
-	$data_field_groups = unserialize($current_revision['field_group_cache']);
-	$data_field_group = $data_field_groups[$data_field_group_id];
-	$all_data_fields = unserialize($current_revision['field_cache']);
-	if(isset($all_data_fields[$data_field_group_id])){
-		$data_fields = $all_data_fields[$data_field_group_id];
-	}else{
+	$data_field_groups = unserialize( $current_revision['field_group_cache'] );
+	$data_field_group  = $data_field_groups[ $data_field_group_id ];
+	$all_data_fields   = unserialize( $current_revision['field_cache'] );
+	if ( isset( $all_data_fields[ $data_field_group_id ] ) ) {
+		$data_fields = $all_data_fields[ $data_field_group_id ];
+	} else {
 		$data_fields = array();
 	}
-}else{
-	$data_field_group = $module->get_data_field_group($data_field_group_id);
-	$data_fields = $module->get_data_fields($data_field_group_id);
+} else {
+	$data_field_group = $module->get_data_field_group( $data_field_group_id );
+	$data_fields      = $module->get_data_fields( $data_field_group_id );
 }
 
 $data_field_group['layout'] = 'table';
 
-if(!isset($rendered_field_groups[$data_field_group_id])){
-	$rendered_field_groups[$data_field_group_id] = true;
-	
-	if(!isset($display_field_group_heading)){
+if ( ! isset( $rendered_field_groups[ $data_field_group_id ] ) ) {
+	$rendered_field_groups[ $data_field_group_id ] = true;
+
+	if ( ! isset( $display_field_group_heading ) ) {
 		$display_field_group_heading = true;
 	}
-	
-	if(!isset($extra_group))$extra_group=array();
-	if(!isset($hide_show_group_on_load))$hide_show_group_on_load=array();
-	
+
+	if ( ! isset( $extra_group ) ) {
+		$extra_group = array();
+	}
+	if ( ! isset( $hide_show_group_on_load ) ) {
+		$hide_show_group_on_load = array();
+	}
+
 	// todo: change display_default based on php on page load, not just javascript after page load. 
 	$display_group = true;
 	/*if(!$data_field_group['display_default'] && !isset($hide_show_group_on_load[$data_field_group['data_field_group_id']])){
@@ -40,40 +52,50 @@ if(!isset($rendered_field_groups[$data_field_group_id])){
 	}*/
 
 	?>
-	
-	<div class="data_group<?php echo (!$display_group)?' data_group_hidden':'';?>" style="<?php echo (!$display_group)?'display:none;':'';?>" id="data_group_<?php echo $data_field_group['data_field_group_id'];?>">
+
+	<div class="data_group<?php echo ( ! $display_group ) ? ' data_group_hidden' : ''; ?>"
+	     style="<?php echo ( ! $display_group ) ? 'display:none;' : ''; ?>"
+	     id="data_group_<?php echo $data_field_group['data_field_group_id']; ?>">
 		<?php
 
-        if(isset($data_field_group['sub_data_type_id']) && $data_field_group['sub_data_type_id']){
+		if ( isset( $data_field_group['sub_data_type_id'] ) && $data_field_group['sub_data_type_id'] ) {
 
-            if((int)$data_record_id > 0){
-                $data_type = $module->get_data_type($data_field_group['sub_data_type_id']);
-                $data_type_id = $data_type['data_type_id'];
-                if($data_type_id){
-                    $allow_search = false;
-                    $parent_data_record_id = $data_record_id;
-                    include('admin_data_list_type.php');
-                }
-            }
+			if ( (int) $data_record_id > 0 ) {
+				$data_type    = $module->get_data_type( $data_field_group['sub_data_type_id'] );
+				$data_type_id = $data_type['data_type_id'];
+				if ( $data_type_id ) {
+					$allow_search          = false;
+					$parent_data_record_id = $data_record_id;
+					include( 'admin_data_list_type.php' );
+				}
+			}
 
-        }else{
+		} else {
 
-            ob_start(); // to pass this into our form printing method (so themes can style this output nicer)
-            ?>
-            <div>
+			ob_start(); // to pass this into our form printing method (so themes can style this output nicer)
+			?>
+			<div>
 
-                <input type="hidden" name="save_data_group[<?php echo $data_field_group['data_field_group_id'];?>]" id="save_group_<?php echo $data_field_group['data_field_group_id'];?>" value="<?php echo ($data_field_group['display_default'])?'true':'';?>">
+				<input type="hidden" name="save_data_group[<?php echo $data_field_group['data_field_group_id']; ?>]"
+				       id="save_group_<?php echo $data_field_group['data_field_group_id']; ?>"
+				       value="<?php echo ( $data_field_group['display_default'] ) ? 'true' : ''; ?>">
 
-                <?php
-                switch($data_field_group['layout']){
-                    case 'table':
-                        ?> <table class="tableclass tableclass_form tableclass_full data_group_fields" id="data_group_fields_<?php echo $data_field_group['data_field_group_id'];?>" rel="<?php echo $data_field_group['data_field_group_id'];?>"><tbody> <?php
-                        break;
-                    case 'float':
-                        ?> <ul class="data_group_fields" id="data_group_fields_<?php echo $data_field_group['data_field_group_id'];?>" rel="<?php echo $data_field_group['data_field_group_id'];?>"> <?php
-                        break;
-                }
-                foreach($data_fields as $data_field){
+				<?php
+				switch ( $data_field_group['layout'] ){
+				case 'table':
+				?>
+				<table class="tableclass tableclass_form tableclass_full data_group_fields"
+				       id="data_group_fields_<?php echo $data_field_group['data_field_group_id']; ?>"
+				       rel="<?php echo $data_field_group['data_field_group_id']; ?>">
+					<tbody> <?php
+					break;
+					case 'float':
+					?>
+					<ul class="data_group_fields" id="data_group_fields_<?php echo $data_field_group['data_field_group_id']; ?>"
+					    rel="<?php echo $data_field_group['data_field_group_id']; ?>"> <?php
+						break;
+						}
+						foreach ( $data_fields as $data_field ) {
                     $data_field_id = $data_field['data_field_id'];
 
                     // depending on the tyep of field we display different outputs:
@@ -139,12 +161,12 @@ if(!isset($rendered_field_groups[$data_field_group_id])){
                             }
                             switch($data_field_group['layout']){
                                 case 'table':
-                                    ?> <tr class="data_field data_field_<?php echo $data_field['field_type'];?><?php if($highlight||isset($custom_highlight_fields[$data_field_id]))echo ' form_field_highlight';?>" id="container_data_field_<?php echo $data_field_id;?>" rel="<?php echo $data_field_id;?>" style="<?php echo $style;?>">
+                                    ?> <tr class="data_field data_field_<?php echo $data_field['field_type'];?><?php if($highlight||isset($custom_highlight_fields[$data_field_id])){echo ' form_field_highlight';}?>" id="container_data_field_<?php echo $data_field_id;?>" rel="<?php echo $data_field_id;?>" style="<?php echo $style;?>">
                                         <th class="width2">
                                     <?php
                                     break;
                                 case 'float':
-                                    ?> <li class="data_field data_field_<?php echo $data_field['field_type'];?><?php if($highlight||isset($custom_highlight_fields[$data_field_id]))echo ' form_field_highlight';?>" id="container_data_field_<?php echo $data_field_id;?>" rel="<?php echo $data_field_id;?>" style="<?php echo $style;?>">
+                                    ?> <li class="data_field data_field_<?php echo $data_field['field_type'];?><?php if($highlight||isset($custom_highlight_fields[$data_field_id])){echo ' form_field_highlight';}?>" id="container_data_field_<?php echo $data_field_id;?>" rel="<?php echo $data_field_id;?>" style="<?php echo $style;?>">
                                         <span class="data_field_title">
                                     <?php
                                     break;
@@ -282,37 +304,38 @@ if(!isset($rendered_field_groups[$data_field_group_id])){
 
                 }
 
-                switch($data_field_group['layout']){
-                    case 'table':
-                        ?>
-                        </tbody></table>
-                        <?php
-                        break;
-                    case 'float':
-                        ?>
-                        </ul>
-                        <?php
-                        break;
-                }
-                ?>
+						switch ( $data_field_group['layout'] ){
+						case 'table':
+						?>
+					</tbody>
+				</table>
+			<?php
+			break;
+			case 'float':
+				?>
+				</ul>
+				<?php
+				break;
+			}
+			?>
 
-            </div>
-            <?php
+			</div>
+			<?php
 
-            $fieldset_data = array(
-                'heading' => false,
-                'elements_before' => ob_get_clean(),
-            );
-            if($display_field_group_heading){
-                $fieldset_data['heading'] = array(
-                    'title' => htmlspecialchars($data_field_group['title']),
-                    'type' => 'h3',
-                );
-            }
-            echo module_form::generate_fieldset($fieldset_data);
-            unset($fieldset_data);
-        }
-    ?>
+			$fieldset_data = array(
+				'heading'         => false,
+				'elements_before' => ob_get_clean(),
+			);
+			if ( $display_field_group_heading ) {
+				$fieldset_data['heading'] = array(
+					'title' => htmlspecialchars( $data_field_group['title'] ),
+					'type'  => 'h3',
+				);
+			}
+			echo module_form::generate_fieldset( $fieldset_data );
+			unset( $fieldset_data );
+		}
+		?>
 	</div>
 
 <?php } ?>

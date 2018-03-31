@@ -1,0 +1,8 @@
+.vendor_overdue{
+    font-weight: bold;
+}
+.vendor_owing{
+    color:#FF0000 !important;
+}
+.vendor_paid{
+}

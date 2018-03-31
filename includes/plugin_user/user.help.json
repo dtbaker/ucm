@@ -1,0 +1,15 @@
+{
+  "title": "Users",
+  "description": "Users can be Customer Contacts or System Users.",
+  "topics": [
+    {
+      "title": "Customer Documentation",
+      "url": "http://ultimateclientmanager.com/support/documentation-wiki/customers/",
+      "wordpress_post_id": 735
+    }
+  ],
+  "config": {
+    "customer_signup_email_welcome_template": "Which template to email to customer after successful customer signup.",
+    "customer_signup_email_admin_template": "Which template to email to admin after successful customer signup."
+  }
+}

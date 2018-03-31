@@ -1,0 +1,140 @@
+
+.ucm-modal-popup.no-buttons .modal-footer{
+    display:none;
+}
+ul.ui-autocomplete.ui-menu {
+    z-index: 2000;
+    max-height: 250px;
+    overflow-y: auto;
+    /* prevent horizontal scrollbar */
+    overflow-x: hidden;
+}
+.ui-datepicker {
+    /* so it works in modal popups */
+    z-index: 1080 !important;
+}
+
+.fieldset-settings-button {
+    position:relative;
+    display:block;
+    width:30px;
+}
+.fieldset-settings-button a{
+    display: none;
+    position:absolute;
+    text-indent: 100px;
+    overflow: hidden;
+    width:20px;
+    height:20px;
+}
+.fieldset-settings-button.hover a,
+.fieldset-settings-button:hover a{
+    display:block;
+}
+.fieldset-settings-button a:before{
+    position: absolute;
+    top: 1px;
+    left: -96px;
+    content: "\273F";
+    font-size: 18px;
+    display: block;
+    width: 20px;
+    height: 20px;
+    color: rgba(70, 65, 99, 0.21);
+}
+
+
+label.flipswitch {
+    position: relative;
+    display: block !important;
+    margin:0 0 5px !important;
+    height: 28px;
+    cursor:pointer;
+    -webkit-user-select:none; -moz-user-select:none; -ms-user-select: none;
+}
+/* Hide default HTML checkbox */
+.flipswitch input {display:none !important;}
+.flipswitch .switch{
+    overflow:hidden;
+    border: 2px solid #999999;
+    border-radius: 20px;
+    width: 69px;
+    position:absolute;
+
+}
+.onoffswitch-inner {
+    display: block; width: 200%; margin-left: -100%;
+    transition: margin 0.3s ease-in 0s;
+}
+.onoffswitch-inner:before, .onoffswitch-inner:after {
+    display: block; float: left; width: 50%; height: 23px; padding: 0; line-height: 23px;
+    font-size: 14px; color: white; font-family: Trebuchet, Arial, sans-serif; font-weight: bold;
+    box-sizing: border-box;
+}
+.onoffswitch-inner:before {
+    content: "ON";
+    padding-left: 10px;
+    background-color: #2196f3; color: #FFFFFF;
+}
+.onoffswitch-inner:after {
+    content: "OFF";
+    padding-right: 10px;
+    background-color: #EEEEEE; color: #999999;
+    text-align: right;
+}
+.onoffswitch-switch {
+    display: block; width: 13px; margin: 5px;
+    background: #FFFFFF;
+    position: absolute; top: 0; bottom: 0;
+    right: 42px;
+    border: 2px solid #999999; border-radius: 20px;
+    transition: all 0.3s ease-in 0s;
+}
+
+
+.flipswitch .text{
+    line-height: 28px;
+    font-weight:normal;
+    margin-left: 75px;
+}
+
+.flipswitch .slider:before {
+    position: absolute;
+    content: "";
+    height: 20px;
+    width: 20px;
+    left: 4px;
+    bottom: 4px;
+    background-color: white;
+    -webkit-transition: .4s;
+    transition: .4s;
+    border-radius: 50%;
+}
+
+.flipswitch input:checked + .switch .onoffswitch-inner {
+    margin-left: 0;
+}
+
+.flipswitch input:checked + .switch  .onoffswitch-switch  {
+    right: 0;
+}
+
+
+
+.form-ajax-buttons {
+    padding: 10px;
+    margin: 5px 0;
+}
+.form-ajax-message{
+    border: 1px solid #677258;
+    background: #DFF2BF;
+    color: #4F8A10;
+    border-radius: 4px;
+    padding: 10px;
+    margin: 5px 0;
+}
+.form-ajax-message.error{
+    border: 1px solid #962321;
+    background: #ffbaba;
+    color: #D8000C;
+}

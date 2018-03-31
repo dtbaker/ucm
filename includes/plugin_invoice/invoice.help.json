@@ -1,0 +1,31 @@
+{
+  "title": "Invoices",
+  "description": "Invoices let you bill customers for jobs.",
+  "topics": [
+    {
+      "title": "Invoice Documentation",
+      "url": "http://ultimateclientmanager.com/support/documentation-wiki/jobs/",
+      "wordpress_post_id": 737
+    },
+    {
+      "title": "Change the number of decimal places in Job task quantities (Advanced)",
+      "url": "http://ultimateclientmanager.com/support/faq-knowledge-base/faq-item/115/change-the-number-of-decimal-places-in-job-task-quantities",
+      "faq_id": 115
+    },
+    {
+      "title": "How to save Jobs/Projects/Tasks as a template for future use",
+      "url": "http://ultimateclientmanager.com/support/faq-knowledge-base/faq-item/22/how-to-save-jobsprojectstasks-as-a-template-for-future-use",
+      "faq_id": 22
+    },
+    {
+      "title": "How to create a Job deposit",
+      "url": "http://ultimateclientmanager.com/support/faq-knowledge-base/faq-item/26/how-to-create-a-job-deposit",
+      "faq_id": 26
+    }
+  ],
+  "config": {
+    "invoice_auto_renew_only_paid_invoices": "Set this to 1 in order to automatically renew only paid invoices. Set to 0 to automatically renew all invoices, even those that are unpaid.",
+    "deposit_task_taxable_default": "When creating a deposit invoice for a job this creates the task as taxable when set to 1",
+    "long_description_wysiwyg": "Set this to 1 to enable WYSIWYG editor on invoice task description. Set it to 0 to leave it as plain text."
+  }
+}

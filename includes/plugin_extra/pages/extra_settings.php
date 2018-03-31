@@ -38,25 +38,25 @@ if ( isset( $_REQUEST['extra_default_id'] ) && $_REQUEST['extra_default_id'] ) {
 			),
 		)
 	);
-	switch($extra_default['owner_table']){
+	switch ( $extra_default['owner_table'] ) {
 		case 'customer':
 
 			$fieldset_data['elements'] [] = array(
 				'title' => 'Customer Type',
 				'field' => array(
-					'type'    => 'select',
-					'name'    => 'owner_table_child',
-					'value'   => $extra_default['owner_table_child'],
-					'options' => module_customer::get_customer_types(),
+					'type'             => 'select',
+					'name'             => 'owner_table_child',
+					'value'            => $extra_default['owner_table_child'],
+					'options'          => module_customer::get_customer_types(),
 					'options_array_id' => 'type_name',
-					'blank'   => ' - All - ',
-					'help'    => 'Default will display the extra field when opening an item (eg: opening a customer). If a user can view the customer they will be able to view the extra field information when viewing the customer. Public In Column means that this extra field will also display in the overall listing (eg: customer listing). More options coming soon (eg: private)',
+					'blank'            => ' - All - ',
+					'help'             => 'Default will display the extra field when opening an item (eg: opening a customer). If a user can view the customer they will be able to view the extra field information when viewing the customer. Public In Column means that this extra field will also display in the overall listing (eg: customer listing). More options coming soon (eg: private)',
 				),
 			);
 			break;
 	}
 
-	$fieldset_data['elements'] [] = array(
+	$fieldset_data['elements'] []            = array(
 		'title' => 'Visibility',
 		'field' => array(
 			'type'    => 'select',
@@ -67,7 +67,7 @@ if ( isset( $_REQUEST['extra_default_id'] ) && $_REQUEST['extra_default_id'] ) {
 			'help'    => 'Default will display the extra field when opening an item (eg: opening a customer). If a user can view the customer they will be able to view the extra field information when viewing the customer. Public In Column means that this extra field will also display in the overall listing (eg: customer listing). More options coming soon (eg: private)',
 		),
 	);
-	$fieldset_data['elements'] [] = array(
+	$fieldset_data['elements'] []            = array(
 		'title' => 'Order',
 		'field' => array(
 			'type'  => 'text',
@@ -75,7 +75,7 @@ if ( isset( $_REQUEST['extra_default_id'] ) && $_REQUEST['extra_default_id'] ) {
 			'value' => $extra_default['order'],
 		),
 	);
-	$fieldset_data['elements'] [] = array(
+	$fieldset_data['elements'] []            = array(
 		'title' => 'Searchable',
 		'field' => array(
 			'type'    => 'select',
@@ -93,34 +93,34 @@ if ( isset( $_REQUEST['extra_default_id'] ) && $_REQUEST['extra_default_id'] ) {
 			'name'    => 'field_type',
 			'value'   => $extra_default['field_type'],
 			'options' => array(
-				''         => 'Text',
-				'date'     => 'Date',
-				'textarea' => 'Text Area',
-				'wysiwyg'  => 'Rich Text/WYSIWYG',
-				'checkbox' => 'Tick Box',
-				'select'   => 'Dropdown / Select',
-				'file'     => 'File Upload',
-				'reference'     => 'Reference (advanced)',
-				'ajax'     => 'Ajax Lookup',
+				''          => 'Text',
+				'date'      => 'Date',
+				'textarea'  => 'Text Area',
+				'wysiwyg'   => 'Rich Text/WYSIWYG',
+				'checkbox'  => 'Tick Box',
+				'select'    => 'Dropdown / Select',
+				'file'      => 'File Upload',
+				'reference' => 'Reference (advanced)',
+				'ajax'      => 'Ajax Lookup',
 			),
 			'blank'   => false,
 		),
 	);
-	if($extra_default['field_type'] == 'ajax') {
+	if ( $extra_default['field_type'] == 'ajax' ) {
 		$fieldset_data['elements'] ['lookup'] = array(
-			'title' => 'Ajax Lookup',
+			'title'      => 'Ajax Lookup',
 			'dependency' => array(
 				'field' => 'field_type',
-				'value' => array('ajax'),
+				'value' => array( 'ajax' ),
 			),
-			'field' => array(
-				'type'    => 'text',
-				'name'    => 'options[lookup]',
-				'value'   => isset( $extra_default['options']['lookup'] ) ? $extra_default['options']['lookup'] : '',
-				'help' => 'Set the ajax lookup key here. See documentation for more details.',
+			'field'      => array(
+				'type'  => 'text',
+				'name'  => 'options[lookup]',
+				'value' => isset( $extra_default['options']['lookup'] ) ? $extra_default['options']['lookup'] : '',
+				'help'  => 'Set the ajax lookup key here. See documentation for more details.',
 			),
 		);
-	}else if($extra_default['field_type'] == 'reference') {
+	} else if ( $extra_default['field_type'] == 'reference' ) {
 		$fieldset_data['elements'] [] = array(
 			'title' => 'Reference Settings',
 			'field' => array(
@@ -130,7 +130,7 @@ if ( isset( $_REQUEST['extra_default_id'] ) && $_REQUEST['extra_default_id'] ) {
 				'help'  => 'Reference value. E.g. customer.member_id'
 			),
 		);
-	}else if($extra_default['field_type'] == 'select') {
+	} else if ( $extra_default['field_type'] == 'select' ) {
 		$fieldset_data['elements'] [] = array(
 			'title' => 'Dropdown Options',
 			'field' => array(
@@ -218,7 +218,7 @@ if ( isset( $_REQUEST['extra_default_id'] ) && $_REQUEST['extra_default_id'] ) {
 	}
 
 
-}else{
+} else{
     ?>
 
 

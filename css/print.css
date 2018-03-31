@@ -1,0 +1,5 @@
+html, body, #holder {
+min-height: 0;
+width: auto;
+height: auto;
+}

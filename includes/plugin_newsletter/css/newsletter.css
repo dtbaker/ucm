@@ -1,0 +1,14 @@
+
+.template.selected{
+    background: #EFEFEF;
+}
+.template.selected div{
+    font-weight: bold !important;
+}
+.template{
+    border: 1px solid #CCC;
+    width:110px;
+    padding: 4px 0 0 0;
+    float:left;
+    margin: 2px;
+}

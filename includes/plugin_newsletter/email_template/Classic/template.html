@@ -1,0 +1,70 @@
+<html lang="en">
+  <head>
+    <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+    <title>
+      Email
+    </title>
+	<style type="text/css">
+	a:hover { text-decoration: none !important; }
+	.header h1 {color: #fff; font: normal 33px Georgia, serif; margin: 0; padding: 0; line-height: 33px;}
+	.header p {color: #dfa575; font: normal 11px Georgia, serif; margin: 0; padding: 0; line-height: 11px; letter-spacing: 2px}
+	.content h2 {color:#8598a3; font-weight: normal; margin: 0; padding: 0; font-style: italic; line-height: 30px; font-size: 30px;font-family: Georgia, serif; }
+	.content p {color:#767676; font-weight: normal; margin: 0; padding: 0; line-height: 20px; font-size: 12px;font-family: Georgia, serif;}
+	.content a {color: #d18648; text-decoration: none;}
+	.footer p {padding: 0; font-size: 11px; color:#fff; margin: 0; font-family: Georgia, serif;}
+	.footer a {color: #f7a766; text-decoration: none;}
+	</style>
+  </head>
+  <body style="margin: 0; padding: 0; background: #bccdd9;">
+  	<table cellpadding="0" cellspacing="0" border="0" align="center" width="100%">
+		  <tr>
+		  	<td align="center" style="margin: 0; padding: 0; background:#bccdd9 url('{TEMPLATE_PATH}images/bg_email.png');padding: 35px 0">
+			    <table cellpadding="0" cellspacing="0" border="0" align="center" width="650" style="font-family: Georgia, serif;" class="header">
+			      <tr>
+			        <td bgcolor="#698291" height="115" align="center">
+						<h1 style="color: #fff; font: normal 33px Georgia, serif; margin: 0; padding: 0; line-height: 33px;">{SUBJECT}</h1>
+						<p style="color: #dfa575; font: normal 11px Georgia, serif; margin: 0; padding: 0; line-height: 11px;">Date: {DATE}</p>
+			        </td>
+			      </tr>
+				  <tr>
+					  <td style="font-size: 1px; height: 5px; line-height: 1px;" height="5">&nbsp;</td>
+				  </tr>
+				</table><!-- header-->
+				<table cellpadding="0" cellspacing="0" border="0" align="center" width="650" style="font-family: Georgia, serif; background: #fff;" bgcolor="#ffffff">
+			      <tr>
+			        <td width="14" style="font-size: 0px;" bgcolor="#ffffff">&nbsp;</td>
+					<td width="620" valign="top" align="left" bgcolor="#ffffff"style="font-family: Georgia, serif; background: #fff;">
+						<table cellpadding="0" cellspacing="0" border="0"  style="color: #717171; font: normal 11px Georgia, serif; margin: 0; padding: 0;" width="620" class="content">
+						<tr>
+							<td style="padding: 25px 0 0;" align="left">
+								<!-- content start -->
+								{BODY}
+								<!-- content end -->
+							</td>
+						</tr>
+						<tr>
+							<td style="padding: 15px 0 15px; border-bottom: 1px solid #d2b49b;"  valign="top">
+								<p>&nbsp;</p>
+							</td>
+						</tr>
+						</table>
+					</td>
+
+					<td width="16" style="font-size: 0px; font-family: Georgia, serif; background: #fff;" bgcolor="#ffffff">&nbsp;</td>
+			      </tr>
+				</table><!-- body -->
+				<table cellpadding="0" cellspacing="0" border="0" align="center" width="650" style="font-family: Georgia, serif; line-height: 10px;" bgcolor="#698291" class="footer">
+			      <tr>
+
+					  <td bgcolor="#698291" align="center" style="padding: 15px 0 10px; font-size: 11px; color:#fff; margin: 0; line-height: 1.2;font-family: Helvetica, Arial, sans-serif;" valign="top">
+						<p style="font-size: 11px; color:#fff; margin: 0; padding: 0;font-family: Helvetica, Arial, sans-serif;">You're receiving this newsletter from <a href="mailto:{FROM_EMAIL}" style="color:#f7a766;" color="#f7a766">{FROM_EMAIL}</a>. </p>
+						<p style="font-size: 11px; color:#fff; margin: 0 0 10px 0; padding: 0;font-family: Helvetica, Arial, sans-serif;">Having trouble reading this? <a href="{VIEW_ONLINE}" style="color:#f7a766; text-decoration:none;" target="_blank">View it in your browser</a>. Not interested anymore? <a href="{UNSUBSCRIBE}" style="color:#f7a766" color="#f7a766">Unsubscribe</a> Instantly.</p>
+					</td>
+
+			      </tr>
+				</table><!-- footer-->
+		  	</td>
+		</tr>
+    </table>
+  </body>
+</html>

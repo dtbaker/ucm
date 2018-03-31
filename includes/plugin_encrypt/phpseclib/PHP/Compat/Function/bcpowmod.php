@@ -15,52 +15,54 @@
  * @since       PHP 5.0.0
  * @require     PHP 4.0.0 (user_error)
  */
-function php_compat_bcpowmod($x, $y, $modulus, $scale = 0)
-{
-    // Sanity check
-    if (!is_scalar($x)) {
-        user_error('bcpowmod() expects parameter 1 to be string, ' .
-            gettype($x) . ' given', E_USER_WARNING);
-        return false;
-    }
+function php_compat_bcpowmod( $x, $y, $modulus, $scale = 0 ) {
+	// Sanity check
+	if ( ! is_scalar( $x ) ) {
+		user_error( 'bcpowmod() expects parameter 1 to be string, ' .
+		            gettype( $x ) . ' given', E_USER_WARNING );
 
-    if (!is_scalar($y)) {
-        user_error('bcpowmod() expects parameter 2 to be string, ' .
-            gettype($y) . ' given', E_USER_WARNING);
-        return false;
-    }
+		return false;
+	}
 
-    if (!is_scalar($modulus)) {
-        user_error('bcpowmod() expects parameter 3 to be string, ' .
-            gettype($modulus) . ' given', E_USER_WARNING);
-        return false;
-    }
+	if ( ! is_scalar( $y ) ) {
+		user_error( 'bcpowmod() expects parameter 2 to be string, ' .
+		            gettype( $y ) . ' given', E_USER_WARNING );
 
-    if (!is_scalar($scale)) {
-        user_error('bcpowmod() expects parameter 4 to be integer, ' .
-            gettype($scale) . ' given', E_USER_WARNING);
-        return false;
-    }
+		return false;
+	}
 
-    $t = '1';
-    while (bccomp($y, '0')) {
-        if (bccomp(bcmod($y, '2'), '0')) {
-            $t = bcmod(bcmul($t, $x), $modulus);
-            $y = bcsub($y, '1');
-        }
+	if ( ! is_scalar( $modulus ) ) {
+		user_error( 'bcpowmod() expects parameter 3 to be string, ' .
+		            gettype( $modulus ) . ' given', E_USER_WARNING );
 
-        $x = bcmod(bcmul($x, $x), $modulus);
-        $y = bcdiv($y, '2');
-    }
+		return false;
+	}
 
-    return $t;    
+	if ( ! is_scalar( $scale ) ) {
+		user_error( 'bcpowmod() expects parameter 4 to be integer, ' .
+		            gettype( $scale ) . ' given', E_USER_WARNING );
+
+		return false;
+	}
+
+	$t = '1';
+	while ( bccomp( $y, '0' ) ) {
+		if ( bccomp( bcmod( $y, '2' ), '0' ) ) {
+			$t = bcmod( bcmul( $t, $x ), $modulus );
+			$y = bcsub( $y, '1' );
+		}
+
+		$x = bcmod( bcmul( $x, $x ), $modulus );
+		$y = bcdiv( $y, '2' );
+	}
+
+	return $t;
 }
 
 
 // Define
-if (!function_exists('bcpowmod')) {
-    function bcpowmod($x, $y, $modulus, $scale = 0)
-    {
-        return php_compat_bcpowmod($x, $y, $modulus, $scale);
-    }
+if ( ! function_exists( 'bcpowmod' ) ) {
+	function bcpowmod( $x, $y, $modulus, $scale = 0 ) {
+		return php_compat_bcpowmod( $x, $y, $modulus, $scale );
+	}
 }

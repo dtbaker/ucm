@@ -1,0 +1,164 @@
+th#ticket_number{
+width:8%;
+}
+th#ticket_subject{
+width:12%;
+}
+th#ticket_time{
+width:16%;
+}
+th#ticket_due_time{
+width:16%;
+}
+th#ticket_type{
+width:12%;
+}
+th#ticket_status{
+width:9%;
+}
+th#ticket_staff{
+width:10%;
+}
+th#ticket_customer{
+width:10%;
+}
+th#ticket_contact{
+width:10%;
+}
+th#ticket_product{
+width:10%;
+}
+th#ticket_envato{
+width:10%;
+}
+th#ticket_group{
+width:9%;
+}
+th#ticket_priority{
+width:5%;
+}
+#ticket_list th.extra_column{
+width:10%;
+}
+th#ticket_action{
+width:3%;
+}
+
+.ticket_message{
+    clear:both;
+    margin: 5px 0;
+    border: 1px solid #DFDFDF;
+    -moz-border-radius: 6px;
+    -webkit-border-radius: 6px;
+    -khtml-border-radius: 6px;
+    border-radius: 6px;
+}
+.ticket_message_title{
+    background:#EFEFEF;
+    padding: 5px;
+    text-align: left;
+    -moz-border-radius: 6px 6px 0 0;
+    border-radius: 6px 6px 0 0;
+}
+.ticket_message_title span{
+    display:inline-block;
+}
+.ticket_message_title_full{
+    display:none;
+}
+.ticket_message_text{
+    padding: 5px;
+}
+#ticket_reply_button{
+    margin-top:10px;
+}
+.ticket_reply{
+    margin-top: 5px;
+    text-align: center;
+}
+.ticket_reply textarea{
+    background-color: #FFF;
+    border: 1px solid #CCC;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 12px;
+    padding: 1px;
+    margin: 0;
+    text-align: left;
+    width:90%;
+}
+.ticket_message_creator{
+    margin-right:20px;
+    border: 1px solid #AAA;
+}
+.ticket_message_admin{
+    margin-left:20px;
+}
+.ticket_message_admin .ticket_message_title{
+    text-align: right;
+}
+.ticket_message_private,
+.ticket_message_private .tableclass{
+    background: #effedd;
+}
+.ticket_message_private .ticket_message_title{
+    background: #effedd;
+}
+
+.public_header{
+    font-size:20px;
+    font-weight: bold;
+    text-align: center;
+}
+.public_welcome{
+    text-align: center;
+}
+
+.ticket_message_hider{
+    height:30px;
+    overflow: hidden;
+    border-bottom: 1px dashed #CCC;
+}
+.ticket_message_hider_show{
+    height:auto;
+    overflow: visible;
+}
+
+/* new tickets */
+.ticket_status_2{
+    color:#FF0000 !important;
+}
+/* inprogress or replied */
+.ticket_status_3,
+.ticket_status_5{
+    color:#fe7800 !important;
+}
+/* resolved */
+.ticket_status_6{
+    color:#339900 !important;
+}
+/*cancelled*/
+.ticket_status_7{
+    color:#339900 !important;
+}
+
+.show_auto_reply_button{
+    float: right;
+    clear:both;
+    margin: 0 0 5px 0;
+    display: block;
+}
+
+.email_input{
+    width:80%;
+}
+
+.ticket_message_title label{
+    font-weight: normal;
+}
+
+@media screen and (max-width: 560px) {
+    .ticket_message_admin,
+    .ticket_message_creator{
+        margin:0;
+    }
+}

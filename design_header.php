@@ -16,56 +16,56 @@ switch ( $display_mode ) {
 
 		?>
 
-<!DOCTYPE html>
-<html dir="<?php echo module_config::c( 'text_direction', 'ltr' ); ?>">
-<head>
-	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-	<title><?php echo $page_title; ?></title>
+		<!DOCTYPE html>
+	<html dir="<?php echo module_config::c( 'text_direction', 'ltr' ); ?>">
+		<head>
+			<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+			<title><?php echo $page_title; ?></title>
 
-	<?php $header_favicon = module_theme::get_config( 'theme_favicon', '' );
-	if ( $header_favicon ) { ?>
-		<link rel="icon" href="<?php echo htmlspecialchars( $header_favicon ); ?>">
-	<?php } ?>
+			<?php $header_favicon = module_theme::get_config( 'theme_favicon', '' );
+			if ( $header_favicon ) { ?>
+				<link rel="icon" href="<?php echo htmlspecialchars( $header_favicon ); ?>">
+			<?php } ?>
 
-	<link rel="stylesheet" href="<?php echo _BASE_HREF; ?>css/desktop.css?ver=<?php echo _SCRIPT_VERSION; ?>"
-	      type="text/css"/>
-	<link rel="stylesheet" href="<?php echo _BASE_HREF; ?>css/styles.css?ver=<?php echo _SCRIPT_VERSION; ?>"
-	      type="text/css"/>
-	<?php module_config::print_css( _SCRIPT_VERSION ); ?>
+			<link rel="stylesheet" href="<?php echo _BASE_HREF; ?>css/desktop.css?ver=<?php echo _SCRIPT_VERSION; ?>"
+			      type="text/css"/>
+			<link rel="stylesheet" href="<?php echo _BASE_HREF; ?>css/styles.css?ver=<?php echo _SCRIPT_VERSION; ?>"
+			      type="text/css"/>
+			<?php module_config::print_css( _SCRIPT_VERSION ); ?>
 
-	<?php module_config::print_js( _SCRIPT_VERSION ); ?>
-
-
-	<!--
-	Author: David Baker (dtbaker.com.au)
-	10/May/2010
-	-->
-	<script type="text/javascript">
-		$(function () {
-			init_interface();
-		});
-	</script>
-
-	<?php if ( function_exists( 'hook_handle_callback' ) ) {
-		hook_handle_callback( 'page_header' );
-	} ?>
+			<?php module_config::print_js( _SCRIPT_VERSION ); ?>
 
 
-</head>
-<body id="<?php echo isset( $page_unique_id ) ? $page_unique_id : 'page'; ?>" <?php
-if ( $display_mode == 'iframe' ) {
-	echo ' style="background:#FFF;"';
-} ?>>
-<?php if ( $display_mode == 'iframe' ){ ?>
+			<!--
+			Author: David Baker (dtbaker.com.au)
+			10/May/2010
+			-->
+			<script type="text/javascript">
+          $(function () {
+              init_interface();
+          });
+			</script>
+
+			<?php if ( function_exists( 'hook_handle_callback' ) ) {
+				hook_handle_callback( 'page_header' );
+			} ?>
+
+
+		</head>
+	<body id="<?php echo isset( $page_unique_id ) ? $page_unique_id : 'page'; ?>" <?php
+	if ( $display_mode == 'iframe' ) {
+		echo ' style="background:#FFF;"';
+	} ?>>
+		<?php if ( $display_mode == 'iframe' ){ ?>
 
 	<div id="iframe">
 
-<?php }else{ ?>
+		<?php }else{ ?>
 
-	<?php if ( _DEBUG_MODE ) {
-		module_debug::print_heading();
-	} ?>
-	<div id="holder">
+		<?php if ( _DEBUG_MODE ) {
+			module_debug::print_heading();
+		} ?>
+		<div id="holder">
 
 		<div id="header">
 
@@ -75,14 +75,14 @@ if ( $display_mode == 'iframe' ) {
 					<?php if ( print_header_message() ) {
 						?>
 						<script type="text/javascript">
-							$('#message_popdown').fadeIn('slow');
-							<?php if(module_config::c( 'header_messages_fade_out', 1 )){ ?>
-							$(function () {
-								setTimeout(function () {
-									$('#message_popdown').fadeOut();
-								}, 4000);
-							});
-							<?php } ?>
+                $('#message_popdown').fadeIn('slow');
+								<?php if(module_config::c( 'header_messages_fade_out', 1 )){ ?>
+                $(function () {
+                    setTimeout(function () {
+                        $('#message_popdown').fadeOut();
+                    }, 4000);
+                });
+								<?php } ?>
 						</script>
 						<?php
 					} ?>
@@ -153,10 +153,10 @@ if ( $display_mode == 'iframe' ) {
 			hook_handle_callback( 'content_header' );
 		}
 	}// end ifelse iframe mode
-	?>
+		?>
 
 		<div class="content">
 
 
-		<?php
+	<?php
 }

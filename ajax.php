@@ -1,18 +1,18 @@
 <?php
 
-$start_search_time = microtime(true);
+$start_search_time = microtime( true );
 
 $noredirect = true;
-require_once('init.php');
+require_once( 'init.php' );
 
-if(module_security::is_logged_in()){
+if ( module_security::is_logged_in() ) {
 
 
-	if(!empty($_POST['autocomplete'])){
+	if ( ! empty( $_POST['autocomplete'] ) ) {
 
-		header( 'Content-type: text/json');
+		header( 'Content-type: text/json' );
 		$result = array();
-		if(module_form::check_secure_key() ) {
+		if ( module_form::check_secure_key() ) {
 
 			$plugin = ! empty( $_POST['plugin'] ) && ! empty( $plugins[ $_POST['plugin'] ] ) ? $_POST['plugin'] : false;
 			if ( $plugin ) {
@@ -22,9 +22,9 @@ if(module_security::is_logged_in()){
 			}
 		}
 
-		echo json_encode($result);
+		echo json_encode( $result );
 
-	}else {
+	} else {
 
 
 		header( 'Content-Type: text/html; charset=UTF-8' );

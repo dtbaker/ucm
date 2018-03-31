@@ -1,0 +1,80 @@
+<html lang="en">
+  <head>
+    <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+    <title>
+      Boutique
+    </title>
+	<style type="text/css">
+	a:hover { text-decoration: none !important; }
+	.header h1 {color: #ede6cb; font: normal 24px Georgia, serif; margin: 0; padding: 0; line-height: 28px;}
+	.header p {color: #645847; font: bold 11px Georgia, serif; margin: 0; padding: 0; line-height: 12px; text-transform: uppercase;}
+	.content h2 {color:#393023; font-weight: bold; margin: 0; padding: 0; line-height: 30px; font-size: 17px;font-family: Helvetica, Arial, sans-serif; }
+	.content p {color:#767676; font-weight: normal; margin: 0; padding: 0; line-height: 20px; font-size: 12px; font-family: Helvetica, Arial, sans-serif;}
+	.content a {color: #0fa2e6; text-decoration: none;}
+	.footer p {font-size: 11px; color:#bfbfbf; margin: 0; padding: 0;font-family: Helvetica, Arial, sans-serif;}
+	.footer a {color: #0fa2e6; text-decoration: none;}
+	</style>
+  </head>
+  <body style="margin: 0; padding: 0; background: #f3dc74 url('{TEMPLATE_PATH}images/bg_email.jpg') no-repeat center top;" bgcolor="#f3dc74">
+  	<table cellpadding="0" cellspacing="0" border="0" align="center" width="100%" style="background: url('{TEMPLATE_PATH}images/bg_email.jpg') no-repeat center top; padding: 85px 0 35px">
+		  <tr>
+		  	<td align="center">
+			    <table cellpadding="0" cellspacing="0" border="0" align="center" width="599" style="font-family: Georgia, serif; background: url('{TEMPLATE_PATH}images/bg_header.jpg') no-repeat center top" height="142">
+			      <tr>
+			        <td style="margin: 0; padding: 40px 0 0; background: #c89c22 url('{TEMPLATE_PATH}images/bg_header.jpg') no-repeat center top" align="center" valign="top">
+						<h1 style="color: #ede6cb; font: normal 24px Georgia, serif; margin: 0; padding: 0; line-height: 28px;">{SUBJECT}</h1>
+				    </td>
+			      </tr>
+				  <tr>
+			        <td style="margin: 0; padding: 25px 0 0;" align="center" valign="top">
+						<p style="color: #645847; font: bold 11px Georgia, serif; margin: 0; padding: 0; line-height: 12px; text-transform: uppercase;">Email Newsletter</p>
+			        </td>
+			      </tr>
+				  <tr>
+					  <td style="font-size: 1px; height: 15px; line-height: 1px;" height="15">&nbsp;</td>
+				  </tr>	
+				</table><!-- header-->
+				<table cellpadding="0" cellspacing="0" border="0" align="center" width="599" style="font-family: Georgia, serif;" >
+			      <tr>
+			        <td width="599" valign="top" align="left" bgcolor="#ffffff"style="font-family: Georgia, serif; background: #fff; border-top: 5px solid #e5bd5f">
+						<table cellpadding="0" cellspacing="0" border="0"  style="color: #717171; font: normal 11px Georgia, serif; margin: 0; padding: 0;" width="599">
+						<tr>
+							<td width="15" style="font-size: 1px; line-height: 1px; width: 15px;"><img src="{TEMPLATE_PATH}images/spacer.gif" alt="space" width="15"></td>
+							<td style="padding: 15px 0 5px; font-family: Georgia, serif;" valign="top" align="center" width="569">
+								<img src="{TEMPLATE_PATH}images/divider_top_full.png" alt="divider"><br>
+							</td>
+							<td width="15" style="font-size: 1px; line-height: 1px; width: 15px;"><img src="{TEMPLATE_PATH}images/spacer.gif" alt="space" width="15"></td>
+						</tr>
+						<tr>
+							<td width="15" style="font-size: 1px; line-height: 1px; width: 15px;"><img src="{TEMPLATE_PATH}images/spacer.gif" alt="space" width="15"></td>
+							<td style="padding: 10px 0 0; font-family: Helvetica, Arial, sans-serif;" align="left">
+
+								<!-- start content -->
+								{BODY}
+								<!-- end content -->
+
+                                <p>&nbsp;</p>
+							</td>
+							<td width="15" style="font-size: 1px; line-height: 1px; width: 15px;"><img src="{TEMPLATE_PATH}images/spacer.gif" alt="space" width="15"></td>
+						</tr>
+						</table>	
+					</td>
+			      </tr>
+				 <tr>
+					  <td style="font-size: 1px; height: 10px; line-height: 1px;" height="10"><img src="{TEMPLATE_PATH}images/spacer.gif" alt="space" width="15"></td>
+				  </tr>
+				</table><!-- body -->
+				<table cellpadding="0" cellspacing="0" border="0" align="center" width="599" style="font-family: Georgia, serif; line-height: 10px;" bgcolor="#464646" class="footer">
+			      <tr>
+			        <td bgcolor="#464646"  align="center" style="padding: 15px 0 10px; font-size: 11px; color:#bfbfbf; margin: 0; line-height: 1.2;font-family: Helvetica, Arial, sans-serif;" valign="top">
+						<p style="font-size: 11px; color:#bfbfbf; margin: 0; padding: 0;font-family: Helvetica, Arial, sans-serif;">You're receiving this newsletter from <a href="mailto:{FROM_EMAIL}" style="color:#0fa2e6;" color="#0fa2e6">{FROM_EMAIL}</a>. </p>
+						<p style="font-size: 11px; color:#bfbfbf; margin: 0 0 10px 0; padding: 0;font-family: Helvetica, Arial, sans-serif;">Having trouble reading this? <a href="{VIEW_ONLINE}" style="color:#0fa2e6; text-decoration:none;" target="_blank">View it in your browser</a>. Not interested anymore? <a href="{UNSUBSCRIBE}" style="color:#0fa2e6" color="#0fa2e6">Unsubscribe</a> Instantly.</p>
+					</td>
+			      </tr>
+				  <tr> 
+				</table><!-- footer-->
+		  	</td>
+		</tr>
+    </table>
+  </body>
+</html>

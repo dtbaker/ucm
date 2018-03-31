@@ -1,0 +1,164 @@
+@font-face {
+  font-family: 'Journal';
+  src: url('../lib/journal.eot');
+  src: url('../lib/journal.eot?#iefix') format('embedded-opentype'),
+       url('../lib/journal.woff') format('woff'),
+       url('../lib/journal.ttf') format('truetype'),
+       url('../lib/journal.svg#JournalRegular') format('svg');
+  font-weight: normal;
+  font-style: normal;
+}
+
+.sigPad hr{
+    margin:4px 0;
+}
+.sigPad {
+  margin: 0;
+  padding: 0;
+}
+
+.sigPad label {
+  display: block;
+  margin: 0 0 0.515em;
+  padding: 0;
+}
+
+.sigPad label.error {
+  color: #f33;
+}
+
+.sigPad input {
+}
+
+.sigPad input.error {
+  border-color: #f33;
+}
+
+
+.sig {
+}
+
+.sigNav {
+  display: none;
+  height: 2.25em;
+  margin: 0;
+  padding: 0;
+  position: relative;
+
+  list-style-type: none;
+}
+
+.sigNav li {
+  display: inline;
+  float: left;
+  margin: 0;
+  padding: 0;
+}
+
+.sigNav a,
+.sigNav a:link,
+.sigNav a:visited {
+  display: block;
+  margin: 0;
+  padding: 0 0.6em;
+
+  border: 0;
+
+  color: #333;
+  font-weight: bold;
+  line-height: 2.25em;
+  text-decoration: underline;
+}
+
+.sigNav a.current,
+.sigNav a.current:link,
+.sigNav a.current:visited {
+  background-color: #666;
+  -moz-border-radius-topleft: 8px;
+  -moz-border-radius-topright: 8px;
+  -webkit-border-top-left-radius: 8px;
+  -webkit-border-top-right-radius: 8px;
+  border-radius: 8px 8px 0 0;
+
+  color: #fff;
+  text-decoration: none;
+}
+
+.sigNav .typeIt a.current,
+.sigNav .typeIt a.current:link,
+.sigNav .typeIt a.current:visited {
+  background-color: #ccc;
+
+  color: #555;
+}
+.clearButton{
+    float:right;
+}
+
+
+.sigWrapper {
+  clear: both;
+  height: 110px;
+    border: 1px solid #ccc;
+-webkit-border-radius: 3px;
+-moz-border-radius: 3px;
+border-radius: 3px;
+}
+
+.sigWrapper.current {
+}
+
+.signed .sigWrapper {
+  border: 0;
+}
+
+.pad {
+  position: relative;
+
+  /**
+   * For cross browser compatibility, this should be an absolute URL
+   * In IE the cursor is relative to the HTML document
+   * In all other browsers the cursor is relative to the CSS file
+   *
+   * http://www.useragentman.com/blog/2011/12/21/cross-browser-css-cursor-images-in-depth/
+   */
+  cursor: url("../lib/pen.cur"), crosshair;
+  /**
+   * IE will ignore this line because of the hotspot position
+   * Unfortunately we need this twice, because some browsers ignore the hotspot inside the .cur
+   */
+  cursor: url("../lib/pen.cur") 16 16, crosshair;
+
+  -ms-touch-action: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  -o-user-select: none;
+  user-select: none;
+}
+
+.typed {
+  height: 55px;
+  margin: 0;
+  padding: 0 5px;
+  position: absolute;
+  z-index: 90;
+  cursor: default;
+  color: #145394;
+}
+
+.typeItDesc,
+.drawItDesc {
+  /*display: none;*/
+  margin: 0.75em 0 0.515em;
+  padding: 0.515em 0 0;
+}
+
+p.error {
+  display: block;
+  margin: 0.5em 0;
+  padding: 0.4em;
+  background-color: #f33;
+  color: #fff;
+  font-weight: bold;
+}

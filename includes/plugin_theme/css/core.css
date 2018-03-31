@@ -1,0 +1,199 @@
+
+/*Begin 3wCorner.com Mod*/
+@media screen and (max-width: 768px)
+{
+    .ResponsiveModal .modal-dialog  {width:100%; margin: 0;}
+
+}
+
+@media screen and (min-width: 768px)
+{
+    .ResponsiveModal .modal-dialog  {width:90%;}
+}
+
+@media screen and (min-width: 992px)
+{
+    .ResponsiveModal .modal-dialog  {width:80%;}
+}
+
+@media screen and (min-width: 1200px)
+{
+    .ResponsiveModal .modal-dialog  {width:1000px;}
+}
+/*End 3wCorner.com Mod*/
+
+/* responsive forms (also in metris theme.css file) */
+.responsive-toggle-button{
+    display: none;
+}
+.responsive-shown{
+    display: none;
+}
+.box-responsive .responsive-summary{
+    display: none;
+}
+.title.has-responsive .responsive-title{
+    display: none;
+}
+@media screen and (max-width: 560px) {
+    .box{
+        margin-bottom: 10px;
+    }
+    .box-responsive .responsive-summary{
+        font-size: 0.7em;
+        font-weight: normal;
+        display: inline;
+    }
+    .box-responsive .responsive-toggle-button{
+        display: inline-block;
+    }
+    .box-responsive .body,
+    .box-responsive .box-body{
+        display: none;
+    }
+    /* toggled on*/
+    .responsive-toggled.box-responsive .body,
+    .responsive-toggled.box-responsive .box-body{
+        display: block;
+    }
+    .responsive-toggled.box-responsive .responsive-summary{
+        display:none;
+    }
+    .responsive-toggled.box-responsive .responsive-shown{
+        display:inline;
+    }
+    .responsive-toggled.box-responsive .responsive-hidden{
+        display:none;
+    }
+    .title.has-responsive .responsive-title{
+        display: inline;
+    }
+    .title.has-responsive .main-title{
+        display: none;
+    }
+
+}
+
+/* settings button */
+[data-settings-url] .data-settings-button{
+    display: none;
+    position: absolute;
+    /* right: 0; */
+}
+[data-settings-url] .data-settings-button a{
+    position: relative;
+    display: block;
+    text-indent: 100px;
+    overflow: hidden;
+    width:20px;
+    height:20px;
+    /* float: right; */
+}
+[data-settings-url] .data-settings-button a:before{
+    position: absolute;
+    font-family: FontAwesome;
+    top: 1px;
+    left: -96px;
+    content: "\f013";
+    font-size: 15px;
+    display: block;
+    width: 20px;
+    height: 20px;
+    color:#E5E5E5;
+}
+[data-settings-url]:hover .data-settings-button{
+    display: block;
+}
+.data-settings-right{
+    right:10px;
+}
+.ui-widget-overlay{
+    position: fixed !important;
+}
+
+.ui-widget .ui-state-highlight{
+    /* padding:10px !important; */
+}
+.ui-widget-header{
+    background: #FFF !important;
+    border: 0 !important;
+    border-bottom:1px solid #ccc !important;
+    min-height:40px;
+    line-height:40px;
+    border-radius:0 !important;
+}
+.tableclass_form td textarea{
+    width:100%;
+}
+
+.ui-tabs .ui-tabs-nav li.ui-tabs-active a {
+    background-color: #fff;
+    color: #555;
+}
+.ui-tabs .ui-tabs-nav li.ui-tabs-active{
+    border: 1px solid #ddd;
+    border-bottom: 1px solid #fff;
+}
+.ui-tabs .ui-tabs-nav li a:active,
+.ui-tabs .ui-tabs-nav li a:focus{
+    outline:0;
+}
+.ui-tabs .ui-tabs-nav li {
+    background: #f5f5f5;
+    line-height: 15px;
+    margin: 4px 3px 0px !important;
+    height: 33px;
+}
+.ui-tabs .ui-tabs-nav li{
+    margin:0;
+    padding:0;
+}
+.ui-widget-content{
+    border:0;
+}
+.btn-default{
+    border-color: #ccc;
+}
+.action_bar .action .btn{
+    margin-bottom:10px;
+}
+#message_popdown p{
+    margin:5px 0;
+}
+#ajax_task_save{
+    display: none;
+}
+th,
+td{
+    white-space: normal;
+}
+.nowrap{
+    white-space: nowrap;
+}
+
+
+.message-box{
+    padding: 10px;
+    background:#47a8f5;
+    color: #FFF;
+    margin: 0 0 20px;
+}
+.message-box a{
+    color: #FFF;
+}
+.message-box.type-warning{
+    background:#ff9800;
+}
+.message-box.type-error{
+    background:#f44336;
+}
+.message-box.type-success{
+    background:#4CAF50;
+}
+
+.archive_button{
+    background:#ff9800;
+}
+.archive_button:hover{
+    background:#e08702;
+}

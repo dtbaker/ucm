@@ -1,0 +1,14 @@
+{
+  "title": "Subscriptions",
+  "description": "Manage automatic subscriptions",
+  "topics": [
+    {
+      "title": "Subscription Documentation",
+      "url": "https://ultimateclientmanager.com/support/documentation-wiki/subscriptions/",
+      "wordpress_post_id": 771
+    }
+  ],
+  "config": {
+    "subscription_merge_invoices": "Merge invoices together before sending them to the customer. 0 will not merge. 1 will merge all daily invoices together and send as one."
+  }
+}

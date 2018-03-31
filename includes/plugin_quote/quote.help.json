@@ -1,0 +1,15 @@
+{
+  "title": "Quotes",
+  "description": "Quotes can be sent to a Lead or Customer for approval. Once approved, they can be converted into a Job and then finally an Invoice.",
+  "topics": [
+    {
+      "title": "Quote Documentation",
+      "url": "http://ultimateclientmanager.com/support/documentation-wiki/quotes/",
+      "wordpress_post_id": 5194
+    }
+  ],
+  "config": {
+    "quote_name_incrementing": "Set this to 1 to enable quote numbers incrementing.",
+    "quote_name_incrementing_next": "This is the next number that the quote will start from"
+  }
+}
