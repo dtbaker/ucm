@@ -1,0 +1,7 @@
+
+.schedule_email_date{
+    display:none;
+}
+.schedule_email_check:checked ~ .schedule_email_date{
+    display: inline;
+}

@@ -1,0 +1,7 @@
+.tableclass_form.file_drop{
+    border: 5px dashed transparent !important;
+    margin: -5px !important;
+}
+.tableclass_form.file_drop.dragover{
+    border-color: green !important;
+}

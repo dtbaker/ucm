@@ -1,0 +1,18 @@
+{
+  "title": "FAQ",
+  "description": "This area allows you to manage Frequently Asked Questions for your customers. ",
+  "topics": [
+    {
+      "title": "FAQ Documentation",
+      "url": "http://ultimateclientmanager.com/support/documentation-wiki/faq/",
+      "wordpress_post_id": 6238
+    }
+  ],
+  "api_endpoints": [
+    {
+      "endpoint": "faq",
+      "method": "list_products",
+      "description": "List available FAQ products"
+    }
+  ]
+}

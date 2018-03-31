@@ -1,0 +1,14 @@
+{
+  "title": "Backup System",
+  "description": "The backup system allows you to create a complete backup of all the files and database into ZIP files. It is recommended to perform regular backups incase of server failure.",
+  "topics": [
+    {
+      "title": "Backup Documentation",
+      "url": "http://ultimateclientmanager.com/support/documentation-wiki/backup/",
+      "wordpress_post_id": 4557
+    }
+  ],
+  "config": {
+    "backup_post_delay": "How long to wait between backing up each database table or plugin files. May need to increase this if hosting provider blocks repeated requests."
+  }
+}

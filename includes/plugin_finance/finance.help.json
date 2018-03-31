@@ -1,0 +1,14 @@
+{
+  "title": "Finance",
+  "description": "The Finance area shows a summary of all your income and expenses. You can even set recurring upcoming payments for bill reminders. ",
+  "topics": [
+    {
+      "title": "Finance Documentation",
+      "url": "http://ultimateclientmanager.com/support/documentation-wiki/finance/",
+      "wordpress_post_id": 6272
+    }
+  ],
+  "config": {
+    "finance_date_type": "Default is 'payment' showing invoicse by payment date. Other option is 'invoice' which shows payments by invoice create date."
+  }
+}

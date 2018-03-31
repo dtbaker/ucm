@@ -1,0 +1,254 @@
+
+/*==============================================
+    GENERAL  STYLES
+    =============================================*/
+body {
+  font-family: 'Open Sans', sans-serif;
+  line-height:30px;
+}
+
+#wrapper {
+  width: 100%;
+  margin-top:50px;
+}
+
+#page-wrapper {
+  padding: 15px 15px;
+  min-height: 600px;
+  background:#F3F3F3;
+
+}
+#page-inner {
+  width:100%;
+  margin:10px 20px 10px 0px;
+  background-color:#fff!important;
+  padding:30px;
+  min-height:1050px;
+}
+.pad-top {
+  padding-top:15px;
+}
+/*==============================================
+    MENU STYLES
+    =============================================*/
+
+.sidebar-collapse .nav {
+  padding:0;
+  margin-top:25px;
+    border-top: 1px solid #e1e1e1;
+}
+
+.sidebar-collapse > .nav > li > a {
+  padding:15px 10px;
+  color: #214761;
+  font-weight: 900;
+  font-size: 16px;
+}
+.sidebar-collapse > .nav > li {
+  border-bottom:1px solid #e1e1e1;
+}
+.sidebar-collapse .nav > li > a:hover,
+.sidebar-collapse .nav > li > a:focus {
+
+  background:#F3F3F3;
+  outline:0;
+}
+
+.navbar-side {
+  border:none;
+  background-color: #fff;
+
+}
+.navbar-inverse {
+
+  background-color: #214761;
+  border-color: #F0F0F0;
+  min-height: 40px;
+}
+
+
+.nav > li > a > i {
+  margin-right:10px;
+}
+.logout-spn {
+  float:right;
+  color:#fff;
+  font-size:25px;
+  font-weight:800;
+  margin:20px;
+  margin: 10px 25px 10px 50px;
+}
+.logout-spn a {
+  text-decoration:none;
+}
+.active-link {
+  background-color:#f3f3f3;
+}
+
+/*==============================================
+    DASHBOARD STYLES
+    =============================================*/
+.div-square {
+  padding:5px;
+  border:3px double #e1e1e1;
+  -webkit-border-radius:8px;
+  -moz-border-radius:8px;
+  border-radius:8px;
+  margin:5px;
+
+}
+
+.div-square> a,.div-square> a:hover {
+  color:#808080;
+  text-decoration:none;
+}
+/*==============================================
+    FOOTER STYLES
+    =============================================*/
+.footer {
+  background-color:#214761;
+  width:100%;
+  color:#fff;
+  padding:20px 50px 20px 50px;
+  padding-left:20px;
+}
+
+
+.footer > a, .footer>a:hover {
+
+  color:#fff;
+}
+
+/*==============================================
+    MEDIA QUERIES
+    =============================================*/
+
+@media(min-width:768px) {
+  #page-wrapper{
+    margin: 0 0 0 260px;
+    padding: 15px 30px;
+    min-height: 1050px;
+
+  }
+
+
+  .navbar-side {
+    z-index: 1;
+    position: absolute;
+    width: 260px;
+
+  }
+
+
+}
+
+
+
+
+#portal-login{
+  margin: 120px 0 60px;
+  text-align: center;
+}
+@media print
+{
+  table { page-break-after:auto }
+  tr    { page-break-inside:avoid; page-break-after:auto }
+  td    { page-break-inside:avoid; page-break-after:auto }
+  thead { display:table-header-group }
+  tfoot { display:table-footer-group }
+  img.logo {
+    diplay:none;
+  }
+}
+table {
+  width:100%;
+  margin: 15px auto 42px;
+  border-collapse: collapse;
+  -fs-table-paginate: paginate;
+  table-layout: fixed;
+}
+table tfoot td,
+table th {
+  background: #f3f3f3;
+  color: #734641;
+  text-align: center;
+  padding: 10px 8px;
+  font-size: 12px;
+  font-weight: normal;
+  border: thin solid #cbcbcb;
+}
+table td {
+  background:#FFF;
+  border: thin solid #cbcbcb;
+  font-size: 12px;
+  padding: 9px 8px;
+  overflow: hidden;
+  white-space: nowrap;
+}
+table tr.public td{
+  background:#FFF;
+}
+table td.currency {
+  text-align:right;
+}
+table td.currency.year {
+  background:#fdebca;
+}
+table tfoot.old td{
+  -moz-transform: translateY(10px);
+  -webkit-transform: translateY(10px);
+  -o-transform: translateY(10px);
+  -ms-transform: translateY(10px);
+  transform: translateY(10px);
+}
+table td .invoice {
+  background: #6d89bd;
+  color:white;
+  border-radius: 11px;
+  padding:4px 6px;
+}
+table td .payment {
+  background: #53a28a;
+  color:white;
+  border-radius: 11px;
+  padding:4px 6px;
+}
+
+
+h3{
+  margin:10px 0;
+  padding:0 0 10px;
+  border-bottom: 1px solid #e1e1e1;
+  font-size: 24px;
+  background:transparent;
+
+}
+
+div.section{
+  display:none;
+  &.active{
+    display:block;
+  }
+}
+
+#shop-order-form{
+  td.quantity{
+    text-align: center;
+    input[type=text]{
+      padding: 3px 10px;
+      width: 60px;
+      text-align: center;
+    }
+  }
+}
+.alert {
+  padding: 20px;
+  background-color: #f44336;
+  color: white;
+  opacity: 0.83;
+  transition: opacity 0.6s;
+  margin-bottom: 15px;
+}
+.alert.success{
+  background-color: #4CAF50;
+}

@@ -1,0 +1,6 @@
+.extra_field_key:hover{
+    text-decoration: underline;
+}
+.extra_field_row_hidden{
+    display: none;
+}

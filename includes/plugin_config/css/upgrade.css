@@ -1,0 +1,17 @@
+.update_progress{
+    display:none;
+    color: #119211;
+    max-height: 135px;
+    overflow-y:auto;
+}
+.update_progress.error{
+    color: #FF0000;
+    font-weight: bold;
+}
+#upgrade_table th,
+#upgrade_table td.plugin_name{
+    white-space: nowrap;
+}
+#upgrade_table th.progress{
+    width:60%;
+}

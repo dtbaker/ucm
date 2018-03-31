@@ -1,0 +1,13 @@
+{
+  "title": "Custom Data",
+  "description": "The Custom Data area lets you build simple web forms for storing data in the UCM system in your own format. ",
+  "topics": [
+    {
+      "title": "Custom Data Documentation",
+      "url": "https://ultimateclientmanager.com/support/documentation-wiki/custom-data-forms/",
+      "wordpress_post_id": 2769
+    }
+  ],
+  "config": {
+  }
+}

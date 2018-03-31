@@ -1,0 +1,26 @@
+{
+  "title": "Dashboard",
+  "description": "This is the home page of your CRM. It will show alerts and notices for the entire system. This page looks different depending on who is logged in.",
+  "topics": [
+    {
+      "title": "Getting Started Guide",
+      "url": "http://ultimateclientmanager.com/support/documentation-wiki/getting-started-guidegetting-started-guide/",
+      "wordpress_post_id": 2015
+    },
+    {
+      "title": "Dashboard Documentation",
+      "url": "http://ultimateclientmanager.com/support/documentation-wiki/dashboard/",
+      "wordpress_post_id": 6247
+    },
+    {
+      "title": "Create your own Dashboard Widgets (Advanced)",
+      "url": "http://ultimateclientmanager.com/support/documentation-wiki/custom-ucm-development/#accordion_wiki_bit_create_custom_dashboard_widgets",
+      "wordpress_post_id": 0
+    },
+    {
+      "title": "Create your own Dashboard Alerts (Advanced)",
+      "url": "http://ultimateclientmanager.com/support/documentation-wiki/custom-ucm-development/#accordion_wiki_bit_creating_custom_dashboard_alerts_",
+      "wordpress_post_id": 0
+    }
+  ]
+}

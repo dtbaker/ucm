@@ -1,0 +1,15 @@
+#php_flag xdebug.remote_enable on
+#php_flag xdebug.remote_connect_back on
+#
+#php_flag xdebug.profiler_enable_trigger on
+#php_flag xdebug.show_mem_delta on
+#php_flag xdebug.trace_format 1
+#php_flag xdebug.trace_enable_trigger on
+#php_flag xdebug.auto_trace on
+
+<IfModule mod_rewrite.c>
+RewriteEngine on
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^(.*)$ index.php [L,QSA]
+</IfModule>

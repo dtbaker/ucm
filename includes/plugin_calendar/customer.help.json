@@ -1,0 +1,15 @@
+{
+  "title": "Calendar",
+  "description": "Use the calendar to plan your days. Show jobs, job tasks and other events on the calendar from the system.",
+  "topics": [
+    {
+      "title": "Calendar Documentation",
+      "url": "http://ultimateclientmanager.com/support/documentation-wiki/customers/",
+      "wordpress_post_id": 735
+    },
+  ],
+  "config": {
+    "calendar_show_jobs": "When 'calendar_show_jobs' is set to 1 the overall 'job' will show in the calendar based on the due date.",
+    "calendar_show_job_tasks": "When 'calendar_show_job_tasks' is set to 1 the individual 'job tasks' will show in the calendar based on the individual job task due dates."
+  }
+}

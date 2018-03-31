@@ -1,0 +1,11 @@
+.backup_status.success {
+    color: #119211;
+}
+.backup_status.error {
+    color: #FF0000;
+    font-weight: bold;
+}
+#database_backup .database_table,
+#files_backup .file_name {
+    font-weight: bold;
+}

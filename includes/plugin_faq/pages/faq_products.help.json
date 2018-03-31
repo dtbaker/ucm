@@ -1,0 +1,11 @@
+{
+  "title": "FAQ",
+  "description": "This area allows you to create a series of Frequently asked Questions and Answers. These can be displayed to your customers through the Ticket system or embedded on your website. ",
+  "topics": [
+    {
+      "title": "FAQ Documentation",
+      "url": "http://ultimateclientmanager.com/support/documentation-wiki/faq/",
+      "wordpress_post_id": 6238
+    }
+  ]
+}

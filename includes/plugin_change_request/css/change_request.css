@@ -1,0 +1,253 @@
+#wp3changerequest_helper{
+    position: absolute;
+    z-index: 90000;
+    width:150px;
+    height:150px;
+    /*background: transparent url(images/pin.png) no-repeat;*/
+    background-color: transparent;
+    border: 3px solid #FF0000;
+    -moz-border-radius:75px;
+    -webkit-border-radius: 75px;
+    border-radius:75px;
+}
+#wp3changerequest_options{
+    position: fixed;
+    z-index: 999999;
+    top: 0px;
+    left: 50px;
+    background: #FFF;
+    text-align: center;
+    color: #000;
+    padding: 7px 15px;
+    border-right: 1px solid #CCC;
+    border-left: 1px solid #CCC;
+    border-bottom: 1px solid #CCC;
+    overflow: hidden;
+    font-size: 13px;
+    font-family: arial;
+    border-bottom-right-radius: 10px;
+    border-bottom-left-radius: 10px;
+}
+    #wp3changerequest_options_header{
+        text-transform: uppercase;
+        font-size: 15px;;
+    }
+
+.wp3changerequest_change{
+    position: absolute;
+    z-index: 90009;
+    background-color: #fefde1;
+    border: 1px solid #fded95;
+    -moz-box-shadow: 2px 2px 0 #fded95;
+    -webkit-box-shadow: 2px 2px 0 #fded95;
+    box-shadow: 2px 2px 0 #fded95;
+    width:250px;
+    padding: 0;
+    margin: 0;
+    -ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=70)";
+    filter: alpha(opacity=70);
+    -moz-opacity: 0.7;
+    -khtml-opacity: 0.7;
+    opacity: 0.7;
+    font-family: arial;
+    font-size:12px;
+    text-align: left;
+    color:#000;
+}
+.wp3changerequest_change .title{
+    text-transform: uppercase;
+    font-size:13px;
+    padding: 3px;
+    background: #fded95;
+    height: 20px;
+}
+.wp3changerequest_change .content{
+    padding: 10px 18px;
+}
+.wp3changerequest_change p{
+    margin: 0;
+    padding: 3px 0;
+    font-family: arial;
+    font-size:12px;
+}
+.wp3changerequest_change_active{
+    z-index: 99992 !important;
+}
+.wp3changerequest_change_loading{
+    background: url(../images/ajax-loader.gif) no-repeat 50% 50%;
+    height:50px;
+}
+.wp3changerequest_change_pending{
+    background-color: #EFEFEF !important;
+    border: 1px solid #cdcdcd;
+    -moz-box-shadow: 2px 2px 0 #cdcdcd;
+    -webkit-box-shadow: 2px 2px 0 #cdcdcd;
+    box-shadow: 2px 2px 0 #cdcdcd;
+}
+.wp3changerequest_change_pending .title{
+    background: #cdcdcd !important;
+}
+.wp3changerequest_actions{
+    border-top: 1px solid #CCC;
+    padding-top:5px;
+    margin-top:5px;
+}
+
+ol#change_request_steps{
+    list-style: none;
+    margin: 10px 0 10px 0;
+    padding: 0;
+    height: 38px;
+    border-bottom: 3px solid #cdcdcd;
+    width: 598px;
+}
+ol#change_request_steps li{
+    list-style: none;
+    line-height: 22px;
+    margin: 0 8px 0 0;
+    float:left;
+    padding: 0;
+    background: #FFF;
+    border: 1px solid #cccccc;
+}
+ol#change_request_steps li > span{
+    display:block;
+    margin: 0;
+    padding: 8px 0 0 15px;
+    height: 28px;
+    width: 177px;
+    border-top: 1px solid #FFF;
+    background: #f4f4f4;
+    font-size: 18px;
+    text-transform: uppercase;
+    color:#555555;
+    font-family: arial;
+}
+ol#change_request_steps li.current > span{
+    background: #e8e8e8;
+}
+
+ol#change_request_steps li span span{
+    background: white;
+    display: block;
+    width: 23px;
+    -moz-border-radius:13px;
+    -webkit-border-radius: 13px;
+    border-radius: 13px;
+    padding: 2px 0 0 0;
+    margin: -25px 0 0 58px;
+    border: 1px solid #CDCDCD;
+    position: absolute;
+    height: 21px;
+    text-align: center;
+}
+#change_request_popup{
+    background: #FFFFFF;
+    font-family: arial;
+    font-size:13px;
+    padding:17px;
+    width:600px;
+    text-align: left;
+    color:#000;
+}
+#change_request_popup p{
+    margin: 0 0 0 0;
+    padding: 3px 0 3px 0;
+    font-size:13px;
+    font-family: arial;
+}
+
+#change_request_popup ul{
+    margin: 0;
+    padding: 0;
+}
+#change_request_popup ul li{
+    margin: 0 0 2px 19px;
+    padding: 0;
+}
+#change_request_popup h1{
+    font-size: 20px;
+    color:#555555;
+    margin: 0;
+    text-transform: uppercase;
+    padding: 8px 0;
+    font-family: arial;
+    clear: none;
+}
+#change_request_popup h2{
+    font-size: 16px;
+    font-weight: bold;
+    color:#555555;
+    margin: 0;
+    padding: 8px 0;
+    font-family: arial;
+}
+.wp3changerequest_button{
+    background: #edfbd8;
+    border: 1px solid #c0de84;
+    padding: 8px 12px 8px;
+    color: #518500;
+    margin: 17px 4px;
+    text-transform: uppercase;
+    cursor: pointer;
+    font-size:13px;
+    font-family: arial;
+}
+.wp3changerequest_button_small{
+    font-size:12px;
+    margin:0;
+}
+.wp3changerequest_button_cancel{
+    background: #f6f6f6;
+    border: 1px solid #cccccc;
+    color: #565656;
+}
+.wp3changerequest_button_arrow{
+    background: #edfbd8 url(../images/icon_arrow.png) no-repeat 10px 7px;
+    padding-left: 30px;
+}
+.change_request_remain{
+    border: 1px solid #feed95;
+    background: #fefce3 url(../images/icon_warning.png) no-repeat 10px 7px;
+    padding: 7px 10px 7px 40px;
+    float: right;
+}
+.wp3changerequest_message_box{
+    background: #ecf9ff;
+    border: 1px solid #bcdbe0;
+    -moz-border-radius:4px;
+    -webkit-border-radius: 4px;
+    border-radius: 4px;
+    padding: 10px;
+    margin: 4px 0;
+}
+
+table.wp3changerequest_table{
+
+}
+table.wp3changerequest_table td{
+    vertical-align: top;
+    text-align: left;
+    padding: 7px;
+}
+table.wp3changerequest_table_line td{
+    border-bottom: 1px solid #EFEFEF;
+}
+table.wp3changerequest_table th{
+    vertical-align: top;
+    text-align: left;
+    font-weight: bold;
+    padding: 7px;
+}
+.wp3changerequest_input{
+    background: #FFF;
+    border: 1px solid #cccccc;
+    font-family: arial;
+    font-size:13px;
+    padding: 2px;
+    color: #000 !important;
+}
+.add_addit,
+.remove_addit{
+    text-decoration: none;
+}

@@ -1,0 +1,35 @@
+{
+  "title": "Extra Fields",
+  "description": "Extra fields allow you to store basic additional information through out the system. Fields can be displayed in the main listing and in some areas you can even search based on these values. Some extra fields can have special meaning in the system, such as flags. More details below:",
+  "topics": [
+    {
+      "title": "Extra Field Documentation",
+      "url": "http://ultimateclientmanager.com/support/documentation-wiki/extra-fields/",
+      "wordpress_post_id": 12102
+    },
+    {
+      "title": "How to create Extra Fields",
+      "url": "http://ultimateclientmanager.com/support/faq-knowledge-base/faq-item/116/how-to-create-extra-fields/",
+      "faq_id": 116
+    },
+    {
+      "title": "Using Extra Fields in invoices",
+      "url": "http://ultimateclientmanager.com/support/faq-knowledge-base/faq-item/71/using-customer-extra-fields-in-invoices/",
+      "faq_id": 71
+    },
+    {
+      "title": "Flagging a Customer Contact as Accounts so they receive all Invoices",
+      "url": "http://ultimateclientmanager.com/support/faq-knowledge-base/faq-item/118/flag-a-customer-contact-as-accounts-so-they-receive-all-invoices/",
+      "faq_id": 118
+    },
+    {
+      "title": "Setting a default Invoice Template per customer using an Extra Field (see: Multiple Invoice PDF Templates)",
+      "url": "http://ultimateclientmanager.com/support/documentation-wiki/invoices/",
+      "wordpress_post_id": 737
+    }
+  ],
+  "config": {
+    "hide_extra": "All available extra fields will be displayed on the page if this is set to 0. Extra fields will be hidden under a More Fields button if this setting is 1. Recommended leaving this as 0",
+    "accounts_extra_field_name": "What extra field name the system should look for when determining which Customer Contact should be Accounts Receivable. Default is Accounts."
+  }
+}

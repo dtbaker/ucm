@@ -1,0 +1,21 @@
+.customer_overdue{
+    font-weight: bold;
+}
+.customer_owing{
+    color:#FF0000 !important;
+}
+.customer_paid{
+}
+
+.dynamic_customer_selection{
+
+}
+.dynamic_customer_selection.has-current .choose_customer{
+    display: none;
+}
+.dynamic_customer_selection.selecting .current_customer{
+    display: none;
+}
+.dynamic_customer_selection.selecting .choose_customer{
+    display: block;
+}

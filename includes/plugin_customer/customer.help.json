@@ -1,0 +1,57 @@
+{
+  "title": "Customers &amp; Leads",
+  "description": "Customers and Leads are the core entity in this CRM. Everything is linked underneath one of these: Contacts, Quotes, Jobs, Websites, Invoices, Tickets, Files and more",
+  "topics": [
+    {
+      "title": "Customer Documentation",
+      "url": "http://ultimateclientmanager.com/support/documentation-wiki/customers/",
+      "wordpress_post_id": 735
+    },
+    {
+      "title": "Supplier/Vendor Documentation",
+      "url": "http://ultimateclientmanager.com/support/documentation-wiki/suppliers/",
+      "wordpress_post_id": 12138
+    },
+    {
+      "title": "How to setup Customer Login",
+      "url": "http://ultimateclientmanager.com/support/faq-knowledge-base/faq-item/20/how-do-i-setup-a-customer-login",
+      "faq_id": 20
+    },
+    {
+      "title": "What is the standard workflow (eg: Creating Jobs, Invoices, Projects, Customers)",
+      "url": "http://ultimateclientmanager.com/support/faq-knowledge-base/faq-item/34/what-is-the-standard-workflow-eg-creating-jobs-invoices-projects-customers",
+      "faq_id": 34
+    },
+    {
+      "title": "How to change customers on an invoice",
+      "url": "http://ultimateclientmanager.com/support/faq-knowledge-base/faq-item/35/how-to-change-customers-on-an-invoice",
+      "faq_id": 35
+    },
+    {
+      "title": "Move a Contact to another Customer",
+      "url": "http://ultimateclientmanager.com/support/faq-knowledge-base/faq-item/38/move-a-contact-to-another-customer",
+      "faq_id": 38
+    },
+    {
+      "title": "Using customer extra fields in invoices",
+      "url": "http://ultimateclientmanager.com/support/faq-knowledge-base/faq-item/71/using-customer-extra-fields-in-invoices",
+      "faq_id": 71
+    },
+    {
+      "title": "Password reset for a customer doesn't work",
+      "url": "http://ultimateclientmanager.com/support/faq-knowledge-base/faq-item/101/password-reset-for-a-customer-doesnt-work",
+      "faq_id": 101
+    },
+    {
+      "title": "Customer / User cannot change password / profile link doesn't work",
+      "url": "http://ultimateclientmanager.com/support/faq-knowledge-base/faq-item/107/customer-user-cannot-change-password-profile-link-doesnt-work",
+      "faq_id": 107
+    }
+  ],
+  "config": {
+    "customer_signup_email_welcome_template": "Which template to email to customer after successful customer signup.",
+    "customer_signup_email_admin_template": "Which template to email to admin after successful customer signup.",
+    "customer_mask_0": "This is the mask to apply to custom numbers. Uses sprintf() format",
+    "customer_next_0": "The next customer number that will be used"
+  }
+}

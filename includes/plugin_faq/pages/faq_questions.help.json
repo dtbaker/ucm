@@ -1,0 +1,11 @@
+{
+  "title": "FAQ Products",
+  "description": "This area allows you to link FAQ items to Products. ",
+  "topics": [
+    {
+      "title": "FAQ Documentation",
+      "url": "http://ultimateclientmanager.com/support/documentation-wiki/faq/",
+      "wordpress_post_id": 6238
+    }
+  ]
+}

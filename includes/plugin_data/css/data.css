@@ -1,0 +1,54 @@
+
+.form_field_required {
+		border-right:4px solid #00FF00 !important;
+	}
+.form_field_highlight,
+.form_field_highlight td{
+		border:2px solid #FF0000 !important;
+	}
+	.data_group{
+		clear:both;
+		/*margin-top:10px;*/
+	}
+
+	.data_field_title{
+		float:left;
+		padding-right:3px;
+	}
+	.field_radio,
+	.field_radio label,
+	.field_radio input{
+		float:left;
+		padding-right:3px;
+	}
+	.data_field_input{
+		float:left;
+	}
+	ul.data_group_fields{
+		/* sortable! */
+		list-style:none;
+		margin:0;
+		padding:0;
+	}
+	li.data_field{
+		float:left;
+		margin:3px 10px 3px 3px;
+		padding:0;
+		border:1px solid #FFF;
+		list-style:none;
+	}
+
+	.data_field_view{
+		padding:1px;
+		display:block;
+		/*background-color:#EEEEEE;
+		width:130px;*/
+	}
+	/*.data_field_datetime .data_field_view,*/
+	.date_time_field{
+		width:115px;
+	}
+	/*.data_field_date .data_field_view,*/
+	.date_field{
+		width:67px;
+	}
