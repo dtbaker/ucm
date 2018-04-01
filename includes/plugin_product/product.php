@@ -24,7 +24,8 @@ class module_product extends module_base {
 		$this->product_types   = array();
 		$this->module_name     = "product";
 		$this->module_position = 31;
-		$this->version         = 2.167;
+		$this->version         = 2.168;
+		// 2.168 - 2018-04-01 - log integration
 		// 2.167 - 2017-07-26 - starting on basic shop functionality
 		// 2.166 - 2017-05-02 - big changes
 		// 2.165 - 2017-04-19 - vendor support
@@ -709,7 +710,7 @@ Current Inventory Level: {PRODUCT_QUANTITY} <br/><br/>
 					}
 					$new_qty = $data['inventory_level'] - $inventory_usage;
 					if ( class_exists( 'module_log', false ) && module_log::is_plugin_enabled() && $data['inventory_level_current'] != $new_qty ) {
-						module_log::log( 'inventory', $product_id, false, "Invoice Saved: " . $invoice_data['name'], "Quantity changed from " . $data['inventory_level_current'] . " to " . ( $new_qty ) . " after saving this invoice." );
+						module_log::log( 'inventory', $product_id, 'invoice', false, "Invoice Saved: " . $invoice_data['name'], "Quantity changed from " . $data['inventory_level_current'] . " to " . ( $new_qty ) . " after saving this invoice." );
 					}
 					update_insert( "product_id", $product_id, "product", array(
 						'inventory_level_current' => $new_qty
@@ -750,7 +751,7 @@ Current Inventory Level: {PRODUCT_QUANTITY} <br/><br/>
 					}
 					$inventory_usage -= $qty_deleted;
 					if ( class_exists( 'module_log', false ) && module_log::is_plugin_enabled() ) {
-						module_log::log( 'inventory', $product_id, false, "Invoice Deleted: " . $invoice_data['name'], "Quantity changed from " . $data['inventory_level_current'] . " to " . ( $data['inventory_level'] - $inventory_usage ) . " after removing " . $qty_deleted . " items from this deleted invoice." );
+						module_log::log( 'inventory', $product_id, 'invoice', false, "Invoice Deleted: " . $invoice_data['name'], "Quantity changed from " . $data['inventory_level_current'] . " to " . ( $data['inventory_level'] - $inventory_usage ) . " after removing " . $qty_deleted . " items from this deleted invoice." );
 					}
 					update_insert( "product_id", $product_id, "product", array(
 						'inventory_level_current' => $data['inventory_level'] - $inventory_usage

@@ -19,7 +19,8 @@ class module_core extends module_base {
 		$this->module_name     = "core";
 		$this->module_position = 0;
 
-		$this->version = 2.152;
+		$this->version = 2.153;
+		//2.153 - 2018-04-01 - core fixes
 		//2.152 - 2017-07-26 - bug fixes
 		//2.151 - 2017-07-24 - default field improvements
 		//2.150 - 2017-05-30 - thousands fix

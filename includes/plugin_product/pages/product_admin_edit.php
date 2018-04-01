@@ -252,9 +252,10 @@ $fieldset_data['elements'][] = array(
 	)
 );*/
 if ( (int) $product_id > 0 && class_exists( 'module_log', false ) && module_log::is_plugin_enabled() ) {
-	$history = module_log::log_history( 'inventory', $product_id );
+	$history = module_log::get_history( 'inventory', $product_id );
 	if ( $history ) {
-		$fieldset_data['elements'][] = array(
+		// rename this once history popup is finished.
+		/*$fieldset_data['elements'][] = array(
 			'title'  => 'Inventory History',
 			'fields' => array(
 				array(
@@ -262,7 +263,7 @@ if ( (int) $product_id > 0 && class_exists( 'module_log', false ) && module_log:
 					'value' => $history,
 				),
 			)
-		);
+		);*/
 	}
 	$fieldset_data['elements'][] = array(
 		'title'  => 'Product Usage',

@@ -46,7 +46,7 @@ class module_invoice extends module_base {
 		$this->module_position = 18;
 
 		$this->version = 2.809;
-		//2.809 - 2018-03-31 - linked timers showing in invoice page.
+		//2.809 - 2018-03-31 - timer + invoice link
 		//2.808 - 2017-07-23 - adding website invoies to website page.
 		//2.807 - 2017-05-30 - invoice api
 		//2.806 - 2017-05-28 - invoice api
@@ -4474,6 +4474,35 @@ Job: <strong>{JOB_NAME}</strong> <br/>
 
 		return $response;
 	}
+
+
+
+
+	public function autocomplete( $search_string = '', $search_options = array() ) {
+		$result = array();
+
+		if ( module_invoice::can_i( 'view', 'Invoices' ) ) {
+			$search_array = array(
+				'generic' => $search_string,
+			);
+			if ( ! empty( $_REQUEST['customer_id'] ) ) {
+				$search_array['customer_id'] = (int) $_REQUEST['customer_id'];
+			}
+			if ( ! empty( $_REQUEST['vars']['customer_id'] ) ) {
+				$search_array['customer_id'] = (int) $_REQUEST['vars']['customer_id'];
+			}
+			$res = module_invoice::get_invoices( $search_array );
+			foreach ( $res as $row ) {
+				$result[] = array(
+					'key'   => $row['invoice_id'],
+					'value' => $row['name']
+				);
+			}
+		}
+
+		return $result;
+	}
+
 
 
 	public function get_upgrade_sql() {

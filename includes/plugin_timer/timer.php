@@ -12,7 +12,8 @@ define( '_TIMER_ACCESS_MINE', 'Only my timers' ); // do not change string
 class module_timer extends module_base {
 
 
-	public $version = 2.140;
+	public $version = 2.141;
+	//2.141 - 2018-03-31 - timer + invoice link
 	//2.140 - 2017-07-26 - bug fixes
 	//2.139 - 2017-07-23 - timers linked to customers/websites
 	//2.138 - 2017-05-02 - big changes
@@ -663,6 +664,30 @@ class module_timer extends module_base {
 						}
 					}
 					break;
+			}
+		}else if ( module_timer::can_i( 'view', 'Timers' ) ) {
+
+			$ucmtimers = new UCMTimers();
+
+			$search_array = array(
+				'description' => '%' . $search_string,
+			);
+			if ( ! empty( $_REQUEST['customer_id'] ) ) {
+				$search_array['customer_id'] = (int) $_REQUEST['customer_id'];
+			}
+			if ( ! empty( $_REQUEST['vars']['customer_id'] ) ) {
+				$search_array['customer_id'] = (int) $_REQUEST['vars']['customer_id'];
+			}
+
+			$res    = $ucmtimers->get( $search_array, array( 'timer_id' => 'DESC' ) );
+			foreach ( $res as $row ) {
+				$result[] = array(
+					'key'   => $row['timer_id'],
+					'value' => $row['description']
+				);
+				if ( count( $result ) > 20 ) {
+					break;
+				}
 			}
 		}
 

@@ -682,6 +682,43 @@ $default_payment_method = module_config::c( 'invoice_default_payment_method', 'p
 			);
 		}
 
+		if ( class_exists( 'module_timer' ) && module_timer::is_plugin_enabled() && (int)$invoice['invoice_id'] > 0) {
+
+			$linked_timers = array();
+			$ucmtimers = new UCMTimers();
+			$timers    = $ucmtimers->get( array(
+				'invoice_id' => $invoice['invoice_id']
+			), array( 'timer_id' => 'DESC' ) );
+			foreach($timers as $timer){
+				$UCMTimer = new UCMTimer($timer['timer_id']);
+				$linked_timers[] = array(
+					'description' => $UCMTimer->get('description'),
+					'link' => $UCMTimer->link_open(),
+					'time' => $UCMTimer->get_total_time(),
+					'seconds' => $UCMTimer->get('duration_calc'),
+				);
+			}
+			if ( $linked_timers ) {
+				$fieldset_data['elements'][] = array(
+					'title'  => 'Linked Timers',
+					'fields' => array(
+						'<div id="timer_rel_ids_holder">',
+						function() use ($linked_timers){
+							$total_time = 0;
+							foreach($linked_timers as $linked_timer){
+								echo '<a href="' . $linked_timer['link'] . '">' . htmlspecialchars($linked_timer['description']).'</a> (' . $linked_timer['time'] .' ) <br>';
+								$total_time += $linked_timer['seconds'];
+							}
+							if(count($linked_timers)>1){
+								echo 'Total Time: '.module_timer::format_seconds($total_time);
+							}
+						},
+						'</div>'
+					),
+				);
+			}
+		}
+
 
 		echo module_form::generate_fieldset( $fieldset_data );
 		unset( $fieldset_data );

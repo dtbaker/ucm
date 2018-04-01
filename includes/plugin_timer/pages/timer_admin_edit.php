@@ -230,9 +230,20 @@ if ( ! empty( $_GET['timer_segment_id'] ) ) {
 				'elements' => array()
 			);
 			$fieldset_data['elements'][] = array(
-				'title'  => _l( 'Invoices' ),
+				'title'  => _l( 'Linked Invoice' ),
 				'fields' => array(
-					( $timer['invoice_id'] ? module_invoice::link_open( $timer['invoice_id'], true ) : '' ),
+					array(
+						'type'   => 'text',
+						'name'   => 'invoice_id',
+						'value'  => $timer['invoice_id'],
+						'lookup' => array(
+							'key'         => 'invoice_id',
+							'display_key' => 'name',
+							'plugin'      => 'invoice',
+							'lookup'      => 'name',
+							'return_link' => true,
+						),
+					),
 					' ',
 					array(
 						'type'    => 'button',

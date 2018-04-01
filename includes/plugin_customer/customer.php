@@ -41,7 +41,8 @@ class module_customer extends module_base {
 		$this->customer_types  = array();
 		$this->module_name     = "customer";
 		$this->module_position = 5.1;
-		$this->version         = 2.487;
+		$this->version         = 2.488;
+		//2.488 - 2018-04-01 - logging improvements.
 		//2.487 - 2017-07-26 - customer portal improvements
 		//2.486 - 2017-07-23 - customer portal improvements
 		//2.485 - 2017-05-30 - customer api work
@@ -1327,7 +1328,12 @@ Invoice: <strong>{INVOICE_LINK}</strong>
 			unset( $data['primary_user_id'] );
 		} // only allow this to be set through the method.
 
-		$customer_id = update_insert( "customer_id", $customer_id, "customer", $data );
+		// Migrating to new class based update method.
+		//$customer_id = update_insert( "customer_id", $customer_id, "customer", $data );
+		$UCMCustomer = new UCMCustomer( $customer_id );
+		$UCMCustomer->save_data( $data );
+
+
 		if ( isset( $data['single_staff_id'] ) && (int) $data['single_staff_id'] > 0 && module_customer::get_customer_data_access() == _CUSTOMER_ACCESS_STAFF && $data['single_staff_id'] == module_security::get_loggedin_id() ) {
 			$sql = "REPLACE INTO `" . _DB_PREFIX . "customer_user_rel` SET ";
 			$sql .= " `user_id` = " . (int) $data['single_staff_id'];
@@ -1869,7 +1875,6 @@ Invoice: <strong>{INVOICE_LINK}</strong>
 		$customer_data['credit'] -= $credit;
 		update_insert( 'customer_id', $customer_id, 'customer', array( 'credit' => $customer_data['credit'] ) );
 		module_cache::clear( 'customer' );
-		//self::add_history($customer_id,'Added '.dollar($credit).' credit to customers account.');
 	}
 
 

@@ -213,10 +213,48 @@ class UCMBaseSingle implements ArrayAccess {
 		}
 	}
 
+	/**
+	 * We use these to hook into the new "field history" log feature.
+	 * Store a state of fields before and after save. If any of the fields have changed
+	 * then we record a log entry for that.
+	 */
+	public $log_field_changes = array();
+	private $before_save_data = array();
+	public function before_save(){
+		if($this->log_field_changes) {
+			foreach($this->log_field_changes as $field_to_monitor){
+				$this->before_save_data[$field_to_monitor] = isset($this->db_details[$field_to_monitor]) ? $this->db_details[$field_to_monitor] : null;
+			}
+		}
+	}
+	public function after_save(){
+		if($this->log_field_changes) {
+			$changed_fields = array();
+			foreach($this->log_field_changes as $field_to_monitor){
+				$new_field_value = isset($this->db_details[$field_to_monitor]) ? $this->db_details[$field_to_monitor] : null;
+				if( $new_field_value != $this->before_save_data[$field_to_monitor]){
+					$changed_fields[$field_to_monitor] = array(
+						'before' => $this->before_save_data[$field_to_monitor],
+						'after' => $new_field_value,
+					);
+				}
+			}
+			if($changed_fields){
+				if ( class_exists( 'module_log', false ) && module_log::is_plugin_enabled() ) {
+					foreach($changed_fields as $changed_key => $changed_values){
+						module_log::log_field_change( $this->db_table, $this->id, $changed_key, $changed_values['before'], $changed_values['after'] );
+					}
+				}
+			}
+			$this->before_save_data = array();
+		}
+	}
+
 	public function save_data( $post_data ) {
 		$conn = $this->get_db();
 		if ( $conn ) {
 
+			$this->before_save();
 			$doing_update = false;
 
 			// support composite keys:
@@ -249,7 +287,11 @@ class UCMBaseSingle implements ArrayAccess {
 					$sql = 'INSERT INTO `' . _DB_PREFIX . $this->db_table . '` SET ';
 				}
 			}
+			$new_db_details = array();
 			foreach ( $this->db_fields as $db_field => $db_field_settings ) {
+				if ( $db_field == $this->db_id ) {
+					continue;
+				}
 				if ( isset( $post_data[ 'default_' . $db_field ] ) && ! isset( $post_data[ $db_field ] ) ) {
 					// a hack for our empty checkboxes
 					$post_data[ $db_field ] = 0;
@@ -264,6 +306,7 @@ class UCMBaseSingle implements ArrayAccess {
 					$sql .= '`' . $db_field . '` = :' . $db_field . ' , ';
 					$this->db->bind_param( $db_field, $post_data[ $db_field ], ! empty( $db_field_settings['type'] ) ? $db_field_settings['type'] : false );
 					//					}
+					$new_db_details[$db_field] = $post_data[$db_field];
 				}
 			}
 			if ( $doing_update ) {
@@ -313,7 +356,7 @@ class UCMBaseSingle implements ArrayAccess {
 				}
 				$sql = rtrim( $sql, ', ' );
 			}
-			//			print_r($_REQUEST); print_r($this->db->params); echo $sql; exit;
+//						print_r($_REQUEST); print_r($this->db->params); echo $sql; exit;
 			$this->db->prepare( $sql );
 
 			if ( $this->db->execute() ) {
@@ -337,6 +380,9 @@ class UCMBaseSingle implements ArrayAccess {
 						$this->load( $this->id );
 					}
 				} else {
+					foreach($new_db_details as $key => $val){
+						$this->db_details[ $key ] = $val;
+					}
 					$this->db->close();
 				}
 
@@ -350,7 +396,10 @@ class UCMBaseSingle implements ArrayAccess {
 					}
 				}
 
+				$this->after_save();
 				return $this->id;
+			}else{
+				// todo: log error.
 			}
 		}
 
@@ -360,6 +409,8 @@ class UCMBaseSingle implements ArrayAccess {
 	public function update( $field, $value ) {
 		$conn = $this->get_db();
 		if ( $conn && $this->id && isset( $this->db_fields[ $field ] ) ) {
+
+			$this->before_save();
 
 			$this->db->prepare( 'UPDATE `' . _DB_PREFIX . $this->db_table . '` SET `' . $field . '` = :value WHERE `' . $this->db_id . '` = :id LIMIT 1' );
 
@@ -374,6 +425,7 @@ class UCMBaseSingle implements ArrayAccess {
 				$this->db_details[ $field ] = $value;
 			}
 			$this->db->close();
+			$this->after_save();
 		}
 	}
 

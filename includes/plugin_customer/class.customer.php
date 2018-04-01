@@ -12,6 +12,10 @@ class UCMCustomer extends UCMBaseSingle {
 	public $display_name = 'Customer';
 	public $display_name_plural = 'Customers';
 	public $db_fields = array();
+	public $log_field_changes = array(
+		'customer_name',
+		'credit',
+	);
 
 	public function get_billing_type() {
 		// based on the customer billing type.
