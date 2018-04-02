@@ -41,7 +41,8 @@ class module_customer extends module_base {
 		$this->customer_types  = array();
 		$this->module_name     = "customer";
 		$this->module_position = 5.1;
-		$this->version         = 2.488;
+		$this->version         = 2.489;
+		//2.489 - 2018-04-03 - fix saving customer.
 		//2.488 - 2018-04-01 - logging improvements.
 		//2.487 - 2017-07-26 - customer portal improvements
 		//2.486 - 2017-07-23 - customer portal improvements
@@ -1331,7 +1332,7 @@ Invoice: <strong>{INVOICE_LINK}</strong>
 		// Migrating to new class based update method.
 		//$customer_id = update_insert( "customer_id", $customer_id, "customer", $data );
 		$UCMCustomer = new UCMCustomer( $customer_id );
-		$UCMCustomer->save_data( $data );
+		$customer_id = $UCMCustomer->save_data( $data );
 
 
 		if ( isset( $data['single_staff_id'] ) && (int) $data['single_staff_id'] > 0 && module_customer::get_customer_data_access() == _CUSTOMER_ACCESS_STAFF && $data['single_staff_id'] == module_security::get_loggedin_id() ) {
