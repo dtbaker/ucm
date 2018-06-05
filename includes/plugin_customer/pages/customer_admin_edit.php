@@ -14,7 +14,7 @@ if ( isset( $_REQUEST['email'] ) ) {
 
 $page_type        = 'Customers';
 $page_type_single = 'Customer';
-$group_owner = 'customer';
+$group_owner = module_customer::get_group_owner_slug();
 
 $current_customer_type_id = module_customer::get_current_customer_type_id();
 if ( $current_customer_type_id > 0 ) {
@@ -22,7 +22,6 @@ if ( $current_customer_type_id > 0 ) {
 	if ( $customer_type && ! empty( $customer_type['type_name'] ) ) {
 		$page_type        = $customer_type['type_name_plural'];
 		$page_type_single = $customer_type['type_name'];
-		$group_owner = 'customer_' . $current_customer_type_id;
 	}
 }
 
