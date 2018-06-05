@@ -189,7 +189,8 @@ $job_tasks = module_job::get_tasks( $job_id );
 				'field'  => array(
 					'type'  => 'currency',
 					'name'  => 'hourly_rate',
-					'value' => number_out( $job['hourly_rate'] ), // todo: is number_out($job['hourly_rate']) needed?
+					'placeholder' => module_customer::c( 'hourly_rate', 60, (int) $job['customer_id'] ),
+					'value' => $job['hourly_rate'] > 0 ? number_out( $job['hourly_rate'] ) : '', // todo: is number_out($job['hourly_rate']) needed?
 				),
 			),
 			'status'         => array(

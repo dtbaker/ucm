@@ -30,7 +30,8 @@ class module_job extends module_base {
 	public $links;
 	public $job_types;
 
-	public $version = 2.614;
+	public $version = 2.615;
+	//2.615 - 2018-06-05 - fix for hourly rate when creating a job
 	//2.614 - 2017-05-24 - quote_copy_job_name setting
 	//2.613 - 2017-05-16 - ajax autocomplete option for jobs in extra fields
 	//2.612 - 2017-05-02 - tax display at 0%
@@ -2570,7 +2571,7 @@ Job Name: <strong>{JOB_NAME}</strong> <br/>
 				'job_id'               => 'new',
 				'customer_id'          => $customer_id,
 				'website_id'           => ( isset( $_REQUEST['website_id'] ) ? $_REQUEST['website_id'] : 0 ),
-				'hourly_rate'          => module_customer::c( 'hourly_rate', 60, $customer_id ),
+				'hourly_rate'          => 0, // default to customer hourly rate. module_customer::c( 'hourly_rate', 60, $customer_id ),
 				'name'                 => $default_job_name,
 				'date_quote'           => date( 'Y-m-d' ),
 				'date_start'           => module_config::c( 'job_allow_quotes', 0 ) ? '' : date( 'Y-m-d' ),
@@ -3089,6 +3090,14 @@ Job Name: <strong>{JOB_NAME}</strong> <br/>
 		} else {
 			$original_job_data = array();
 			$job_id            = false;
+		}
+
+		// fix for default hourly rate.
+		if(empty($data['hourly_rate'])){
+			$customer_hourly_rate = module_customer::c( 'hourly_rate', 60, (int) $data['customer_id'] );
+			if($customer_hourly_rate > 0){
+				$data['hourly_rate'] = $customer_hourly_rate;
+			}
 		}
 
 		$job_id = update_insert( "job_id", $job_id, "job", $data );
