@@ -2,6 +2,7 @@
 
 $page_type        = 'Customers';
 $page_type_single = 'Customer';
+$group_owner = 'customer';
 
 $search                     = isset( $_REQUEST['search'] ) ? $_REQUEST['search'] : array();
 $current_customer_type_id   = module_customer::get_current_customer_type_id();
@@ -11,6 +12,7 @@ if ( $current_customer_type_id > 0 ) {
 	if ( $customer_type && ! empty( $customer_type['type_name'] ) ) {
 		$page_type        = $customer_type['type_name_plural'];
 		$page_type_single = $customer_type['type_name'];
+		$group_owner = 'customer_' . $current_customer_type_id;
 	}
 }
 if ( ! module_customer::can_i( 'view', $page_type ) ) {
@@ -50,7 +52,7 @@ if ( class_exists( 'module_import_export', false ) && module_customer::can_i( 'v
 				'callback'   => 'module_customer::handle_import',
 				'name'       => $page_type,
 				'return_url' => $_SERVER['REQUEST_URI'],
-				'group'      => 'customer',
+				'group'      => $group_owner,
 				'fields'     => array(
 					$page_type_single . ' ID'    => 'customer_id',
 					$page_type_single . ' Name'  => 'customer_name',
@@ -172,7 +174,7 @@ print_heading( array(
 				'type'             => 'select',
 				'name'             => 'search[group_id]',
 				'value'            => isset( $search['group_id'] ) ? $search['group_id'] : '',
-				'options'          => module_group::get_groups( 'customer' ),
+				'options'          => module_group::get_groups( $group_owner ),
 				'options_array_id' => 'name',
 				'blank'            => _l( ' - Group - ' ),
 			)
@@ -282,13 +284,13 @@ print_heading( array(
 	if ( class_exists( 'module_group', false ) && module_customer::can_i( 'view', $page_type_single . ' Groups' ) ) {
 		$columns['customer_group'] = array(
 			'title'    => 'Group',
-			'callback' => function ( $customer ) {
+			'callback' => function ( $customer ) use ($group_owner) {
 				if ( isset( $customer['group_sort_customer'] ) ) {
 					echo htmlspecialchars( $customer['group_sort_customer'] );
 				} else {
 					// find the groups for this customer.
 					$groups = module_group::get_groups_search( array(
-						'owner_table' => 'customer',
+						'owner_table' => $group_owner,
 						'owner_id'    => $customer['customer_id'],
 					) );
 					$g      = array();
@@ -355,7 +357,7 @@ print_heading( array(
 	$table_manager->enable_group_option( array(
 			'fields' => array(
 				'owner_id'    => 'customer_id',
-				'owner_table' => 'customer',
+				'owner_table' => $group_owner,
 				'title'       => $page_type_single . ' Groups',
 				'name'        => 'customer_name',
 				'email'       => 'primary_user_email'
@@ -390,7 +392,7 @@ print_heading( array(
 				// special case for group sorting.
 				'customer_group'        => array(
 					'group_sort'  => true,
-					'owner_table' => 'customer',
+					'owner_table' => $group_owner,
 					'owner_id'    => 'customer_id',
 				),
 				/*// special case for extra field sorting.
@@ -448,7 +450,7 @@ print_heading( array(
 				'group'  => array(
 					array(
 						'title'       => $page_type_single . ' Group',
-						'owner_table' => 'customer',
+						'owner_table' => $group_owner,
 						'owner_id'    => 'customer_id',
 					)
 				),

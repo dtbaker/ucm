@@ -36,12 +36,14 @@ class module_customer extends module_base {
 		return __CLASS__;
 	}
 
+
 	public function init() {
 		$this->links           = array();
 		$this->customer_types  = array();
 		$this->module_name     = "customer";
 		$this->module_position = 5.1;
-		$this->version         = 2.489;
+		$this->version         = 2.490;
+		//2.490 - 2018-06-05 - fix for supplier groups
 		//2.489 - 2018-04-03 - fix saving customer.
 		//2.488 - 2018-04-01 - logging improvements.
 		//2.487 - 2017-07-26 - customer portal improvements
@@ -337,6 +339,9 @@ Invoice: <strong>{INVOICE_LINK}</strong>
 				break;
 			case 'add_to_group':
 
+
+				$group_owner = self::get_group_owner_slug();
+
 				$customer_id = ! empty( $_REQUEST['customer_id'] ) ? (int) $_REQUEST['customer_id'] : 0;
 				if ( $customer_id ) {
 					$customer_data = self::get_customer( $customer_id );
@@ -346,7 +351,7 @@ Invoice: <strong>{INVOICE_LINK}</strong>
 						$response['customer_id'] = $customer_id;
 						$group_name              = ! empty( $_REQUEST['group_name'] ) ? $_REQUEST['group_name'] : false;
 						if ( $group_name ) {
-							$existing_groups = module_group::get_groups( 'customer' );
+							$existing_groups = module_group::get_groups( $group_owner );
 							$existing_id     = false;
 							foreach ( $existing_groups as $group ) {
 								if ( $group['name'] == $group_name ) {
@@ -356,11 +361,11 @@ Invoice: <strong>{INVOICE_LINK}</strong>
 							if ( ! $existing_id ) {
 								$existing_id = update_insert( 'group_id', 'new', 'group', array(
 									'name'        => $group_name,
-									'owner_table' => 'customer',
+									'owner_table' => $group_owner,
 								) );
 							}
 							if ( $existing_id ) {
-								module_group::add_to_group( $existing_id, $customer_id, 'customer' );
+								module_group::add_to_group( $existing_id, $customer_id, $group_owner );
 								$response['group_added'] = true;
 							}
 						}
@@ -782,9 +787,13 @@ Invoice: <strong>{INVOICE_LINK}</strong>
 			$where .= " AND (ccr.company_id = '$str')";
 		}
 		if ( isset( $search['group_id'] ) && trim( $search['group_id'] ) ) {
+
+
+			$group_owner = self::get_group_owner_slug();
+
 			$str   = (int) $search['group_id'];
 			$sql   .= " LEFT JOIN `" . _DB_PREFIX . "group_member` gm ON (c.customer_id = gm.owner_id)";
-			$where .= " AND (gm.group_id = '$str' AND gm.owner_table = 'customer')";
+			$where .= " AND (gm.group_id = '$str' AND gm.owner_table = '$group_owner')";
 		}
 		if ( isset( $search['extra_fields'] ) && is_array( $search['extra_fields'] ) && class_exists( 'module_extra', false ) ) {
 			$extra_fields = array();
@@ -1522,12 +1531,14 @@ Invoice: <strong>{INVOICE_LINK}</strong>
 			$customer = self::get_customer( $customer_id );
 			if ( $customer && $customer['customer_id'] == $customer_id ) {
 
+
+				$group_owner = self::get_group_owner_slug();
 				// todo: Delete emails (wack these in this customer_deleted hook)
 				hook_handle_callback( 'customer_deleted', $customer_id, $remove_linked_data );
 
 				if ( class_exists( 'module_group', false ) ) {
 					// remove the customer from his groups
-					module_group::delete_member( $customer_id, 'customer' );
+					module_group::delete_member( $customer_id, $group_owner );
 				}
 				if ( class_exists( 'module_extra', false ) ) {
 					module_extra::delete_extras( 'customer', 'customer_id', $customer_id );
@@ -1782,8 +1793,11 @@ Invoice: <strong>{INVOICE_LINK}</strong>
 			) );
 			module_address::save_address( $address_id, $address );
 
+
+			$group_owner = self::get_group_owner_slug();
+
 			foreach ( $add_to_group as $group_id => $tf ) {
-				module_group::add_to_group( $group_id, $customer_id, 'customer' );
+				module_group::add_to_group( $group_id, $customer_id, $group_owner );
 			}
 
 
@@ -2708,12 +2722,16 @@ Invoice: <strong>{INVOICE_LINK}</strong>
 
 
 		if ( class_exists( 'module_group', false ) && module_group::is_plugin_enabled() ) {
+
+
+			$group_owner = self::get_group_owner_slug();
+
 			// get the customer groups
 			$g = array();
 			if ( (int) $customer_data['customer_id'] > 0 ) {
 				foreach (
 					module_group::get_groups_search( array(
-						'owner_table' => 'customer',
+						'owner_table' => $group_owner,
 						'owner_id'    => $customer_data['customer_id'],
 					) ) as $group
 				) {
@@ -2727,7 +2745,7 @@ Invoice: <strong>{INVOICE_LINK}</strong>
 				$customer_data = module_customer::get_customer( $customer_id );
 				foreach (
 					module_group::get_groups_search( array(
-						'owner_table' => 'customer',
+						'owner_table' => $group_owner,
 						'owner_id'    => $customer_id,
 					) ) as $group
 				) {
@@ -2843,6 +2861,23 @@ Invoice: <strong>{INVOICE_LINK}</strong>
 			</div>
 		</div>
 		<?php
+	}
+
+
+	public static function get_group_owner_slug() {
+
+		$group_owner = 'customer';
+		if(module_config::c('groups_unique_per_customer_type',0)) {
+			$current_customer_type_id = module_customer::get_current_customer_type_id();
+			if ( $current_customer_type_id > 0 ) {
+				$customer_type = module_customer::get_customer_type( $current_customer_type_id );
+				if ( $customer_type && ! empty( $customer_type['type_name'] ) ) {
+					$group_owner = 'customer_' . $current_customer_type_id;
+				}
+			}
+		}
+		return $group_owner;
+
 	}
 
 	public static function get_config_fields( $customer_id ) {
