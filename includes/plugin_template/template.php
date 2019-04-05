@@ -31,7 +31,8 @@ class module_template extends module_base {
 		$this->module_name     = "template";
 		$this->module_position = 28;
 
-		$this->version = 2.259;
+		$this->version = 2.260;
+		//2.260 - 2019-04-06 - php error fix
 		//2.259 - 2015-11-06 - javascript template improvement
 		//2.258 - 2015-07-29 - delete template button
 		//2.257 - 2015-04-23 - more template tags for emails
@@ -271,7 +272,7 @@ class module_template extends module_base {
 		if ( ! self::db_table_exists( 'template' ) ) {
 			return;
 		}
-		if ( ! count( self::$_templates ) ) {
+		if ( ! self::$_templates || ! count( self::$_templates ) ) {
 			self::_load_all_templates();
 		}
 		$template = false;

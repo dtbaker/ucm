@@ -23,7 +23,8 @@ class module_config extends module_base {
 	public function init() {
 		$this->module_name     = "config";
 		$this->module_position = 40;
-		$this->version         = 2.432;
+		$this->version         = 2.433;
+		//2.433 - 2019-04-06 - php error fix
 		//2.432 - 2017-06-27 - date format
 		//2.431 - 2017-06-14 - file path configuration
 		//2.430 - 2017-05-02 - file path configuration
@@ -118,7 +119,9 @@ class module_config extends module_base {
 		// try to set our memory limit.
 		$desired_limit_r = module_config::c( 'php_memory_limit', '64M' );
 		$desired_limit   = trim( $desired_limit_r );
-		$last            = strtolower( $desired_limit[ strlen( $desired_limit ) - 1 ] );
+		$last            = $desired_limit[ strlen( $desired_limit ) - 1 ];
+		$desired_limit   = rtrim( $desired_limit_r, $last );
+		$last = strtolower($last);
 		switch ( $last ) {
 			// The 'G' modifier is available since PHP 5.1.0
 			case 'g':
@@ -131,7 +134,9 @@ class module_config extends module_base {
 
 		$memory_limit = ini_get( 'memory_limit' );
 		$val          = trim( $memory_limit );
-		$last         = strtolower( $val[ strlen( $val ) - 1 ] );
+		$last         = $val[ strlen( $val ) - 1 ];
+		$val = rtrim($val, $last);
+		$last = strtolower($last);
 		switch ( $last ) {
 			// The 'G' modifier is available since PHP 5.1.0
 			case 'g':

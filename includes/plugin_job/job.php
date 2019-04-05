@@ -30,7 +30,8 @@ class module_job extends module_base {
 	public $links;
 	public $job_types;
 
-	public $version = 2.615;
+	public $version = 2.616;
+	//2.616 - 2019-04-06 - php error fix
 	//2.615 - 2018-06-05 - fix for hourly rate when creating a job
 	//2.614 - 2017-05-24 - quote_copy_job_name setting
 	//2.613 - 2017-05-16 - ajax autocomplete option for jobs in extra fields
@@ -3612,7 +3613,7 @@ Job Name: <strong>{JOB_NAME}</strong> <br/>
 				switch ( $job_task_creation_permissions ) {
 					case _JOB_TASK_CREATION_NOT_ALLOWED:
 						if ( ! $task_id ) {
-							continue; // dont allow new tasks.
+							continue 2; // dont allow new tasks.
 						}
 						break;
 					case _JOB_TASK_CREATION_REQUIRES_APPROVAL:
