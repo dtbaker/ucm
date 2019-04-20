@@ -24,9 +24,6 @@ class module_session extends module_base {
 
 		if(isset($_SESSION))return true;
 		if ( self::is_db_sessions_enabled() ) {
-
-			var_export(session_status());
-			echo "<br>";
 			try {
 				session_set_save_handler(
 					array( $this, 'open' ),
@@ -78,7 +75,8 @@ class module_session extends module_base {
 		$this->module_position = 0;
 
 
-		$this->version = 2.167;
+		$this->version = 2.168;
+		//2.168 - 2019-04-20 - fix database sessions
 		//2.167 - 2019-04-06 - fix database sessions
 		//2.166 - 2017-05-02 - file path configuration
 		//2.165 - 2016-07-13 - big update to mysqli
