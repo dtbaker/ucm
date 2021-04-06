@@ -16,7 +16,8 @@ class module_newsletter extends module_base {
 	public $links;
 	public $newsletter_types;
 
-	public $version = 2.468;
+	public $version = 2.469;
+	// 2.469 - 2021-04-07 - php8 compatibility fix
 	// 2.468 - 2017-05-07 - template file improvements
 	// 2.467 - 2017-05-02 - file path configuration
 	// 2.466 - 2017-02-20 - default newsletter template
@@ -1684,7 +1685,7 @@ class module_newsletter extends module_base {
 			return array();
 		}
 
-		$send_time = isset( $send_data['start_time'] ) ? $send_data['start_time'] : isset( $newsletter['date_updated'] ) ? strtotime( $newsletter['date_updated'] ) : time();
+		$send_time = isset( $send_data['start_time'] ) ? $send_data['start_time'] : ( isset( $newsletter['date_updated'] ) ? strtotime( $newsletter['date_updated'] ) : time() );
 		$replace   = array();
 
 		$replace['COMPANY_NAME'] = '';

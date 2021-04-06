@@ -27,7 +27,8 @@ class module_change_request extends module_base {
 		$this->change_request_types = array();
 		$this->module_name          = "change_request";
 		$this->module_position      = 30;
-		$this->version              = 2.297;
+		$this->version              = 2.298;
+		// 2.298 - 2021-04-07 - php8 compatibility fix
 		// 2.297 - 2016-07-10 - big update to mysqli
 		// 2.296 - 2015-06-14 - fix for newer fancybox version
 		// 2.295 - 2015-04-03 - fixed translation
@@ -547,7 +548,7 @@ Change request details:<br><br>
 									$email                 = module_email::new_email();
 									$email->replace_values = array_merge( $customer_data, $website_data, $email_data );
 									$email->set_to( 'user', $alert_user['user_id'] );
-									$email->set_from( 'user', module_security::get_loggedin_id() ? module_security::get_loggedin_id() : ( isset( $customer_data['primary_user_id'] ) ) ? $customer_data['primary_user_id'] : 0 );
+									$email->set_from( 'user', module_security::get_loggedin_id() ? module_security::get_loggedin_id() : ( ( isset( $customer_data['primary_user_id'] ) ) ? $customer_data['primary_user_id'] : 0 ) );
 									$email->set_subject( $template->description );
 									// do we send images inline?
 									$email->set_html( $html );
