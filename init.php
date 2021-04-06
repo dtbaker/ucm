@@ -9,6 +9,7 @@ if ( _DEBUG_MODE && ! isset( $debug_info ) ) {
 
 define( '_APPLICATION_ID', 47626 ); // not used any more.
 define( '_SCRIPT_VERSION', '3.554' );
+// 3.552 - 2021-04-07 - php 8 magic quotes fix
 // 3.551 - 2017-01-12 - fieldset settings
 // 3.548 - 2016-11-23 - adminlte fixes
 // 3.547 - 2016-11-16 - fontawesome icon fixes
@@ -106,7 +107,7 @@ if ( ! isset( $_SERVER['REQUEST_URI'] ) ) {
 }
 
 // oldschool setups:
-if ( get_magic_quotes_gpc() ) {
+if ( function_exists( 'get_magic_quotes_gpc' ) && get_magic_quotes_gpc() ) {
 	function stripslashes_deep( &$value ) {
 		$value = is_array( $value ) ? array_map( 'stripslashes_deep', $value ) : stripslashes( $value );
 

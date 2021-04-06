@@ -22,7 +22,7 @@ $debug_info[] = array(
 	'mem'   => function_exists( 'memory_get_usage' ) ? round( memory_get_usage() / 1048576, 4 ) : '',
 );
 
-if ( get_magic_quotes_gpc() ) {
+if ( function_exists( 'get_magic_quotes_gpc' ) && get_magic_quotes_gpc() ) {
 	$process = array( &$_GET, &$_POST, &$_COOKIE, &$_REQUEST );
 	while ( list( $key, $val ) = each( $process ) ) {
 		foreach ( $val as $k => $v ) {
