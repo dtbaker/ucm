@@ -949,7 +949,7 @@ if ( ! class_exists( 'FPDF' ) ) {
 			$this->_value    = $value;
 
 			//       $this->_appearance = new PDFAppearanceStream($handler,
-			//                                                    $handler->_generate_new_object_number(), 
+			//                                                    $handler->_generate_new_object_number(),
 			//                                                    $generation_id,
 			//                                                    "/Tx BMC EMC");
 		}
@@ -2022,7 +2022,7 @@ if ( ! class_exists( 'FPDF' ) ) {
 			include( $filepath );
 
 			// After we've executed 'include' the $file variable
-			// have been overwritten by $file declared in font definition file; if we do not want 
+			// have been overwritten by $file declared in font definition file; if we do not want
 			// to embed the font in the PDF file, we should set to empty string
 			if ( ! $bEmbed ) {
 				$file = '';
@@ -2093,7 +2093,7 @@ if ( ! class_exists( 'FPDF' ) ) {
 			$fontkey = $this->_MakeFontKey( $family, $encoding );
 			$this->_LoadFont( $fontkey, $family, $encoding, $style );
 
-			if ( $this->page > 0 /* && 
+			if ( $this->page > 0 /* &&
           ($this->CurrentFont['i'] != $this->fonts[$fontkey]['i'] ||
            $this->FontSizePt != $size) */ ) {
 				//Select it
@@ -2483,8 +2483,8 @@ if ( ! class_exists( 'FPDF' ) ) {
 					$type = substr( $file, $pos + 1 );
 				}
 				$type = strtolower( $type );
-				$mqr  = get_magic_quotes_runtime();
-				set_magic_quotes_runtime( 0 );
+				$mqr  = function_exists('get_magic_quotes_runtime') && get_magic_quotes_runtime();
+				function_exists('set_magic_quotes_runtime') && set_magic_quotes_runtime( 0 );
 				if ( $type == 'jpg' || $type == 'jpeg' ) {
 					$info = $this->_parsejpg( $file );
 				} elseif ( $type == 'png' ) {
@@ -2497,7 +2497,7 @@ if ( ! class_exists( 'FPDF' ) ) {
 					}
 					$info = $this->$mtd( $file );
 				}
-				set_magic_quotes_runtime( $mqr );
+				function_exists('set_magic_quotes_runtime') && set_magic_quotes_runtime( $mqr );
 				$info['i']             = count( $this->images ) + 1;
 				$this->images[ $file ] = $info;
 			} else {
@@ -2751,8 +2751,8 @@ if ( ! class_exists( 'FPDF' ) ) {
 				$this->_out( 'endobj' );
 			}
 
-			$mqr = get_magic_quotes_runtime();
-			set_magic_quotes_runtime( 0 );
+			$mqr = function_exists('get_magic_quotes_runtime') && get_magic_quotes_runtime();
+			function_exists('set_magic_quotes_runtime') && set_magic_quotes_runtime( 0 );
 			foreach ( $this->FontFiles as $file => $info ) {
 				//Font file embedding
 				$this->_newobj();
@@ -2794,7 +2794,7 @@ if ( ! class_exists( 'FPDF' ) ) {
 				$this->_putstream( $font );
 				$this->_out( 'endobj' );
 			}
-			set_magic_quotes_runtime( $mqr );
+			function_exists('set_magic_quotes_runtime') && set_magic_quotes_runtime( $mqr );
 
 			foreach ( $this->fonts as $k => $font ) {
 				//Font objects

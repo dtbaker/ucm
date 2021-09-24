@@ -19,7 +19,7 @@ class module_pdf extends module_base {
 	}
 
 	function init() {
-		$this->version = 2.133;
+		$this->version = 2.134;
 		// 2.1 - added arialuni ttf file
 		// 2.11 - more options for pdf generation
 		// 2.12 - better unicode configuration
@@ -36,6 +36,7 @@ class module_pdf extends module_base {
 		// 2.131 - 2016-01-06 - mpdf ttf update
 		// 2.132 - 2016-05-02 - support for online pdf rocket service
 		// 2.133 - 2016-07-10 - php7 support
+		// 2.134 - 2021-04-07 - php8 compatibility fix
 		$this->links           = array();
 		$this->module_name     = "pdf";
 		$this->module_position = 8882;

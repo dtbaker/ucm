@@ -28,7 +28,8 @@ class module_email extends module_base {
 		$this->module_name     = "email";
 		$this->module_position = 1666;
 
-		$this->version = 2.364;
+		$this->version = 2.365;
+		// 2.365 - 2021-04-07 - php8 compatibility fix
 		// 2.364 - 2017-07-24 - auto bcc option
 		// 2.363 - 2017-05-18 - quote email fix
 		// 2.362 - 2017-05-02 - file path configuration

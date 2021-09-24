@@ -1006,8 +1006,8 @@ class Pipeline {
 		$this->clear_box_id_map();
 
 		// Save and disable magic_quotes_runtime
-		$mq_runtime = get_magic_quotes_runtime();
-		set_magic_quotes_runtime( 0 );
+		$mq_runtime = function_exists('get_magic_quotes_runtime') && get_magic_quotes_runtime();
+		function_exists('set_magic_quotes_runtime') && set_magic_quotes_runtime( 0 );
 
 		$this->_prepare( $media );
 
@@ -1025,7 +1025,7 @@ class Pipeline {
 		$this->close();
 
 		// Restore magic_quotes_runtime setting
-		set_magic_quotes_runtime( $mq_runtime );
+		function_exists('set_magic_quotes_runtime') && set_magic_quotes_runtime( $mq_runtime );
 
 		return true;
 	}

@@ -17,7 +17,8 @@ class module_form extends module_base {
 		return parent::can_i( $actions, $name, $category, $module );
 	}
 
-	public $version = 2.276;
+	public $version = 2.277;
+	// 2.277 - 2021-04-07 - php8 compatibility fix
 	// 2.276 - 2017-06-27 - date format
 	// 2.275 - 2017-06-14 - decimal processing
 	// 2.274 - 2017-05-02 - dynamic field fixes
@@ -994,7 +995,7 @@ class module_form extends module_base {
 		if ( isset( $setting['label'] ) && strlen( $setting['label'] ) ) {
 			echo '<label for="' . htmlspecialchars( $setting['id'] ) . '">' . _l( $setting['label'] ) . '</label>';
 		}
-		if ( isset( $setting['help'] ) && ( count( $setting['help'] ) || strlen( $setting['help'] ) ) ) {
+		if ( !empty( $setting['help'] ) ) {
 			_h( $setting['help'] );
 		}
 	}
