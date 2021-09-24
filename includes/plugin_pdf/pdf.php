@@ -19,7 +19,7 @@ class module_pdf extends module_base {
 	}
 
 	function init() {
-		$this->version = 2.134;
+		$this->version = 2.135;
 		// 2.1 - added arialuni ttf file
 		// 2.11 - more options for pdf generation
 		// 2.12 - better unicode configuration
@@ -37,6 +37,7 @@ class module_pdf extends module_base {
 		// 2.132 - 2016-05-02 - support for online pdf rocket service
 		// 2.133 - 2016-07-10 - php7 support
 		// 2.134 - 2021-04-07 - php8 compatibility fix
+		// 2.135 - 2021-09-24 - change to dompdf generation
 		$this->links           = array();
 		$this->module_name     = "pdf";
 		$this->module_position = 8882;
@@ -60,12 +61,9 @@ class module_pdf extends module_base {
 
 function convert_html2pdf( $html, $pdf ) {
 
-	// start conversion
-	//require_once('includes/html2ps/dave.php');
-
 	$library = module_config::c( 'pdf_library' );
-	if ( ! $library && file_exists( dirname( __FILE__ ) . '/mpdf/mpdf.php' ) ) {
-		$library = 'mpdf';
+	if ( ! $library ) {
+		$library = 'dompdf';
 	}
 	switch ( $library ) {
 		case 'pdfrocket':
@@ -108,124 +106,19 @@ function convert_html2pdf( $html, $pdf ) {
 				$result = curl_exec( $ch );
 			}
 			file_put_contents( $pdf, $result );
-
 			break;
-		case 'mpdf':
-			if ( file_exists( dirname( __FILE__ ) . '/mpdf/mpdf.php' ) ) {
-				//require_once ( dirname( __FILE__ ) . '/mpdf/mpdf.php' );
-				require_once( module_theme::include_ucm( 'includes/plugin_pdf/mpdf/mpdf.php' ) );
-				$html_contents = file_get_contents( $html );
-				$mpdf          = new mPDF( '', module_config::c( 'pdf_media_size', 'A4' ), 0, '', module_config::c( 'pdf_media_left', '10' ), module_config::c( 'pdf_media_right', '10' ), module_config::c( 'pdf_media_top', '10' ), module_config::c( 'pdf_media_bottom', '10' ), 8, 8 );
-				$mpdf->debug   = true;
-				$mpdf->WriteHTML( $html_contents );
-				//$mpdf->Output($pdf,'D'); // Download
-				$mpdf->Output( $pdf, 'F' );
-
-				break;
-			}
 		default:
 			ini_set( 'error_reporting', E_ERROR );
 			ini_set( "display_errors", true );
-			require_once( 'html2ps/config.inc.php' );
-			require_once( HTML2PS_DIR . 'pipeline.factory.class.php' );
-
+			require_once( 'dompdf/autoload.inc.php' );
 			set_time_limit( 120 );
-			parse_config_file( HTML2PS_DIR . 'html2ps.config' );
 
+			$dompdf = new \Dompdf\Dompdf();
+			$dompdf->loadHtml( file_get_contents( $html ) );
+			$dompdf->setPaper( module_config::c( 'pdf_media_size', 'A4' ) );
+			$dompdf->render();
+			$dompdf->stream($pdf);
 
-			global $g_font_resolver_pdf;
-			//    print_r($g_font_resolver_pdf->ttf_mappings); exit;
-			$g_font_resolver_pdf->ttf_mappings['Arial Unicode MS'] = module_config::c( 'pdf_unicode_font', 'arialuni.ttf' );
-			/**
-			 * Handles the saving generated PDF to user-defined output file on server
-			 */
-			if ( ! class_exists( 'MyDestinationFile', false ) ) {
-				class MyDestinationFile extends Destination {
-					/**
-					 * @var String result file name / path
-					 * @access private
-					 */
-					var $_dest_filename;
-
-					public function __construct( $dest_filename ) {
-						$this->_dest_filename = $dest_filename;
-					}
-
-					function process( $tmp_filename, $content_type ) {
-						copy( $tmp_filename, $this->_dest_filename );
-					}
-				}
-
-				class MyFetcherLocalFile extends Fetcher {
-					var $_content;
-
-					public function __construct( $file ) {
-						$this->_content = file_get_contents( $file );
-					}
-
-					function get_data( $dummy1 ) {
-						return new FetchedDataURL( $this->_content, array(), "" );
-					}
-
-					function get_base_url() {
-						return "http://" . $_SERVER['HTTP_HOST'] . '/';
-					}
-				}
-
-
-				/**
-				 * Runs the HTML->PDF conversion with default settings
-				 *
-				 * Warning: if you have any files (like CSS stylesheets and/or images referenced by this file,
-				 * use absolute links (like http://my.host/image.gif).
-				 *
-				 * @param $path_to_html String path to source html file.
-				 * @param $path_to_pdf  String path to file to save generated PDF to.
-				 */
-				function convert_to_pdf( $path_to_html, $path_to_pdf ) {
-					$pipeline = PipelineFactory::create_default_pipeline( "", "" );
-					// Override HTML source
-					$pipeline->fetchers[] = new MyFetcherLocalFile( $path_to_html );
-
-					//$filter = new PreTreeFilterHeaderFooter("HEADER", "FOOTER");
-					//$pipeline->pre_tree_filters[] = $filter;
-
-					// Override destination to local file
-					$pipeline->destination = new MyDestinationFile( $path_to_pdf );
-
-					$baseurl = "";
-					$media   = Media::predefined( module_config::c( 'pdf_media_size', 'A4' ) );
-					$media->set_landscape( false );
-					$media->set_margins( array(
-						'left'   => module_config::c( 'pdf_media_left', '0' ),
-						'right'  => module_config::c( 'pdf_media_right', '0' ),
-						'top'    => module_config::c( 'pdf_media_top', '0' ),
-						'bottom' => module_config::c( 'pdf_media_bottom', '0' )
-					) );
-					$media->set_pixels( module_config::c( 'pdf_media_pixels', '1010' ) );
-
-					global $g_config;
-					$g_config = array(
-						'compress'         => true,
-						'cssmedia'         => 'screen',
-						'scalepoints'      => '1',
-						'renderimages'     => true,
-						'renderlinks'      => true,
-						'renderfields'     => true,
-						'renderforms'      => false,
-						'mode'             => 'html',
-						'encoding'         => 'UTF-8',
-						'debugbox'         => false,
-						'pdfversion'       => '1.4',
-						'draw_page_border' => false,
-						'media'            => module_config::c( 'pdf_media_size', 'A4' ),
-					);
-					$pipeline->configure( $g_config );
-					//$pipeline->add_feature('toc', array('location' => 'before'));
-					$pipeline->process( $baseurl, $media );
-				}
-			}
-			convert_to_pdf( $html, $pdf );
 			break;
 	}
 

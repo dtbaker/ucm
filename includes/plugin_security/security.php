@@ -39,7 +39,8 @@ class module_security extends module_base {
 		$this->module_name     = "security";
 		$this->module_position = 999;
 
-		$this->version = 2.526;
+		$this->version = 2.527;
+		// 2.527 - 2021-04-07 - php8 compatibility fix
 		// 2.526 - 2017-05-02 - file path configuration
 		// 2.525 - 2017-02-16 - js error fix
 		// 2.524 - 2017-01-12 - edit form fields based on user role

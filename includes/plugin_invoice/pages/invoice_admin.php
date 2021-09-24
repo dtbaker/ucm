@@ -24,5 +24,5 @@ if ( isset( $_REQUEST['print'] ) ) {
 	include( module_theme::include_ucm( "includes/plugin_invoice/pages/invoice_admin_list.php" ) );
 	//include("invoice_admin_list.php");
 
-} 
+}
 

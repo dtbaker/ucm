@@ -1447,7 +1447,9 @@ Job: <strong>{JOB_NAME}</strong> <br/>
 				$data['invoice_notes'] .= '</ul>';
 			} else {
 				$note                  = array_shift( $notes );
-				$data['invoice_notes'] .= htmlspecialchars( $note['note'] );
+				if(!empty($note['note'])) {
+					$data['invoice_notes'] .= htmlspecialchars( $note['note'] );
+				}
 			}
 		}
 
