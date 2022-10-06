@@ -22,21 +22,21 @@ $debug_info[] = array(
 	'mem'   => function_exists( 'memory_get_usage' ) ? round( memory_get_usage() / 1048576, 4 ) : '',
 );
 
-if ( function_exists( 'get_magic_quotes_gpc' ) && get_magic_quotes_gpc() ) {
-	$process = array( &$_GET, &$_POST, &$_COOKIE, &$_REQUEST );
-	while ( list( $key, $val ) = each( $process ) ) {
-		foreach ( $val as $k => $v ) {
-			unset( $process[ $key ][ $k ] );
-			if ( is_array( $v ) ) {
-				$process[ $key ][ stripslashes( $k ) ] = $v;
-				$process[]                             = &$process[ $key ][ stripslashes( $k ) ];
-			} else {
-				$process[ $key ][ stripslashes( $k ) ] = stripslashes( $v );
-			}
-		}
-	}
-	unset( $process );
-}
+//if ( function_exists( 'get_magic_quotes_gpc' ) && get_magic_quotes_gpc() ) {
+//	$process = array( &$_GET, &$_POST, &$_COOKIE, &$_REQUEST );
+//	while ( list( $key, $val ) = each( $process ) ) {
+//		foreach ( $val as $k => $v ) {
+//			unset( $process[ $key ][ $k ] );
+//			if ( is_array( $v ) ) {
+//				$process[ $key ][ stripslashes( $k ) ] = $v;
+//				$process[]                             = &$process[ $key ][ stripslashes( $k ) ];
+//			} else {
+//				$process[ $key ][ stripslashes( $k ) ] = stripslashes( $v );
+//			}
+//		}
+//	}
+//	unset( $process );
+//}
 
 if ( preg_match( '#/external/(m.*$)#', $_SERVER['REQUEST_URI'], $matches ) ) {
 	// hack for dodgy email clients.
