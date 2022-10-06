@@ -88,7 +88,7 @@ if ( ! function_exists( 'curl_init' ) ) {
 	set_error( 'Sorry CURL is not enabled on your hosting account. Please contact your host to have this enabled.' );
 } else {
 	// do a test connection
-	$ch = curl_init( 'http://ultimateclientmanager.com/api/?curl_check' );
+	$ch = curl_init( 'https://api.ultimateclientmanager.com/?curl_check' );
 	curl_setopt( $ch, CURLOPT_RETURNTRANSFER, true );
 	curl_setopt( $ch, CURLOPT_HEADER, false );
 	$result = curl_exec( $ch );
@@ -104,7 +104,7 @@ if ( $setup_errors ) {
 	print_header_message();
 	?>
 	<p>If you require support, or assistance installing this item, please send in a support ticket here: <a
-			href="http://ultimateclientmanager.com/support-ticket.html" target="_blank">http://ultimateclientmanager.com/support-ticket.html</a>
+			href="https://ultimateclientmanager.com/support/" target="_blank">https://ultimateclientmanager.com/support/</a>
 	</p>
 
 	<a href="?p=setup" class="uibutton">Try Again</a>
