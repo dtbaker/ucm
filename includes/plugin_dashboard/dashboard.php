@@ -30,7 +30,8 @@ class module_dashboard extends module_base {
 		$this->module_position = 0;
 
 
-		$this->version = 2.140;
+		$this->version = 2.141;
+		//2.141 - 2022-10-22 - bug fix for dashboard alerts
 		//2.140 - 2017-02-16 - dashboard_tab_ajax_stream setting
 		//2.139 - 2016-11-16 - fontawesome fixes
 		//2.138 - 2014-11-19 - dashboard date sorting fix
@@ -194,9 +195,7 @@ class module_dashboard extends module_base {
 									}
 									$tabid ++;
 									?>
-									$( "
-									<li><a href='#newtab<?php echo $tabid; ?>'><?php echo $key; ?> (<?php echo count( $alerts ); ?>)</a>
-									</li>" ).appendTo( ul );
+									$( "<li><a href='#newtab<?php echo $tabid; ?>'><?php echo $key; ?> (<?php echo count( $alerts ); ?>)</a></li>" ).appendTo( ul );
 									<?php
 									ob_start();
 									if ( isset( module_dashboard::$group_settings[ $key ] ) ) {
@@ -293,8 +292,7 @@ class module_dashboard extends module_base {
 									$html = preg_replace( '#\s+#', ' ', $html );
 									$html = addcslashes( $html, "'" );
 									?>
-									$( '
-									<div id="newtab<?php echo $tabid; ?>"><?php echo $html; ?></div>' ).appendTo( tabs );
+									$( '<div id="newtab<?php echo $tabid; ?>"><?php echo $html; ?></div>' ).appendTo( tabs );
 									<?php
 								}
 								?>
