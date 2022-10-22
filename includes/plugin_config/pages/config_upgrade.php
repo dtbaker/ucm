@@ -686,8 +686,13 @@ if ( isset( $_REQUEST['process_upgrade'] ) && isset( $_REQUEST['via_ajax'] ) ) {
 			),
 			'elements_after' => module_form::generate_form_actions( $form_actions ),
 		);
-		$url           = module_config::c( 'ucm_upgrade_url', 'http://api.ultimateclientmanager.com/upgrade.php' );
-		if ( $url != 'http://ultimateclientmanager.com/api/upgrade.php' && $url != 'http://api.ultimateclientmanager.com/upgrade.php' ) {
+		$url           = module_config::c( 'ucm_upgrade_url', 'https://api.ultimateclientmanager.com/upgrade.php' );
+		if (
+			$url != 'http://ultimateclientmanager.com/api/upgrade.php' &&
+			$url != 'http://api.ultimateclientmanager.com/upgrade.php' &&
+			$url != 'https://ultimateclientmanager.com/api/upgrade.php' &&
+			$url != 'https://api.ultimateclientmanager.com/upgrade.php'
+		) {
 			$fieldset_data['elements_before'] = '<div class="error_text text-center">Warning, "ucm_upgrade_url" setting is incorrect. Please contact <a href="http://ultimateclientmanager.com/support/support-ticket/">Support</a></div>';
 		}
 		echo module_form::generate_fieldset( $fieldset_data );

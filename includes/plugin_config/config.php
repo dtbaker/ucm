@@ -23,7 +23,8 @@ class module_config extends module_base {
 	public function init() {
 		$this->module_name     = "config";
 		$this->module_position = 40;
-		$this->version         = 2.433;
+		$this->version         = 2.434;
+		//2.434 - 2022-10-22 - default to https update url
 		//2.433 - 2019-04-06 - php error fix
 		//2.432 - 2017-06-27 - date format
 		//2.431 - 2017-06-14 - file path configuration
@@ -930,11 +931,16 @@ public static function js_combine($version, $reinit=false){
 			'requested_plugin'      => $requested_plugin,
 			'get_file_contents'     => $get_file_contents,
 		);
-		$url         = module_config::c( 'ucm_upgrade_url', 'http://api.ultimateclientmanager.com/upgrade.php' );
+		$url         = module_config::c( 'ucm_upgrade_url', 'https://api.ultimateclientmanager.com/upgrade.php' );
 		if ( $url == 'http://ultimateclientmanager.com/api/upgrade.php' ) {
-			$url = 'http://api.ultimateclientmanager.com/upgrade.php'; // hack to use new update subdomain
+			$url = 'https://api.ultimateclientmanager.com/upgrade.php'; // hack to use new update subdomain
 		}
-		if ( $url != 'http://ultimateclientmanager.com/api/upgrade.php' && $url != 'http://api.ultimateclientmanager.com/upgrade.php' ) {
+		if (
+			$url != 'http://ultimateclientmanager.com/api/upgrade.php' &&
+	     $url != 'http://api.ultimateclientmanager.com/upgrade.php' &&
+	     $url != 'https://ultimateclientmanager.com/api/upgrade.php' &&
+	     $url != 'https://api.ultimateclientmanager.com/upgrade.php'
+		) {
 			set_error( 'Incorrect API url' );
 			redirect_browser( _BASE_HREF );
 		}
