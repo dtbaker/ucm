@@ -161,7 +161,6 @@ class module_debug extends module_base {
 			<link rel="stylesheet" href="<?php echo _BASE_HREF; ?>css/styles.css?ver=3" type="text/css"/>
 			<link type="text/css" href="<?php echo _BASE_HREF; ?>css/smoothness/jquery-ui-1.9.2.custom.min.css"
 			      rel="stylesheet"/>
-			<script type="text/javascript" src="<?php echo _BASE_HREF; ?>js/jquery-1.8.3.min.js"></script>
 			<?php
 		}
 		?>

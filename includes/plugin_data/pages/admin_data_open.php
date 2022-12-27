@@ -3,7 +3,7 @@
 // when a particular data entry is opened, this page is displayed.
 // this reads the layout of the page structure from the database (configured through the drag/drop settings) and displays the info.
 
-// we could pass rendering this type of layout off to one of the /layout/ 
+// we could pass rendering this type of layout off to one of the /layout/
 
 // this file could be included multiple times from within itself, maybe... so we do some if(!isset()) checking first..
 
@@ -48,7 +48,7 @@ if ( ! isset( $data_record_id ) || ! $data_record_id ) {
 			exit;
 		}*/
 
-		// record that a record was accessed 
+		// record that a record was accessed
 		$module->record_access( $data_record_id );
 
 	} else {
@@ -621,7 +621,7 @@ if ( isset( $_REQUEST['print'] ) ) {
 		<title>Print</title>
 		<link rel="stylesheet" href="css/styles.css" type="text/css"/>
 		<link type="text/css" href="css/ui-lightness/jquery-ui-1.8.1.custom.css" rel="stylesheet"/>
-		<script type="text/javascript" src="js/jquery-1.4.2.min.js"></script>
+		<script type="text/javascript" src="js/jquery-1.8.3.min.js"></script>
 		<script type="text/javascript" src="js/jquery-ui-1.8.1.custom.min.js"></script>
 
 		<style type="text/css">
