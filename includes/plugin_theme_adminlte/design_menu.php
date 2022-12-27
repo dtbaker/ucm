@@ -2,7 +2,7 @@
 if(!function_exists('sort_menu_links')){
 	function sort_menu_links($a,$b){
 		if(isset($a['order']) && isset($b['order'])){
-			return $a['order'] > $b['order'];
+			return $a['order'] > $b['order'] ? 1 : -1;
 		}
 		return 1;
 	}

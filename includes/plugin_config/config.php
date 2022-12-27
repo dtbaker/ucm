@@ -1,7 +1,7 @@
 <?php
 
 function config_sort_css( $a, $b ) {
-	return $a[3] > $b[3];
+	return $a[3] > $b[3] ? 1 : -1;
 }
 
 class module_config extends module_base {
@@ -23,7 +23,8 @@ class module_config extends module_base {
 	public function init() {
 		$this->module_name     = "config";
 		$this->module_position = 40;
-		$this->version         = 2.434;
+		$this->version         = 2.435;
+		//2.435 - 2022-12-27 - uasort boolean error fix
 		//2.434 - 2022-10-22 - default to https update url
 		//2.433 - 2019-04-06 - php error fix
 		//2.432 - 2017-06-27 - date format
@@ -232,6 +233,7 @@ class module_config extends module_base {
 						$desired_limit_r = module_config::c( 'php_memory_limit', '64M' );
 						$desired_limit   = trim( $desired_limit_r );
 						$last            = strtolower( $desired_limit[ strlen( $desired_limit ) - 1 ] );
+						$desired_limit   = (int)$desired_limit;
 						switch ( $last ) {
 							// The 'G' modifier is available since PHP 5.1.0
 							case 'g':
@@ -245,6 +247,7 @@ class module_config extends module_base {
 						$memory_limit = ini_get( 'memory_limit' );
 						$val          = trim( $memory_limit );
 						$last         = strtolower( $val[ strlen( $val ) - 1 ] );
+						$val          = (int)$val;
 						switch ( $last ) {
 							// The 'G' modifier is available since PHP 5.1.0
 							case 'g':

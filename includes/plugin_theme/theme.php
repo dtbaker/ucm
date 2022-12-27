@@ -29,7 +29,8 @@ class module_theme extends module_base {
 	}
 
 	public function init() {
-		$this->version = 2.406;
+		$this->version = 2.407;
+		// 2.407 - 2022-12-27 - php8.1 fixes
 		// 2.406 - 2017-05-02 - big changes
 		// 2.405 - 2017-02-27 - custom page header code
 		// 2.404 - 2017-02-26 - new jquery ui update

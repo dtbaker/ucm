@@ -8,7 +8,8 @@ if ( _DEBUG_MODE && ! isset( $debug_info ) ) {
 }
 
 define( '_APPLICATION_ID', 47626 ); // not used any more.
-define( '_SCRIPT_VERSION', '3.554' );
+define( '_SCRIPT_VERSION', '3.555' );
+// 3.555 - 2022-12-27 - uasort boolean fix
 // 3.552 - 2021-04-07 - php 8 magic quotes fix
 // 3.551 - 2017-01-12 - fieldset settings
 // 3.548 - 2016-11-23 - adminlte fixes
@@ -342,7 +343,7 @@ hook_handle_callback( 'plugins_loaded' );
 
 if ( ! function_exists( 'sort_plugins' ) ) {
 	function sort_plugins( $a, $b ) {
-		return $a->module_position > $b->module_position;
+		return $a->module_position > $b->module_position ? 1 : -1;
 	}
 }
 uasort( $plugins, 'sort_plugins' );

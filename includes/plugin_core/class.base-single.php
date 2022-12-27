@@ -548,21 +548,23 @@ class UCMBaseSingle implements ArrayAccess {
 		unset( $this->db_details[ $key ] );
 	}
 
+	#[\ReturnTypeWillChange]
 	public function offsetSet( $offset, $value ) {
 		$this->db_details[ $offset ] = $value;
 	}
 
+	#[\ReturnTypeWillChange]
 	public function offsetExists( $offset ) {
 		return isset( $this->db_details[ $offset ] );
 	}
 
+	#[\ReturnTypeWillChange]
 	public function offsetUnset( $offset ) {
 		unset( $this->db_details[ $offset ] );
 	}
 
+	#[\ReturnTypeWillChange]
 	public function offsetGet( $offset ) {
 		return isset( $this->db_details[ $offset ] ) ? $this->db_details[ $offset ] : null;
 	}
-
-
 }

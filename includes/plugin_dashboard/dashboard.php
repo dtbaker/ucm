@@ -4,7 +4,7 @@
 // sort the alerts
 function sort_ajax_alert( $a, $b ) {
 	if ( isset( $a['time'] ) && isset( $b['time'] ) ) {
-		return $a['time'] > $b['time'];
+		return $a['time'] > $b['time'] ? 1 : -1;
 	}
 
 	return strtotime( input_date( $a['date'] ) ) > strtotime( input_date( $b['date'] ) );
@@ -30,7 +30,8 @@ class module_dashboard extends module_base {
 		$this->module_position = 0;
 
 
-		$this->version = 2.141;
+		$this->version = 2.142;
+		//2.142 - 2022-12-27 - php8.1 fixes
 		//2.141 - 2022-10-22 - bug fix for dashboard alerts
 		//2.140 - 2017-02-16 - dashboard_tab_ajax_stream setting
 		//2.139 - 2016-11-16 - fontawesome fixes
@@ -79,10 +80,10 @@ class module_dashboard extends module_base {
 				// sort the alerts
 				function sort_alert( $a, $b ) {
 					if ( isset( $a['time'] ) && isset( $b['time'] ) ) {
-						return $a['time'] > $b['time'];
+						return $a['time'] > $b['time'] ? 1 : -1;
 					}
 					if ( isset( $a['date'] ) && isset( $b['date'] ) ) {
-						return strtotime( $a['date'] ) > strtotime( $b['date'] );
+						return strtotime( $a['date'] ) > strtotime( $b['date'] ) ? 1 : -1;
 					}
 
 					return 0;

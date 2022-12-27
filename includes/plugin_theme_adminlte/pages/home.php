@@ -158,7 +158,7 @@ foreach ( $widget_columns as $column_count => $widgets ) {
 				<?php
 
 				uasort( $column_widgets, function ( $a, $b ) {
-					return $a['page_order'] > $b['page_order'];
+					return $a['page_order'] > $b['page_order'] ? 1 : -1;
 				} );
 
 				foreach ( $column_widgets as $column_widget ) {

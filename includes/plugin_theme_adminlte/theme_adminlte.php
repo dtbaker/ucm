@@ -19,7 +19,8 @@ class module_theme_adminlte extends module_base {
 		$this->module_name     = "theme_adminlte";
 		$this->module_position = 0;
 
-		$this->version = 2.158;
+		$this->version = 2.159;
+		//2.159 - 2022-12-27 - php8.1 fixes
 		//2.158 - 2017-01-12 - fieldset settings
 		//2.157 - 2017-01-05 - php warning fix
 		//2.156 - 2016-12-20 - ajax lookup forms

@@ -7,7 +7,8 @@ class module_address extends module_base {
 	public $address_types;
 
 
-	public $version = 2.225;
+	public $version = 2.226;
+	// 2.226 - 2022-12-27 - php8.1 fixes
 	// 2.225 - 2016-07-10 - big update to mysqli
 	// 2.224 - 2016-01-25 - remove address fields if empty title
 	// 2.223 - 2015-07-06 - hook bug fix
@@ -258,12 +259,12 @@ class module_address extends module_base {
 		if ( $res && is_array( $res ) ) {
 			$res = array_shift( $res );
 		} else {
-			$res = false;
+			$res = [];
 		}
 		if ( $only_address_fields ) {
 			$address = array();
 			foreach ( array( 'line_1', 'line_2', 'suburb', 'state', 'region', 'country', 'post_code' ) as $key ) {
-				$address[ $key ] = $res[ $key ];
+				$address[ $key ] = isset($res[ $key ]) ? $res[ $key ] : false;
 			}
 
 			return $address;
