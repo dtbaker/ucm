@@ -381,11 +381,14 @@ class module_config extends module_base {
 				case 'system_base_href':
 				case 'php_memory_limit':
 				case 'force_ssl':
+				case 'theme_name':
+				case 'ucm_upgrade_url':
 					set_error( 'Changing some settings is disabled in DEMO mode.' );
 
 					return $val;
 				default:
 					if (
+						strpos( $key, '_theme' ) !== false ||
 						strpos( $key, 'license' ) !== false ||
 						strpos( $key, 'licence' ) !== false
 					) {
