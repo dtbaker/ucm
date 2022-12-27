@@ -216,18 +216,6 @@ class module_config extends module_base {
 				$alerts = array();
 				// check if the cron job hasn'e run in a certian amount of time.
 
-				if ( module_config::can_i( 'view', 'Upgrade System' ) ) {
-					$last_update = module_config::c( 'last_update', time() );
-					// prompt them to do an update every 7 days
-					if ( $last_update < ( time() - 604800 ) ) {
-						$alert_res = process_alert( date( 'Y-m-d' ), _l( 'Please check for Software Updates' ) );
-						if ( $alert_res ) {
-							$alert_res['link'] = $this->link_generate( false, array( 'page' => 'config_upgrade' ) );
-							$alert_res['name'] = _l( 'Please go to Settings > Upgrade and check for latest Software Updates.' );
-							$alerts[]          = $alert_res;
-						}
-					}
-				}
 				if ( module_config::can_i( 'view', 'Settings' ) ) {
 					$last_cron_run = module_config::c( 'cron_last_run', 0 );
 					if ( $last_cron_run < ( time() - 86400 ) && ! _DEMO_MODE ) {
