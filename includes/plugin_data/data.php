@@ -13,6 +13,11 @@ class module_data extends module_base {
 
 	var $links;
 
+	public function __construct() {
+		$this->module_name     = 'data';
+		$this->module_position = 150;
+		$this->version         = 2.185;
+	}
 
 	public static function can_i( $actions, $name = false, $category = false, $module = false ) {
 		if ( ! $module ) {
@@ -27,11 +32,8 @@ class module_data extends module_base {
 	}
 
 	public function init() {
-		$this->links           = array();
-		$this->user_types      = array();
-		$this->module_name     = "data";
-		$this->module_position = 150;
-		$this->version         = 2.185;
+		$this->links     = array();
+		$this->user_types = array();
 		//2.185 - 2017-05-02 - file path configuration
 		//2.184 - 2017-02-20 - custom data extra field improvement
 		//2.183 - 2016-12-10 - ajax lookup from extra fields

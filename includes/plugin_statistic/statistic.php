@@ -15,7 +15,11 @@ class module_statistic extends module_base {
 		return __CLASS__;
 	}
 
-	public $version = 2.167;
+	public function __construct() {
+		$this->module_name     = 'statistic';
+		$this->module_position = 490;
+		$this->version         = 2.167;
+	}
 	// 2.1 - initial release of finance staff report
 	// 2.11 - added new "Job Report"
 	// 2.12 - added new "Subscription Report" for those with subscription plugin
@@ -32,11 +36,7 @@ class module_statistic extends module_base {
 	// 2.167 - 2017-06-14 - tax report fixes
 
 	function init() {
-		$this->links           = array();
-		$this->module_name     = "statistic";
-		$this->module_position = 490;
-
-
+		$this->links = array();
 	}
 
 	public function pre_menu() {

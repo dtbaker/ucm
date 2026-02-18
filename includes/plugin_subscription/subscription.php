@@ -20,12 +20,15 @@ class module_subscription extends module_base {
 		return __CLASS__;
 	}
 
+	public function __construct() {
+		$this->module_name     = 'subscription';
+		$this->module_position = 30;
+		$this->version         = 2.204;
+	}
+
 	public function init() {
 		$this->links              = array();
 		$this->subscription_types = array();
-		$this->module_name        = "subscription";
-		$this->module_position    = 30;
-		$this->version            = 2.204;
 		// 2.204 - 2017-02-26 - add website details to subscription
 		// 2.203 - 2017-01-04 - subscription pdf template customer option
 		// 2.202 - 2016-12-01 - ajax lookup for subscribers

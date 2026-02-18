@@ -12,6 +12,11 @@ function sort_ajax_alert( $a, $b ) {
 
 class module_dashboard extends module_base {
 
+	public function __construct() {
+		$this->module_name     = 'dashboard';
+		$this->module_position = 140;
+		$this->version         = 2.142;
+	}
 
 	public static function can_i( $actions, $name = false, $category = false, $module = false ) {
 		if ( ! $module ) {
@@ -26,11 +31,6 @@ class module_dashboard extends module_base {
 	}
 
 	public function init() {
-		$this->module_name     = "dashboard";
-		$this->module_position = 140;
-
-
-		$this->version = 2.142;
 		//2.142 - 2022-12-27 - php8.1 fixes
 		//2.141 - 2022-10-22 - bug fix for dashboard alerts
 		//2.140 - 2017-02-16 - dashboard_tab_ajax_stream setting

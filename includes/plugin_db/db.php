@@ -3,6 +3,12 @@
 
 class module_db extends module_base {
 
+	public function __construct() {
+		$this->module_name     = 'db';
+		$this->module_position = 20;
+		$this->version         = 2.140;
+	}
+
 	public static function can_i( $actions, $name = false, $category = false, $module = false ) {
 		if ( ! $module ) {
 			$module = __CLASS__;
@@ -16,10 +22,6 @@ class module_db extends module_base {
 	}
 
 	public function init() {
-		$this->module_name     = "db";
-		$this->module_position = 20;
-
-		$this->version = 2.140;
 		//2.140 - 2017-05-30 - upgrade fix
 		//2.139 - 2017-05-02 - speed fixes
 		//2.138 - 2017-05-02 - big changes

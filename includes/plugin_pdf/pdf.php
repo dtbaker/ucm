@@ -18,8 +18,13 @@ class module_pdf extends module_base {
 		return __CLASS__;
 	}
 
+	public function __construct() {
+		$this->module_name     = 'pdf';
+		$this->module_position = 410;
+		$this->version         = 2.135;
+	}
+
 	function init() {
-		$this->version = 2.135;
 		// 2.1 - added arialuni ttf file
 		// 2.11 - more options for pdf generation
 		// 2.12 - better unicode configuration
@@ -38,9 +43,7 @@ class module_pdf extends module_base {
 		// 2.133 - 2016-07-10 - php7 support
 		// 2.134 - 2021-04-07 - php8 compatibility fix
 		// 2.135 - 2021-09-24 - change to dompdf generation
-		$this->links           = array();
-		$this->module_name     = "pdf";
-		$this->module_position = 410;
+		$this->links = array();
 	}
 
 	public function pre_menu() {

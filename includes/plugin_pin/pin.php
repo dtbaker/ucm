@@ -15,14 +15,15 @@ class module_pin extends module_base {
 		return __CLASS__;
 	}
 
-	public function init() {
-		$this->module_name     = "pin";
+	public function __construct() {
+		$this->module_name     = 'pin';
 		$this->module_position = 420;
+		$this->version         = 2.12;
+	}
 
+	public function init() {
 		module_config::register_css( 'pin', 'pin.css' );
 		module_config::register_js( 'pin', 'pin.js' );
-
-		$this->version = 2.12;
 		//2.12 - 2016-02-02 - pin theme overriding support
 		//2.11 css tweak
 

@@ -6,7 +6,11 @@ class module_backup extends module_base {
 
 	public $links;
 
-	public $version = 2.117;
+	public function __construct() {
+		$this->module_name     = 'backup';
+		$this->module_position = 90;
+		$this->version         = 2.117;
+	}
 	// 2.117 - 2017-05-02 - backup fix
 	// 2.116 - 2017-05-02 - backup fix
 	// 2.115 - 2016-07-10 - big update to mysqli
@@ -31,9 +35,7 @@ class module_backup extends module_base {
 	}
 
 	public function init() {
-		$this->links           = array();
-		$this->module_name     = "backup";
-		$this->module_position = 90;
+		$this->links = array();
 
 		module_config::register_js( 'backup', 'backup.js' );
 		module_config::register_css( 'backup', 'backup.css' );

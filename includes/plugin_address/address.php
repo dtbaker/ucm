@@ -6,8 +6,11 @@ class module_address extends module_base {
 	public $links;
 	public $address_types;
 
-
-	public $version = 2.226;
+	public function __construct() {
+		$this->module_name     = 'address';
+		$this->module_position = 70;
+		$this->version         = 2.226;
+	}
 	// 2.226 - 2022-12-27 - php8.1 fixes
 	// 2.225 - 2016-07-10 - big update to mysqli
 	// 2.224 - 2016-01-25 - remove address fields if empty title
@@ -30,11 +33,8 @@ class module_address extends module_base {
 	}
 
 	public function init() {
-		$this->links           = array();
-		$this->address_types   = array();
-		$this->module_name     = "address";
-		$this->module_position = 70;
-
+		$this->links               = array();
+		$this->address_types       = array();
 		$this->link_include_parents = true; // set defaullt
 
 	}

@@ -23,7 +23,6 @@ class module_ticket extends module_base {
 	public $links;
 	public $ticket_types;
 
-	public $version = 2.504;
 	// 2.504 - 2017-05-02 - file path configuration
 	// 2.503 - 2017-04-22 - more debug messages on save test page
 	// 2.502 - 2017-02-20 - gmail email markup
@@ -185,11 +184,15 @@ class module_ticket extends module_base {
 		return __CLASS__;
 	}
 
-	public function init() {
-		$this->links           = array();
-		$this->ticket_types    = array();
-		$this->module_name     = "ticket";
+	public function __construct() {
+		$this->module_name     = 'ticket';
 		$this->module_position = 530;
+		$this->version         = 2.504;
+	}
+
+	public function init() {
+		$this->links       = array();
+		$this->ticket_types = array();
 
 		self::$ticket_statuses = array(
 			1                             => _l( 'Unassigned' ),

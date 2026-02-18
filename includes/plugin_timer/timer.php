@@ -12,7 +12,11 @@ define( '_TIMER_ACCESS_MINE', 'Only my timers' ); // do not change string
 class module_timer extends module_base {
 
 
-	public $version = 2.141;
+	public function __construct() {
+		$this->module_name     = 'timer';
+		$this->module_position = 540;
+		$this->version         = 2.141;
+	}
 	//2.141 - 2018-03-31 - timer + invoice link
 	//2.140 - 2017-07-26 - bug fixes
 	//2.139 - 2017-07-23 - timers linked to customers/websites
@@ -41,9 +45,6 @@ class module_timer extends module_base {
 	}
 
 	public function init() {
-		$this->module_name     = "timer";
-		$this->module_position = 540;
-
 		if ( module_security::is_logged_in() && self::is_plugin_enabled() && self::can_i( 'view', 'Timers' ) && get_display_mode() != 'mobile' ) {
 			module_config::register_css( 'timer', 'timer.css' );
 			module_config::register_js( 'timer', 'timer.js' );

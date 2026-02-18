@@ -347,27 +347,12 @@ if ( $plugins_to_init ) {
 
 hook_handle_callback( 'plugins_loaded' );
 
-/*foreach($plugins as $plugin_name => &$p){
-    echo $plugin_name.'<br>';
-    eval('echo module_'.$plugin_name.'::$module_name_hack;');
-    echo '<br>';
-}*/
-
 if ( ! function_exists( 'sort_plugins' ) ) {
 	function sort_plugins( $a, $b ) {
 		return $a->module_position > $b->module_position ? 1 : -1;
 	}
 }
 uasort( $plugins, 'sort_plugins' );
-echo 'init';
-foreach($plugins as $plugin_name => &$p){
-    echo $plugin_name.'<br>';
-    echo $p->module_position.'<br>';
-    echo '<br>';
-}
-print_r($plugins_to_init);
-print_r(array_keys($plugins));exit;
-
 
 if ( isset( $_REQUEST['auto_login'] ) ) {
 	// try to process an auto login.

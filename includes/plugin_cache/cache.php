@@ -11,6 +11,12 @@ class module_cache extends module_base {
 
 	private static $cache_store = array();
 
+	public function __construct() {
+		$this->module_name     = 'cache';
+		$this->module_position = 10;
+		$this->version         = 2.232;
+	}
+
 	public static function can_i( $actions, $name = false, $category = false, $module = false ) {
 		if ( ! $module ) {
 			$module = __CLASS__;
@@ -27,9 +33,6 @@ class module_cache extends module_base {
 	private static $_db_cache = array();
 
 	public function init() {
-		$this->module_name     = "cache";
-		$this->module_position = 10;
-		$this->version         = 2.232;
 		// 2.232 - 2016-12-20 - speed improvements
 		// 2.231 - 2016-12-18 - speed improvements
 		// 2.230 - 2016-07-10 - big update to mysqli

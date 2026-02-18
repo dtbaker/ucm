@@ -5,6 +5,12 @@ class module_import_export extends module_base {
 
 	var $links;
 
+	public function __construct() {
+		$this->module_name     = 'import_export';
+		$this->module_position = 240;
+		$this->version         = 2.242;
+	}
+
 	public static function can_i( $actions, $name = false, $category = false, $module = false ) {
 		if ( ! $module ) {
 			$module = __CLASS__;
@@ -18,11 +24,7 @@ class module_import_export extends module_base {
 	}
 
 	function init() {
-		$this->links           = array();
-		$this->module_name     = "import_export";
-		$this->module_position = 240;
-
-		$this->version = 2.242;
+		$this->links = array();
 		// 2.2 - exporting groups to CSV (started with customer export)
 		// 2.21 - clear 'eys' value from form after generation - support for a non parent() form submission (eg: from finance list)
 		// 2.22 - import options moved to a hidden form submit, rather than a long GET url. better!

@@ -39,13 +39,15 @@ class module_invoice extends module_base {
 		return __CLASS__;
 	}
 
-	public function init() {
-		$this->links           = array();
-		$this->invoice_types   = array();
-		$this->module_name     = "invoice";
+	public function __construct() {
+		$this->module_name     = 'invoice';
 		$this->module_position = 250;
+		$this->version         = 2.809;
+	}
 
-		$this->version = 2.809;
+	public function init() {
+		$this->links         = array();
+		$this->invoice_types = array();
 		//2.809 - 2018-03-31 - timer + invoice link
 		//2.808 - 2017-07-23 - adding website invoies to website page.
 		//2.807 - 2017-05-30 - invoice api

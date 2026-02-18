@@ -85,11 +85,14 @@ class module_newsletter extends module_base {
 		return __CLASS__;
 	}
 
+	public function __construct() {
+		$this->module_name     = 'newsletter';
+		$this->module_position = 22;
+	}
+
 	public function init() {
 		$this->links            = array();
 		$this->newsletter_types = array();
-		$this->module_name      = "newsletter";
-		$this->module_position  = 22;
 
 		if ( $this->can_i( 'view', 'Newsletters' ) ) {
 			$this->links[] = array(

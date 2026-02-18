@@ -18,12 +18,15 @@ class module_map extends module_base {
 		return __CLASS__;
 	}
 
-	public function init() {
-		$this->links           = array();
-		$this->map_types       = array();
-		$this->module_name     = "map";
+	public function __construct() {
+		$this->module_name     = 'map';
 		$this->module_position = 290;
 		$this->version         = 2.21;
+	}
+
+	public function init() {
+		$this->links    = array();
+		$this->map_types = array();
 		//2.21 - 2015-09-10 - map marker fix
 		//2.2 - 2015-09-09 - map marker fix
 		//2.1 - 2015-06-10 - initial release

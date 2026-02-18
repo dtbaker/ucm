@@ -19,12 +19,15 @@ class module_product extends module_base {
 		return __CLASS__;
 	}
 
-	public function init() {
-		$this->links           = array();
-		$this->product_types   = array();
-		$this->module_name     = "product";
+	public function __construct() {
+		$this->module_name     = 'product';
 		$this->module_position = 430;
 		$this->version         = 2.168;
+	}
+
+	public function init() {
+		$this->links         = array();
+		$this->product_types = array();
 		// 2.168 - 2018-04-01 - log integration
 		// 2.167 - 2017-07-26 - starting on basic shop functionality
 		// 2.166 - 2017-05-02 - big changes

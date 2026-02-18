@@ -23,13 +23,15 @@ class module_theme extends module_base {
 	}
 
 	public function __construct() {
+		$this->module_name     = 'theme';
+		$this->module_position = 520;
+		$this->version         = 2.407;
 		// here because init() doesn't run on install.
 		hook_add( 'plugins_loaded', 'module_theme::hook_plugins_loaded' );
 		hook_add( 'page_header', 'module_theme::hook_page_header' );
 	}
 
 	public function init() {
-		$this->version = 2.407;
 		// 2.407 - 2022-12-27 - php8.1 fixes
 		// 2.406 - 2017-05-02 - big changes
 		// 2.405 - 2017-02-27 - custom page header code
@@ -97,9 +99,7 @@ class module_theme extends module_base {
 		// 2.346 - css fixes
 
 
-		$this->links           = array();
-		$this->module_name     = "theme";
-		$this->module_position = 520;
+		$this->links = array();
 
 		if ( file_exists( 'includes/plugin_theme/pages/theme_settings.php' ) && module_security::has_feature_access( array(
 				'name'        => 'Settings',

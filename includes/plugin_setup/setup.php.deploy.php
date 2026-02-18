@@ -14,13 +14,13 @@ class module_setup extends module_base {
 		return __CLASS__;
 	}
 
-	public $version = 1;
+	public function __construct() {
+		$this->module_name     = 'setup';
+		$this->module_position = 20;
+		$this->version         = 1;
+	}
 
 	public function init() {
-		$this->module_name     = "setup";
-		$this->module_position = 20;
-
-
 	}
 
 

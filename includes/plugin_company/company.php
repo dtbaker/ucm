@@ -15,7 +15,12 @@ define( '_COMPANY_ACCESS_CONTACT', 'Only companies I am assigned to as a contact
 class module_company extends module_base {
 
 	var $links;
-	public $version = 2.143;
+
+	public function __construct() {
+		$this->module_name     = 'company';
+		$this->module_position = 10;
+		$this->version         = 2.143;
+	}
 	// 2.143 - 2016-07-10 - big update to mysqli
 	// 2.142 - 2014-07-21 - fix for custom company configurations
 	// 2.141 - 2014-07-21 - company permission improvement
@@ -49,10 +54,7 @@ class module_company extends module_base {
 	}
 
 	function init() {
-		$this->links           = array();
-		$this->module_name     = "company";
-		$this->module_position = 10;
-
+		$this->links = array();
 
 		if ( self::can_i( 'edit', 'Company' ) ) {
 			$this->links[] = array(

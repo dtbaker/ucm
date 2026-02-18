@@ -19,10 +19,13 @@ class module_log extends module_base {
 		return __CLASS__;
 	}
 
-	public function init() {
-		$this->module_name     = "log";
+	public function __construct() {
+		$this->module_name     = 'log';
 		$this->module_position = 280;
 		$this->version         = 2.1;
+	}
+
+	public function init() {
 		// 2.1 - 2018-04-01 - log integration
 	}
 

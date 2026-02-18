@@ -17,7 +17,11 @@ class module_quote extends module_base {
 	public $links;
 	public $quote_types;
 
-	public $version = 2.179;
+	public function __construct() {
+		$this->module_name     = 'quote';
+		$this->module_position = 440;
+		$this->version         = 2.179;
+	}
 	//2.179 - 2017-05-18 - quote email fix
 	//2.178 - 2017-05-07 - quote pdf fix
 	//2.177 - 2017-05-02 - file path configuration
@@ -98,10 +102,8 @@ class module_quote extends module_base {
 	}
 
 	public function init() {
-		$this->links           = array();
-		$this->quote_types     = array();
-		$this->module_name     = "quote";
-		$this->module_position = 440;
+		$this->links      = array();
+		$this->quote_types = array();
 
 		module_config::register_css( 'quote', 'quote.css' );
 		module_config::register_js( 'quote', 'quote.js' );

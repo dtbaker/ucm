@@ -11,6 +11,11 @@ define( '_MAIL_STATUS_SCHEDULED', 5 );
 
 class module_email extends module_base {
 
+	public function __construct() {
+		$this->module_name     = 'email';
+		$this->module_position = 160;
+		$this->version         = 2.365;
+	}
 
 	public static function can_i( $actions, $name = false, $category = false, $module = false ) {
 		if ( ! $module ) {
@@ -25,10 +30,6 @@ class module_email extends module_base {
 	}
 
 	function init() {
-		$this->module_name     = "email";
-		$this->module_position = 160;
-
-		$this->version = 2.365;
 		// 2.365 - 2021-04-07 - php8 compatibility fix
 		// 2.364 - 2017-07-24 - auto bcc option
 		// 2.363 - 2017-05-18 - quote email fix

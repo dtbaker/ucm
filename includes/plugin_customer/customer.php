@@ -36,13 +36,15 @@ class module_customer extends module_base {
 		return __CLASS__;
 	}
 
-
-	public function init() {
-		$this->links           = array();
-		$this->customer_types  = array();
-		$this->module_name     = "customer";
+	public function __construct() {
+		$this->module_name     = 'customer';
 		$this->module_position = 130;
 		$this->version         = 2.490;
+	}
+
+	public function init() {
+		$this->links          = array();
+		$this->customer_types = array();
 		//2.490 - 2018-06-05 - fix for supplier groups
 		//2.489 - 2018-04-03 - fix saving customer.
 		//2.488 - 2018-04-01 - logging improvements.

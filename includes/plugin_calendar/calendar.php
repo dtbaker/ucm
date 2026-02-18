@@ -7,6 +7,12 @@ class module_calendar extends module_base {
 
 	var $links;
 
+	public function __construct() {
+		$this->module_name     = 'calendar';
+		$this->module_position = 100;
+		$this->version         = 2.238;
+	}
+
 	public static function can_i( $actions, $name = false, $category = false, $module = false ) {
 		if ( ! $module ) {
 			$module = __CLASS__;
@@ -20,11 +26,7 @@ class module_calendar extends module_base {
 	}
 
 	function init() {
-		$this->links           = array();
-		$this->module_name     = "calendar";
-		$this->module_position = 100;
-
-		$this->version = 2.238;
+		$this->links = array();
 		// 2.238 - 2017-05-02 - calendar staff name
 		// 2.237 - 2016-10-06 - fix for multi-day events
 		// 2.236 - 2016-07-10 - big update to mysqli

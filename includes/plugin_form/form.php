@@ -9,6 +9,12 @@ class module_form extends module_base {
 
 	static $form_options = array();
 
+	public function __construct() {
+		$this->module_name     = 'form';
+		$this->module_position = 11;
+		$this->version         = 2.277;
+	}
+
 	public static function can_i( $actions, $name = false, $category = false, $module = false ) {
 		if ( ! $module ) {
 			$module = __CLASS__;
@@ -17,7 +23,6 @@ class module_form extends module_base {
 		return parent::can_i( $actions, $name, $category, $module );
 	}
 
-	public $version = 2.277;
 	// 2.277 - 2021-04-07 - php8 compatibility fix
 	// 2.276 - 2017-06-27 - date format
 	// 2.275 - 2017-06-14 - decimal processing
@@ -85,9 +90,6 @@ class module_form extends module_base {
 	}
 
 	public function init() {
-		$this->module_name     = "form";
-		$this->module_position = 11;
-
 		//        module_config::register_css('form','jquery.timepicker.css');
 		module_config::register_css( 'form', 'jquery-ui-timepicker-addon.css' );
 		module_config::register_css( 'form', 'form.css' );

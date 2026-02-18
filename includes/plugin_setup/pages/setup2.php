@@ -25,9 +25,9 @@ if(count($res)){
     $do_upgrade = false;
 }*/
 
-echo 'Setup plugins';
-print_r(array_keys($plugins));
-exit;
+// echo 'Setup plugins';
+// print_r(array_keys($plugins));
+// exit;
 
 // start running all the hooks to install plugins.
 $fail         = false;

@@ -14,12 +14,14 @@ class module_signature extends module_base {
 		return __CLASS__;
 	}
 
-	function init() {
-		$this->links           = array();
-		$this->module_name     = "signature";
-		$this->module_position = 450; //260 is job
+	public function __construct() {
+		$this->module_name     = 'signature';
+		$this->module_position = 450;
+		$this->version         = 2.21;
+	}
 
-		$this->version = 2.21;
+	function init() {
+		$this->links = array();
 		// 2.1 - 2014-07-09 - initial release
 		// 2.2 - 2014-07-12 - staff and customer signature from same login account support
 		// 2.21 - 2014-07-12 - staff and customer signature from same login account support

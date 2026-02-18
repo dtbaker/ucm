@@ -33,13 +33,15 @@ class module_security extends module_base {
 		return __CLASS__;
 	}
 
-	public function init() {
-		$this->links           = array();
-		$this->security_types  = array();
-		$this->module_name     = "security";
+	public function __construct() {
+		$this->module_name     = 'security';
 		$this->module_position = 50;
+		$this->version         = 2.527;
+	}
 
-		$this->version = 2.527;
+	public function init() {
+		$this->links          = array();
+		$this->security_types = array();
 		// 2.527 - 2021-04-07 - php8 compatibility fix
 		// 2.526 - 2017-05-02 - file path configuration
 		// 2.525 - 2017-02-16 - js error fix

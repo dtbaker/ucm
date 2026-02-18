@@ -245,11 +245,14 @@ class module_job extends module_base {
 		);
 	}
 
-	public function init() {
-		$this->links           = array();
-		$this->job_types       = array();
-		$this->module_name     = "job";
+	public function __construct() {
+		$this->module_name     = 'job';
 		$this->module_position = 260;
+	}
+
+	public function init() {
+		$this->links     = array();
+		$this->job_types = array();
 
 		module_config::register_css( 'job', 'tasks.css' );
 		module_config::register_js( 'job', 'tasks.js' );

@@ -7,7 +7,12 @@ function sort_groups( $a, $b ) {
 class module_group extends module_base {
 
 	var $links;
-	public $version = 2.198;
+
+	public function __construct() {
+		$this->module_name     = 'group';
+		$this->module_position = 220;
+		$this->version         = 2.198;
+	}
 	// 2.198 - 2016-11-01 - layout improvement
 	// 2.197 - 2016-07-10 - big update to mysqli
 	// 2.196 - 2016-03-29 - autocomplete fix
@@ -45,10 +50,7 @@ class module_group extends module_base {
 	}
 
 	function init() {
-		$this->links           = array();
-		$this->module_name     = "group";
-		$this->module_position = 220;
-
+		$this->links = array();
 
 		if ( self::can_i( 'edit', 'Groups' ) ) {
 			$this->links[] = array(

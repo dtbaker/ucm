@@ -6,6 +6,12 @@ class module_help extends module_base {
 	public $links;
 	public $help_types;
 
+	public function __construct() {
+		$this->module_name     = 'help';
+		$this->module_position = 230;
+		$this->version         = 2.13;
+	}
+
 	public static function can_i( $actions, $name = false, $category = false, $module = false ) {
 		if ( ! $module ) {
 			$module = __CLASS__;
@@ -19,11 +25,8 @@ class module_help extends module_base {
 	}
 
 	public function init() {
-		$this->links           = array();
-		$this->help_types      = array();
-		$this->module_name     = "help";
-		$this->module_position = 230;
-		$this->version         = 2.13;
+		$this->links      = array();
+		$this->help_types = array();
 		//2.13 - 2016-20-30 - modal improvements
 		//2.12 - 2016-01-04 - help js
 		//2.11 - 2014-04-05 - url help js

@@ -5,7 +5,11 @@ global $labels;
 
 class module_language extends module_base {
 
-	public $version = 2.181;
+	public function __construct() {
+		$this->module_name     = 'language';
+		$this->module_position = 60;
+		$this->version         = 2.181;
+	}
 	// 2.14 default system language in advanced settings.
 	// 2.15 - added a default german translation (needs work!)
 	// 2.16 - French translation added - thanks Amar Bou!
@@ -43,10 +47,7 @@ class module_language extends module_base {
 	}
 
 	function init() {
-
-		$this->module_position = 60;
-		$this->module_name = "language";
-		$language_code     = basename( module_config::c( 'default_language' ) );
+		$language_code = basename( module_config::c( 'default_language' ) );
 
 		if ( module_security::is_logged_in() ) {
 			$user = module_user::get_user( module_security::get_loggedin_id(), false );

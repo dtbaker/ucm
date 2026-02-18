@@ -13,7 +13,11 @@ class module_contract extends module_base {
 	public $links;
 	public $contract_types;
 
-	public $version = 2.11;
+	public function __construct() {
+		$this->module_name     = 'contract';
+		$this->module_position = 120;
+		$this->version         = 2.11;
+	}
 	//2.11 - 2017-07-28 - terminate date
 	//2.1 - 2017-07-23 - initial release
 
@@ -31,10 +35,8 @@ class module_contract extends module_base {
 	}
 
 	public function init() {
-		$this->links           = array();
-		$this->contract_types  = array();
-		$this->module_name     = "contract";
-		$this->module_position = 120;
+		$this->links          = array();
+		$this->contract_types = array();
 
 		module_config::register_css( 'contract', 'contract.css' );
 		module_config::register_js( 'contract', 'contract.js' );

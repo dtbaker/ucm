@@ -27,13 +27,14 @@ class module_social_twitter extends module_base {
 		return __CLASS__;
 	}
 
+	public function __construct() {
+		$this->module_name     = 'social_twitter';
+		$this->module_position = 480;
+		$this->version         = 2.133;
+	}
 
 	function init() {
-		$this->links           = array();
-		$this->module_name     = "social_twitter";
-		$this->module_position = 480;
-
-		$this->version = 2.133;
+		$this->links = array();
 		// 2.133 - 2016-07-10 - big update to mysqli
 		// 2.132 - 2016-01-23 - message type fix
 		// 2.131 - 2014-08-04 - responsive im

@@ -11,6 +11,11 @@ class module_extra extends module_base {
 
 	var $links;
 
+	public function __construct() {
+		$this->module_name     = 'extra';
+		$this->module_position = 180;
+		$this->version         = 2.265;
+	}
 
 	public static function can_i( $actions, $name = false, $category = false, $module = false ) {
 		if ( ! $module ) {
@@ -25,7 +30,6 @@ class module_extra extends module_base {
 	}
 
 	function init() {
-		$this->version = 2.265;
 		// 2.265 - 2017-02-20 - custom data extra field integration
 		// 2.264 - 2016-12-20 - ajax lookup fields
 		// 2.263 - 2016-10-25 - extra field update
@@ -62,9 +66,7 @@ class module_extra extends module_base {
 		// 2.245 - 2013-12-19 - extra fields now available when creating a job
 		// 2.246 - 2014-01-23 - searching by extra fields
 
-		$this->links           = array();
-		$this->module_name     = "extra";
-		$this->module_position = 180;
+		$this->links = array();
 		module_config::register_css( 'extra', 'extra.css' );
 		module_config::register_js( 'extra', 'extra.js' );
 	}

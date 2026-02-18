@@ -22,12 +22,15 @@ class module_change_request extends module_base {
 		return __CLASS__;
 	}
 
+	public function __construct() {
+		$this->module_name     = 'change_request';
+		$this->module_position = 30;
+		$this->version         = 2.298;
+	}
+
 	public function init() {
 		$this->links                = array();
 		$this->change_request_types = array();
-		$this->module_name          = "change_request";
-		$this->module_position      = 30;
-		$this->version              = 2.298;
 		// 2.298 - 2021-04-07 - php8 compatibility fix
 		// 2.297 - 2016-07-10 - big update to mysqli
 		// 2.296 - 2015-06-14 - fix for newer fancybox version

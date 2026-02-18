@@ -6,6 +6,12 @@ class module_captcha extends module_base {
 	// 2.2 - fix for ssl captcha
 	private static $captcha_store = array();
 
+	public function __construct() {
+		$this->module_name     = 'captcha';
+		$this->module_position = 110;
+		$this->version         = 2.24;
+	}
+
 	public static function can_i( $actions, $name = false, $category = false, $module = false ) {
 		if ( ! $module ) {
 			$module = __CLASS__;
@@ -19,10 +25,6 @@ class module_captcha extends module_base {
 	}
 
 	public function init() {
-		$this->version         = 2.24;
-		$this->module_name     = "captcha";
-		$this->module_position = 110;
-
 		// 2.21 - 2013-04-12 - fix for auto login
 		// 2.22 - 2014-12-19 - php fix
 		// 2.23 - 2016-10-06 - new captcha

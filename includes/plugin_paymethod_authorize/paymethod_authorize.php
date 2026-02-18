@@ -16,11 +16,13 @@ class module_paymethod_authorize extends module_base {
 		return __CLASS__;
 	}
 
-	function init() {
-		$this->version         = 2.23;
-		$this->module_name     = "paymethod_authorize";
+	public function __construct() {
+		$this->module_name     = 'paymethod_authorize';
 		$this->module_position = 320;
+		$this->version         = 2.23;
+	}
 
+	function init() {
 		// 2.24 - 2017-03-21 - authorize fee charge percent
 		// 2.229 - 2015-11-26 - processing fee
 		// 2.229 - 2015-11-26 - processing fee

@@ -16,7 +16,11 @@ class module_finance extends module_base {
 		return __CLASS__;
 	}
 
-	public $version = 2.311;
+	public function __construct() {
+		$this->module_name     = 'finance';
+		$this->module_position = 210;
+		$this->version         = 2.311;
+	}
 	// 2.311 - 2017-06-14 - tax report fixes
 	// 2.310 - 2017-05-02 - big changes
 	// 2.309 - 2017-01-12 - job finance totals
@@ -95,9 +99,7 @@ class module_finance extends module_base {
 	// 2.264 - 2013-08-12 - better searching in upcoming payments
 
 	function init() {
-		$this->links           = array();
-		$this->module_name     = "finance";
-		$this->module_position = 210;
+		$this->links = array();
 
 		module_config::register_css( 'finance', 'finance.css' );
 		module_config::register_js( 'finance', 'finance.js' );

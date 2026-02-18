@@ -15,11 +15,13 @@ class module_theme_blocks extends module_base {
 		return __CLASS__;
 	}
 
-	public function init() {
-		$this->module_name     = "theme_blocks";
+	public function __construct() {
+		$this->module_name     = 'theme_blocks';
 		$this->module_position = 0;
+		$this->version         = 2.129;
+	}
 
-		$this->version = 2.129;
+	public function init() {
 		//2.129 - 2017-01-12 - fieldset settings
 		//2.128 - 2016-12-20 - ajax lookup forms
 		//2.127 - 2015-11-06 - javascript theme improvement

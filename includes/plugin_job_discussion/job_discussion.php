@@ -14,12 +14,14 @@ class module_job_discussion extends module_base {
 		return __CLASS__;
 	}
 
-	function init() {
-		$this->links           = array();
-		$this->module_name     = "job_discussion";
-		$this->module_position = 270; //260 is job
+	public function __construct() {
+		$this->module_name     = 'job_discussion';
+		$this->module_position = 270;
+		$this->version         = 2.153;
+	}
 
-		$this->version = 2.153;
+	function init() {
+		$this->links = array();
 		// 2.1 - initial
 		// 2.11 - date change
 		// 2.12 - better linking and auto open

@@ -30,12 +30,15 @@ class module_vendor extends module_base {
 		return __CLASS__;
 	}
 
-	public function init() {
-		$this->links           = array();
-		$this->vendor_types    = array();
-		$this->module_name     = "vendor";
+	public function __construct() {
+		$this->module_name     = 'vendor';
 		$this->module_position = 560;
 		$this->version         = 2.122;
+	}
+
+	public function init() {
+		$this->links        = array();
+		$this->vendor_types = array();
 		// 2.122 - 2016-07-10 - big update to mysqli
 		// 2.121 - 2016-04-30 - update message
 		// 2.12 - 2014-07-31 - responsive improvements

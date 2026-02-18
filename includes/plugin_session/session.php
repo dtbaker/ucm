@@ -51,8 +51,13 @@ class module_session extends module_base {
 	}
 
 	public function __construct() {
+		$this->module_name     = 'session';
+		$this->module_position = 0;
+		$this->version         = 2.168;
 
-		if(isset($_SESSION))return true;
+		if ( isset( $_SESSION ) ) {
+			return true;
+		}
 		if ( self::is_db_sessions_enabled() ) {
 			try {
 				session_set_save_handler( new UcmSessionHandler() );
@@ -94,11 +99,6 @@ class module_session extends module_base {
 	}
 
 	public function init() {
-		$this->module_name     = "session";
-		$this->module_position = 0;
-
-
-		$this->version = 2.168;
 		//2.168 - 2019-04-20 - fix database sessions
 		//2.167 - 2019-04-06 - fix database sessions
 		//2.166 - 2017-05-02 - file path configuration

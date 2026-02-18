@@ -18,12 +18,15 @@ class module_website extends module_base {
 		return __CLASS__;
 	}
 
-	public function init() {
-		$this->links           = array();
-		$this->website_types   = array();
-		$this->module_name     = "website";
+	public function __construct() {
+		$this->module_name     = 'website';
 		$this->module_position = 570;
 		$this->version         = 2.271;
+	}
+
+	public function init() {
+		$this->links         = array();
+		$this->website_types = array();
 		//2.271 - 2017-07-23 - adding website invoices and timers to edit page
 		//2.270 - 2016-11-02 - website timer feature
 		//2.269 - 2016-07-10 - big update to mysqli

@@ -15,14 +15,16 @@ class module_paymethod_other extends module_base {
 		return __CLASS__;
 	}
 
+	public function __construct() {
+		$this->module_name     = 'paymethod_other';
+		$this->module_position = 370;
+		$this->version         = 2.12;
+	}
+
 	function init() {
-		$this->version = 2.12;
 		//2.1 - new option that can be used for cheque/check payments
 		//2.11 - 2014-11-27 - updated defaults
 		//2.12 - 2015-03-14 - better default payment method options
-
-		$this->module_name     = "paymethod_other";
-		$this->module_position = 370;
 
 		if ( class_exists( 'module_template', false ) ) {
 			module_template::init_template( 'paymethod_other', 'Hello,

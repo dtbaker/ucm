@@ -11,7 +11,11 @@ class module_user extends module_base {
 	public $links;
 	public $user_types;
 
-	public $version = 2.289;
+	public function __construct() {
+		$this->module_name     = 'user';
+		$this->module_position = 550;
+		$this->version         = 2.289;
+	}
 	// 2.289 - 2017-05-28 - api improvements
 	// 2.288 - 2017-02-27 - staff member first/last name flag for drop downs
 	// 2.287 - 2016-11-01 - ajax autocompletion
@@ -84,10 +88,8 @@ class module_user extends module_base {
 	}
 
 	public function init() {
-		$this->links           = array();
-		$this->user_types      = array();
-		$this->module_name     = "user";
-		$this->module_position = 550;
+		$this->links     = array();
+		$this->user_types = array();
 
 		hook_add( 'contact_list', 'module_user::hook_filter_var_contact_list' );
 		hook_add( 'staff_list', 'module_user::hook_filter_var_staff_list' );

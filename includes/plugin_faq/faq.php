@@ -4,7 +4,11 @@ class module_faq extends module_base {
 
 	public $links;
 
-	public $version = 2.150;
+	public function __construct() {
+		$this->module_name     = 'faq';
+		$this->module_position = 190;
+		$this->version         = 2.150;
+	}
 	// 2.150 - 2016-07-10 - big update to mysqli
 	// 2.149 - 2015-09-25 - product bug fix
 	// 2.148 - 2015-06-28 - started work on FAQ API
@@ -40,10 +44,7 @@ class module_faq extends module_base {
 	}
 
 	public function init() {
-		$this->links           = array();
-		$this->module_name     = "faq";
-		$this->module_position = 190;
-
+		$this->links = array();
 
 		hook_add( 'api_callback_faq', 'module_faq::api_filter_faq' );
 

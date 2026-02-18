@@ -7,7 +7,12 @@ function sort_notes( $a, $b ) {
 class module_note extends module_base {
 
 	var $links;
-	public $version = 2.278;
+
+	public function __construct() {
+		$this->module_name     = 'note';
+		$this->module_position = 310;
+		$this->version         = 2.278;
+	}
 	// 2.278 - 2016-11-16 - fontawesome icon fixes
 	// 2.277 - 2016-11-06 - timepicker improvement
 	// 2.276 - 2016-10-22 - modal popup improvements
@@ -63,10 +68,8 @@ class module_note extends module_base {
 	}
 
 	function init() {
-		$this->links           = array();
-		$this->user_types      = array();
-		$this->module_name     = "note";
-		$this->module_position = 310;
+		$this->links     = array();
+		$this->user_types = array();
 		module_config::register_css( 'note', 'notes.css' );
 
 		hook_add( 'calendar_events', 'module_note::hook_calendar_events' );

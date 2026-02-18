@@ -16,11 +16,13 @@ class module_paymethod_paynl extends module_base {
 		return __CLASS__;
 	}
 
-	function init() {
-		$this->version         = 2.2;
-		$this->module_name     = "paymethod_paynl";
+	public function __construct() {
+		$this->module_name     = 'paymethod_paynl';
 		$this->module_position = 380;
+		$this->version         = 2.2;
+	}
 
+	function init() {
 		// 2.1 - 2015-03-14 - new payment gateway
 		// 2.2 - 2017-03-25 - cron speed up
 	}

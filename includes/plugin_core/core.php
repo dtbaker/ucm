@@ -3,6 +3,12 @@
 
 class module_core extends module_base {
 
+	public function __construct() {
+		$this->module_name     = 'core';
+		$this->module_position = 1;
+		$this->version         = 2.154;
+	}
+
 	public static function can_i( $actions, $name = false, $category = false, $module = false ) {
 		if ( ! $module ) {
 			$module = __CLASS__;
@@ -16,10 +22,6 @@ class module_core extends module_base {
 	}
 
 	public function init() {
-		$this->module_name     = "core";
-		$this->module_position = 1;
-
-		$this->version = 2.154;
 		//2.154 - 2022-12-27 - php8.1 fixes
 		//2.153 - 2018-04-01 - core fixes
 		//2.152 - 2017-07-26 - bug fixes

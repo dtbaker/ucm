@@ -14,6 +14,12 @@ class module_template extends module_base {
 
 	private static $_templates;
 
+	public function __construct() {
+		$this->module_name     = 'template';
+		$this->module_position = 510;
+		$this->version         = 2.260;
+	}
+
 	public static function can_i( $actions, $name = false, $category = false, $module = false ) {
 		if ( ! $module ) {
 			$module = __CLASS__;
@@ -27,11 +33,7 @@ class module_template extends module_base {
 	}
 
 	function init() {
-		$this->links           = array();
-		$this->module_name     = "template";
-		$this->module_position = 510;
-
-		$this->version = 2.260;
+		$this->links = array();
 		//2.260 - 2019-04-06 - php error fix
 		//2.259 - 2015-11-06 - javascript template improvement
 		//2.258 - 2015-07-29 - delete template button

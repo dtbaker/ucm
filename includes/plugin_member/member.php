@@ -19,12 +19,15 @@ class module_member extends module_base {
 		return __CLASS__;
 	}
 
-	public function init() {
-		$this->links           = array();
-		$this->member_types    = array();
-		$this->module_name     = "member";
+	public function __construct() {
+		$this->module_name     = 'member';
 		$this->module_position = 300;
 		$this->version         = 2.185;
+	}
+
+	public function init() {
+		$this->links        = array();
+		$this->member_types = array();
 		// 2.185 - 2016-07-10 - big update to mysqli
 		// 2.184 - 2014-11-26 - duplicate member warning on add
 		// 2.183 - 2014-08-10 - responsive fixes

@@ -19,13 +19,14 @@ class module_social_facebook extends module_base {
 		return __CLASS__;
 	}
 
+	public function __construct() {
+		$this->module_name     = 'social_facebook';
+		$this->module_position = 470;
+		$this->version         = 2.135;
+	}
 
 	function init() {
-		$this->links           = array();
-		$this->module_name     = "social_facebook";
-		$this->module_position = 470;
-
-		$this->version = 2.135;
+		$this->links = array();
 		// 2.135 - 2016-07-10 - big update to mysqli
 		// 2.134 - 2016-01-23 - facebook api update
 		// 2.133 - 2016-01-22 - facebook publish pages permission

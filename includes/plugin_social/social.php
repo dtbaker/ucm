@@ -23,12 +23,14 @@ class module_social extends module_base {
 		return __CLASS__;
 	}
 
-	function init() {
-		$this->links           = array();
-		$this->module_name     = "social";
+	public function __construct() {
+		$this->module_name     = 'social';
 		$this->module_position = 460;
+		$this->version         = 2.132;
+	}
 
-		$this->version = 2.132;
+	function init() {
+		$this->links = array();
 		// 2.132 - 2015-12-28 - menu speed up
 		// 2.131 - 2014-08-04 - responsive improvements
 		// 2.13 - 2014-05-23 - social fixes

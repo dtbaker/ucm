@@ -20,6 +20,12 @@ class module_file extends module_base {
 
 	var $links;
 
+	public function __construct() {
+		$this->module_name     = 'file';
+		$this->module_position = 200;
+		$this->version         = 2.574;
+	}
+
 	public static function can_i( $actions, $name = false, $category = false, $module = false ) {
 		if ( ! $module ) {
 			$module = __CLASS__;
@@ -33,11 +39,7 @@ class module_file extends module_base {
 	}
 
 	function init() {
-		$this->links           = array();
-		$this->module_name     = "file";
-		$this->module_position = 200;
-
-		$this->version = 2.574;
+		$this->links = array();
 		// 2.574 - 2017-07-26 - fixes for php error messages
 		// 2.573 - 2017-05-02 - file path configuration
 		// 2.572 - 2017-01-03 - extra field searching

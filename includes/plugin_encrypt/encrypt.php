@@ -14,6 +14,12 @@ class module_encrypt extends module_base {
 	public static $show_encrypt = false;
 	public static $start_time = 0;
 
+	public function __construct() {
+		$this->module_name     = 'encrypt';
+		$this->module_position = 170;
+		$this->version         = 2.270;
+	}
+
 	public static function can_i( $actions, $name = false, $category = false, $module = false ) {
 		if ( ! $module ) {
 			$module = __CLASS__;
@@ -27,9 +33,6 @@ class module_encrypt extends module_base {
 	}
 
 	public function init() {
-		$this->module_name     = "encrypt";
-		$this->module_position = 170;
-		$this->version         = 2.270;
 		// 2.2 - initial release
 		// 2.21 - better support for new 'extra' fields
 		// 2.22 - permissions.

@@ -15,13 +15,15 @@ class module_paymethod_check extends module_base {
 		return __CLASS__;
 	}
 
+	public function __construct() {
+		$this->module_name     = 'paymethod_check';
+		$this->module_position = 340;
+		$this->version         = 2.11;
+	}
+
 	function init() {
-		$this->version = 2.11;
 		//2.1 - 2014-11-27 - initial release
 		//2.11 - 2015-03-14 - better default payment method options
-
-		$this->module_name     = "paymethod_check";
-		$this->module_position = 340;
 
 		if ( class_exists( 'module_template', false ) ) {
 			module_template::init_template( 'paymethod_check', 'Hello,

@@ -18,11 +18,13 @@ class module_paymethod_stripe extends module_base {
 		return __CLASS__;
 	}
 
-	function init() {
-		$this->version         = 2.245;
-		$this->module_name     = "paymethod_stripe";
+	public function __construct() {
+		$this->module_name     = 'paymethod_stripe';
 		$this->module_position = 400;
+		$this->version         = 2.245;
+	}
 
+	function init() {
 		// 2.245 - 2017-02-27 - config fix
 		// 2.244 - 2017-01-12 - stripe debugging information
 		// 2.243 - 2017-01-03 - stripe debugging information

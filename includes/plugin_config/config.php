@@ -8,6 +8,12 @@ class module_config extends module_base {
 
 	private static $config_vars = array();
 
+	public function __construct() {
+		$this->module_name     = 'config';
+		$this->module_position = 40;
+		$this->version         = 2.435;
+	}
+
 	public static function can_i( $actions, $name = false, $category = false, $module = false ) {
 		if ( ! $module ) {
 			$module = __CLASS__;
@@ -21,9 +27,6 @@ class module_config extends module_base {
 	}
 
 	public function init() {
-		$this->module_name     = "config";
-		$this->module_position = 40;
-		$this->version         = 2.435;
 		//2.435 - 2022-12-27 - uasort boolean error fix
 		//2.434 - 2022-10-22 - default to https update url
 		//2.433 - 2019-04-06 - php error fix
