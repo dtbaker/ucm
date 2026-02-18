@@ -28,7 +28,7 @@ class module_cache extends module_base {
 
 	public function init() {
 		$this->module_name     = "cache";
-		$this->module_position = 1;
+		$this->module_position = 10;
 		$this->version         = 2.232;
 		// 2.232 - 2016-12-20 - speed improvements
 		// 2.231 - 2016-12-18 - speed improvements

@@ -23,7 +23,7 @@ class module_social_facebook extends module_base {
 	function init() {
 		$this->links           = array();
 		$this->module_name     = "social_facebook";
-		$this->module_position = 25.2;
+		$this->module_position = 470;
 
 		$this->version = 2.135;
 		// 2.135 - 2016-07-10 - big update to mysqli

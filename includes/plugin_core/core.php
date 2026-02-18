@@ -17,7 +17,7 @@ class module_core extends module_base {
 
 	public function init() {
 		$this->module_name     = "core";
-		$this->module_position = 0;
+		$this->module_position = 1;
 
 		$this->version = 2.154;
 		//2.154 - 2022-12-27 - php8.1 fixes

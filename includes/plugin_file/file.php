@@ -35,7 +35,7 @@ class module_file extends module_base {
 	function init() {
 		$this->links           = array();
 		$this->module_name     = "file";
-		$this->module_position = 21;
+		$this->module_position = 200;
 
 		$this->version = 2.574;
 		// 2.574 - 2017-07-26 - fixes for php error messages

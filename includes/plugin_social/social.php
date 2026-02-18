@@ -26,7 +26,7 @@ class module_social extends module_base {
 	function init() {
 		$this->links           = array();
 		$this->module_name     = "social";
-		$this->module_position = 25.1;
+		$this->module_position = 460;
 
 		$this->version = 2.132;
 		// 2.132 - 2015-12-28 - menu speed up

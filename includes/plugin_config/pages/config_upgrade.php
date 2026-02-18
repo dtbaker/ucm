@@ -532,8 +532,7 @@ if ( isset( $_REQUEST['process_upgrade'] ) && isset( $_REQUEST['via_ajax'] ) ) {
 	foreach ( $plugins as $plugin_name => $p ) {
 		if ( isset( $set_versions[ $plugin_name ] ) ) {
 			$p->init();
-			// lol typo - oh well.
-			$p->set_insatlled_plugin_version( $set_versions[ $plugin_name ] );
+			$p->set_installed_plugin_version( $set_versions[ $plugin_name ] );
 		}
 	}
 	//}

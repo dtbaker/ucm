@@ -25,6 +25,10 @@ if(count($res)){
     $do_upgrade = false;
 }*/
 
+echo 'Setup plugins';
+print_r(array_keys($plugins));
+exit;
+
 // start running all the hooks to install plugins.
 $fail         = false;
 $set_versions = array();
@@ -46,8 +50,7 @@ if ( isset( $set_versions['config'] ) ) {
 	foreach ( $plugins as $plugin_name => &$p ) {
 		if ( isset( $set_versions[ $plugin_name ] ) ) {
 			$p->init();
-			// lol typo - oh well.
-			$p->set_insatlled_plugin_version( $set_versions[ $plugin_name ] );
+			$p->set_installed_plugin_version( $set_versions[ $plugin_name ] );
 		}
 	}
 }

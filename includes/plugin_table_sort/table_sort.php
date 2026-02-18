@@ -30,7 +30,7 @@ class module_table_sort extends module_base {
 
 	public function init() {
 		$this->module_name     = "table_sort";
-		$this->module_position = 0;
+		$this->module_position = 500;
 		$this->version         = 2.228;
 		// 2.228 - 2016-07-10 - big update to mysqli
 		// 2.227 - 2016-02-01 - css fix

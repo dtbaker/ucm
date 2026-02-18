@@ -64,7 +64,7 @@ class module_extra extends module_base {
 
 		$this->links           = array();
 		$this->module_name     = "extra";
-		$this->module_position = 8882;
+		$this->module_position = 180;
 		module_config::register_css( 'extra', 'extra.css' );
 		module_config::register_js( 'extra', 'extra.js' );
 	}

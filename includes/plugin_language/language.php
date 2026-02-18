@@ -44,6 +44,7 @@ class module_language extends module_base {
 
 	function init() {
 
+		$this->module_position = 60;
 		$this->module_name = "language";
 		$language_code     = basename( module_config::c( 'default_language' ) );
 
@@ -345,7 +346,7 @@ class module_language extends module_base {
 		}
 	}
 
-	public static function handle_import( $data, $group = false, $extra_options ) {
+	public static function handle_import( $data, $group = false, $extra_options = array() ) {
 
 		$imported = 0;
 		if ( ! _DEMO_MODE && isset( $extra_options['language_id'] ) && $extra_options['language_id'] > 0 && count( $data ) > 1 ) {

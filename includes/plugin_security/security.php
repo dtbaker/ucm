@@ -37,7 +37,7 @@ class module_security extends module_base {
 		$this->links           = array();
 		$this->security_types  = array();
 		$this->module_name     = "security";
-		$this->module_position = 999;
+		$this->module_position = 50;
 
 		$this->version = 2.527;
 		// 2.527 - 2021-04-07 - php8 compatibility fix
@@ -847,16 +847,15 @@ class module_security extends module_base {
 			$password                   = trim( $_REQUEST['password'] );
 			$_SESSION['_AVA_logged_in'] = false;
 			if ( strlen( $email ) && strlen( $password ) ) {
-				// a user logs in, and they can access a certain areas of the website based on their permissions.
-				// each user is assigned a site.
-				// all data in the system is related to a particular site.
-				// we store the users current site id in the system.
-				// this way when the security 'sanatise' option runs we know which site_id to place into newly created date and
-				// which site_id's the user can access if they are not super admins
-				// update! we match hashed passwords, as well as unhashed passwords.
-				$sql = "SELECT u.*, sr.security_role_id FROM `" . _DB_PREFIX . "user` u LEFT JOIN `" . _DB_PREFIX . "user_role` sr ON u.user_id = sr.user_id WHERE `email` LIKE '" . db_escape( $email ) . "' AND ( `password` = '" . db_escape( $password ) . "' OR `password` = '" . db_escape( md5( $password ) ) . "' )";
+				// Fetch user by email only (password verified in PHP for security)
+				$sql = "SELECT u.*, sr.security_role_id FROM `" . _DB_PREFIX . "user` u LEFT JOIN `" . _DB_PREFIX . "user_role` sr ON u.user_id = sr.user_id WHERE `email` LIKE '" . db_escape( $email ) . "' LIMIT 1";
 				$res = qa1( $sql );
-				if ( strlen( trim( $res['email'] ) ) > 0 && strtolower( $res['email'] ) == strtolower( $email ) ) {
+				if ( $res && strlen( trim( $res['email'] ) ) > 0 && strtolower( $res['email'] ) == strtolower( $email ) && ucm_password_verify( $password, $res['password'] ) ) {
+					// Migrate legacy MD5 to bcrypt on successful login
+					if ( ucm_password_needs_rehash( $res['password'] ) ) {
+						$new_hash = ucm_password_hash( $password );
+						query( "UPDATE `" . _DB_PREFIX . "user` SET `password` = '" . db_escape( $new_hash ) . "' WHERE user_id = '" . (int) $res['user_id'] . "' LIMIT 1" );
+					}
 					// check the status of the user.
 
 					// not sure what this will do.
@@ -901,7 +900,7 @@ class module_security extends module_base {
 					$_SESSION['_access_level'] = $level['access_level'];
 					$_SESSION['_data_access'] = $level['data_access'];*/
 
-					$sql = "INSERT INTO `" . _DB_PREFIX . "security_login` SET user_id = '" . $res['user_id'] . "', `time` = '" . time() . "', ip_address = '" . $_SERVER['REMOTE_ADDR'] . "'";
+					$sql = "INSERT INTO `" . _DB_PREFIX . "security_login` SET user_id = '" . (int) $res['user_id'] . "', `time` = '" . (int) time() . "', ip_address = '" . db_escape( $_SERVER['REMOTE_ADDR'] ?? '' ) . "'";
 					query( $sql );
 
 					$_SESSION['_user_name']    = $res['name'];
@@ -1117,8 +1116,8 @@ class module_security extends module_base {
 	}
 
 	public static function get_auto_login_string( $user_id ) {
-
-		$sql = "SELECT * FROM `" . _DB_PREFIX . "user` WHERE user_id = '$user_id'";
+		$user_id = (int) $user_id;
+		$sql     = "SELECT * FROM `" . _DB_PREFIX . "user` WHERE user_id = '$user_id'";
 		$res = qa( $sql );
 		if ( $res ) {
 			$user = array_shift( $res );

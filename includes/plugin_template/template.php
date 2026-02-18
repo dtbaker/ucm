@@ -29,7 +29,7 @@ class module_template extends module_base {
 	function init() {
 		$this->links           = array();
 		$this->module_name     = "template";
-		$this->module_position = 28;
+		$this->module_position = 510;
 
 		$this->version = 2.260;
 		//2.260 - 2019-04-06 - php error fix

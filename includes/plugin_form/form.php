@@ -86,7 +86,7 @@ class module_form extends module_base {
 
 	public function init() {
 		$this->module_name     = "form";
-		$this->module_position = 0;
+		$this->module_position = 11;
 
 		//        module_config::register_css('form','jquery.timepicker.css');
 		module_config::register_css( 'form', 'jquery-ui-timepicker-addon.css' );

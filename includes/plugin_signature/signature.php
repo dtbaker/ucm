@@ -17,7 +17,7 @@ class module_signature extends module_base {
 	function init() {
 		$this->links           = array();
 		$this->module_name     = "signature";
-		$this->module_position = 17.1; //17 is job
+		$this->module_position = 450; //260 is job
 
 		$this->version = 2.21;
 		// 2.1 - 2014-07-09 - initial release

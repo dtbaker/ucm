@@ -17,21 +17,7 @@ class module_base {
 	}
 
 	public static function can_i( $actions, $name = false, $category = false, $module = false ) {
-		$class_name = $module;
-		if ( ! $module ) {
-			// php5.2 doesn't have get_called_class() :(
-			if ( function_exists( 'get_called_class' ) ) {
-				$class_name = get_called_class();
-			} else if ( is_callable( 'self::get_class()' ) ) {
-				eval( '$class_name = self::get_class();' );
-			} else {
-				// doesn't work in php5.2
-				eval( '$class_name = static::get_class();' );
-			}
-			if ( ! $class_name ) {
-				echo 'no class found - please upgrade to php5.3';
-			}
-		}
+		$class_name = $module ?: get_called_class();
 
 		if ( ! $name ) {
 			$name = ucwords( str_replace( '_', ' ', str_replace( 'module_', '', $class_name ) ) );
@@ -62,22 +48,9 @@ class module_base {
 		if ( ! _UCM_INSTALLED ) {
 			return false;
 		}
-		$class_name = false;
-		if ( function_exists( 'get_called_class' ) ) {
-			$class_name = get_called_class();
-		} else if ( is_callable( 'self::get_class()' ) ) {
-			eval( '$class_name = self::get_class();' );
-		} else if ( is_callable( 'static::get_class()' ) ) {
-			// doesn't work in php5.2
-			eval( '$class_name = static::get_class();' );
-		}
-		if ( $class_name ) {
-			$class_name = str_replace( 'module_', '', $class_name );
+		$class_name = str_replace( 'module_', '', get_called_class() );
 
-			return module_config::c( 'plugin_enabled_' . $class_name, 1 );
-		}
-
-		return true;
+		return module_config::c( 'plugin_enabled_' . $class_name, 1 );
 	}
 
 	public function autocomplete( $search_string = '', $search_options = array() ) {
@@ -265,9 +238,10 @@ class module_base {
 	private static $_dbt_exists = array();
 
 	public static function db_table_exists( $name, $force = false ) {
-		if ( defined( '_UCM_INSTALLED' ) && ! _UCM_INSTALLED ) {
-			return false;
-		}
+		// This caused an issue installing via docker for some reason. Commenting it out:
+		// if ( defined( '_UCM_INSTALLED' ) && ! _UCM_INSTALLED ) {
+		// 	return false;
+		// }
 		if ( $force ) {
 			if ( isset( self::$_dbt_exists[ $name ] ) && self::$_dbt_exists[ $name ] ) {
 				return true;
@@ -333,7 +307,7 @@ class module_base {
 		return ( $this->page_title ) ? _l( $this->page_title ) : _l( ucwords( str_replace( "_", " ", $this->module_name ) ) );
 	}
 
-	function set_insatlled_plugin_version( $version ) {
+	function set_installed_plugin_version( $version ) {
 		module_config::save_config( '_plugin_version_' . $this->module_name, $version );
 	}
 

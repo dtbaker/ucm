@@ -97,7 +97,7 @@ class module_finance extends module_base {
 	function init() {
 		$this->links           = array();
 		$this->module_name     = "finance";
-		$this->module_position = 28;
+		$this->module_position = 210;
 
 		module_config::register_css( 'finance', 'finance.css' );
 		module_config::register_js( 'finance', 'finance.js' );

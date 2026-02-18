@@ -34,7 +34,7 @@ class module_statistic extends module_base {
 	function init() {
 		$this->links           = array();
 		$this->module_name     = "statistic";
-		$this->module_position = 28;
+		$this->module_position = 490;
 
 
 	}

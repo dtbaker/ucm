@@ -33,7 +33,7 @@ class module_address extends module_base {
 		$this->links           = array();
 		$this->address_types   = array();
 		$this->module_name     = "address";
-		$this->module_position = 101;
+		$this->module_position = 70;
 
 		$this->link_include_parents = true; // set defaullt
 

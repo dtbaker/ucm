@@ -41,7 +41,7 @@ class module_customer extends module_base {
 		$this->links           = array();
 		$this->customer_types  = array();
 		$this->module_name     = "customer";
-		$this->module_position = 5.1;
+		$this->module_position = 130;
 		$this->version         = 2.490;
 		//2.490 - 2018-06-05 - fix for supplier groups
 		//2.489 - 2018-04-03 - fix saving customer.
@@ -1769,7 +1769,7 @@ Invoice: <strong>{INVOICE_LINK}</strong>
 				$user_update['language'] = $row['primary_user_language'];
 			}
 			if ( isset( $row['password'] ) && strlen( $row['password'] ) ) {
-				$user_update['password'] = md5( trim( $row['password'] ) );
+				$user_update['password'] = ucm_password_hash( trim( $row['password'] ) );
 			}
 			$user_match = update_insert( "user_id", $user_match, "user", $user_update );
 			if ( $user_match && isset( $row['role'] ) && strlen( trim( $row['role'] ) ) ) {

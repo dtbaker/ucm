@@ -21,12 +21,12 @@ class module_log extends module_base {
 
 	public function init() {
 		$this->module_name     = "log";
-		$this->module_position = 1;
+		$this->module_position = 280;
 		$this->version         = 2.1;
 		// 2.1 - 2018-04-01 - log integration
 	}
 
-	public static function log( $owner_table, $owner_id, $sub_section, $user_id = false, $comment, $data ) {
+	public static function log( $owner_table, $owner_id, $sub_section, $comment, $data, $user_id = false ) {
 
 		if ( ! module_config::c( 'log_history_for_' . $owner_table, 1 ) ) {
 			return;

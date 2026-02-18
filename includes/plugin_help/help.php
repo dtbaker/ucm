@@ -22,7 +22,7 @@ class module_help extends module_base {
 		$this->links           = array();
 		$this->help_types      = array();
 		$this->module_name     = "help";
-		$this->module_position = 16;
+		$this->module_position = 230;
 		$this->version         = 2.13;
 		//2.13 - 2016-20-30 - modal improvements
 		//2.12 - 2016-01-04 - help js

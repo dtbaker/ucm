@@ -47,7 +47,7 @@ class module_group extends module_base {
 	function init() {
 		$this->links           = array();
 		$this->module_name     = "group";
-		$this->module_position = 8882;
+		$this->module_position = 220;
 
 
 		if ( self::can_i( 'edit', 'Groups' ) ) {

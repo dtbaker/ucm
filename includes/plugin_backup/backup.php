@@ -33,7 +33,7 @@ class module_backup extends module_base {
 	public function init() {
 		$this->links           = array();
 		$this->module_name     = "backup";
-		$this->module_position = 30;
+		$this->module_position = 90;
 
 		module_config::register_js( 'backup', 'backup.js' );
 		module_config::register_css( 'backup', 'backup.css' );

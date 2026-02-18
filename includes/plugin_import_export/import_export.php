@@ -20,7 +20,7 @@ class module_import_export extends module_base {
 	function init() {
 		$this->links           = array();
 		$this->module_name     = "import_export";
-		$this->module_position = 8882;
+		$this->module_position = 240;
 
 		$this->version = 2.242;
 		// 2.2 - exporting groups to CSV (started with customer export)

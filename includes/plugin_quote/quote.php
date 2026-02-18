@@ -101,7 +101,7 @@ class module_quote extends module_base {
 		$this->links           = array();
 		$this->quote_types     = array();
 		$this->module_name     = "quote";
-		$this->module_position = 15.9;
+		$this->module_position = 440;
 
 		module_config::register_css( 'quote', 'quote.css' );
 		module_config::register_js( 'quote', 'quote.js' );

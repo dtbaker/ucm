@@ -99,7 +99,7 @@ class module_theme extends module_base {
 
 		$this->links           = array();
 		$this->module_name     = "theme";
-		$this->module_position = 8882;
+		$this->module_position = 520;
 
 		if ( file_exists( 'includes/plugin_theme/pages/theme_settings.php' ) && module_security::has_feature_access( array(
 				'name'        => 'Settings',

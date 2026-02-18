@@ -27,7 +27,7 @@ class module_dashboard extends module_base {
 
 	public function init() {
 		$this->module_name     = "dashboard";
-		$this->module_position = 0;
+		$this->module_position = 140;
 
 
 		$this->version = 2.142;

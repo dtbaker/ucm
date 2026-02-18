@@ -21,7 +21,7 @@ class module_paymethod_check extends module_base {
 		//2.11 - 2015-03-14 - better default payment method options
 
 		$this->module_name     = "paymethod_check";
-		$this->module_position = 8882;
+		$this->module_position = 340;
 
 		if ( class_exists( 'module_template', false ) ) {
 			module_template::init_template( 'paymethod_check', 'Hello,

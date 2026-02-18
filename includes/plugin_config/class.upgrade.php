@@ -147,7 +147,7 @@ class ucm_upgrade_manager {
 				$new_system_version = max( $version, $new_system_version );
 				$plugins[ $plugin_name ]->init();
 				// lol typo - oh well.
-				$plugins[ $plugin_name ]->set_insatlled_plugin_version( $version );
+				$plugins[ $plugin_name ]->set_installed_plugin_version( $version );
 			} else {
 				$fail              = true;
 				$result['message'] .= '<span class="error_text">failed</span> ';

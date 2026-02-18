@@ -87,7 +87,7 @@ class module_user extends module_base {
 		$this->links           = array();
 		$this->user_types      = array();
 		$this->module_name     = "user";
-		$this->module_position = 15;
+		$this->module_position = 550;
 
 		hook_add( 'contact_list', 'module_user::hook_filter_var_contact_list' );
 		hook_add( 'staff_list', 'module_user::hook_filter_var_staff_list' );
@@ -940,7 +940,7 @@ class module_user extends module_base {
 			// the user is trying to change their password.
 			// only do this if the user has edit password permissions and their password matches.
 			if ( module_user::can_i( 'edit', 'Users Passwords', 'Config' ) || $user_id == module_security::get_loggedin_id() ) {
-				if ( isset( $data['password_old'] ) && ( md5( $data['password_old'] ) == $temp_user['password'] || $data['password_old'] == $temp_user['password'] ) ) {
+				if ( isset( $data['password_old'] ) && ucm_password_verify( $data['password_old'], $temp_user['password'] ) ) {
 					// correct old password
 					// verify new password.
 					if ( $data['password_new1'] == $data['password_new2'] ) {
@@ -955,11 +955,9 @@ class module_user extends module_base {
 				set_error( 'No permissions to change passwords' );
 			}
 		}
-		// and we finally hash our password
+		// and we finally hash our password (bcrypt, with legacy MD5 support for verification)
 		if ( isset( $data['password'] ) && strlen( $data['password'] ) > 0 ) {
-			$data['password'] = md5( $data['password'] );
-			// if you change md5 also change it in customer import.
-			// todo - salt? meh.
+			$data['password'] = ucm_password_hash( $data['password'] );
 		}
 		$user_id = update_insert( "user_id", $user_id, "user", $data );
 

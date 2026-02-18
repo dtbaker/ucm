@@ -1,5 +1,44 @@
 <?php
 
+/**
+ * Hash a password using bcrypt (PHP password_hash).
+ * Replaces legacy MD5 hashing.
+ */
+function ucm_password_hash( $password ) {
+	return password_hash( $password, PASSWORD_DEFAULT );
+}
+
+/**
+ * Verify a password against a stored hash.
+ * Supports both password_hash (bcrypt/argon2) and legacy MD5 for backwards compatibility.
+ * Returns true if password matches. When MD5 matches, consider rehashing on next save.
+ */
+function ucm_password_verify( $password, $hash ) {
+	if ( empty( $hash ) ) {
+		return false;
+	}
+	// password_hash format: $2y$... or $argon2...
+	if ( preg_match( '/^\$[2ay]|\$argon2/', $hash ) ) {
+		return password_verify( $password, $hash );
+	}
+	// Legacy MD5 (32 hex chars)
+	if ( strlen( $hash ) === 32 && ctype_xdigit( $hash ) ) {
+		return md5( $password ) === $hash || $password === $hash;
+	}
+
+	return false;
+}
+
+/**
+ * Check if a hash is legacy MD5 (should be rehashed).
+ */
+function ucm_password_needs_rehash( $hash ) {
+	if ( empty( $hash ) ) {
+		return false;
+	}
+
+	return strlen( $hash ) === 32 && ctype_xdigit( $hash );
+}
 
 function get_yes_no() {
 	$data = array(

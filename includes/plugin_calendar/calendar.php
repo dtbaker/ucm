@@ -22,7 +22,7 @@ class module_calendar extends module_base {
 	function init() {
 		$this->links           = array();
 		$this->module_name     = "calendar";
-		$this->module_position = 4.1;
+		$this->module_position = 100;
 
 		$this->version = 2.238;
 		// 2.238 - 2017-05-02 - calendar staff name

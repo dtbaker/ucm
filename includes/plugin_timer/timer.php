@@ -42,7 +42,7 @@ class module_timer extends module_base {
 
 	public function init() {
 		$this->module_name     = "timer";
-		$this->module_position = 26;
+		$this->module_position = 540;
 
 		if ( module_security::is_logged_in() && self::is_plugin_enabled() && self::can_i( 'view', 'Timers' ) && get_display_mode() != 'mobile' ) {
 			module_config::register_css( 'timer', 'timer.css' );

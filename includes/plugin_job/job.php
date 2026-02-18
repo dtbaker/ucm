@@ -249,7 +249,7 @@ class module_job extends module_base {
 		$this->links           = array();
 		$this->job_types       = array();
 		$this->module_name     = "job";
-		$this->module_position = 17;
+		$this->module_position = 260;
 
 		module_config::register_css( 'job', 'tasks.css' );
 		module_config::register_js( 'job', 'tasks.js' );
@@ -1207,7 +1207,7 @@ Thank you,<br><br>
 		return full_link( _EXTERNAL_TUNNEL_REWRITE . 'm.job/h.public/i.' . $job_id . '/hash.' . self::link_public( $job_id, true ) );
 	}
 
-	public static function job_task_has_split_hours( $job_id, $job_data = array(), $task_id, $task_data ) {
+	public static function job_task_has_split_hours( $job_id, $task_id, $task_data, $job_data = array() ) {
 		if ( ! $job_data ) {
 			$job_data = self::get_job( $job_id );
 		}
@@ -1229,7 +1229,7 @@ Thank you,<br><br>
 	}
 
 	// this works out if the current user is a staff member and if they should only see their set split pricing.
-	public static function job_task_only_show_split_hours( $job_id, $job_data = array(), $task_id, $task_data ) {
+	public static function job_task_only_show_split_hours( $job_id, $task_id, $task_data, $job_data = array() ) {
 		if ( ! $job_data ) {
 			$job_data = self::get_job( $job_id );
 		}
@@ -2299,7 +2299,7 @@ Job Name: <strong>{JOB_NAME}</strong> <br/>
 		// permission hack to
 		foreach ( $res as $rid => $r ) {
 			$job_data = array( 'user_id' => $r['job_user_id'] );
-			if ( $r['staff_split'] && module_job::job_task_only_show_split_hours( $job_id, $job_data, $r['task_id'], $r ) ) {
+			if ( $r['staff_split'] && module_job::job_task_only_show_split_hours( $job_id, $r['task_id'], $r, $job_data ) ) {
 				//                $res[$rid]['hours'] = $r['staff_hours'];
 				//                $res[$rid]['amount'] = $r['staff_amount'];
 				// others here
@@ -2811,7 +2811,7 @@ Job Name: <strong>{JOB_NAME}</strong> <br/>
 
 					// new staff expenses calculations
 
-					if ( self::job_task_has_split_hours( $job_id, $job, $task_id, $task ) ) {
+					if ( self::job_task_has_split_hours( $job_id, $task_id, $task, $job ) ) {
 						$tasks[ $task_id ]['staff_sum_amount'] = 0;
 						switch ( $task['manual_task_type'] ) {
 							case _TASK_TYPE_QTY_AMOUNT:
@@ -3517,7 +3517,7 @@ Job Name: <strong>{JOB_NAME}</strong> <br/>
 				}
 				// add / save this task.
 				$task_data['job_id'] = $job_id;
-				if ( module_job::job_task_only_show_split_hours( $job_id, $job_data, $task_id, $task_data ) ) {
+				if ( module_job::job_task_only_show_split_hours( $job_id, $task_id, $task_data, $job_data ) ) {
 					if ( isset( $task_data['hours'] ) && ! isset( $task_data['staff_hours'] ) ) {
 						$task_data['staff_hours']  = $task_data['hours'];
 						$task_data['staff_amount'] = $task_data['amount'];

@@ -189,7 +189,7 @@ class module_ticket extends module_base {
 		$this->links           = array();
 		$this->ticket_types    = array();
 		$this->module_name     = "ticket";
-		$this->module_position = 25;
+		$this->module_position = 530;
 
 		self::$ticket_statuses = array(
 			1                             => _l( 'Unassigned' ),

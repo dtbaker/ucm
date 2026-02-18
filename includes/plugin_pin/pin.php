@@ -17,7 +17,7 @@ class module_pin extends module_base {
 
 	public function init() {
 		$this->module_name     = "pin";
-		$this->module_position = 0;
+		$this->module_position = 420;
 
 		module_config::register_css( 'pin', 'pin.css' );
 		module_config::register_js( 'pin', 'pin.js' );

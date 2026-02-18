@@ -21,7 +21,7 @@ class module_paymethod_stripe extends module_base {
 	function init() {
 		$this->version         = 2.245;
 		$this->module_name     = "paymethod_stripe";
-		$this->module_position = 8882;
+		$this->module_position = 400;
 
 		// 2.245 - 2017-02-27 - config fix
 		// 2.244 - 2017-01-12 - stripe debugging information

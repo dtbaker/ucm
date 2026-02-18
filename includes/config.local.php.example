@@ -1,0 +1,17 @@
+<?php
+/**
+ * Local configuration for UCM.
+ * Copy this file to config.local.php and adjust for your environment.
+ * config.local.php is gitignored and used for Docker/local development.
+ * Overrides defaults from includes/config.php.
+ */
+
+define('_DB_SERVER', 'db');
+define('_DB_NAME', 'ucm');
+define('_DB_USER', 'ucm');
+define('_DB_PASS', 'ucm');
+define('_DB_PREFIX', 'ucm_');
+
+// Enable debug in Docker (errors in browser + module_debug output)
+define('_DEBUG_MODE', true);
+define('_DEBUG_SQL', false);

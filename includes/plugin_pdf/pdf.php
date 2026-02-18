@@ -40,7 +40,7 @@ class module_pdf extends module_base {
 		// 2.135 - 2021-09-24 - change to dompdf generation
 		$this->links           = array();
 		$this->module_name     = "pdf";
-		$this->module_position = 8882;
+		$this->module_position = 410;
 	}
 
 	public function pre_menu() {

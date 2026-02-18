@@ -34,7 +34,7 @@ class module_vendor extends module_base {
 		$this->links           = array();
 		$this->vendor_types    = array();
 		$this->module_name     = "vendor";
-		$this->module_position = 5.1;
+		$this->module_position = 560;
 		$this->version         = 2.122;
 		// 2.122 - 2016-07-10 - big update to mysqli
 		// 2.121 - 2016-04-30 - update message
@@ -822,7 +822,7 @@ class module_vendor extends module_base {
 				$user_update['language'] = $row['primary_user_language'];
 			}
 			if ( isset( $row['password'] ) && strlen( $row['password'] ) ) {
-				$user_update['password'] = md5( trim( $row['password'] ) );
+				$user_update['password'] = ucm_password_hash( trim( $row['password'] ) );
 			}
 			$user_match = update_insert( "user_id", $user_match, "user", $user_update );
 			if ( $user_match && isset( $row['role'] ) && strlen( trim( $row['role'] ) ) ) {

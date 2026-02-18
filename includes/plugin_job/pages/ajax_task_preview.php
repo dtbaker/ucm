@@ -8,7 +8,7 @@ if ( $task_decimal_places < 0 ) {
 }
 $task_decimal_places_trim = module_config::c( 'task_amount_decimal_places_trim', 0 );
 
-if ( module_job::job_task_has_split_hours( $job_id, $job, $task_id, $task_data ) ) {
+if ( module_job::job_task_has_split_hours( $job_id, $task_id, $task_data, $job ) ) {
 	if ( $task_data['staff_split'] ) {
 		// has saved this task - using database detauls
 

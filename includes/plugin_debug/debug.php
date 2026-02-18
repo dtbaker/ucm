@@ -24,7 +24,7 @@ class module_debug extends module_base {
 			self::$start_time = microtime( true );
 		}
 		$this->module_name     = "debug";
-		$this->module_position = 1;
+		$this->module_position = 30;
 		$this->version         = 2.121;
 		// 2.1 - 2013-08-30 - debug mode enhancements
 		// 2.11 - 2013-09-15 - ID in debug column output

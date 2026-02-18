@@ -21,7 +21,7 @@ class module_captcha extends module_base {
 	public function init() {
 		$this->version         = 2.24;
 		$this->module_name     = "captcha";
-		$this->module_position = 65;
+		$this->module_position = 110;
 
 		// 2.21 - 2013-04-12 - fix for auto login
 		// 2.22 - 2014-12-19 - php fix

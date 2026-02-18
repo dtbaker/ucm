@@ -26,7 +26,7 @@ class module_email extends module_base {
 
 	function init() {
 		$this->module_name     = "email";
-		$this->module_position = 1666;
+		$this->module_position = 160;
 
 		$this->version = 2.365;
 		// 2.365 - 2021-04-07 - php8 compatibility fix

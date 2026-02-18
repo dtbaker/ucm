@@ -30,7 +30,7 @@ class module_data extends module_base {
 		$this->links           = array();
 		$this->user_types      = array();
 		$this->module_name     = "data";
-		$this->module_position = 18;
+		$this->module_position = 150;
 		$this->version         = 2.185;
 		//2.185 - 2017-05-02 - file path configuration
 		//2.184 - 2017-02-20 - custom data extra field improvement

@@ -17,7 +17,7 @@ class module_db extends module_base {
 
 	public function init() {
 		$this->module_name     = "db";
-		$this->module_position = 0;
+		$this->module_position = 20;
 
 		$this->version = 2.140;
 		//2.140 - 2017-05-30 - upgrade fix
@@ -236,12 +236,6 @@ class module_db extends module_base {
 
 	public static function db_connect() {
 		if ( ! self::$dbcnx ) {
-			if ( function_exists( 'mysql_connect' ) ) {
-				if ( isset( $_POST['install_upgrade'] ) ) {
-					// we still use oldschool connect during the upgrade process so things don't break .
-					@mysql_connect( _DB_SERVER, _DB_USER, _DB_PASS ) or die( mysql_error() );
-				}
-			}
 			if ( function_exists( 'mysqli_connect' ) ) {
 				// todo; parse out port number or :/tmp/socket listing from _DB_SERVER and add to correct params
 				$server      = _DB_SERVER;
@@ -336,7 +330,7 @@ class module_db extends module_base {
 	}
 
 	public static function escape( $string ) {
-		return function_exists( 'mysqli_real_escape_string' ) ? mysqli_real_escape_string( self::$dbcnx, $string ) : mysql_real_escape_string( $string );
+		return mysqli_real_escape_string( self::$dbcnx, (string) $string );
 	}
 
 	public static function db_insert_id() {

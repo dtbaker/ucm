@@ -21,7 +21,7 @@ class module_paymethod_paypal extends module_base {
 	function init() {
 		$this->version         = 2.261;
 		$this->module_name     = "paymethod_paypal";
-		$this->module_position = 8882;
+		$this->module_position = 390;
 
 		// 2.261 - 2017-02-27 - config fix
 		// 2.260 - 2017-01-05 - php7 support

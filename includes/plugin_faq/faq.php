@@ -42,7 +42,7 @@ class module_faq extends module_base {
 	public function init() {
 		$this->links           = array();
 		$this->module_name     = "faq";
-		$this->module_position = 30;
+		$this->module_position = 190;
 
 
 		hook_add( 'api_callback_faq', 'module_faq::api_filter_faq' );

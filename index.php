@@ -14,6 +14,12 @@
  * If you would like to re-use parts of this system or ideas from this system elsewhere please ask permission first.
  */
 
+$required_php_version = '8.4.0';
+if ( version_compare( PHP_VERSION, $required_php_version ) < 0 ) {
+	header( 'Content-Type: text/html; charset=UTF-8' );
+	die( "PHP version of 8.4 or above is REQUIRED to run this software. Current version: " . PHP_VERSION . ". Please contact your hosting provider to upgrade PHP." );
+}
+
 $start_time   = microtime( true );
 $debug_info   = array();
 $debug_info[] = array(
@@ -55,12 +61,6 @@ if ( _DEBUG_MODE ) {
 }
 
 
-$required_php_version = '5.3.0';
-if ( version_compare( PHP_VERSION, $required_php_version ) < 0 ) {
-	$setup_errors = true;
-	echo "PHP version of 5.3 or above is REQUIRED to run this software - the current PHP version is: " . PHP_VERSION . ". Please contact the web hosting provider and request a PHP version upgrade.";
-}
-
 if ( ! _UCM_INSTALLED ) {
 	$_REQUEST['m']            = 'setup';
 	$_REQUEST['display_mode'] = 'normal';
@@ -80,11 +80,6 @@ $menu_module_index = count( $menu_modules );
 
 $page_unique_id = ''; // used for styling.
 
-
-$required_php_version = '5.3.0';
-if ( version_compare( PHP_VERSION, $required_php_version ) < 0 ) {
-	echo( "I'm sorry, a PHP version of $required_php_version or above is REQUIRED to run this - the current PHP version is: " . PHP_VERSION . ". Please ask the web hosting provider to upgrade you." );
-}
 
 try {
 	foreach ( $load_modules as $load_module_key => $load_module ) {

@@ -43,7 +43,7 @@ class module_invoice extends module_base {
 		$this->links           = array();
 		$this->invoice_types   = array();
 		$this->module_name     = "invoice";
-		$this->module_position = 18;
+		$this->module_position = 250;
 
 		$this->version = 2.809;
 		//2.809 - 2018-03-31 - timer + invoice link

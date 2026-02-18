@@ -34,7 +34,7 @@ class module_contract extends module_base {
 		$this->links           = array();
 		$this->contract_types  = array();
 		$this->module_name     = "contract";
-		$this->module_position = 15.99;
+		$this->module_position = 120;
 
 		module_config::register_css( 'contract', 'contract.css' );
 		module_config::register_js( 'contract', 'contract.js' );

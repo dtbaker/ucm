@@ -21,7 +21,7 @@ class module_hook extends module_base {
 
 	public function init() {
 		$this->module_name     = "hook";
-		$this->module_position = 1;
+		$this->module_position = 2;
 		$this->version         = 2.1;
 		// 2.1 - 2016-06-15 - initial release
 	}

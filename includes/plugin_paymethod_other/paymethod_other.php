@@ -22,7 +22,7 @@ class module_paymethod_other extends module_base {
 		//2.12 - 2015-03-14 - better default payment method options
 
 		$this->module_name     = "paymethod_other";
-		$this->module_position = 8899;
+		$this->module_position = 370;
 
 		if ( class_exists( 'module_template', false ) ) {
 			module_template::init_template( 'paymethod_other', 'Hello,

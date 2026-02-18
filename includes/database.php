@@ -1,95 +1,41 @@
 <?php
 
+/**
+ * Database abstraction layer.
+ * All functions delegate to module_db (MySQLi). The deprecated mysql_* extension is no longer supported.
+ * PHP 8.5+ requires MySQLi.
+ */
+
 $dbcnx = false;
 
 function db_connect() {
-	if ( class_exists( 'module_db', false ) && is_callable( 'module_db::db_connect' ) ) {
-		return module_db::db_connect();
-	}
-	global $dbcnx;
-	if ( ! $dbcnx ) {
-		$dbcnx = false; //@mysql_pconnect(_DB_SERVER,_DB_USER,_DB_PASS); // or die(mysql_error());
-		if ( ! $dbcnx ) {
-			$dbcnx = @mysql_connect( _DB_SERVER, _DB_USER, _DB_PASS ) or die( mysql_error() );
-		}
-		if ( ! $dbcnx || mysql_errno() ) {
-			set_error( mysql_error() );
-
-			return false;
-		}
-		mysql_select_db( _DB_NAME, $dbcnx );
-		query( "SET @@SESSION.sql_mode = ''" );
+	if ( ! class_exists( 'module_db', false ) || ! is_callable( 'module_db::db_connect' ) ) {
+		die( 'Database module not loaded. UCM requires PHP 8.5+ with MySQLi. Please ensure includes/plugin_db/ is present.' );
 	}
 
-	return $dbcnx;
+	return module_db::db_connect();
 }
 
 function db_close( $db ) {
-	mysql_close( $db );
+	if ( class_exists( 'module_db', false ) && method_exists( 'module_db', 'db_close' ) ) {
+		module_db::db_close( $db );
+	}
 }
 
 function query( $sql, $debug_message = '' ) {
-
-	if ( class_exists( 'module_db', false ) && is_callable( 'module_db::query' ) ) {
-		return module_db::query( $sql, $debug_message );
-	}
-	//echo ''.$sql.'<br>';
-	if ( _DEBUG_MODE && defined( '_DEBUG_SQL' ) && _DEBUG_SQL ) {
-		static $past_queries = array();
-		if ( ! isset( $past_queries[ $sql ] ) ) {
-			$past_queries[ $sql ] = 0;
-		} else {
-			$past_queries[ $sql ] ++;
-		}
-		$sql_debug = $sql;
-		if ( strlen( $sql_debug ) > 60 ) {
-			$sql_debug = htmlspecialchars( substr( $sql_debug, 0, 60 ) ) . '<a href="#" onclick="$(this).hide(); $(\'span\',$(this).parent()).show(); return false;">....</a><span style="display:none">' .
-			             htmlspecialchars( substr( $sql, 60 ) ) . '</span>';
-		} else {
-			$sql_debug = htmlspecialchars( $sql );
-		}
-		if ( class_exists( 'module_debug', false ) ) {
-			module_debug::log( array(
-				'title'     => 'SQL Query',
-				'file'      => 'includes/database.php',
-				'data'      => '(' . ( $past_queries[ $sql ] > 0 ? '<span style="color:#FF0000; font-weight:bold;">' . $past_queries[ $sql ] . '</span>' : $past_queries[ $sql ] ) . ') ' . $debug_message . $sql_debug,
-				'important' => $past_queries[ $sql ] > 0,
-			) );
-		}
+	if ( ! class_exists( 'module_db', false ) || ! is_callable( 'module_db::query' ) ) {
+		die( 'Database module not loaded. UCM requires PHP 8.5+ with MySQLi.' );
 	}
 
-	$res = mysql_query( $sql ); //or die(mysql_error() . $sql);
-	if ( mysql_errno() ) {
-		set_error( _l( 'SQL Error: %s', mysql_error() . ' ' . $sql ) );
-		set_error( _l( 'Try clicking the "Run Manual Upgrades" button to resolve SQL Errors.' ) );
-
-		return false;
-	}
-
-	return $res;
+	return module_db::query( $sql, $debug_message );
 }
 
-/*function db_clean_deep(&$value){
-    $value = is_array($value) ? array_map('db_clean_deep', $value) : stripslashes(htmlspecialchars($value));
-    return $value;
-}*/
 function query_to_array( $res ) {
-	if ( class_exists( 'module_db', false ) && is_callable( 'module_db::query_to_array' ) ) {
-		return module_db::query_to_array( $res );
-	}
-	$array = array();
-	if ( ! $res ) {
-		return $array;
-	}
-	while ( $row = mysql_fetch_assoc( $res ) ) {
-		if ( isset( $row['id'] ) && $row['id'] ) {
-			$array[ $row['id'] ] = $row;
-		} else {
-			$array[] = $row;
-		}
+	if ( ! class_exists( 'module_db', false ) || ! is_callable( 'module_db::query_to_array' ) ) {
+		die( 'Database module not loaded. UCM requires PHP 8.5+ with MySQLi.' );
 	}
 
-	return $array;
+	return module_db::query_to_array( $res );
 }
 
 function qa( $sql ) {
@@ -385,7 +331,7 @@ function update_insert( $pkey, $pid, $table, $data = false, $do_replace = false 
 	$sql .= $where;
 	query( $sql );
 	if ( $pid == "new" ) {
-		$pid = mysql_insert_id();
+		$pid = class_exists( 'module_db', false ) ? module_db::db_insert_id() : 0;
 	}
 
 	return $pid;

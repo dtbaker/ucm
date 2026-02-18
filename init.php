@@ -272,7 +272,14 @@ if ( ! session_id() && ( ! isset( $disable_sessions ) || ! $disable_sessions ) )
 		ini_set( "session.save_handler", "files" );
 		session_save_path( _UCM_FILE_STORAGE_DIR . "temp/" );
 	}
-	session_set_cookie_params( 0, _BASE_HREF );
+	session_set_cookie_params( array(
+		'lifetime' => 0,
+		'path'     => _BASE_HREF,
+		'domain'   => '',
+		'secure'   => ! empty( $_SERVER['HTTPS'] ) && $_SERVER['HTTPS'] !== 'off',
+		'httponly' => true,
+		'samesite' => 'Lax',
+	) );
 	session_start();
 	// if there are no session values
 }
@@ -298,6 +305,10 @@ if ( _REWRITE_LINKS ) {
 			}
 			$m = explode( ".", $part );
 			if ( count( $m ) == 2 ) {
+				if ( $module_number === 0 ) {
+					$_REQUEST['m'] = array();
+					$_REQUEST['p'] = array();
+				}
 				$_REQUEST['m'][ $module_number ] = $m[0];
 				$_REQUEST['p'][ $module_number ] = $m[1];
 				$module_number ++;
@@ -316,7 +327,8 @@ if ( $plugins_to_init ) {
 	//$uninstalled_plugins = $upgradable_plugins = array();
 	foreach ( $plugins_to_init as $plugin_name ) {
 		if ( class_exists( 'module_' . $plugin_name, false ) ) {
-			eval( '$plugins[$plugin_name] = new module_' . $plugin_name . '();' );
+			$class_name = 'module_' . $plugin_name;
+			$plugins[ $plugin_name ] = new $class_name();
 			// this is a hack for php 5.2 to get the can_i() thing working
 			//eval('module_'.$plugin_name.'::$module_name_hack = module_'.$plugin_name.'::get_class();');
 			if ( _UCM_INSTALLED && $plugins[ $plugin_name ]->is_plugin_enabled() ) {
@@ -347,6 +359,14 @@ if ( ! function_exists( 'sort_plugins' ) ) {
 	}
 }
 uasort( $plugins, 'sort_plugins' );
+echo 'init';
+foreach($plugins as $plugin_name => &$p){
+    echo $plugin_name.'<br>';
+    echo $p->module_position.'<br>';
+    echo '<br>';
+}
+print_r($plugins_to_init);
+print_r(array_keys($plugins));exit;
 
 
 if ( isset( $_REQUEST['auto_login'] ) ) {

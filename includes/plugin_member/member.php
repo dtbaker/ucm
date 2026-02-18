@@ -23,7 +23,7 @@ class module_member extends module_base {
 		$this->links           = array();
 		$this->member_types    = array();
 		$this->module_name     = "member";
-		$this->module_position = 20.1;
+		$this->module_position = 300;
 		$this->version         = 2.185;
 		// 2.185 - 2016-07-10 - big update to mysqli
 		// 2.184 - 2014-11-26 - duplicate member warning on add

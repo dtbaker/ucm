@@ -22,7 +22,7 @@ class module_api extends module_base {
 		$this->links           = array();
 		$this->api_types       = array();
 		$this->module_name     = "api";
-		$this->module_position = 26;
+		$this->module_position = 80;
 		$this->version         = 2.1;
 		//2.1 - 2014-05-26 - initial release of new api system
 

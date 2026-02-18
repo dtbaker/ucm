@@ -28,7 +28,7 @@ class module_encrypt extends module_base {
 
 	public function init() {
 		$this->module_name     = "encrypt";
-		$this->module_position = 1;
+		$this->module_position = 170;
 		$this->version         = 2.270;
 		// 2.2 - initial release
 		// 2.21 - better support for new 'extra' fields

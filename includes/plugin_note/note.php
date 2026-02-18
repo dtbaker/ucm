@@ -66,7 +66,7 @@ class module_note extends module_base {
 		$this->links           = array();
 		$this->user_types      = array();
 		$this->module_name     = "note";
-		$this->module_position = 8882;
+		$this->module_position = 310;
 		module_config::register_css( 'note', 'notes.css' );
 
 		hook_add( 'calendar_events', 'module_note::hook_calendar_events' );
