@@ -11,6 +11,11 @@ class module_template extends module_base {
 
 	public $template_id;
 	public $template_key;
+	public $create_user_id;
+	public $update_user_id;
+	public $date_created;
+	public $date_updated;
+	public $id;
 
 	private static $_templates;
 

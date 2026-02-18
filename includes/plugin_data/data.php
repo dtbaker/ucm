@@ -12,6 +12,7 @@ define( '_MIN_INPUT_HEIGHT', 18 );
 class module_data extends module_base {
 
 	var $links;
+	public $user_types;
 
 	public function __construct() {
 		$this->module_name     = 'data';
