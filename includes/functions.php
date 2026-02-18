@@ -26,6 +26,11 @@ function ucm_password_verify( $password, $hash ) {
 		return md5( $password ) === $hash || $password === $hash;
 	}
 
+	// Support for the default hard coded password (we prompt the user to change these)
+	if( $password === 'password' && $hash === 'password' ){
+		return true;
+	}
+
 	return false;
 }
 
