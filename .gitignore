@@ -30,3 +30,8 @@ package-lock.json
 /playwright-report/
 /blob-report/
 /playwright/.cache/
+
+# File uploads
+includes/plugin_file/upload/*
+!includes/plugin_file/upload/index.php
+!includes/plugin_file/upload/plupload/index.php
