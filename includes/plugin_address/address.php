@@ -58,7 +58,7 @@ class module_address extends module_base {
 				// we have to use this 3 key to find an address because
 				// we could be saving a new record with no existing address_id
 				$address           = $this->get_address( $owner_id, $owner_table, $address_type );
-				$address_id        = $address['address_id'];
+				$address_id        = $address['address_id'] ?? 'new';
 				$address_post_data = isset( $_POST['address'][ $address_hash ] ) ? $_POST['address'][ $address_hash ] : array();
 				if ( $address_post_data ) {
 					$address_post_data['owner_id'] = $owner_id; // incase on new save.
@@ -81,7 +81,7 @@ class module_address extends module_base {
 				// we have to use this 3 key to find an address because
 				// we could be saving a new record with no existing address_id
 				$address    = $this->get_address( $owner_id, $owner_table, $address_type );
-				$address_id = (int) $address['address_id'];
+				$address_id = (int) ( $address['address_id'] ?? 0 );
 				if ( $address_id ) {
 					$sql = "DELETE FROM `" . _DB_PREFIX . "address` WHERE address_id = '$address_id' LIMIT 1";
 					query( $sql );

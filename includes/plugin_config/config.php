@@ -206,7 +206,7 @@ class module_config extends module_base {
 			$this->links[] = array(
 				"name"      => "Settings",
 				"p"         => "config_admin",
-				"order"     => 99,
+				"order"     => 9999,
 				'icon_name' => 'cogs',
 			);
 		}

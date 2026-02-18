@@ -35,7 +35,7 @@ if ( module_user::can_i( 'edit', 'Users Permissions', 'Config' ) ) {
 				),
 			)
 		);
-		if ( module_security::can_i( 'view', 'Security Roles', 'Security' ) ) {
+		if ( $current_role && module_security::can_i( 'view', 'Security Roles', 'Security' ) ) {
 			$fieldset_data['elements']['role']['fields'][] = ' <a href="' . module_security::link_open_role( $current_role['security_role_id'] ) . '">edit</a> ';
 		}
 		$fieldset_data['elements']['role']['fields'][] = _hr( 'You can setup a list of permissions to re-use over and over again under Settings > Roles. This will control what parts of the application this user can access (if any). ' );

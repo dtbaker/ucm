@@ -425,7 +425,7 @@ Comment: {COMMENT}
 						// instead of include file below.
 						$file_item['html'] = $this->print_file( $file_item['file_id'] );
 					}
-					include( "pages/file_list.php" );
+					include( dirname( __FILE__ ) . '/pages/file_list.php' );
 				} else {
 					echo 'Please save first before creating files.';
 				}
@@ -483,8 +483,10 @@ Comment: {COMMENT}
 				$editable = false;
 			}
 			$title = ( isset( $options['title'] ) && $options['title'] ) ? $options['title'] : false;
-			if ( ! is_file( 'pages/file_list_' . basename( $layout_type ) . '.php' ) || ! @include( 'pages/file_list_' . basename( $layout_type ) . '.php' ) ) {
-				include( "pages/file_list.php" );
+			$file_list_dir = dirname( __FILE__ ) . '/pages/';
+			$layout_file   = $file_list_dir . 'file_list_' . basename( $layout_type ) . '.php';
+			if ( ! is_file( $layout_file ) || ! @include( $layout_file ) ) {
+				include( $file_list_dir . 'file_list.php' );
 			}
 		}
 	}
@@ -708,7 +710,12 @@ Comment: {COMMENT}
 			$file_path = false;
 			$file_name = false;
 
-			$options = unserialize( base64_decode( $_REQUEST['options'] ) );
+			$options = array();
+			if ( ! empty( $_REQUEST['options'] ) ) {
+				$decoded = base64_decode( $_REQUEST['options'] );
+				$unserialized = is_string( $decoded ) ? @unserialize( $decoded ) : false;
+				$options = is_array( $unserialized ) ? $unserialized : array();
+			}
 
 			// have we uploaded anything
 			if ( isset( $_FILES['file_upload'] ) && is_uploaded_file( $_FILES['file_upload']['tmp_name'] ) ) {
