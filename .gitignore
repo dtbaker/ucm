@@ -1,0 +1,32 @@
+# Dependencies
+/vendor/
+
+# Local configuration (contains DB credentials)
+includes/config.local.php
+
+# Temp/cache
+temp/*
+!temp/.gitkeep
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Composer
+composer.lock
+
+# Node / Playwright
+node_modules/
+package-lock.json
+
+# Playwright
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/

@@ -1,0 +1,20 @@
+parameters:
+    level: 2
+    paths:
+        - includes/
+    excludePaths:
+        - includes/plugin_pdf/dompdf/*
+        - includes/plugin_encrypt/phpseclib/*
+        - includes/plugin_email/class.*
+        - includes/plugin_social_facebook/*
+        - includes/plugin_social_twitter/*
+        - includes/plugin_calendar/wdCalendar/*
+    ignoreErrors:
+        - '#Call to an undefined (method|static method)#'
+        - '#Parameter .* has no type specified#'
+        - '#Constant .* not found#'
+        - '#Variable .* might not be defined#'
+        - '#will always evaluate to (true|false)#'
+        - '#Result of && is always#'
+        - '#Unreachable statement#'
+        - '#treatPhpDocTypesAsCertain#'

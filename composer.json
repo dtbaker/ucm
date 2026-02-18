@@ -1,0 +1,26 @@
+{
+    "name": "ucm/ultimate-client-manager",
+    "description": "Ultimate Client Manager - Freelance Project Invoice CRM",
+    "type": "project",
+    "require": {
+        "php": "^8.4"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^11.0",
+        "phpstan/phpstan": "^2.0",
+        "phpstan/extension-installer": "^1.4"
+    },
+    "autoload": {
+        "files": []
+    },
+    "config": {
+        "allow-plugins": {
+            "phpstan/extension-installer": true
+        }
+    },
+    "scripts": {
+        "test": "phpunit",
+        "test:e2e": "npm run test:e2e",
+        "phpstan": "phpstan analyse includes/ --memory-limit=512M"
+    }
+}
