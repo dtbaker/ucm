@@ -750,9 +750,10 @@ class module_timer extends module_base {
 	}
 
 	public static function format_seconds( $total_time ) {
-		$hours   = (int) floor( $total_time / 3600 );
-		$minutes = (int) floor( ( $total_time / 60 ) % 60 );
-		$seconds = (int) floor( $total_time % 60 );
+		$total_int = (int) floor( $total_time );
+		$hours     = (int) ( $total_int / 3600 );
+		$minutes   = ( (int) floor( $total_time / 60 ) ) % 60;
+		$seconds   = $total_int % 60;
 
 		return sprintf( "%02d:%02d:%02d", $hours, $minutes, $seconds );
 	}
