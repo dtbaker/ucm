@@ -256,6 +256,7 @@ class module_template extends module_base {
 			}
 			foreach ( $tags_to_add as $key => $val ) {
 				if ( ! is_array( $val ) ) {
+					$val = $val ?? '';
 					if ( strlen( $val ) > 30 ) {
 						$val = substr( $val, 0, 30 ) . '...';
 					}
@@ -536,6 +537,7 @@ class module_template extends module_base {
 			if ( is_array( $val ) ) {
 				continue;
 			}
+			$val = $val ?? '';
 			// if this isn't a html field we add newlines.
 			if ( ! preg_match( '#<[^>]+>#', $val ) ) {
 				// raw text. nl2br

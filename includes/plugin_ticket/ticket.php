@@ -1925,8 +1925,8 @@ Thanks,
 			}
 			//$last_message = current($messages);
 			$last_message                       = mysqli_fetch_assoc( $messages );
-			$ticket['last_ticket_message_id']   = $last_message['ticket_message_id'];
-			$ticket['last_message_was_private'] = isset( $last_message['private_message'] ) && $last_message['private_message'];
+			$ticket['last_ticket_message_id']   = $last_message ? $last_message['ticket_message_id'] : null;
+			$ticket['last_message_was_private'] = $last_message && isset( $last_message['private_message'] ) && $last_message['private_message'];
 			// for passwords and website addresses..
 			$ticket['extra_data'] = self::get_ticket_extras( $ticket_id );
 

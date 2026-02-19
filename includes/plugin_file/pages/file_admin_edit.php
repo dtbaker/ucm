@@ -57,6 +57,8 @@ $(function() {
 		container: 'container',
 		url : plupload_url,
 		flash_swf_url : '<?php echo full_link('includes/plugin_file/js/plupload.flash.swf');?>',
+		chunk_size : 0,
+		file_data_name : 'file',
 
 		/*filters : {
 			max_file_size : '10mb',
@@ -201,7 +203,7 @@ $(function() {
 						</div>
                     <?php } ?>
                     <?php if($file_id){ ?>
-                    <a href="<?php echo $module->link('file_edit',array('_process'=>'download','file_id'=>$file_id),'file',false);?>"><?php echo nl2br(htmlspecialchars($file['file_name']));?></a>
+                    <a href="<?php echo $module->link('file_edit',array('_process'=>'download','file_id'=>$file_id),'file',false);?>"><?php echo nl2br(htmlspecialchars($file['file_name'] ?? ''));?></a>
                     <?php }
                 }
             ),
@@ -212,7 +214,7 @@ $(function() {
             'field' => array(
                 'type' => 'text',
 	            'name' => 'file_name',
-	            'value' => $file['file_name'],
+	            'value' => $file['file_name'] ?? '',
             ),
         );
 	    $fieldset_data['elements'][] = array(
@@ -220,13 +222,13 @@ $(function() {
             'fields' => array(
                 function() use(&$file, $file_id){
 	                if(module_file::can_i('edit','Files')){ ?>
-					<input type="text" name="file_url" value="<?php echo htmlspecialchars($file['file_url']);?>">
+					<input type="text" name="file_url" value="<?php echo htmlspecialchars($file['file_url'] ?? '');?>">
                         <?php if($file['file_url']){ ?>
-                        <a href="<?php echo htmlspecialchars($file['file_url']);?>" target="_blank"><?php _e('Open');?></a>
+                        <a href="<?php echo htmlspecialchars($file['file_url'] ?? '');?>" target="_blank"><?php _e('Open');?></a>
                         <?php } ?>
                     <?php _h('You can enter a full URL to a file here (eg: http://yoursite.com/file.txt) and that link will become available through this system.'); ?>
                     <?php }else{ ?>
-                        <a href="<?php echo htmlspecialchars($file['file_url']);?>" target="_blank"><?php echo htmlspecialchars($file['file_url']);?></a>
+                        <a href="<?php echo htmlspecialchars($file['file_url'] ?? '');?>" target="_blank"><?php echo htmlspecialchars($file['file_url'] ?? '');?></a>
                     <?php }
                 }
             )
@@ -396,7 +398,7 @@ $(function() {
                                 _e( 'File has not been sent for approval.' );
                                 break;
                             default:
-                                _e( 'File was approved at %s by %s', print_date( $file['approved_time'], true ), htmlspecialchars( $file['approved_by'] ) );
+                                _e( 'File was approved at %s by %s', print_date( $file['approved_time'], true ), htmlspecialchars( $file['approved_by'] ?? '' ) );
                         }
                     }
                 }

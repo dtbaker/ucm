@@ -430,7 +430,7 @@ print_heading( $header );
 	$columns['ticket_type']   = array(
 		'title'    => 'Type',
 		'callback' => function ( $ticket ) {
-			echo htmlspecialchars( $ticket['ticket_type'] );
+			echo htmlspecialchars( $ticket['ticket_type'] ?? '' );
 		},
 	);
 	$columns['ticket_status'] = array(

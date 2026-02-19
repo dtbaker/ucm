@@ -669,12 +669,20 @@ Comment: {COMMENT}
 			}
 			@fclose( $out );
 			@fclose( $in );
-			// Check if file has been uploaded
+			// Check if file has been uploaded (last chunk or non-chunked)
 			if ( ! $chunks || $chunk == $chunks - 1 ) {
-				// Strip the temp .part suffix off
-				rename( "{$filePath}.part", $filePath );
+				$partPath = "{$filePath}.part";
+				if ( file_exists( $partPath ) ) {
+					if ( ! @rename( $partPath, $filePath ) ) {
+						// Fallback for cross-filesystem or permission issues
+						if ( @copy( $partPath, $filePath ) ) {
+							@unlink( $partPath );
+						} else {
+							die( '{"jsonrpc" : "2.0", "error" : {"code": 104, "message": "Failed to finalize upload."}, "id" : "id"}' );
+						}
+					}
+				}
 			}
-
 
 			die( '{"jsonrpc" : "2.0", "result" : null, "id" : "id"}' );
 
@@ -810,9 +818,12 @@ Comment: {COMMENT}
 
 					if ( isset( $_REQUEST['plupload_key'] ) && isset( $_REQUEST['plupload_file_name'] ) && is_array( $_REQUEST['plupload_file_name'] ) && strlen( preg_replace( '/[^a-zA-Z0-9-_]+/', '', basename( $_REQUEST['plupload_key'] ) ) ) ) {
 						$plupload_key = preg_replace( '/[^a-zA-Z0-9-_]+/', '', basename( $_REQUEST['plupload_key'] ) );
+						
 						foreach ( $_REQUEST['plupload_file_name'] as $plupload_file_name_key => $file_name ) {
 							$plupload_file_name_key = preg_replace( '/[^a-zA-Z0-9-_]+/', '', basename( $plupload_file_name_key ) );
 							if ( $plupload_key && $plupload_file_name_key && $file_name && is_file( _FILE_UPLOAD_PATH . 'plupload' . DIRECTORY_SEPARATOR . $plupload_key . '-' . $plupload_file_name_key ) ) {
+
+
 								$file_path = _FILE_UPLOAD_PATH . time() . '-' . md5( time() . $file_name );
 								if ( rename( _FILE_UPLOAD_PATH . 'plupload' . DIRECTORY_SEPARATOR . $plupload_key . '-' . $plupload_file_name_key, $file_path ) ) {
 									// it worked. umm.. do something.
@@ -831,6 +842,7 @@ Comment: {COMMENT}
 						}
 
 					}
+
 					// the old file upload method, no plupload:
 					if ( ! $file_changed && isset( $_FILES['file_upload'] ) && is_uploaded_file( $_FILES['file_upload']['tmp_name'] ) ) {
 						// copy to file area.
@@ -866,6 +878,7 @@ Comment: {COMMENT}
 						);
 					}
 
+					//print_r($files_to_save);exit;
 					// make sure we have a valid customer_id and job_id selected.
 					$possible_customers = $possible_jobs = array();
 					if ( class_exists( 'module_customer', false ) ) {
@@ -938,7 +951,7 @@ Comment: {COMMENT}
 						$parent_file      = new ucm_file( $file_data['bucket_parent_file_id'] );
 						$parent_file_data = $parent_file->get_data();
 						foreach ( $sub_bucket_fields as $sub_bucket_field ) {
-							$file_data[ $sub_bucket_field ] = $parent_file_data[ $sub_bucket_field ];
+							$file_data[ $sub_bucket_field ] = $parent_file_data[ $sub_bucket_field ] ?? 0;
 						}
 					}
 

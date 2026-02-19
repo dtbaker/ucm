@@ -553,8 +553,8 @@ class UCMBaseDocument extends UCMBaseSingle {
 				'fields' => array(
 					function () use ( $self ) {
 						echo $self->is_document_locked() ?
-							htmlspecialchars( $self->get( 'discount_description' ) ) :
-							'<input type="text" name="discount_description" value="' . htmlspecialchars( $self->get( 'discount_description' ) ) . '" style="width:80px;">';
+							htmlspecialchars( $self->get( 'discount_description' ) ?? '' ) :
+							'<input type="text" name="discount_description" value="' . htmlspecialchars( $self->get( 'discount_description' ) ?? '' ) . '" style="width:80px;">';
 					}
 				),
 			);
