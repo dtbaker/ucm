@@ -40,7 +40,6 @@ if ( isset( $_REQUEST['extra_default_id'] ) && $_REQUEST['extra_default_id'] ) {
 	);
 	switch ( $extra_default['owner_table'] ) {
 		case 'customer':
-
 			$fieldset_data['elements'] [] = array(
 				'title' => 'Customer Type',
 				'field' => array(
@@ -120,7 +119,7 @@ if ( isset( $_REQUEST['extra_default_id'] ) && $_REQUEST['extra_default_id'] ) {
 				'help'  => 'Set the ajax lookup key here. See documentation for more details.',
 			),
 		);
-	} else if ( $extra_default['field_type'] == 'reference' ) {
+	} elseif ( $extra_default['field_type'] == 'reference' ) {
 		$fieldset_data['elements'] [] = array(
 			'title' => 'Reference Settings',
 			'field' => array(
@@ -130,7 +129,7 @@ if ( isset( $_REQUEST['extra_default_id'] ) && $_REQUEST['extra_default_id'] ) {
 				'help'  => 'Reference value. E.g. customer.member_id'
 			),
 		);
-	} else if ( $extra_default['field_type'] == 'select' ) {
+	} elseif ( $extra_default['field_type'] == 'select' ) {
 		$fieldset_data['elements'] [] = array(
 			'title' => 'Dropdown Options',
 			'field' => array(
@@ -218,7 +217,7 @@ if ( isset( $_REQUEST['extra_default_id'] ) && $_REQUEST['extra_default_id'] ) {
 	}
 
 
-} else{
+} else {
     ?>
 
 
@@ -247,15 +246,15 @@ if ( isset( $_REQUEST['extra_default_id'] ) && $_REQUEST['extra_default_id'] ) {
         </thead>
         <tbody>
             <?php
-            $c=0;
+            $c = 0;
             $yn = get_yes_no();
-            foreach($extra_defaults as $owner_table => $owner_table_defaults){
-                foreach($owner_table_defaults as $owner_table_default){
+            foreach ($extra_defaults as $owner_table => $owner_table_defaults) {
+                foreach ($owner_table_defaults as $owner_table_default) {
                 ?>
-                <tr class="<?php echo ($c++%2)?"odd":"even"; ?>">
+                <tr class="<?php echo ($c++ % 2) ? "odd" : "even"; ?>">
                     <td>
                         <?php echo htmlspecialchars($owner_table);
-                        switch($owner_table){
+                        switch ($owner_table) {
                             case 'customer':
 								$types = module_customer::get_customer_types();
 	                            echo $owner_table_default['owner_table_child'] && isset($types[$owner_table_default['owner_table_child']]) ? ' / ' . htmlspecialchars($types[$owner_table_default['owner_table_child']]['type_name']) : '';

@@ -98,7 +98,7 @@ print_heading( array(
 		}
 		$total['total_amount_invoicable'][ $job_data['currency_id'] ] += $job_data['total_amount'];
 		?>
-		<tr class="<?php echo ( $c ++ % 2 ) ? "odd" : "even"; ?>">
+		<tr class="<?php echo ( $c++ % 2 ) ? "odd" : "even"; ?>">
 			<td>
 				<?php echo module_job::link_open( $job_data['job_id'], true, $job_data ); ?>
 				<?php if ( isset( $original_job_data['renew_from_job_id'] ) ) {

@@ -197,7 +197,7 @@ if ( class_exists( 'module_security', false ) ) {
 			}
 			echo module_form::generate_fieldset( $fieldset_data );
 			unset( $fieldset_data );
-		} else if ( ! module_user::can_i( 'edit', 'All ' . $page_type_single . ' Contacts', 'Vendor', 'vendor' ) && $vendor['primary_user_id'] != module_security::get_loggedin_id() ) {
+		} elseif ( ! module_user::can_i( 'edit', 'All ' . $page_type_single . ' Contacts', 'Vendor', 'vendor' ) && $vendor['primary_user_id'] != module_security::get_loggedin_id() ) {
 			ob_start();
 			// no permissions to edit.
 			echo '<div class="content_box_wheader"><table width="100%" border="0" cellspacing="0" cellpadding="2" class="tableclass tableclass_form"><tbody><tr><td>';
@@ -243,7 +243,7 @@ if ( class_exists( 'module_security', false ) ) {
 					'class' => 'tableclass tableclass_form tableclass_full',
 					'elements' => array(),
 			);
-	
+
 			if(module_vendor::can_i('edit','Vendor Credit')){
 					$fieldset_data['elements']['credit'] = array(
 							'title' => _l('Credit'),
@@ -304,7 +304,7 @@ if ( class_exists( 'module_security', false ) ) {
 							);
 					}
 			}
-	
+
 			echo module_form::generate_fieldset($fieldset_data);
 	*/
 

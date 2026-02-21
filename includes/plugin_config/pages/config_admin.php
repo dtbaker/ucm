@@ -56,5 +56,3 @@ if ( module_config::can_i( 'view', 'Upgrade System' ) && ! defined( '_UCM_HIDE_U
 		'allow_nesting'       => 1,
 	);
 }
-
-?>

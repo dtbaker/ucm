@@ -7,8 +7,8 @@ defined( '_UCM_VERSION' ) || die( '-5' );
 
 if ( class_exists( 'UCMBaseSingle' ) ) {
 
-	class UCMProduct extends UCMBaseSingle {
-
+	class UCMProduct extends UCMBaseSingle
+    {
 		public $db_id = 'product_id';
 		public $db_table = 'product';
 		public $display_key = 'name';
@@ -255,12 +255,10 @@ if ( class_exists( 'UCMBaseSingle' ) ) {
 				}
 			}
 		}
-
-
 	}
 
-	class UCMProductSupplier extends UCMBaseSingle {
-
+	class UCMProductSupplier extends UCMBaseSingle
+    {
 		// support composite primary keys
 		public $db_id = array( 'product_id', 'customer_id' );
 		public $db_table = 'product_supplier';
@@ -310,12 +308,10 @@ if ( class_exists( 'UCMBaseSingle' ) ) {
 			}
 
 		}
-
-
 	}
 
-	class UCMProducts extends UCMBaseMulti {
-
+	class UCMProducts extends UCMBaseMulti
+    {
 		public $db_id = 'product_id';
 		public $db_table = 'product';
 		public $display_name = 'Product';
@@ -345,17 +341,14 @@ if ( class_exists( 'UCMBaseSingle' ) ) {
 
 			return parent::link_open( $link_options );
 		}
-
-
 	}
 
-	class UCMProductSuppliers extends UCMBaseMulti {
-
+	class UCMProductSuppliers extends UCMBaseMulti
+    {
 		// support composite primary keys
 		public $db_id = array( 'product_id', 'customer_id' );
 		public $db_table = 'product_supplier';
 		public $display_name = 'Product Supplier';
 		public $display_name_plural = 'Product Suppliers';
-
 	}
 }

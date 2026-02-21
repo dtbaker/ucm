@@ -18,7 +18,8 @@ $invoice_templates['credit_note_pdf']         = 1;
 $invoice_templates['invoice_email_due']       = 1;
 $invoice_templates['invoice_email_overdue']   = 1;
 $invoice_templates['invoice_email_paid']      = 1;
-$invoice_templates['credit_note_email']       = 1;;
+$invoice_templates['credit_note_email']       = 1;
+;
 foreach ( $templates as $template ) {
 	if ( stripos( $template['template_key'], 'invoice' ) ) {
 		$invoice_templates[ $template['template_key'] ] = 1;

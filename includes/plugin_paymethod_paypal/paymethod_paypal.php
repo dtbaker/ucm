@@ -3,9 +3,8 @@
 //306412171 ucm_1306412206_per@gmail.com
 
 
-class module_paymethod_paypal extends module_base {
-
-
+class module_paymethod_paypal extends module_base
+{
 	public static function can_i( $actions, $name = false, $category = false, $module = false ) {
 		if ( ! $module ) {
 			$module = __CLASS__;
@@ -102,7 +101,7 @@ class module_paymethod_paypal extends module_base {
 
 		if ( $dollar_limit == 'above' && $invoice_data['total_amount_due'] < $dollar_value ) {
 			return false;
-		} else if ( $dollar_limit == 'below' && $invoice_data['total_amount_due'] > $dollar_value ) {
+		} elseif ( $dollar_limit == 'below' && $invoice_data['total_amount_due'] > $dollar_value ) {
 			return false;
 		}
 		if ( strlen( $cur ) > 1 ) {
@@ -286,9 +285,9 @@ class module_paymethod_paypal extends module_base {
 						$time = key( $is_subscription );
 						if ( $time == 'days' ) {
 							$time = 'D';
-						} else if ( $time == 'months' ) {
+						} elseif ( $time == 'months' ) {
 							$time = 'M';
-						} else if ( $time == 'years' ) {
+						} elseif ( $time == 'years' ) {
 							$time = 'Y';
 						}
 
@@ -340,7 +339,7 @@ class module_paymethod_paypal extends module_base {
 
 						redirect_browser( $url );
 
-					} else if ( isset( $_REQUEST['payment_single'] ) ) {
+					} elseif ( isset( $_REQUEST['payment_single'] ) ) {
 						// use is choosing to continue payment as a once off amount
 
 					} else {
@@ -499,7 +498,7 @@ class module_paymethod_paypal extends module_base {
 		$invoice_payment_subscription_id = false;
 		if ( count( $paypal_bits ) == 4 ) {
 			// normal IPN, single payment.
-		} else if ( count( $paypal_bits ) == 5 ) {
+		} elseif ( count( $paypal_bits ) == 5 ) {
 			// subscription IPN, with subscription id.
 			$invoice_payment_subscription_id = (int) $paypal_bits[3];
 			$invoice_payment_subscription    = get_single( 'invoice_payment_subscription', 'invoice_payment_subscription_id', $invoice_payment_subscription_id );
@@ -619,14 +618,13 @@ class module_paymethod_paypal extends module_base {
 						break;
 					case "subscr_payment":
 					case "web_accept":
-
 						if ( $_REQUEST['payment_status'] == "Canceled_Reversal" || $_REQUEST['payment_status'] == "Refunded" ) {
 							// funky refund!! oh noes!!
 							// TODO: store this in the database as a negative payment... should be easy.
 							// populate $_REQUEST vars then do something like $payment_history_id = update_insert("payment_history_id","new","payment_history");
 							send_error( "PayPal Error! The payment $payment_id has been refunded or reversed! BAD BAD! You have to follup up customer for money manually now." );
 
-						} else if ( $_REQUEST['payment_status'] == "Completed" ) {
+						} elseif ( $_REQUEST['payment_status'] == "Completed" ) {
 
 							// payment is completed! yeye getting closer...
 

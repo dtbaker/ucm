@@ -35,7 +35,7 @@ print_heading( array(
 		foreach ( $templates as $template ) {
 			$template = module_template::get_template( $template['template_id'] );
 			?>
-			<tr class="<?php echo ( $c ++ % 2 ) ? "odd" : "even"; ?>">
+			<tr class="<?php echo ( $c++ % 2 ) ? "odd" : "even"; ?>">
 				<td class="row_action">
 					<?php echo module_template::link_open( $template['template_id'], true ); ?>
 				</td>

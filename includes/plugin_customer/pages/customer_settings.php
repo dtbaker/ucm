@@ -42,4 +42,3 @@ if ( file_exists( dirname( __FILE__ ) . '/customer_signup.php' ) ) {
 		'args'                => array( 'customer_id' => false ),
 	);
 }
-

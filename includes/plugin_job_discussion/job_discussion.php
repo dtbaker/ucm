@@ -1,7 +1,7 @@
 <?php
 
-class module_job_discussion extends module_base {
-
+class module_job_discussion extends module_base
+{
 	public static function can_i( $actions, $name = false, $category = false, $module = false ) {
 		if ( ! $module ) {
 			$module = __CLASS__;
@@ -163,7 +163,7 @@ Thank you,<br><br>
 		if ( isset( $_POST['job_discussion_add_job_id'] ) && isset( $_POST['job_discussion_add_task_id'] ) && $_POST['job_discussion_add_job_id'] == $job_id && $_POST['job_discussion_add_task_id'] == $task_id && isset( $_POST['note'] ) && strlen( $_POST['note'] ) ) {
 
 			$x = 0;
-			while ( ob_get_level() && $x ++ < 10 ) {
+			while ( ob_get_level() && $x++ < 10 ) {
 				ob_end_clean();
 			}
 
@@ -335,7 +335,7 @@ Thank you,<br><br>
 
 			}
 			$x = 0;
-			while ( $x ++ < 5 && ob_get_level() ) {
+			while ( $x++ < 5 && ob_get_level() ) {
 				ob_end_clean();
 			}
 			header( "Content-type: text/javascript", true );

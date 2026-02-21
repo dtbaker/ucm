@@ -114,7 +114,7 @@ if ( $show_theme_selector ) {
 			$c = 0;
 			if ( isset( $style['v'] ) && is_array( $style['v'] ) ) {
 				foreach ( $style['v'] as $k => $v ) {
-					$c ++;
+					$c++;
 					?>
 					<tr class="<?php echo $x % 2 ? 'odd' : 'even'; ?>">
 						<?php if ( $c == 1 ) { ?>
@@ -125,7 +125,7 @@ if ( $show_theme_selector ) {
 						</td>
 						<td>
 							<?php switch ( $k ) {
-								default;
+								default:
 									?>
 									<input type="text"
 									       name="config[_theme_<?php echo htmlspecialchars( module_theme::$current_theme . $style['r'] . '_' . $k ); ?>]"
@@ -142,9 +142,9 @@ if ( $show_theme_selector ) {
 						</td>
 					</tr>
 					<?php
-					$r ++;
+					$r++;
 				}
-			} else if ( isset( $style['elements'] ) && is_array( $style['elements'] ) ) {
+			} elseif ( isset( $style['elements'] ) && is_array( $style['elements'] ) ) {
 				?>
 
 				<tr class="<?php echo $x % 2 ? 'odd' : 'even'; ?>">
@@ -157,7 +157,7 @@ if ( $show_theme_selector ) {
 				</tr>
 				<?php
 			}
-			$x ++;
+			$x++;
 		} ?>
 
 		</tbody>

@@ -9,7 +9,6 @@ $allow_search = true;
 
 switch ( $display_type ) {
 	case 'table':
-
 		$data_types = $module->get_data_types();
 		foreach ( $data_types as $data_type ) {
 			$data_type_id = $data_type['data_type_id'];
@@ -23,7 +22,6 @@ switch ( $display_type ) {
 
 		break;
 	case 'select':
-
 		break;
 	default:
 		echo 'Display type: ' . $display_type . ' unknown.';

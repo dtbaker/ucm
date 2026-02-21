@@ -1,9 +1,7 @@
 <?php
 
-
-class UCMBaseSingle implements ArrayAccess {
-
-
+class UCMBaseSingle implements ArrayAccess
+{
 	public $id = 0;
 	public $db_id = 'id'; // this can be an array of keys.
 	public $db_table = 'table';
@@ -119,7 +117,7 @@ class UCMBaseSingle implements ArrayAccess {
 					}
 				}
 
-			} else if ( (int) $id ) {
+			} elseif ( (int) $id ) {
 				$id = (int) $id;
 
 				$sql = $this->sql_load( $id );
@@ -221,27 +219,27 @@ class UCMBaseSingle implements ArrayAccess {
 	public $log_field_changes = array();
 	private $before_save_data = array();
 	public function before_save(){
-		if($this->log_field_changes) {
-			foreach($this->log_field_changes as $field_to_monitor){
+		if ($this->log_field_changes) {
+			foreach ($this->log_field_changes as $field_to_monitor) {
 				$this->before_save_data[$field_to_monitor] = isset($this->db_details[$field_to_monitor]) ? $this->db_details[$field_to_monitor] : null;
 			}
 		}
 	}
 	public function after_save(){
-		if($this->log_field_changes) {
+		if ($this->log_field_changes) {
 			$changed_fields = array();
-			foreach($this->log_field_changes as $field_to_monitor){
+			foreach ($this->log_field_changes as $field_to_monitor) {
 				$new_field_value = isset($this->db_details[$field_to_monitor]) ? $this->db_details[$field_to_monitor] : null;
-				if( $new_field_value != $this->before_save_data[$field_to_monitor]){
+				if ( $new_field_value != $this->before_save_data[$field_to_monitor]) {
 					$changed_fields[$field_to_monitor] = array(
 						'before' => $this->before_save_data[$field_to_monitor],
 						'after' => $new_field_value,
 					);
 				}
 			}
-			if($changed_fields){
+			if ($changed_fields) {
 				if ( class_exists( 'module_log', false ) && module_log::is_plugin_enabled() ) {
-					foreach($changed_fields as $changed_key => $changed_values){
+					foreach ($changed_fields as $changed_key => $changed_values) {
 						module_log::log_field_change( $this->db_table, $this->id, $changed_key, $changed_values['before'], $changed_values['after'] );
 					}
 				}
@@ -380,7 +378,7 @@ class UCMBaseSingle implements ArrayAccess {
 						$this->load( $this->id );
 					}
 				} else {
-					foreach($new_db_details as $key => $val){
+					foreach ($new_db_details as $key => $val) {
 						$this->db_details[ $key ] = $val;
 					}
 					$this->db->close();
@@ -398,7 +396,7 @@ class UCMBaseSingle implements ArrayAccess {
 
 				$this->after_save();
 				return $this->id;
-			}else{
+			} else {
 				// todo: log error.
 			}
 		}

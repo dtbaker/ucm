@@ -65,7 +65,7 @@
 				}
 			}
 
-		} else if ( $job['discount_type'] == _DISCOUNT_TYPE_AFTER_TAX ) {
+		} elseif ( $job['discount_type'] == _DISCOUNT_TYPE_AFTER_TAX ) {
 			$rows[] = array(
 				'label' => _l( 'Sub Total:' ),
 				'value' => '<span class="currency">' . dollar( $job['total_sub_amount'], true, $job['currency_id'] ) . '</span>'
@@ -220,7 +220,7 @@
 						<?php echo _l( '%s Hours Total', function_exists( 'decimal_time_out' ) ? decimal_time_out( $job['total_hours'] ) : $job['total_hours'] ); ?>
 						<?php if ( $job['total_hours_overworked'] > 0 ) { ?>
 							<?php echo _l( '(%s Hours Over)', function_exists( 'decimal_time_out' ) ? decimal_time_out( $job['total_hours_overworked'] ) : $job['total_hours_overworked'] ); ?>
-						<?php } else if ( $job['total_hours_overworked'] < 0 ) { ?>
+						<?php } elseif ( $job['total_hours_overworked'] < 0 ) { ?>
 							<?php echo _l( '(%s Hours Under)', function_exists( 'decimal_time_out' ) ? decimal_time_out( $job['total_hours_overworked'] ) : $job['total_hours_overworked'] ); ?>
 						<?php } ?>
 					<?php } ?>
@@ -230,7 +230,7 @@
 				</td>
 				<td>
             <span class="currency">
-                <?php echo dollar( $job['total_amount_invoiced'], true, $job['currency_id'] ); // $job['total_amount_invoiced_deposit'] 
+                <?php echo dollar( $job['total_amount_invoiced'], true, $job['currency_id'] ); // $job['total_amount_invoiced_deposit']
                 ?>
             </span>
 					<?php if ( isset( $job['total_amount_invoiced_deposit'] ) && $job['total_amount_invoiced_deposit'] > 0 ) { ?>

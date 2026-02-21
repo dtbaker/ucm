@@ -1,8 +1,7 @@
 <?php
 
-
-class module_help extends module_base {
-
+class module_help extends module_base
+{
 	public $links;
 	public $help_types;
 
@@ -87,6 +86,4 @@ class module_help extends module_base {
 
 		return $header_buttons;
 	}
-
-
 }

@@ -1,8 +1,7 @@
 <?php
 
-
-class module_hook extends module_base {
-
+class module_hook extends module_base
+{
 	public static $hook = array();
 	public static $show_hook = false;
 	public static $start_time = 0;
@@ -45,6 +44,4 @@ class module_hook extends module_base {
 
 
 	}
-
 }
-

@@ -3,8 +3,8 @@
 $labels = array();
 global $labels;
 
-class module_language extends module_base {
-
+class module_language extends module_base
+{
 	public function __construct() {
 		$this->module_name     = 'language';
 		$this->module_position = 60;
@@ -104,7 +104,7 @@ class module_language extends module_base {
 			set_message( 'Translation errors removed successfully' );
 			redirect_browser( $_SERVER['REQUEST_URI'] );
 
-		} else if ( 'language_duplicate_remove' == $_REQUEST['_process'] && $_REQUEST['really'] == 'yep' ) {
+		} elseif ( 'language_duplicate_remove' == $_REQUEST['_process'] && $_REQUEST['really'] == 'yep' ) {
 			if ( ! module_form::check_secure_key() ) {
 				return;
 			}
@@ -129,7 +129,7 @@ class module_language extends module_base {
 							foreach ( $duplicate_ids as $language_word_id ) {
 								if ( $first === false ) {
 									$first = $language_word_id;
-								} else if ( $first ) {
+								} elseif ( $first ) {
 									// remove this one and replace any translations with the first one.
 									$sql = "DELETE FROM `" . _DB_PREFIX . "language_word` WHERE language_word_id = '" . (int) $language_word_id . "' LIMIT 1";
 									query( $sql );
@@ -286,7 +286,7 @@ class module_language extends module_base {
 				$row['word'] = $db_words[ $row['language_word_id'] ];
 				if ( _DEMO_MODE && isset( $_SESSION['temp_translation'][ $language_id ][ $row['language_word_id'] ] ) ) {
 					$labels[ $row['word'] ] = $_SESSION['temp_translation'][ $language_id ][ $row['language_word_id'] ];
-				} else if ( strlen( $row['word'] ) > 0 ) {
+				} elseif ( strlen( $row['word'] ) > 0 ) {
 					if ( isset( $labels[ $row['word'] ] ) && ( ! $row['translation'] || $row['translation'] == $row['word'] ) ) {
 						// we already have a trasnaltion from the raw php file.
 						// do we use this? or a database translation?
@@ -385,10 +385,10 @@ class module_language extends module_base {
 					query( $sql );
 
 					// add this translation to the file.
-					$imported ++;
+					$imported++;
 				}
 			}
-		} else if ( _DEMO_MODE ) {
+		} elseif ( _DEMO_MODE ) {
 			set_error( 'Import disabled in demo mode' );
 		}
 
@@ -469,7 +469,7 @@ class module_language extends module_base {
 		// see if the first one is a lang label
 		if ( isset( $labels[ $text ] ) && strlen( trim( $labels[ $text ] ) ) ) {
 			$argv[0] = $labels[ $text ];
-		} else if ( ! isset( $labels[ $text ] ) && ! isset( self::$label_replace[ $text ] ) ) {
+		} elseif ( ! isset( $labels[ $text ] ) && ! isset( self::$label_replace[ $text ] ) ) {
 			self::missing_word( $text, $_SERVER['REQUEST_URI'] );
 		}
 		if ( count( $argv ) == 1 ) {
@@ -532,7 +532,8 @@ class module_language extends module_base {
 if ( ! function_exists( '_e' ) ) {
 	function _e( $text ) {
 		$argv = func_get_args();
-		print call_user_func_array( '_l', $argv );;
+		print call_user_func_array( '_l', $argv );
+;
 	}
 }
 if ( ! function_exists( '_l' ) ) {

@@ -1,9 +1,7 @@
 <?php
 
-
-class module_paymethod_authorize extends module_base {
-
-
+class module_paymethod_authorize extends module_base
+{
 	public static function can_i( $actions, $name = false, $category = false, $module = false ) {
 		if ( ! $module ) {
 			$module = __CLASS__;
@@ -320,5 +318,4 @@ class module_paymethod_authorize extends module_base {
 				exit;
 		}
 	}
-
 }

@@ -8,4 +8,3 @@ $stripe = array(
 );
 
 Stripe::setApiKey( $stripe['secret_key'] );
-?>

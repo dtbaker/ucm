@@ -328,7 +328,7 @@ print_heading( $header );
 							'cost'      => $item['cost'],
 						);
 					}
-					$item_ticket_count[ $item_id ]['count'] ++;
+					$item_ticket_count[ $item_id ]['count']++;
 					$envato_count += $item['cost'];
 				}
 			} else {
@@ -341,7 +341,7 @@ print_heading( $header );
 						'cost'      => 0,
 					);
 				}
-				$item_ticket_count[ $item_id ]['count'] ++;
+				$item_ticket_count[ $item_id ]['count']++;
 			}
 		}
 		if ( mysqli_num_rows( $tickets ) > 0 ) {

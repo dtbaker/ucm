@@ -36,7 +36,7 @@ foreach ( $upcoming_finances_unsorted as $recurring ) {
 	$count    = 0;
 	while ( $time < $limit_timestamp ) {
 		$next_time = 0;
-		if ( $count ++ > $duplicate_limit ) {
+		if ( $count++ > $duplicate_limit ) {
 			break;
 		}
 
@@ -49,7 +49,7 @@ foreach ( $upcoming_finances_unsorted as $recurring ) {
 			// it's a once off..
 			// add it to the list but dont calculate the next one.
 
-		} else if ( ! $original ) {
+		} elseif ( ! $original ) {
 			// work out when the next one will be.
 			$next_time = $time;
 			$next_time = strtotime( '+' . abs( (int) $recurring['days'] ) . ' days', $next_time );
@@ -80,9 +80,9 @@ foreach ( $upcoming_finances_unsorted as $recurring ) {
 		if ( ! $next_time || ! $time ) {
 			break;
 		}
-		$upcoming_finance_key ++;
+		$upcoming_finance_key++;
 	}
-	$upcoming_finance_key ++;
+	$upcoming_finance_key++;
 }
 unset( $upcoming_finances_unsorted );
 // now we add any upcoming invoice payments to the finance listing.
@@ -172,7 +172,8 @@ if ( isset( $search ) && is_array( $search ) ) {
 <script type="text/javascript">
     function set_starting_balance() {
         var balance = prompt('<?php _e( 'Please enter starting balance' );?>', 0);
-        window.location.href = '<?php $url = module_finance::link_open_recurring( false, false ); echo $url . ( strpos( $url, '?' ) ? '&' : '?' );?>balance=' + balance;
+        window.location.href = '<?php $url = module_finance::link_open_recurring( false, false );
+echo $url . ( strpos( $url, '?' ) ? '&' : '?' );?>balance=' + balance;
     }
 </script>
 
@@ -298,14 +299,14 @@ print_heading( $heading );
 			$show_record_button = true;
 			$days               = 0;
 			?>
-			<tr class="<?php echo ( $c ++ % 2 ) ? "odd" : "even"; ?>">
+			<tr class="<?php echo ( $c++ % 2 ) ? "odd" : "even"; ?>">
 				<td>
 					<?php
 					$next_due = strtotime( $recurring['next_due_date'] );
 					if ( ! $recurring['next_due_date'] || $recurring['next_due_date'] == '0000-00-00' ) {
 						echo _l( '(recurring finished)' );
 						$show_record_button = false;
-					} else if ( $next_due < time() ) {
+					} elseif ( $next_due < time() ) {
 						echo '<span class="important">';
 						echo print_date( $recurring['next_due_date'] );
 						echo '</span>';
@@ -345,7 +346,7 @@ print_heading( $heading );
 					<?php
 					if ( isset( $recurring['recurring_text'] ) && strlen( $recurring['recurring_text'] ) ) {
 						echo $recurring['recurring_text'];
-					} else if ( ! $recurring['days'] && ! $recurring['months'] && ! $recurring['years'] ) {
+					} elseif ( ! $recurring['days'] && ! $recurring['months'] && ! $recurring['years'] ) {
 						echo _l( 'Once off' );
 					} else {
 						$bits = array();
@@ -366,7 +367,7 @@ print_heading( $heading );
 					<?php
 					if ( isset( $recurring['last_transaction_text'] ) && $recurring['last_transaction_text'] ) {
 						echo $recurring['last_transaction_text'];
-					} else if ( ! $recurring['last_transaction_finance_id'] ) {
+					} elseif ( ! $recurring['last_transaction_finance_id'] ) {
 						_e( 'Never' );
 					} else {
 						echo _l( '%s on %s', currency( $recurring['last_amount'] ), print_date( $recurring['last_transaction_date'] ) );

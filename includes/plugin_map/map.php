@@ -1,8 +1,7 @@
 <?php
 
-
-class module_map extends module_base {
-
+class module_map extends module_base
+{
 	public $links;
 	public $map_types;
 
@@ -115,5 +114,4 @@ class module_map extends module_base {
 
 		return ob_get_clean();
 	}
-
 }

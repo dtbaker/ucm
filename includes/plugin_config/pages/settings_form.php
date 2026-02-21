@@ -23,7 +23,7 @@
 				'title' => $settings['title'],
 				'type'  => 'h3',
 			);
-		} else if ( isset( $settings['heading'] ) ) {
+		} elseif ( isset( $settings['heading'] ) ) {
 			$fieldset_data['heading'] = $settings['heading'];
 		}
 		$settings = $settings['settings'];

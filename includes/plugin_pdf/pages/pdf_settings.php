@@ -28,7 +28,7 @@ if ( ! is_dir( 'includes/plugin_pdf/mpdf/' ) || ! is_file( 'includes/plugin_pdf/
 					function unzip_mpdf( $file, $debug = false, $die = true, $overwrite = false ) {
 
 						if ( class_exists( 'ZipArchive' ) ) {
-							$zip = new ZipArchive;
+							$zip = new ZipArchive();
 							$zip->open( $file );
 							$zip->extractTo( './' );
 							$zip->close();

@@ -1,6 +1,5 @@
 <?php
 
-
 define( '_QUOTE_TASK_ACCESS_ALL', 'All tasks within a quote' );
 define( '_QUOTE_TASK_ACCESS_ASSIGNED_ONLY', 'Only assigned tasks within a quote' );
 
@@ -12,8 +11,8 @@ define( '_CUSTOM_DATA_HOOK_LOCATION_QUOTE_FOOTER', 6 );
 define( '_CUSTOM_DATA_HOOK_LOCATION_QUOTE_SIDEBAR', 7 );
 
 
-class module_quote extends module_base {
-
+class module_quote extends module_base
+{
 	public $links;
 	public $quote_types;
 
@@ -386,7 +385,6 @@ Thank you,<br><br>
 				// see finance for example of widget usage.
 				break;
 			case "home_alerts":
-
 				$cache_timeout = module_config::c( 'cache_objects', 60 );
 				$cache_key     = 'home_alerts_' . module_security::get_loggedin_id();
 
@@ -888,7 +886,7 @@ Thank you,<br><br>
 				set_message( "quote deleted successfully" );
 				redirect_browser( $this->link_open( false ) );
 			}
-		} else if ( "ajax_quote_list" == $_REQUEST['_process'] ) {
+		} elseif ( "ajax_quote_list" == $_REQUEST['_process'] ) {
 
 			$customer_id = isset( $_REQUEST['customer_id'] ) ? (int) $_REQUEST['customer_id'] : 0;
 			$res         = module_quote::get_quotes( array( 'customer_id' => $customer_id ) );
@@ -899,7 +897,7 @@ Thank you,<br><br>
 			echo json_encode( $options );
 			exit;
 
-		} else if ( "ajax_create_invoice" == $_REQUEST['_process'] ) {
+		} elseif ( "ajax_create_invoice" == $_REQUEST['_process'] ) {
 
 			$quote_id    = (int) $_REQUEST['quote_id'];
 			$quote       = self::get_quote( $quote_id, true );
@@ -941,7 +939,7 @@ Thank you,<br><br>
 			exit;
 
 
-		} else if ( "ajax_task" == $_REQUEST['_process'] ) {
+		} elseif ( "ajax_task" == $_REQUEST['_process'] ) {
 
 			// we are requesting editing a task.
 			$quote_id    = (int) $_REQUEST['quote_id'];
@@ -978,7 +976,7 @@ Thank you,<br><br>
 				exit;
 
 
-			} else if ( isset( $_REQUEST['update_task_order'] ) ) {
+			} elseif ( isset( $_REQUEST['update_task_order'] ) ) {
 
 				// updating the task orders for this task..
 				$task_order = (array) $_REQUEST['task_order'];
@@ -1057,7 +1055,7 @@ Thank you,<br><br>
 
 			exit;
 
-		} else if ( "save_quote" == $_REQUEST['_process'] ) {
+		} elseif ( "save_quote" == $_REQUEST['_process'] ) {
 
 
 			$save_status = $this->save_quote( $_REQUEST['quote_id'], $_POST );
@@ -1157,9 +1155,9 @@ Thank you,<br><br>
                   parent.clear_create_form();
                   parent.ucm.add_message('<?php _e( 'New task created successfully' );?>');
                   parent.ucm.display_messages(true);
-									<?php if($quote_data['status'] != $new_status){ ?>parent.jQuery('#status').val('<?php echo $new_status;?>').change();
+									<?php if ($quote_data['status'] != $new_status) { ?>parent.jQuery('#status').val('<?php echo $new_status;?>').change();
 									<?php } ?>
-									<?php if($new_quote_data['date_approved'] != $quote_data['date_approved']){ ?>parent.jQuery('#date_approved').val('<?php echo print_date( $new_quote_data['date_approved'] );?>').change();
+									<?php if ($new_quote_data['date_approved'] != $quote_data['date_approved']) { ?>parent.jQuery('#date_approved').val('<?php echo print_date( $new_quote_data['date_approved'] );?>').change();
 									<?php } ?>
 							</script>
 							<?php
@@ -1178,7 +1176,7 @@ Thank you,<br><br>
 						?>
 						<script type="text/javascript">
                 top.location.href = '<?php echo $this->link_open( $quote_id );?>';
-								<?php if($quote_data['status'] != $new_status){ ?>parent.jQuery('#status').val('<?php echo $new_status;?>').change();
+								<?php if ($quote_data['status'] != $new_status) { ?>parent.jQuery('#status').val('<?php echo $new_status;?>').change();
 								<?php } ?>
 						</script>
 						<?php
@@ -1202,9 +1200,9 @@ Thank you,<br><br>
                   //parent.refresh_task_preview(<?php echo (int) $result['quote_task_id'];?>);
                   parent.ucm.add_message('<?php _e( 'Task saved successfully' );?>');
                   parent.ucm.display_messages(true);
-									<?php if($quote_data['status'] != $new_status){ ?>parent.jQuery('#status').val('<?php echo $new_status;?>').change();
+									<?php if ($quote_data['status'] != $new_status) { ?>parent.jQuery('#status').val('<?php echo $new_status;?>').change();
 									<?php } ?>
-									<?php if($new_quote_data['date_approved'] != $quote_data['date_approved']){ ?>parent.jQuery('#date_approved').val('<?php echo print_date( $new_quote_data['date_approved'] );?>').change();
+									<?php if ($new_quote_data['date_approved'] != $quote_data['date_approved']) { ?>parent.jQuery('#date_approved').val('<?php echo print_date( $new_quote_data['date_approved'] );?>').change();
 									<?php } ?>
 							</script>
 							<?php
@@ -1214,7 +1212,7 @@ Thank you,<br><br>
                   parent.canceledittask();
                   parent.ucm.add_error('<?php _e( 'Unable to save task' );?>');
                   parent.ucm.display_messages(true);
-									<?php if($quote_data['status'] != $new_status){ ?>parent.jQuery('#status').val('<?php echo $new_status;?>').change();
+									<?php if ($quote_data['status'] != $new_status) { ?>parent.jQuery('#status').val('<?php echo $new_status;?>').change();
 									<?php } ?>
 							</script>
 							<?php
@@ -1371,7 +1369,6 @@ Thank you,<br><br>
 
 		switch ( self::get_quote_access_permissions() ) {
 			case _QUOTE_ACCESS_ALL:
-
 				break;
 			case _QUOTE_ACCESS_ASSIGNED:
 				// only assigned quotes!
@@ -1513,7 +1510,7 @@ Thank you,<br><br>
 				} else {
 					$quote_item_data['quote_item_amount'] = $quote_item_data['task_hourly_rate'] * $quote_item_data['hours'];
 				}
-			} else if ( $quote_item_data['manual_task_type'] == _TASK_TYPE_QTY_AMOUNT ) {
+			} elseif ( $quote_item_data['manual_task_type'] == _TASK_TYPE_QTY_AMOUNT ) {
 				if ( $quote_item_data['amount'] != 0 ) {
 					$quote_item_data['task_hourly_rate']  = $quote_item_data['amount'];
 					$quote_item_data['quote_item_amount'] = $quote_item_data['amount'] * $quote_item_data['hours'];
@@ -1585,7 +1582,6 @@ Thank you,<br><br>
 		if ( $quote && isset( $quote['quote_id'] ) && $quote['quote_id'] == $quote_id ) {
 			switch ( self::get_quote_access_permissions() ) {
 				case _QUOTE_ACCESS_ALL:
-
 					break;
 				case _QUOTE_ACCESS_ASSIGNED:
 					// only assigned quotes!
@@ -1794,7 +1790,7 @@ Thank you,<br><br>
 					// after tax discount ::::::::::
 					// handled below.
 					//$quote['final_modification'] = -$quote['discount_amount'];
-				} else if ( $quote['discount_type'] == _DISCOUNT_TYPE_BEFORE_TAX ) {
+				} elseif ( $quote['discount_type'] == _DISCOUNT_TYPE_BEFORE_TAX ) {
 					// before tax discount:::::
 					//$quote['final_modification'] = -$quote['discount_amount'];
 					// problem : this 'discount_amount_on_tax' calculation may not match the correct final discount calculation as per below
@@ -1860,7 +1856,7 @@ Thank you,<br><br>
 				// this will only work if a single tax has been included.
 				if ( is_array( $quote['taxes'] ) && count( $quote['taxes'] ) > 1 ) {
 					set_error( 'Included tax calculation only works with 1 tax rate' );
-				} else if ( is_array( $quote['taxes'] ) && count( $quote['taxes'] ) ) {
+				} elseif ( is_array( $quote['taxes'] ) && count( $quote['taxes'] ) ) {
 					reset( $quote['taxes'] );
 					$quote_tax_id = key( $quote['taxes'] );
 					if ( isset( $quote['taxes'][ $quote_tax_id ] ) ) {
@@ -1936,7 +1932,7 @@ Thank you,<br><br>
 						set_message( 'Changed this Quote to match the Website customer' );
 					}
 					$data['customer_id'] = $website['customer_id'];
-				} else if ( isset( $data['customer_id'] ) && $data['customer_id'] > 0 ) {
+				} elseif ( isset( $data['customer_id'] ) && $data['customer_id'] > 0 ) {
 					// set the website customer id to this as well.
 					update_insert( 'website_id', $website['website_id'], 'website', array( 'customer_id' => $data['customer_id'] ) );
 				}
@@ -1985,7 +1981,7 @@ Thank you,<br><br>
 						'percent'   => isset( $data['tax_percents'][ $key ] ) ? $data['tax_percents'][ $key ] : 0,
 						'amount'    => 0, // calculate this where? nfi? maybe on final quote get or something.
 						'name'      => isset( $data['tax_names'][ $key ] ) ? $data['tax_names'][ $key ] : 'TAX',
-						'order'     => $order ++,
+						'order'     => $order++,
 						'increment' => isset( $data['tax_increment_checkbox'] ) && $data['tax_increment_checkbox'] ? 1 : 0,
 					);
 					$quote_tax_id   = update_insert( 'quote_tax_id', $quote_tax_id, 'quote_tax', $quote_tax_data );
@@ -2388,7 +2384,7 @@ Thank you,<br><br>
 		if ( isset( $extra_options['duplicates'] ) && $extra_options['duplicates'] == 'ignore' && $row['customer_id'] > 0 ) {
 			// don't update customer record with new one.
 
-		} else if ( ( isset( $row['customer_name'] ) && strlen( trim( $row['customer_name'] ) ) > 0 ) || $row['customer_id'] > 0 ) {
+		} elseif ( ( isset( $row['customer_name'] ) && strlen( trim( $row['customer_name'] ) ) > 0 ) || $row['customer_id'] > 0 ) {
 			// update customer record with new one.
 			$row['customer_id'] = update_insert( 'customer_id', $row['customer_id'], 'customer', $row );
 
@@ -2454,7 +2450,7 @@ Thank you,<br><br>
 		// first we find any matching existing quotes. skipping duplicates if option is set.
 		foreach ( $data as $rowid => $row ) {
 			if ( self::handle_import_row( $row, false, $add_to_group, $extra_options ) ) {
-				$count ++;
+				$count++;
 			}
 		}
 
@@ -2528,13 +2524,13 @@ Thank you,<br><br>
 				if ( $row['quote_task_id'] == 0 ) {
 					// we are logging hours against a new task
 					$row['log_hours'] = $row['completed'];
-				} else if ( $row['quote_task_id'] > 0 ) {
+				} elseif ( $row['quote_task_id'] > 0 ) {
 					// we are adjusting hours on an existing task.
 					$existing_completed_hours = $existing_tasks[ $row['quote_task_id'] ]['completed'];
 					if ( $row['completed'] > $existing_completed_hours ) {
 						// we are logging additional hours against the quote.
 						$row['log_hours'] = $row['completed'] - $existing_completed_hours;
-					} else if ( $row['completed'] < $existing_completed_hours ) {
+					} elseif ( $row['completed'] < $existing_completed_hours ) {
 						// we are removing hours on this task!
 						// tricky!!
 						$sql = "DELETE FROM `" . _DB_PREFIX . "task_log` WHERE quote_task_id = " . (int) $row['quote_task_id'];
@@ -2548,7 +2544,7 @@ Thank you,<br><br>
 				$quote_task_id = $row['quote_task_id'];
 			} else {
 				$quote_task_id = 'new' . $c . 'new';
-				$c ++;
+				$c++;
 			}
 
 			$task_data[ $quote_task_id ] = $row;
@@ -3009,7 +3005,6 @@ Thank you,<br><br>
 
 		return ob_get_clean();
 	}
-
 }
 
 include_once 'class.quote.php';

@@ -1,8 +1,7 @@
 <?php
 
-
-class module_statistic extends module_base {
-
+class module_statistic extends module_base
+{
 	public static function can_i( $actions, $name = false, $category = false, $module = false ) {
 		if ( ! $module ) {
 			$module = __CLASS__;
@@ -368,11 +367,11 @@ class module_statistic extends module_base {
 				$invoice                                                      = module_invoice::get_invoice( $r['invoice_id'] );
 				$return[ $subscription['subscription_id'] ]['total_received'] += $invoice['total_amount_paid'];
 				if ( $invoice['total_amount_paid'] > 0 ) {
-					$return[ $subscription['subscription_id'] ]['total_received_count'] ++;
+					$return[ $subscription['subscription_id'] ]['total_received_count']++;
 				}
 				$return[ $subscription['subscription_id'] ]['total_unpaid'] += $invoice['total_amount_due'];
 				if ( $invoice['total_amount_due'] > 0 ) {
-					$return[ $subscription['subscription_id'] ]['total_unpaid_count'] ++;
+					$return[ $subscription['subscription_id'] ]['total_unpaid_count']++;
 				}
 
 				if ( $r['customer_id'] ) {
@@ -386,10 +385,10 @@ class module_statistic extends module_base {
 						);
 					}
 					if ( $invoice['total_amount_paid'] > 0 ) {
-						$return[ $subscription['subscription_id'] ]['customers'][ $r['customer_id'] ]['received_payments'] ++;
+						$return[ $subscription['subscription_id'] ]['customers'][ $r['customer_id'] ]['received_payments']++;
 					}
 					if ( $invoice['total_amount_due'] > 0 ) {
-						$return[ $subscription['subscription_id'] ]['customers'][ $r['customer_id'] ]['unpaid_payments'] ++;
+						$return[ $subscription['subscription_id'] ]['customers'][ $r['customer_id'] ]['unpaid_payments']++;
 					}
 					$return[ $subscription['subscription_id'] ]['customers'][ $r['customer_id'] ]['received_total'] += $invoice['total_amount_paid'];
 					$return[ $subscription['subscription_id'] ]['customers'][ $r['customer_id'] ]['unpaid_total']   += $invoice['total_amount_due'];
@@ -405,10 +404,10 @@ class module_statistic extends module_base {
 						);
 					}
 					if ( $invoice['total_amount_paid'] > 0 ) {
-						$return[ $subscription['subscription_id'] ]['members'][ $r['member_id'] ]['received_payments'] ++;
+						$return[ $subscription['subscription_id'] ]['members'][ $r['member_id'] ]['received_payments']++;
 					}
 					if ( $invoice['total_amount_due'] > 0 ) {
-						$return[ $subscription['subscription_id'] ]['members'][ $r['member_id'] ]['unpaid_payments'] ++;
+						$return[ $subscription['subscription_id'] ]['members'][ $r['member_id'] ]['unpaid_payments']++;
 					}
 					$return[ $subscription['subscription_id'] ]['members'][ $r['member_id'] ]['received_total'] += $invoice['total_amount_paid'];
 					$return[ $subscription['subscription_id'] ]['members'][ $r['member_id'] ]['unpaid_total']   += $invoice['total_amount_due'];
@@ -478,7 +477,7 @@ class module_statistic extends module_base {
 			foreach ( qa( $sql ) as $possible_renewed_job ) {
 				$time_diff        = strtotime( $possible_renewed_job['date_renew'] ) - strtotime( $possible_renewed_job['date_start'] );
 				$new_renewal_date = strtotime( $possible_renewed_job['date_renew'] );
-				for ( $x = 0; $x < 5; $x ++ ) {
+				for ( $x = 0; $x < 5; $x++ ) {
 					$new_renewal_date = $new_renewal_date + $time_diff;
 					if ( $new_renewal_date >= $from_timestamp ) {
 						// this job will be renewed in our period! yay!

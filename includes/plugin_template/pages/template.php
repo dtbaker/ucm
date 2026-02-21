@@ -1,4 +1,5 @@
 <?php
+
 //include("top_menu.php");
 
 if ( isset( $_REQUEST['template_id'] ) && $_REQUEST['template_id'] ) {
@@ -6,4 +7,3 @@ if ( isset( $_REQUEST['template_id'] ) && $_REQUEST['template_id'] ) {
 } else {
 	include( "template_list.php" );
 }
-?>

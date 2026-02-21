@@ -1,6 +1,5 @@
 <?php
 
-
 if ( ! module_config::can_i( 'view', 'Settings' ) ) {
 	redirect_browser( _BASE_HREF );
 }
@@ -33,4 +32,3 @@ module_config::print_settings_form(
 print_heading( 'Check Templates' );
 echo module_template::link_open_popup( 'paymethod_check' );
 echo module_template::link_open_popup( 'paymethod_check_details' );
-?>

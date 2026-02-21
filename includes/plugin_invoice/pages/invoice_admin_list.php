@@ -372,11 +372,11 @@ print_heading( $header );
 			'callback' => function ( $invoice ) {
 				if ( $invoice['credit_note_id'] ) {
 					echo _l( 'N/A' );
-				} else if ( $invoice['date_paid'] && $invoice['date_paid'] != '0000-00-00' ) { ?>
+				} elseif ( $invoice['date_paid'] && $invoice['date_paid'] != '0000-00-00' ) { ?>
 					<?php echo print_date( $invoice['date_paid'] ); ?>
-				<?php } else if ( ( $invoice['date_cancel'] && $invoice['date_cancel'] != '0000-00-00' ) ) { ?>
+				<?php } elseif ( ( $invoice['date_cancel'] && $invoice['date_cancel'] != '0000-00-00' ) ) { ?>
 					<span class="error_text"><?php _e( 'Cancelled' ); ?></span>
-				<?php } else if ( $invoice['overdue'] ) { ?>
+				<?php } elseif ( $invoice['overdue'] ) { ?>
 					<span class="error_text"
 					      style="font-weight: bold; text-decoration: underline;"><?php _e( 'Overdue' ); ?></span>
 				<?php } else { ?>
@@ -385,7 +385,7 @@ print_heading( $header );
 			},
 		);
 		if ( class_exists( 'module_website', false ) && module_website::is_plugin_enabled() && module_website::can_i( 'view', module_config::c( 'project_name_plural', 'Websites' ) ) ) {
-			$colspan ++;
+			$colspan++;
 			$columns['invoice_website'] = array(
 				'title'    => module_config::c( 'project_name_single', 'Website' ),
 				'callback' => function ( $invoice ) {
@@ -420,7 +420,7 @@ print_heading( $header );
 			);
 		}
 		if ( ! isset( $_REQUEST['customer_id'] ) && module_customer::can_i( 'view', 'Customers' ) ) {
-			$colspan ++;
+			$colspan++;
 			$columns['invoice_customer'] = array(
 				'title'    => 'Customer',
 				'callback' => function ( $invoice ) {
@@ -458,7 +458,7 @@ print_heading( $header );
 			} );
 		}
 		if ( module_invoice::can_i( 'edit', 'Invoices' ) ) {
-			$colspan2 ++;// used in the footer
+			$colspan2++;// used in the footer
 			$columns['row_bulk_action'] = array(
 				'title'    => ' ',
 				'callback' => function ( $invoice ) {

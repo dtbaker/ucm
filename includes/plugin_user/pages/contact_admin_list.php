@@ -6,7 +6,7 @@ $search = ( isset( $_REQUEST['search'] ) && is_array( $_REQUEST['search'] ) ) ? 
 $use_master_key = module_user::get_contact_master_key();
 if ( ! $use_master_key ) {
 	throw new Exception( 'Sorry no Customer or Vendor selected' );
-} else if ( isset( $_REQUEST[ $use_master_key ] ) ) {
+} elseif ( isset( $_REQUEST[ $use_master_key ] ) ) {
 	$search[ $use_master_key ] = $_REQUEST[ $use_master_key ];
 }
 switch ( $use_master_key ) {

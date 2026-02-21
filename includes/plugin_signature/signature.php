@@ -1,7 +1,7 @@
 <?php
 
-class module_signature extends module_base {
-
+class module_signature extends module_base
+{
 	public static function can_i( $actions, $name = false, $category = false, $module = false ) {
 		if ( ! $module ) {
 			$module = __CLASS__;
@@ -79,7 +79,7 @@ class module_signature extends module_base {
 		if ( ! $existing_job_task_signature || ! $existing_job_task_signature['staff_signature_id'] ) {
 			$class = 'signature_staff';
 			$text  = _l( 'Staff Required' );
-		} else if ( $existing_job_task_signature && ! $existing_job_task_signature['customer_signature_id'] ) {
+		} elseif ( $existing_job_task_signature && ! $existing_job_task_signature['customer_signature_id'] ) {
 			$class = 'signature_customer';
 			$text  = _l( 'Customer Required' );
 		} else {

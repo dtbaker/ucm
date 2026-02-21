@@ -171,7 +171,7 @@ if ( isset( $_REQUEST['ticket_data_key_id'] ) && $_REQUEST['ticket_data_key_id']
 		$c = 0;
 		foreach ( $ticket_data_keys as $ticket_data_key ) {
 			?>
-			<tr class="<?php echo ( $c ++ % 2 ) ? "odd" : "even"; ?>">
+			<tr class="<?php echo ( $c++ % 2 ) ? "odd" : "even"; ?>">
 				<td class="row_action" nowrap="">
 					<?php echo module_ticket::link_open_field( $ticket_data_key['ticket_data_key_id'], true ); ?>
 				</td>

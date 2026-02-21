@@ -67,12 +67,14 @@ ob_start();
 		<tr>
 			<?php
 			switch ( $type ) {
-				case 'hours': ?>
+				case 'hours':
+                    ?>
 					<th><?php _e( 'Date' ); ?></th>
 					<?php
 					break;
 				case 'amount_paid':
-				case 'amount_invoiced': ?>
+				case 'amount_invoiced':
+                    ?>
 					<th><?php _e( 'Date' ); ?></th>
 					<?php
 					break;
@@ -81,12 +83,14 @@ ob_start();
 			<th><?php _e( module_config::c( 'project_name_single', 'Website' ) ); ?></th>
 			<?php
 			switch ( $type ) {
-				case 'hours': ?>
+				case 'hours':
+                    ?>
 					<th><?php _e( 'Job' ); ?></th>
 					<th><?php _e( 'Task' ); ?></th>
 					<?php
 					break;
-				default: ?>
+				default:
+                    ?>
 					<th><?php _e( 'Job' ); ?></th>
 					<?php
 					break;
@@ -94,13 +98,15 @@ ob_start();
 			?>
 			<?php
 			switch ( $type ) {
-				case 'hours': ?>
+				case 'hours':
+                    ?>
 					<th><?php _e( 'Hours' ); ?></th>
 					<th><?php _e( 'Amount' ); ?></th>
 					<?php
 					break;
 				case 'amount_paid':
-				case 'amount_invoiced': ?>
+				case 'amount_invoiced':
+                    ?>
 					<th><?php _e( 'Invoice' ); ?></th>
 					<th><?php _e( 'Amount' ); ?></th>
 					<?php
@@ -120,7 +126,8 @@ ob_start();
 			<tr>
 				<?php
 				switch ( $type ) {
-					case 'hours': ?>
+					case 'hours':
+                        ?>
 						<td>
 							<?php echo print_date( $r['date_created'] ); ?>
 						</td>
@@ -133,7 +140,8 @@ ob_start();
 						</td>
 						<?php
 						break;
-					case 'amount_invoiced': ?>
+					case 'amount_invoiced':
+                        ?>
 						<td>
 							<?php echo print_date( $r['date_create'] ); ?>
 						</td>
@@ -159,7 +167,7 @@ ob_start();
 						<td>
 							<?php if ( isset( $r['job_id'] ) && $r['job_id'] ) {
 								echo module_job::link_open( $r['job_id'], true );
-							} else if ( isset( $r['job_ids'] ) && is_array( $r['job_ids'] ) ) {
+							} elseif ( isset( $r['job_ids'] ) && is_array( $r['job_ids'] ) ) {
 								foreach ( $r['job_ids'] as $job_id ) {
 									echo module_job::link_open( $job_id, true );
 								}
@@ -168,7 +176,7 @@ ob_start();
 						<td>
 							<?php if ( isset( $r['job_id'] ) && $r['job_id'] ) {
 								?>  <a href="<?php echo module_job::link_open( $r['job_id'] ); ?>"><?php echo $foo; ?></a> <?php
-							} else if ( isset( $r['job_ids'] ) && is_array( $r['job_ids'] ) ) {
+							} elseif ( isset( $r['job_ids'] ) && is_array( $r['job_ids'] ) ) {
 								foreach ( $r['job_ids'] as $job_id ) {
 									?>  <a href="<?php echo module_job::link_open( $job_id ); ?>"><?php echo $foo; ?></a> <?php
 								}
@@ -177,11 +185,12 @@ ob_start();
 						</td>
 						<?php
 						break;
-					default: ?>
+					default:
+                        ?>
 						<td>
 							<?php if ( isset( $invoice_data['job_id'] ) && $invoice_data['job_id'] ) {
 								echo module_job::link_open( $invoice_data['job_id'], true );
-							} else if ( isset( $invoice_data['job_ids'] ) && is_array( $invoice_data['job_ids'] ) ) {
+							} elseif ( isset( $invoice_data['job_ids'] ) && is_array( $invoice_data['job_ids'] ) ) {
 								foreach ( $invoice_data['job_ids'] as $job_id ) {
 									echo module_job::link_open( $job_id, true );
 								}
@@ -193,7 +202,8 @@ ob_start();
 				?>
 				<?php
 				switch ( $type ) {
-					case 'hours': ?>
+					case 'hours':
+                        ?>
 						<td>
 							<?php
 							echo $r['hours_logged'];
@@ -232,7 +242,8 @@ ob_start();
 						</td>
 						<?php
 						break;
-					case 'amount_invoiced': ?>
+					case 'amount_invoiced':
+                        ?>
 						<td>
 							<?php
 							echo module_invoice::link_open( $r['invoice_id'], true );

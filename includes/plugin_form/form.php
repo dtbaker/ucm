@@ -1,12 +1,11 @@
 <?php
 
-
 /**
  * FORM CLASS
  * Version: 2.21
  */
-class module_form extends module_base {
-
+class module_form extends module_base
+{
 	static $form_options = array();
 
 	public function __construct() {
@@ -151,7 +150,7 @@ class module_form extends module_base {
 		foreach ( $post_data as $key => $val ) {
 			if ( preg_match( '/^form_saver_/', $key ) ) {
 				continue;
-			} else if ( is_array( $val ) ) {
+			} elseif ( is_array( $val ) ) {
 				self::_serialize_post( $data, $val, $key );
 			} else {
 				// normal string, just add it to the array.
@@ -164,7 +163,6 @@ class module_form extends module_base {
 		self::check_secure_key();
 		switch ( $_REQUEST['_process'] ) {
 			case 'save_fieldset_options':
-
 				if ( module_config::can_i( 'edit', 'Form Settings' ) ) {
 					$user_role_id     = ! empty( $_POST['fieldset_role_id'] ) ? (int) $_POST['fieldset_role_id'] : false;
 					$fieldset_id      = ! empty( $_POST['fieldset_id'] ) ? $_POST['fieldset_id'] : false;
@@ -240,7 +238,7 @@ class module_form extends module_base {
 		// now some javascript to apply 'required' fields to all specified
 		?>
 		<script type="text/javascript">
-			<?php if($data_to_load){ ?>
+			<?php if ($data_to_load) { ?>
       if (typeof Base64 == 'undefined') {
           var Base64 = {
               _keyStr: "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=",
@@ -348,9 +346,9 @@ class module_form extends module_base {
 						?>;
 				<?php
 				// code copied from my "save form for later" program
-				if($data_to_load){ ?>
+				if ($data_to_load) { ?>
           var form_saver_permitted_input_types = {};
-				<?php foreach(explode( ',', 'textarea,text,radio,hidden,checkbox,password,select,select-one' ) as $type){
+				<?php foreach (explode( ',', 'textarea,text,radio,hidden,checkbox,password,select,select-one' ) as $type) {
 				$type = trim( $type );
 				if ( ! $type ) {
 					continue;
@@ -360,7 +358,7 @@ class module_form extends module_base {
 				<?php } ?>
           // all saved data, base64encoded for basic js syntax error safety.
           var form_saver_data = {};
-				<?php foreach($data_to_load as $key=>$val){ ?>
+				<?php foreach ($data_to_load as $key => $val) { ?>
           form_saver_data['<?php echo base64_encode( $key );?>'] = '<?php echo base64_encode( $val );?>';
 				<?php } ?>
 				<?php } ?>
@@ -392,7 +390,7 @@ class module_form extends module_base {
               if (typeof plugin_error_fields[n] != 'undefined') {
                   $(this).addClass('ui-state-error');
               }
-						<?php if($data_to_load){ ?>
+						<?php if ($data_to_load) { ?>
               if (typeof form_saver_data[Base64.encode(jQuery(this).attr('name'))] != 'undefined') {
                   // see if this is in one of the permitted form types.
                   if (typeof form_saver_permitted_input_types[attr_type] == 'undefined' || form_saver_permitted_input_types[attr_type] != 'yes') {
@@ -579,7 +577,7 @@ class module_form extends module_base {
                 change_detected = true;
                 $(this).addClass('form-change');
             });
-					<?php foreach($valid_exits as $valid_exit){ ?>
+					<?php foreach ($valid_exits as $valid_exit) { ?>
             $('<?php echo $valid_exit;?>', plugin_form_prevent_exit).click(function () {
                 change_detected = false;
             });
@@ -684,7 +682,7 @@ class module_form extends module_base {
 				$loop_count = 1;
 			}
 		}
-		for ( $x = 0; $x < $loop_count; $x ++ ) {
+		for ( $x = 0; $x < $loop_count; $x++ ) {
 
 			$after_element = '';
 
@@ -794,7 +792,7 @@ class module_form extends module_base {
               $(function () {
                   $('#<?php echo $setting['id'];?>').tinymce({
                       // Location of TinyMCE script
-										<?php if(! isset( $setting['options'] ) || ! isset( $setting['options']['inline'] ) || $setting['options']['inline']){ ?>
+										<?php if (! isset( $setting['options'] ) || ! isset( $setting['options']['inline'] ) || $setting['options']['inline']) { ?>
                       inline: true,
 										<?php } ?>
                       script_url: '<?php echo _BASE_HREF;?>includes/plugin_form/js/tinymce4.0.11/tinymce.min.js',
@@ -840,8 +838,8 @@ class module_form extends module_base {
                                   });
                               }
                           });
-												<?php if(! isset( $setting['options'] ) || ! isset( $setting['options']['inline'] ) || $setting['options']['inline']){
-												if($setting['name'] != $setting['id']){ ?>
+												<?php if (! isset( $setting['options'] ) || ! isset( $setting['options']['inline'] ) || $setting['options']['inline']) {
+												if ($setting['name'] != $setting['id']) { ?>
                           ed.on("change", function () {
                               $('#<?php echo $setting['id'];?>_postback').val(ed.getContent());
                           });
@@ -1047,7 +1045,7 @@ class module_form extends module_base {
         if (typeof ucm.form.settings.dynamic_select_edit_url != 'undefined') {
             ucm.form.settings.dynamic_select_edit_url = '<?php echo generate_link( 'dynamic_select_box', array( 'display_mode' => 'ajax' ), 'form' ); ?>';
         }
-				<?php if(module_config::can_i( 'edit', 'Form Settings' ) && module_config::c( 'show_form_edit_button', 1 )){ ?>
+				<?php if (module_config::can_i( 'edit', 'Form Settings' ) && module_config::c( 'show_form_edit_button', 1 )) { ?>
         if (typeof ucm.form.settings.fieldset_editing_url != 'undefined') {
             ucm.form.settings.fieldset_editing_url = '<?php echo generate_link( 'fieldset_edit', array( 'display_mode' => 'ajax' ), 'form' ); ?>';
         }
@@ -1449,7 +1447,7 @@ class module_form extends module_base {
 		ob_start();
 		if ( $options['heading'] ) {
 			print_heading( $options['heading'] );
-		} else if ( $options['title'] ) { ?>
+		} elseif ( $options['title'] ) { ?>
 			<<?php echo $options['title_type']; ?>><?php _e( $options['title'] ); ?></<?php echo $options['title_type']; ?>>
 		<?php } ?>
 		<?php echo $options['elements_before']; ?>
@@ -1484,7 +1482,7 @@ class module_form extends module_base {
 						<td colspan="2" align="center">
 							<?php if ( isset( $element['message'] ) ) { ?>
 								<?php echo $element['message']; ?>
-							<?php } else if ( isset( $element['warning'] ) ) { ?>
+							<?php } elseif ( isset( $element['warning'] ) ) { ?>
 								<span class="error_text"><?php echo $element['warning']; ?></span>
 							<?php } ?>
 
@@ -1505,7 +1503,7 @@ class module_form extends module_base {
 											// treat this as a call to the form generate option
 											self::generate_form_element( $field );
 											echo ' ';
-										} else if ( is_closure( $field ) ) {
+										} elseif ( is_closure( $field ) ) {
 											$field();
 										} else {
 											echo $field . ' ';
@@ -1614,6 +1612,4 @@ class module_form extends module_base {
 		<?php
 		return ob_get_clean();
 	}
-
-
 }

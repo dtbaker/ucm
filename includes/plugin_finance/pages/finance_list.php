@@ -409,7 +409,7 @@ print_heading( array(
 					<input type="checkbox" name="link_invoice_payment_ids[<?php echo $finance['invoice_payment_id']; ?>]"
 					       value="<?php echo number_format( $finance['credit'], 2 ) . '_' . number_format( $finance['debit'], 2 ); ?>"
 					       class="link_box">
-				<?php } else if ( isset( $finance['finance_id'] ) ) { ?>
+				<?php } elseif ( isset( $finance['finance_id'] ) ) { ?>
 					<input type="checkbox" name="link_finance_ids[<?php echo $finance['finance_id']; ?>]"
 					       value="<?php echo number_format( $finance['credit'], 2 ) . '_' . number_format( $finance['debit'], 2 ); ?>"
 					       class="link_box">

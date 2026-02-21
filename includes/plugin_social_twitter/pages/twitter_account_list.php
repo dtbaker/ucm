@@ -33,7 +33,7 @@ print_heading( array(
 	<?php
 	$c = 0;
 	foreach ( $twitter_accounts as $twitter_account ) { ?>
-		<tr class="<?php echo ( $c ++ % 2 ) ? "odd" : "even"; ?>">
+		<tr class="<?php echo ( $c++ % 2 ) ? "odd" : "even"; ?>">
 			<td class="row_action">
 				<?php echo module_social_twitter::link_open( $twitter_account['social_twitter_id'], true, $twitter_account ); ?>
 			</td>

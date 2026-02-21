@@ -1,8 +1,7 @@
 <?php
 
-
-class module_log extends module_base {
-
+class module_log extends module_base
+{
 	public static $log = array();
 	public static $show_log = false;
 	public static $start_time = 0;
@@ -85,10 +84,10 @@ class module_log extends module_base {
 		$fields = get_fields( 'log' );
 		if ( ! isset( $fields['sub_section'] ) ) {
 			$sql .= 'ALTER TABLE  `' . _DB_PREFIX . 'log` ADD  `sub_section` VARCHAR(255) NOT NULL DEFAULT \'\' AFTER `user_id`;';
-		}else{
+		} else {
 			self::add_table_index( 'log', 'sub_section' );
 		}
-		if(!self::db_table_exists('log_field')){
+		if (!self::db_table_exists('log_field')) {
 			$sql .= 'CREATE TABLE `' . _DB_PREFIX . 'log_field` (
 		`log_field_id` int(11) NOT NULL auto_increment,
 		`owner_table` VARCHAR(255) NOT NULL DEFAULT \'\',
@@ -153,6 +152,5 @@ class module_log extends module_base {
 		return ob_get_clean();
 
 	}
-
 }
 

@@ -1,4 +1,5 @@
 <?php
+
 if ( $ticket_id > 0 && module_config::c( 'ticket_allow_billing', 1 ) && module_ticket::can_edit_tickets() ) {
 	$responsive_summary = array();
 	$quotes             = array();

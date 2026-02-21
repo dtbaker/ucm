@@ -1,8 +1,7 @@
 <?php
 
-
-class module_debug extends module_base {
-
+class module_debug extends module_base
+{
 	public static $debug = array();
 	public static $show_debug = false;
 	public static $start_time = 0;
@@ -94,13 +93,13 @@ class module_debug extends module_base {
 			if ( isset( $_REQUEST['debug_only_bad'] ) ) {
 				if ( isset( $debug['important'] ) && $debug['important'] ) {
 					// keep this one.
-				} else if ( $this_memory > $memory_limit ) {
+				} elseif ( $this_memory > $memory_limit ) {
 					$show_next = true;
 
-				} else if ( $this_time > $time_limit ) {
+				} elseif ( $this_time > $time_limit ) {
 					$show_next = true;
 					// show this one!
-				} else if ( $show_next ) {
+				} elseif ( $show_next ) {
 					$show_next = false;
 				} else {
 					continue;
@@ -132,7 +131,7 @@ class module_debug extends module_base {
 					?>
 				</td>
 				<td>
-					<?php echo $id ++; ?>
+					<?php echo $id++; ?>
 				</td>
 				<td>
 					<?php echo isset( $debug['title'] ) ? $debug['title'] : 'NA'; ?>
@@ -201,6 +200,5 @@ class module_debug extends module_base {
 		</div>
 		<?php
 	}
-
 }
 

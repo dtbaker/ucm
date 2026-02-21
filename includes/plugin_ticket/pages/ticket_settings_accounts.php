@@ -338,7 +338,7 @@ if ( isset( $_REQUEST['ticket_account_id'] ) && $_REQUEST['ticket_account_id'] )
 		$types = module_ticket::get_types();
 		foreach ( $ticket_accounts as $ticket_account ) {
 			?>
-			<tr class="<?php echo ( $c ++ % 2 ) ? "odd" : "even"; ?>">
+			<tr class="<?php echo ( $c++ % 2 ) ? "odd" : "even"; ?>">
 				<td class="row_action" nowrap="">
 					<?php echo module_ticket::link_open_account( $ticket_account['ticket_account_id'], true ); ?>
 				</td>

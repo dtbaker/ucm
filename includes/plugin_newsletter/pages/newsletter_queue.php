@@ -132,7 +132,7 @@ if ( isset( $_REQUEST['f'] ) && is_array( $_REQUEST['f'] ) ) {
 						foreach ( $send_members_pagination['rows'] as $send_member ) {
 							$cache = unserialize( $send_member['data_cache'] );
 							?>
-							<tr class="<?php echo $x ++ % 2 ? 'odd' : 'even'; ?>">
+							<tr class="<?php echo $x++ % 2 ? 'odd' : 'even'; ?>">
 								<td><?php echo htmlspecialchars( $send_member['company_name'] ); ?></td>
 								<td><?php echo htmlspecialchars( $send_member['first_name'] ); ?></td>
 								<td><?php echo htmlspecialchars( $send_member['last_name'] ); ?></td>
@@ -187,22 +187,22 @@ if ( isset( $_REQUEST['f'] ) && is_array( $_REQUEST['f'] ) ) {
 							// list all members from thsi send.
 							foreach ( $problem_members_pagination['rows'] as $problem_member ) {
 								?>
-								<tr class="<?php echo $x ++ % 2 ? 'odd' : 'even'; ?>">
+								<tr class="<?php echo $x++ % 2 ? 'odd' : 'even'; ?>">
 									<td><?php echo htmlspecialchars( $problem_member['company_name'] ); ?></td>
 									<td><?php echo htmlspecialchars( $problem_member['first_name'] . ' ' . $problem_member['last_name'] ); ?></td>
 									<td><?php echo htmlspecialchars( $problem_member['email'] ); ?></td>
 									<td><?php
 										if ( ! $problem_member['receive_email'] ) {
 											_e( 'Marked as do-not-email' );
-										} else if ( $problem_member['unsubscribe_date'] && $problem_member['unsubscribe_date'] != '0000-00-00' ) {
+										} elseif ( $problem_member['unsubscribe_date'] && $problem_member['unsubscribe_date'] != '0000-00-00' ) {
 											echo _l( 'Unsubscribed on %s', print_date( $problem_member['unsubscribe_date'] ) );
-										} else if ( $problem_member['bounce_count'] >= module_config::c( 'newsletter_bounce_threshold', 3 ) ) {
+										} elseif ( $problem_member['bounce_count'] >= module_config::c( 'newsletter_bounce_threshold', 3 ) ) {
 											echo _l( 'Bounced %s times', $problem_member['bounce_count'] );
-										} else if ( trim( $problem_member['email'] ) == '' ) {
+										} elseif ( trim( $problem_member['email'] ) == '' ) {
 											echo _l( 'No email address' );
-										} else if ( isset( $problem_member['reason'] ) && $problem_member['reason'] == 'doubleoptin' ) {
+										} elseif ( isset( $problem_member['reason'] ) && $problem_member['reason'] == 'doubleoptin' ) {
 											_e( 'Double opt-in incomplete on %s', print_date( $problem_member['time'] ) );
-										} else if ( $problem_member['newsletter_blacklist_id'] ) {
+										} elseif ( $problem_member['newsletter_blacklist_id'] ) {
 											echo _l( 'Unsubscribed on %s', print_date( $problem_member['unsubscribe_time2'], true ) );
 										} else {
 											echo _l( 'Other error' );
@@ -300,7 +300,7 @@ if ( isset( $_REQUEST['f'] ) && is_array( $_REQUEST['f'] ) ) {
 							</td>
 						</tr>
 						<?php
-						$x ++;
+						$x++;
 					} ?>
 					<tr>
 						<td colspan="3" align="center">

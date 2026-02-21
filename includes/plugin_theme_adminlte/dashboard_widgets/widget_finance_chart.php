@@ -26,7 +26,7 @@ if ( module_security::can_user( module_security::get_loggedin_id(), 'Show Dashbo
 
 	$x = 0;
 	foreach ( $home_summary as $home_sum ) {
-		$x ++;
+		$x++;
 		extract( $home_sum ); // hacky, better than old code tho.
 		$data = module_finance::get_finance_summary( $week_start, $week_end, $multiplyer, $row_limit );
 		// return the bits that will be used in the output of the HTML table (and now in the calendar module output)

@@ -1,8 +1,7 @@
 <?php
 
-
-class module_setup extends module_base {
-
+class module_setup extends module_base
+{
 	public function __construct() {
 		$this->module_name     = 'setup';
 		$this->module_position = 20;
@@ -31,6 +30,4 @@ class module_setup extends module_base {
 		// 2.324 - 2017-05-02 - file path configuration
 
 	}
-
-
 }

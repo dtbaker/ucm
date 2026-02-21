@@ -7,8 +7,8 @@ function sort_extra_defaults( $a, $b ) {
 	return $a['order'] > $b['order'];
 }
 
-class module_extra extends module_base {
-
+class module_extra extends module_base
+{
 	var $links;
 
 	public function __construct() {
@@ -364,7 +364,7 @@ class module_extra extends module_base {
 											);
 										}
 									}
-								} else if ( $field_type == 'select' ) {
+								} elseif ( $field_type == 'select' ) {
 									$form_element['options'] = array();
 									if ( isset( $default_fields[ $extra_item['extra_key'] ]['options'] ) && is_array( $default_fields[ $extra_item['extra_key'] ]['options'] ) && isset( $default_fields[ $extra_item['extra_key'] ]['options']['select'] ) ) {
 										foreach ( explode( "\n", $default_fields[ $extra_item['extra_key'] ]['options']['select'] ) as $val ) {
@@ -617,7 +617,7 @@ class module_extra extends module_base {
 				} else {
 					$extra_items[ $key ]['hidden'] = ! $allow_new ? true : ( $val['field_type'] == 'file' ? false : module_config::c( 'hide_extra', 1 ) );
 				}
-				$new_id ++;
+				$new_id++;
 			}
 		}
 
@@ -662,7 +662,7 @@ class module_extra extends module_base {
 				$nextorder[ $r['owner_table'] ] = 0;
 			}
 			if ( ! isset( $defaults[ $r['owner_table'] ] ) || ! isset( $defaults[ $r['owner_table'] ][ $r['extra_key'] ] ) ) {
-				$nextorder[ $r['owner_table'] ] ++;
+				$nextorder[ $r['owner_table'] ]++;
 				$extra_default_id                                                     = update_insert( 'extra_default_id', false, 'extra_default', array(
 					'owner_table'       => $r['owner_table'],
 					'owner_table_child' => $owner_table_child,
@@ -836,7 +836,7 @@ class module_extra extends module_base {
 					<?php echo $column_header['key']; ?>
 				</th>
 				<?php
-				$cols ++;
+				$cols++;
 			}
 		}
 
@@ -855,7 +855,7 @@ class module_extra extends module_base {
 					<?php
 					if ( ! empty( $column_header['field_type'] ) && $column_header['field_type'] == 'reference' && ! empty( $column_header['options']['reference'] ) ) {
 						echo self::get_reference( $owner_table, $owner_id, $column_header, $column_header['options']['reference'] );
-					} else if ( isset( $extra_data[ $column_header['key'] ] ) ) {
+					} elseif ( isset( $extra_data[ $column_header['key'] ] ) ) {
 						echo forum_text( $extra_data[ $column_header['key'] ]['extra'] );
 					} else {
 						echo '';
@@ -1028,5 +1028,4 @@ PRIMARY KEY (`extra_key_id`),
 KEY `owner_table` (`owner_table`)
 ) ENGINE=InnoDB  DEFAULT CHARSET=utf8;*/
 	}
-
 }

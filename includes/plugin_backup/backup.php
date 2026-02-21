@@ -2,8 +2,8 @@
 
 define( '_BACKUP_BASE_DIR', ( defined( '_UCM_FILE_STORAGE_DIR' ) ? _UCM_FILE_STORAGE_DIR : '' ) . 'includes/plugin_backup/backups/' );
 
-class module_backup extends module_base {
-
+class module_backup extends module_base
+{
 	public $links;
 
 	public function __construct() {
@@ -224,7 +224,7 @@ class module_backup extends module_base {
 												}
 											}
 											break;
-										case 'database';
+										case 'database':
 											//
 											$table_name = isset( $_POST['name'] ) ? $_POST['name'] : false;
 											if ( $table_name ) {
@@ -311,7 +311,7 @@ class module_backup extends module_base {
 				}
 				$sql = "";
 				$sql .= 'INSERT INTO `' . $table . '` VALUES(';
-				for ( $j = 0; $j < $num_fields; $j ++ ) {
+				for ( $j = 0; $j < $num_fields; $j++ ) {
 					//$row[ $j ] = addslashes( $row[ $j ] );
 					//$row[ $j ] = preg_replace( "#n#", "n", $row[ $j ] );
 					if ( isset( $row[ $j ] ) ) {
@@ -324,7 +324,7 @@ class module_backup extends module_base {
 					}
 				}
 				$sql .= ");\n";
-				$record_count ++;
+				$record_count++;
 				if ( module_config::c( 'backup_gz', 1 ) && function_exists( 'gzopen' ) && function_exists( 'gzwrite' ) ) {
 					gzwrite( $handle, $sql );
 				} else {
@@ -398,14 +398,14 @@ class module_backup extends module_base {
 										$exists[ $zip_dest ] = true;
 										$zip->addEmptyDir( 'files/' . $zip_dest );
 									}
-								} else if ( is_file( $file ) && ! strpos( $file, 'backup/backups/' ) ) {
+								} elseif ( is_file( $file ) && ! strpos( $file, 'backup/backups/' ) ) {
 									//$zip->addFromString('files/'.str_replace($source . '/', '', $file), file_get_contents($file));
 									//$zip->addFile($file,'files/'.str_replace($source . '/', '', $file));
 									$zip_dest = str_replace( $source, '', $file );
 									if ( ! isset( $exists[ $zip_dest ] ) ) {
 										$exists[ $zip_dest ] = true;
 										$zip->addFile( $file, 'files/' . $zip_dest );
-										$file_count ++;
+										$file_count++;
 									}
 								}
 								//if($x++>100)break;
@@ -450,7 +450,6 @@ class module_backup extends module_base {
 
 		return $sql;
 	}
-
 }
 
 

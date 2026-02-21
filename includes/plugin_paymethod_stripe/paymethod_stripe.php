@@ -3,9 +3,8 @@
 //306412171 ucm_1306412206_per@gmail.com
 
 
-class module_paymethod_stripe extends module_base {
-
-
+class module_paymethod_stripe extends module_base
+{
 	public static function can_i( $actions, $name = false, $category = false, $module = false ) {
 		if ( ! $module ) {
 			$module = __CLASS__;
@@ -100,7 +99,7 @@ class module_paymethod_stripe extends module_base {
 
 		if ( $dollar_limit == 'above' && $invoice_data['total_amount_due'] < $dollar_value ) {
 			return false;
-		} else if ( $dollar_limit == 'below' && $invoice_data['total_amount_due'] > $dollar_value ) {
+		} elseif ( $dollar_limit == 'below' && $invoice_data['total_amount_due'] > $dollar_value ) {
 			return false;
 		}
 		if ( strlen( $cur ) > 1 ) {
@@ -309,10 +308,10 @@ class module_paymethod_stripe extends module_base {
 							$time   = 'day';
 							$period = $is_subscription['days'];
 							//$period = max(1,floor($is_subscription['days'] / 7));
-						} else if ( $time == 'months' ) {
+						} elseif ( $time == 'months' ) {
 							$time   = 'month';
 							$period = $is_subscription['months'];
-						} else if ( $time == 'years' ) {
+						} elseif ( $time == 'years' ) {
 							$time   = 'year';
 							$period = $is_subscription['years'];
 						} else {
@@ -411,7 +410,7 @@ class module_paymethod_stripe extends module_base {
 						}
 
 
-					} else if ( isset( $_REQUEST['payment_single'] ) ) {
+					} elseif ( isset( $_REQUEST['payment_single'] ) ) {
 						// use is choosing to continue payment as a once off amount
 
 					} else {
@@ -754,5 +753,4 @@ class module_paymethod_stripe extends module_base {
 
 		return $sql;
 	}
-
 }

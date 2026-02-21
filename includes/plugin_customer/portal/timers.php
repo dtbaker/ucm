@@ -1,6 +1,5 @@
 <?php
 
-
 $table_manager              = module_theme::new_table_manager();
 $table_manager->table_class = 'public';
 $table_manager->row_class   = 'public';

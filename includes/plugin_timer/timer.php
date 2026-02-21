@@ -9,9 +9,8 @@ define( '_TIMER_ACCESS_ALL', 'All timers in system' ); // do not change string
 define( '_TIMER_ACCESS_CUSTOMER', 'All timers from customers you have access to' ); // do not change string
 define( '_TIMER_ACCESS_MINE', 'Only my timers' ); // do not change string
 
-class module_timer extends module_base {
-
-
+class module_timer extends module_base
+{
 	public function __construct() {
 		$this->module_name     = 'timer';
 		$this->module_position = 540;
@@ -281,7 +280,7 @@ class module_timer extends module_base {
 				exit;
 
 
-			} else if ( "automatic_page_timer" == $_REQUEST['_process'] ) {
+			} elseif ( "automatic_page_timer" == $_REQUEST['_process'] ) {
 
 				// javascript will poll this endpoint every 5 seconds
 				// we look for any non-closed timers that match this owner_table / owner_id
@@ -310,7 +309,7 @@ class module_timer extends module_base {
 
 				exit;
 
-			} else if ( "task_timer_clicked" == $_REQUEST['_process'] ) {
+			} elseif ( "task_timer_clicked" == $_REQUEST['_process'] ) {
 
 				header( "Content-type: text/json" );
 
@@ -328,9 +327,9 @@ class module_timer extends module_base {
 							$timer->delete();
 							echo json_encode( array( 'deleted' => 1 ) );
 							exit;
-						} else if ( ! empty( $_POST['finished'] ) ) {
+						} elseif ( ! empty( $_POST['finished'] ) ) {
 							$timer->closed();
-						} else if ( $timer->timer_status != _TIMER_STATUS_CLOSED ) {
+						} elseif ( $timer->timer_status != _TIMER_STATUS_CLOSED ) {
 							$latest = $timer->get_latest();
 							if ( $latest ) {
 								switch ( $latest['timer_status'] ) {
@@ -375,7 +374,7 @@ class module_timer extends module_base {
 				}
 
 				exit;
-			} else if ( "complete_timer" == $_REQUEST['_process'] ) {
+			} elseif ( "complete_timer" == $_REQUEST['_process'] ) {
 
 				if ( self::can_i( 'edit', 'Timers' ) ) {
 					$timer         = new UCMTimer( $_REQUEST['timer_id'] );
@@ -389,12 +388,12 @@ class module_timer extends module_base {
 					exit;
 				}
 
-			} else if ( "save_timer_segment" == $_REQUEST['_process'] ) {
+			} elseif ( "save_timer_segment" == $_REQUEST['_process'] ) {
 
 				$timer_segment = new UCMTimerSegment( $_REQUEST['timer_segment_id'] );
 				$timer_segment->handle_submit();
 
-			} else if ( "save_timer" == $_REQUEST['_process'] ) {
+			} elseif ( "save_timer" == $_REQUEST['_process'] ) {
 
 				if ( isset( $_REQUEST['butt_del'] ) && $_REQUEST['butt_del'] && self::can_i( 'delete', 'Timers' ) && module_form::check_secure_key() ) {
 
@@ -417,7 +416,7 @@ class module_timer extends module_base {
 					}
 					$timer->delete_with_confirm( false, $return );
 
-				} else if ( self::can_i( 'edit', 'Timers' ) ) {
+				} elseif ( self::can_i( 'edit', 'Timers' ) ) {
 					$timer     = new UCMTimer( $_REQUEST['timer_id'] );
 					$save_data = $_POST;
 					$timer->save_data( $save_data );
@@ -427,7 +426,7 @@ class module_timer extends module_base {
 
 						$timer->closed();
 
-					} else if ( isset( $_POST['start_pause'] ) ) {
+					} elseif ( isset( $_POST['start_pause'] ) ) {
 						// we're starting or pausing the timer.
 						$latest = $timer->get_latest();
 						switch ( $latest['timer_status'] ) {
@@ -666,7 +665,7 @@ class module_timer extends module_base {
 					}
 					break;
 			}
-		}else if ( module_timer::can_i( 'view', 'Timers' ) ) {
+		} elseif ( module_timer::can_i( 'view', 'Timers' ) ) {
 
 			$ucmtimers = new UCMTimers();
 
@@ -814,8 +813,6 @@ class module_timer extends module_base {
 		<?php
 		return ob_get_clean();
 	}
-
-
 }
 
 include_once 'class.timer.php';

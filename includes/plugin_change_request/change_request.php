@@ -4,8 +4,8 @@ define( '_CHANGE_REQUEST_STATUS_NEW', 1 );
 define( '_CHANGE_REQUEST_STATUS_COMPLETE', 2 );
 define( '_CHANGE_REQUEST_STATUS_DELETE', 3 );
 
-class module_change_request extends module_base {
-
+class module_change_request extends module_base
+{
 	public $links;
 	public $change_request_types;
 	public $change_request_id;
@@ -208,8 +208,6 @@ Change request details:<br><br>
 	public function handle_hook( $hook, &$calling_module = false ) {
 		switch ( $hook ) {
 			case "home_alerts":
-
-
 				$alerts = array();
 				if ( module_config::c( 'change_request_alerts', 1 ) && class_exists( 'module_website', false ) ) {
 					$cache_key     = "home_alerts_" . module_security::get_loggedin_id();
@@ -867,6 +865,4 @@ Change request details:<br><br>
 		<?php
 		return ob_get_clean();
 	}
-
-
 }

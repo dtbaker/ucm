@@ -1,16 +1,18 @@
-<?php 
+<?php
 
-if(!$file_safe)die('wrong page');
+if (!$file_safe) { die('wrong page');
+}
 
 
-if($file_id > 0){
+if ($file_id > 0) {
     $module->page_title = _l('File Bucket: %s',$file['file_name']);
 	$ucm_file->has_viewed();
-}else{
+} else {
     $module->page_title = _l('File Bucket: %s',_l('New'));
 }
 
-if(!isset($file['customer_id'])||!$file['customer_id'])$file['customer_id']=false; // helps with drop downs below.
+if (!isset($file['customer_id']) || !$file['customer_id']) { $file['customer_id'] = false; // helps with drop downs below.
+}
 
 $type = $ucm_file->get_type();
 
@@ -76,13 +78,13 @@ $type = $ucm_file->get_type();
 		    'allow_new' => true,
 	    ),
 	);
-    if(class_exists('module_customer',false)){
+    if (class_exists('module_customer',false)) {
 	    $c = array();
         $res = module_customer::get_customers();
-        foreach($res as $row){
+        foreach ($res as $row) {
             $c[$row['customer_id']] = $row['customer_name'];
         }
-        if($file['customer_id'] && !isset($c[$file['customer_id']])){
+        if ($file['customer_id'] && !isset($c[$file['customer_id']])) {
             // this file is related to another job. from another customer.
             $related_customer = module_customer::get_customer($file['customer_id'],true);
             $c[$file['customer_id']] = $related_customer['customer_name'];
@@ -97,23 +99,23 @@ $type = $ucm_file->get_type();
 		    ),
 		);
     }
-    if (class_exists('module_job',false) && class_exists('module_customer',false)){
+    if (class_exists('module_job',false) && class_exists('module_customer',false)) {
 	    $c = array();
-        $res = module_job::get_jobs(array('customer_id'=>$file['customer_id']));
-        foreach($res as $row){
+        $res = module_job::get_jobs(array('customer_id' => $file['customer_id']));
+        foreach ($res as $row) {
             $c[$row['job_id']] = $row['name'];
         }
-        if($file['job_id'] && !isset($c[$file['job_id']])){
+        if ($file['job_id'] && !isset($c[$file['job_id']])) {
             // this file is related to another job. from another customer.
             $related_job = module_job::get_job($file['job_id'],false,true);
-            if($related_job && $related_job['job_id'] == $file['job_id']){
+            if ($related_job && $related_job['job_id'] == $file['job_id']) {
                 $related_customer = module_customer::get_customer($related_job['customer_id'],true);
-                if($related_customer && $related_customer['customer_id'] == $related_job['customer_id']){
+                if ($related_customer && $related_customer['customer_id'] == $related_job['customer_id']) {
                     $c[$file['job_id']] = _l('%s (from %s)',$related_job['name'],$related_customer['customer_name']);
-                }else{
+                } else {
                     $file['job_id'] = false;
                 }
-            }else{
+            } else {
                 $file['job_id'] = false;
             }
         }
@@ -126,32 +128,32 @@ $type = $ucm_file->get_type();
 			        'value' => $file['job_id'],
 				    'options' => $c,
 			    ),
-			    function() use (&$file){
-				    if($file['job_id']){
+			    function () use (&$file) {
+				    if ($file['job_id']) {
                         echo ' ';
-                        echo '<a href="'.module_job::link_open($file['job_id'],false).'">'._l('Open Job &raquo;').'</a>';
+                        echo '<a href="' . module_job::link_open($file['job_id'],false) . '">' . _l('Open Job &raquo;') . '</a>';
                     }
 			    }
 		    ),
 		);
     }
-    if (class_exists('module_quote',false) && module_quote::is_plugin_enabled()){
+    if (class_exists('module_quote',false) && module_quote::is_plugin_enabled()) {
 	    $c = array();
-        $res = module_quote::get_quotes(array('customer_id'=>$file['customer_id']));
-        foreach($res as $row){
+        $res = module_quote::get_quotes(array('customer_id' => $file['customer_id']));
+        foreach ($res as $row) {
             $c[$row['quote_id']] = $row['name'];
         }
-        if($file['quote_id'] && !isset($c[$file['quote_id']])){
+        if ($file['quote_id'] && !isset($c[$file['quote_id']])) {
             // this file is related to another quote. from another customer.
             $related_quote = module_quote::get_quote($file['quote_id'],false,true);
-            if($related_quote && $related_quote['quote_id'] == $file['quote_id']){
+            if ($related_quote && $related_quote['quote_id'] == $file['quote_id']) {
                 $related_customer = module_customer::get_customer($related_quote['customer_id'],true);
-                if($related_customer && $related_customer['customer_id'] == $related_quote['customer_id']){
+                if ($related_customer && $related_customer['customer_id'] == $related_quote['customer_id']) {
                     $c[$file['quote_id']] = _l('%s (from %s)',$related_quote['name'],$related_customer['customer_name']);
-                }else{
+                } else {
                     $file['quote_id'] = false;
                 }
-            }else{
+            } else {
                 $file['quote_id'] = false;
             }
         }
@@ -164,10 +166,10 @@ $type = $ucm_file->get_type();
 			        'value' => $file['quote_id'],
 				    'options' => $c,
 			    ),
-			    function() use (&$file){
-				    if($file['quote_id']){
+			    function () use (&$file) {
+				    if ($file['quote_id']) {
                         echo ' ';
-                        echo '<a href="'.module_quote::link_open($file['quote_id'],false).'">'._l('Open Quote &raquo;').'</a>';
+                        echo '<a href="' . module_quote::link_open($file['quote_id'],false) . '">' . _l('Open Quote &raquo;') . '</a>';
                     }
 			    }
 		    ),
@@ -176,12 +178,12 @@ $type = $ucm_file->get_type();
 
     $staff_members = module_user::get_staff_members();
 	$staff_member_rel = array();
-	foreach($staff_members as $staff_member){
+	foreach ($staff_members as $staff_member) {
 	    $staff_member_rel[$staff_member['user_id']] = $staff_member['name'];
 	}
-	if(!isset($file['staff_ids']) || !is_array($file['staff_ids']) || !count($file['staff_ids'])){
-	    $file['staff_ids']= array(false);
-	    if(count($staff_member_rel) == 1){
+	if (!isset($file['staff_ids']) || !is_array($file['staff_ids']) || !count($file['staff_ids'])) {
+	    $file['staff_ids'] = array(false);
+	    if (count($staff_member_rel) == 1) {
 	        $file['staff_ids'] = array(key($staff_member_rel));
 	    }
 	}
@@ -202,10 +204,10 @@ $type = $ucm_file->get_type();
                 'values' => $file['staff_ids'],
             ),
 		    '</div>',
-		    function() use (&$file){
-			    if($file['quote_id']){
+		    function () use (&$file) {
+			    if ($file['quote_id']) {
                     echo ' ';
-                    echo '<a href="'.module_quote::link_open($file['quote_id'],false).'">'._l('Open Quote &raquo;').'</a>';
+                    echo '<a href="' . module_quote::link_open($file['quote_id'],false) . '">' . _l('Open Quote &raquo;') . '</a>';
                 }
 		    },
 		    array(
@@ -241,7 +243,7 @@ $type = $ucm_file->get_type();
     echo module_form::generate_fieldset($fieldset_data);
     unset($fieldset_data);
 
-    if((int)$file_id > 0) {
+    if ((int)$file_id > 0) {
         if ( module_file::can_i( 'edit', 'Files' ) ) {
             module_email::display_emails( array(
                 'title'  => 'File Emails',
@@ -322,7 +324,7 @@ $type = $ucm_file->get_type();
                 'title' => _l( 'Add New File' ),
                 'type'  => 'add',
             );
-        if(count($files)){
+        if (count($files)) {
 
             $buttons[] = array(
                 'url'   => module_file::link_public_download_bucket( $file_id ),
@@ -365,14 +367,14 @@ $type = $ucm_file->get_type();
                 'name' => 'cancel',
                 'value' => _l('Cancel'),
                 'class' => 'submit_button',
-                'onclick' => "window.location.href='".module_file::link_open(false)."';",
+                'onclick' => "window.location.href='" . module_file::link_open(false) . "';",
             ),
         ),
     );
     echo module_form::generate_form_actions($form_actions);
 
 
-    if((int)$file_id > 0 && isset($file['file_path']) && $file['file_path'] && is_file($file['file_path']) && module_file::can_i('view','File Comments')){   ?>
+    if ((int)$file_id > 0 && isset($file['file_path']) && $file['file_path'] && is_file($file['file_path']) && module_file::can_i('view','File Comments')) {   ?>
         <h2><?php echo _l('File Comments'); ?></h2>
 
         <div>
@@ -384,29 +386,29 @@ $type = $ucm_file->get_type();
             </div>
             <div style="width:29%; float:right;" id="file_notes">
                 <div class="tableclass" style="margin:0 0 10px 0">
-                    <?php if(module_file::can_i('create','File Comments')){ ?>
+                    <?php if (module_file::can_i('create','File Comments')) { ?>
                     <textarea name="new_comment_text" style="width:98%;" class="no_permissions"></textarea>
                     <?php } ?>
                     <div style="text-align:right;">
-                        <?php if(module_file::can_i('create','File Comments')){ ?>
+                        <?php if (module_file::can_i('create','File Comments')) { ?>
                         <input type="submit" name="butt_save_note" id="butt_save_note" value="<?php echo _l('Add Comment'); ?>" class="submit_button no_permissions">
                         <?php } ?>
                         <input type="hidden" name="delete_file_comment_id" id="delete_file_comment_id" value="0" class="no_permissions">
                     </div>
                 </div>
-                <?php foreach(module_file::get_file_comments($file_id) as $item){
+                <?php foreach (module_file::get_file_comments($file_id) as $item) {
                 $note_text = forum_text($item['comment']);
-                if(preg_match_all('/#(\d+)/',$note_text,$matches)){
+                if (preg_match_all('/#(\d+)/',$note_text,$matches)) {
                     //
-                    foreach($matches[1] as $digit){
-                        $note_text = preg_replace('/#'.$digit.'([^\d]*)/','<span node_id='.$digit.' class="pointer-ids pointer-id-'.$digit.'">#'.$digit.'</span>$1',$note_text);
+                    foreach ($matches[1] as $digit) {
+                        $note_text = preg_replace('/#' . $digit . '([^\d]*)/','<span node_id=' . $digit . ' class="pointer-ids pointer-id-' . $digit . '">#' . $digit . '</span>$1',$note_text);
                     }
                 }
                 ?>
                 <div style="border-top:1px dashed #CCCCCC; padding:3px; margin:3px 0;">
                     <?php echo $note_text; ?>
                     <div style="font-size:10px; text-align:right; color:#CCCCCC;">From <?php echo $item['create_user_id'] ? module_user::link_open($item['create_user_id'],true) : _l('Customer'); ?> on <?php echo print_date($item['date_created'],true); ?>
-                        <?php if(module_file::can_i('delete','File Comments') || $item['create_user_id'] == module_security::get_loggedin_id()){ ?>
+                        <?php if (module_file::can_i('delete','File Comments') || $item['create_user_id'] == module_security::get_loggedin_id()) { ?>
                         <a href="#" onclick="if(confirm('<?php echo _l('Really remove this comment?'); ?>')){$('#delete_file_comment_id').val('<?php echo $item['file_comment_id']; ?>'); $('#butt_save_note').click(); } return false;" style="color:#FF0000">x</a>
                         <?php } ?>
                     </div>

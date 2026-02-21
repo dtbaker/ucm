@@ -493,8 +493,8 @@ if ( count( $sends_warning ) ) {
 							$fields = module_newsletter::get_replace_fields( $newsletter_id );
 							foreach ( $fields
 
-							as $key => $val ){
-							if ( $x == 4 ){
+ as $key => $val ) {
+							if ( $x == 4 ) {
 							?>
 							</tbody>
 							<tbody id="dynamic_more" style="display:none;">
@@ -512,7 +512,7 @@ if ( count( $sends_warning ) ) {
 								</td>
 							</tr>
 							<?php
-							$x ++;
+							$x++;
 							} ?>
 							<tr>
 								<td colspan="2" align="center">
@@ -589,10 +589,10 @@ if ( count( $sends_warning ) ) {
 
             setup: function (ed) {
                 ed.onInit.add(function (ed) {
-									<?php if(isset( $editor_bg_color )){ ?>
+									<?php if (isset( $editor_bg_color )) { ?>
                     $('body', $('#' + ed.id + '_ifr')[0].contentWindow.document).css('backgroundColor', '<?php echo $editor_bg_color;?>');
 									<?php } ?>
-									<?php if(isset( $text_color )){ ?>
+									<?php if (isset( $text_color )) { ?>
                     $('body', $('#' + ed.id + '_ifr')[0].contentWindow.document).css('color', '<?php echo $text_color;?>');
                     $('a', $('#' + ed.id + '_ifr')[0].contentWindow.document).css('color', '<?php echo $text_color;?>');
                     //document.getElementById(ed.id+'_ifr').contentWindow.document.body.style.color='<?php echo $text_color;?>';

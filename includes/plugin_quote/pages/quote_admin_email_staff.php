@@ -1,4 +1,5 @@
 <?php
+
 if ( ! $quote_safe ) {
 	die( 'failed' );
 }
@@ -35,7 +36,7 @@ foreach ( $quote_tasks as $quote_task ) {
 		$quote['quote_tasks'] .= _l( 'Hours:' ) . ' ' . $quote_task['hours'] . '<br/>';
 	}
 	$quote['quote_tasks'] .= '</li>';
-	$quote['task_count'] ++;
+	$quote['task_count']++;
 }
 $quote['quote_tasks'] .= '</ul>';
 

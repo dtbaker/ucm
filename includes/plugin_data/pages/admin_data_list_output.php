@@ -137,7 +137,7 @@ if ( empty( $embed_form ) && $allow_search ) {
 							break;
 						}
 					}
-				} else if ( $data_field['type'] == 'wysiwyg' ) {
+				} elseif ( $data_field['type'] == 'wysiwyg' ) {
 					$data_field['type'] = 'text';
 				} else {
 
@@ -158,7 +158,7 @@ if ( empty( $embed_form ) && $allow_search ) {
 							$data_field2
 						)
 					);
-				} else if ( $data_field['type'] != 'file' ) {
+				} elseif ( $data_field['type'] != 'file' ) {
 					$search_bar['elements'][] = array(
 						'title' => $data_field['title'],
 						'field' => $data_field
@@ -212,11 +212,11 @@ if ( isset( $_REQUEST['search_field'] ) ) {
 											if ( $search_date >= $from_date && $search_date <= $to_date ) {
 												$match = true;
 											}
-										} else if ( $from_date ) {
+										} elseif ( $from_date ) {
 											if ( $search_date >= $from_date ) {
 												$match = true;
 											}
-										} else if ( $to_date ) {
+										} elseif ( $to_date ) {
 											if ( $search_date <= $to_date ) {
 												$match = true;
 											}
@@ -329,7 +329,7 @@ if ( isset( $_REQUEST['search_field'] ) ) {
 													unset( $datas[ $data_id ] );
 													continue;
 												}
-											} else if ( strtolower( trim( $data_items[ $data_field_id ]['data_text'] ) ) != strtolower( $data_field_value ) ) {
+											} elseif ( strtolower( trim( $data_items[ $data_field_id ]['data_text'] ) ) != strtolower( $data_field_value ) ) {
 												unset( $datas[ $data_id ] );
 												continue;
 											}

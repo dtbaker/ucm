@@ -32,17 +32,17 @@ if ( $timer->timer_status != _TIMER_STATUS_CLOSED && $timer->timer_status != _TI
             });
 				</script>
 			<?php
-			break;
+			    break;
 			default:
 			// start a new timer.
-			if ( $latest ){
+			if ( $latest ) {
 			?>
 				<button type="submit" name="start_pause"
 				        class="start_pause submit_button btn btn-primary"><?php _e( 'Resume Timer' ); ?></button>
 				<button type="submit" name="close_timer"
 				        class="submit_button btn"><?php _e( 'Finish Timer' ); ?></button>
 				<?php
-			}else {
+			} else {
 				?>
 				<button type="submit" name="start_pause"
 				        class="start_pause submit_button btn btn-primary"><?php _e( 'Start Timer' ); ?></button>

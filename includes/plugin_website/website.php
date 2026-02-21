@@ -1,8 +1,7 @@
 <?php
 
-
-class module_website extends module_base {
-
+class module_website extends module_base
+{
 	public $links;
 	public $website_types;
 
@@ -261,7 +260,7 @@ class module_website extends module_base {
 				set_message( module_config::c( 'project_name_single', 'Website' ) . " deleted successfully" );
 				redirect_browser( self::link_open( false ) );
 			}
-		} else if ( "save_website" == $_REQUEST['_process'] ) {
+		} elseif ( "save_website" == $_REQUEST['_process'] ) {
 			$website_id = $this->save_website( $_REQUEST['website_id'], $_POST );
 			hook_handle_callback( 'website_save', $website_id );
 			$_REQUEST['_redirect'] = $this->link_open( $website_id );
@@ -559,7 +558,7 @@ class module_website extends module_base {
 			if ( $website && $website['website_id'] > 0 ) {
 				$row['website_id'] = $website['website_id'];
 			}
-		} else if ( isset( $row['url'] ) ) {
+		} elseif ( isset( $row['url'] ) ) {
 			$row['name'] = $row['url'];
 		}
 		if ( ! $row['website_id'] && isset( $row['url'] ) && strlen( trim( $row['url'] ) ) ) {
@@ -627,7 +626,7 @@ class module_website extends module_base {
 		if ( isset( $extra_options['duplicates'] ) && $extra_options['duplicates'] == 'ignore' && $row['customer_id'] > 0 ) {
 			// don't update customer record with new one.
 
-		} else if ( ( isset( $row['customer_name'] ) && strlen( trim( $row['customer_name'] ) ) > 0 ) || $row['customer_id'] > 0 ) {
+		} elseif ( ( isset( $row['customer_name'] ) && strlen( trim( $row['customer_name'] ) ) > 0 ) || $row['customer_id'] > 0 ) {
 			// update customer record with new one.
 			$row['customer_id'] = update_insert( 'customer_id', $row['customer_id'], 'customer', $row );
 			if ( isset( $row['customer_contact_fname'] ) || isset( $row['customer_contact_email'] ) ) {
@@ -723,7 +722,7 @@ class module_website extends module_base {
 		// first we find any matching existing websites. skipping duplicates if option is set.
 		foreach ( $data as $rowid => $row ) {
 			if ( self::handle_import_row( $row, false, $add_to_group, $extra_options ) ) {
-				$count ++;
+				$count++;
 			}
 		}
 
@@ -801,5 +800,4 @@ class module_website extends module_base {
 
 		return $attributes;
 	}
-
 }

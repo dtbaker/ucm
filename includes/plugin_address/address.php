@@ -1,8 +1,7 @@
 <?php
 
-
-class module_address extends module_base {
-
+class module_address extends module_base
+{
 	public $links;
 	public $address_types;
 
@@ -342,5 +341,4 @@ class module_address extends module_base {
 		<?php
 		return ob_get_clean();
 	}
-
 }

@@ -63,7 +63,7 @@ $search = isset( $_REQUEST['search'] ) && is_array( $_REQUEST['search'] ) ? $_RE
 				$customer['full_address'] = '';
 				foreach ( array( 'line_1', 'line_2', 'suburb', 'state', 'region', 'country', 'post_code' ) as $key ) {
 					if ( ! empty( $address[ $key ] ) ) {
-						$address_count ++;
+						$address_count++;
 						$customer['full_address'] .= $address[ $key ] . ', ';
 					}
 					$customer[ $key ] = $address[ $key ];
@@ -83,7 +83,7 @@ $search = isset( $_REQUEST['search'] ) && is_array( $_REQUEST['search'] ) ? $_RE
 				}
 			}
 		}
-		foreach($customer_addresses as $customer_address){ ?>
+		foreach ($customer_addresses as $customer_address) { ?>
     customer_address.push(<?php echo json_encode( $customer_address );?>);
 		<?php }
 		?>
@@ -91,7 +91,7 @@ $search = isset( $_REQUEST['search'] ) && is_array( $_REQUEST['search'] ) ? $_RE
 
     function initializeMaps() {
         geocoder = new google.maps.Geocoder();
-			<?php if(! empty( $search['location'] )){ ?>
+			<?php if (! empty( $search['location'] )) { ?>
         geocoder.geocode({'address': '<?php echo addcslashes( preg_replace( "#\s+#", " ", $search['location'] ), "'" );?>'}, function (results, status) {
             if (status == google.maps.GeocoderStatus.OK) {
                 var mapOptions = {
@@ -108,7 +108,7 @@ $search = isset( $_REQUEST['search'] ) && is_array( $_REQUEST['search'] ) ? $_RE
                 alert('Address not found: ' + status);
             }
         });
-			<?php }else{ ?>
+			<?php } else { ?>
         var latlng = new google.maps.LatLng(-34.397, 150.644);
         var mapOptions = {
             zoom: 8,
@@ -127,7 +127,9 @@ $search = isset( $_REQUEST['search'] ) && is_array( $_REQUEST['search'] ) ? $_RE
                     map: map,
                     position: pos
                 });
-                createInfoWindow(customer_address[i].marker, 'Customer: <a href="<?php $link = module_customer::link_open( 1 ); echo $link; echo strpos( $link, '?' ) ? '&' : '?';?>customer_id=' + customer_address[i].customer_id + '">' + customer_address[i].customer_name + '</a><br/>' + customer_address[i].full_address);
+                createInfoWindow(customer_address[i].marker, 'Customer: <a href="<?php $link = module_customer::link_open( 1 );
+echo $link;
+echo strpos( $link, '?' ) ? '&' : '?';?>customer_id=' + customer_address[i].customer_id + '">' + customer_address[i].customer_name + '</a><br/>' + customer_address[i].full_address);
                 bounds.extend(pos);
             } else {
                 // have to geocode this one.
@@ -156,9 +158,11 @@ $search = isset( $_REQUEST['search'] ) && is_array( $_REQUEST['search'] ) ? $_RE
                                     map: map,
                                     position: results[0].geometry.location
                                 });
-                                createInfoWindow(customer_address[index].marker, 'Customer: <a href="<?php $link = module_customer::link_open( 1 ); echo $link; echo strpos( $link, '?' ) ? '&' : '?';?>customer_id=' + cust.customer_id + '">' + cust.customer_name + '</a><br/>' + address);
+                                createInfoWindow(customer_address[index].marker, 'Customer: <a href="<?php $link = module_customer::link_open( 1 );
+echo $link;
+echo strpos( $link, '?' ) ? '&' : '?';?>customer_id=' + cust.customer_id + '">' + cust.customer_name + '</a><br/>' + address);
                                 bounds.extend(results[0].geometry.location);
-															<?php if(empty( $search['location'] )){ ?>
+															<?php if (empty( $search['location'] )) { ?>
                                 map.fitBounds(bounds);
 															<?php } ?>
                             } else {
@@ -169,7 +173,7 @@ $search = isset( $_REQUEST['search'] ) && is_array( $_REQUEST['search'] ) ? $_RE
                 })();
             }
         }
-			<?php if(empty( $search['location'] )){ ?>
+			<?php if (empty( $search['location'] )) { ?>
         map.fitBounds(bounds);
 			<?php } ?>
     }

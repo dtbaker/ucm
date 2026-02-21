@@ -2,8 +2,8 @@
 
 define( '_LABEL_USER_SPECIFIC', 'User Specific' );
 
-class module_security extends module_base {
-
+class module_security extends module_base
+{
 	//test
 	public $links;
 	public $security_types;
@@ -1412,7 +1412,7 @@ PRIMARY KEY (`user_id`)
 			echo self::$page_denied_message;
 			self::$page_denied_message = '';
 
-		} else if ( self::$process_editable_page ) {
+		} elseif ( self::$process_editable_page ) {
 			module_debug::log( array(
 				'title' => 'Page Editable',
 				'file'  => 'includes/plugin_security/security.php',
@@ -1508,6 +1508,4 @@ PRIMARY KEY (`user_id`)
 
 		return $purifier->purify( $dirty_html );
 	}
-
-
 }

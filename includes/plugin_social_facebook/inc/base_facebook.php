@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Copyright 2011 Facebook, Inc.
  *
@@ -27,7 +28,8 @@ if ( ! function_exists( 'json_decode' ) ) {
  *
  * @author Naitik Shah <naitik@facebook.com>
  */
-class FacebookApiException extends Exception {
+class FacebookApiException extends Exception
+{
 	/**
 	 * The result from the API server that represents the exception information.
 	 *
@@ -51,10 +53,10 @@ class FacebookApiException extends Exception {
 		if ( isset( $result['error_description'] ) ) {
 			// OAuth 2.0 Draft 10 style
 			$msg = $result['error_description'];
-		} else if ( isset( $result['error'] ) && is_array( $result['error'] ) ) {
+		} elseif ( isset( $result['error'] ) && is_array( $result['error'] ) ) {
 			// OAuth 2.0 Draft 00 style
 			$msg = $result['error']['message'];
-		} else if ( isset( $result['error_msg'] ) ) {
+		} elseif ( isset( $result['error_msg'] ) ) {
 			// Rest server style
 			$msg = $result['error_msg'];
 		} else {
@@ -85,7 +87,7 @@ class FacebookApiException extends Exception {
 			if ( is_string( $error ) ) {
 				// OAuth 2.0 Draft 10 style
 				return $error;
-			} else if ( is_array( $error ) ) {
+			} elseif ( is_array( $error ) ) {
 				// OAuth 2.0 Draft 00 style
 				if ( isset( $error['type'] ) ) {
 					return $error['type'];
@@ -120,7 +122,8 @@ class FacebookApiException extends Exception {
  *
  * @author Naitik Shah <naitik@facebook.com>
  */
-abstract class BaseFacebook {
+abstract class BaseFacebook
+{
 	/**
 	 * Version.
 	 */
@@ -538,7 +541,7 @@ abstract class BaseFacebook {
 				$this->signedRequest = $this->parseSignedRequest(
 					$_REQUEST['signed_request']
 				);
-			} else if ( ! empty( $_COOKIE[ $this->getSignedRequestCookieName() ] ) ) {
+			} elseif ( ! empty( $_COOKIE[ $this->getSignedRequestCookieName() ] ) ) {
 				$this->signedRequest = $this->parseSignedRequest(
 					$_COOKIE[ $this->getSignedRequestCookieName() ] );
 			}
@@ -1138,7 +1141,7 @@ abstract class BaseFacebook {
 		}
 
 		$result = 0;
-		for ( $i = 0; $i < strlen( $expected_sig ); $i ++ ) {
+		for ( $i = 0; $i < strlen( $expected_sig ); $i++ ) {
 			$result |= ord( $expected_sig[ $i ] ) ^ ord( $sig[ $i ] );
 		}
 
@@ -1247,7 +1250,7 @@ abstract class BaseFacebook {
 		$name = 'api';
 		if ( isset( $READ_ONLY_CALLS[ strtolower( $method ) ] ) ) {
 			$name = 'api_read';
-		} else if ( strtolower( $method ) == 'video.upload' ) {
+		} elseif ( strtolower( $method ) == 'video.upload' ) {
 			$name = 'api_video';
 		}
 

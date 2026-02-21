@@ -14,7 +14,7 @@ if ( isset( $access_requirements['feature'] ) && $access_requirements['feature']
 		default:
 			$access = true;
 	}
-} else if ( isset( $access_requirements['feature'] ) && $access_requirements['feature'] == 'submenu' ) {
+} elseif ( isset( $access_requirements['feature'] ) && $access_requirements['feature'] == 'submenu' ) {
 	switch ( $access_requirements['module'] ) {
 		case 'user':
 		case 'supplier_product':
@@ -54,4 +54,3 @@ if ( isset( $access_requirements['feature'] ) && $access_requirements['feature']
 		}
 	}
 }
-?>

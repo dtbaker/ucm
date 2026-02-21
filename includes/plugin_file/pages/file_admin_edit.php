@@ -1,23 +1,25 @@
-<?php 
+<?php
 
-if(!$file_safe)die('wrong page');
+if (!$file_safe) { die('wrong page');
+}
 
 $file['bucket_parent_file_id'] = isset($_REQUEST['bucket_parent_file_id']) ? (int)$_REQUEST['bucket_parent_file_id'] : (isset($file['bucket_parent_file_id']) ? $file['bucket_parent_file_id'] : 0);
 $is_bucket_file = $file['bucket_parent_file_id'] > 0;
 
-if($file_id > 0){
+if ($file_id > 0) {
     $module->page_title = _l('File: %s',$file['file_name']);
 	$ucm_file->has_viewed();
-}else{
+} else {
     $module->page_title = _l('File: %s',_l('New'));
 }
 
-if(!isset($file['customer_id'])||!$file['customer_id'])$file['customer_id']=false; // helps with drop downs below.
+if (!isset($file['customer_id']) || !$file['customer_id']) { $file['customer_id'] = false; // helps with drop downs below.
+}
 
-$plupload_key = md5(time().mt_rand(1,300));
+$plupload_key = md5(time() . mt_rand(1,300));
 
 $type = $ucm_file->get_type();
-if($is_bucket_file){
+if ($is_bucket_file) {
     $type = 'upload';
     $fieldset_data = array(
         'heading' =>  array(
@@ -35,7 +37,7 @@ if($is_bucket_file){
 }
 
 
-if(!module_config::c('file_upload_old',0) && $type == 'upload'){
+if (!module_config::c('file_upload_old',0) && $type == 'upload') {
 ?>
 
 <!-- Third party script for BrowserPlus runtime (Google Gears included in Gears runtime now) -->
@@ -172,9 +174,9 @@ $(function() {
         'heading' => array(
             'type' => 'h3',
             'title' => 'File Details',
-	        'button'=>$is_bucket_file ? array() : array(
-	            'url'=>module_file::link_open($file_id).'&file_type='.($type=='upload'?'remote':'upload'),
-	            'title'=>($type=='upload'?'Swap to URL':'Swap to Upload'),
+	        'button' => $is_bucket_file ? array() : array(
+	            'url' => module_file::link_open($file_id) . '&file_type=' . ($type == 'upload' ? 'remote' : 'upload'),
+	            'title' => ($type == 'upload' ? 'Swap to URL' : 'Swap to Upload'),
 	        )
         ),
         'class' => 'tableclass tableclass_form tableclass_full file_drop',
@@ -188,27 +190,27 @@ $(function() {
              'allow_edit' => module_file::can_i('create','Files'),
         ),
     );
-    if( $type == 'upload' ){
+    if ( $type == 'upload' ) {
         $fieldset_data['elements'][] = array(
             'title' => 'Upload File',
             'fields' => array(
-                function() use(&$file, $file_id, &$module){
-	                if(module_config::c('file_upload_old',0)){ ?>
+                function () use (&$file, $file_id, &$module) {
+	                if (module_config::c('file_upload_old',0)) { ?>
                         <input type="file" name="file_upload">
-                    <?php }else{ ?>
+                    <?php } else { ?>
 						<div id="progressbar"></div>
 						<div id="container">
 							<div id="filelist"> Error, unable to upload files. </div>
 						    <input type="button" name="u" id="pickfiles" value="<?php _e('Select Files');?>">
 						</div>
                     <?php } ?>
-                    <?php if($file_id){ ?>
-                    <a href="<?php echo $module->link('file_edit',array('_process'=>'download','file_id'=>$file_id),'file',false);?>"><?php echo nl2br(htmlspecialchars($file['file_name'] ?? ''));?></a>
+                    <?php if ($file_id) { ?>
+                    <a href="<?php echo $module->link('file_edit',array('_process' => 'download','file_id' => $file_id),'file',false);?>"><?php echo nl2br(htmlspecialchars($file['file_name'] ?? ''));?></a>
                     <?php }
                 }
             ),
         );
-    }else{
+    } else {
 	    $fieldset_data['elements'][] = array(
             'title' => 'File Name',
             'field' => array(
@@ -220,14 +222,14 @@ $(function() {
 	    $fieldset_data['elements'][] = array(
             'title' => 'File URL',
             'fields' => array(
-                function() use(&$file, $file_id){
-	                if(module_file::can_i('edit','Files')){ ?>
+                function () use (&$file, $file_id) {
+	                if (module_file::can_i('edit','Files')) { ?>
 					<input type="text" name="file_url" value="<?php echo htmlspecialchars($file['file_url'] ?? '');?>">
-                        <?php if($file['file_url']){ ?>
+                        <?php if ($file['file_url']) { ?>
                         <a href="<?php echo htmlspecialchars($file['file_url'] ?? '');?>" target="_blank"><?php _e('Open');?></a>
                         <?php } ?>
                     <?php _h('You can enter a full URL to a file here (eg: http://yoursite.com/file.txt) and that link will become available through this system.'); ?>
-                    <?php }else{ ?>
+                    <?php } else { ?>
                         <a href="<?php echo htmlspecialchars($file['file_url'] ?? '');?>" target="_blank"><?php echo htmlspecialchars($file['file_url'] ?? '');?></a>
                     <?php }
                 }
@@ -244,13 +246,13 @@ $(function() {
 		    'allow_new' => true,
 	    ),
 	);
-    if(!$is_bucket_file && class_exists('module_customer',false)){
+    if (!$is_bucket_file && class_exists('module_customer',false)) {
 	    $c = array();
         $res = module_customer::get_customers();
-        foreach($res as $row){
+        foreach ($res as $row) {
             $c[$row['customer_id']] = $row['customer_name'];
         }
-        if($file['customer_id'] && !isset($c[$file['customer_id']])){
+        if ($file['customer_id'] && !isset($c[$file['customer_id']])) {
             // this file is related to another job. from another customer.
             $related_customer = module_customer::get_customer($file['customer_id'],true);
             $c[$file['customer_id']] = $related_customer['customer_name'];
@@ -265,23 +267,23 @@ $(function() {
 		    ),
 		);
     }
-    if (!$is_bucket_file && class_exists('module_job',false) && class_exists('module_customer',false)){
+    if (!$is_bucket_file && class_exists('module_job',false) && class_exists('module_customer',false)) {
 	    $c = array();
-        $res = module_job::get_jobs(array('customer_id'=>$file['customer_id']));
-        foreach($res as $row){
+        $res = module_job::get_jobs(array('customer_id' => $file['customer_id']));
+        foreach ($res as $row) {
             $c[$row['job_id']] = $row['name'];
         }
-        if($file['job_id'] && !isset($c[$file['job_id']])){
+        if ($file['job_id'] && !isset($c[$file['job_id']])) {
             // this file is related to another job. from another customer.
             $related_job = module_job::get_job($file['job_id'],false,true);
-            if($related_job && $related_job['job_id'] == $file['job_id']){
+            if ($related_job && $related_job['job_id'] == $file['job_id']) {
                 $related_customer = module_customer::get_customer($related_job['customer_id'],true);
-                if($related_customer && $related_customer['customer_id'] == $related_job['customer_id']){
+                if ($related_customer && $related_customer['customer_id'] == $related_job['customer_id']) {
                     $c[$file['job_id']] = _l('%s (from %s)',$related_job['name'],$related_customer['customer_name']);
-                }else{
+                } else {
                     $file['job_id'] = false;
                 }
-            }else{
+            } else {
                 $file['job_id'] = false;
             }
         }
@@ -294,32 +296,32 @@ $(function() {
 			        'value' => $file['job_id'],
 				    'options' => $c,
 			    ),
-			    function() use (&$file){
-				    if($file['job_id']){
+			    function () use (&$file) {
+				    if ($file['job_id']) {
                         echo ' ';
-                        echo '<a href="'.module_job::link_open($file['job_id'],false).'">'._l('Open Job &raquo;').'</a>';
+                        echo '<a href="' . module_job::link_open($file['job_id'],false) . '">' . _l('Open Job &raquo;') . '</a>';
                     }
 			    }
 		    ),
 		);
     }
-    if (!$is_bucket_file && class_exists('module_quote',false) && module_quote::is_plugin_enabled()){
+    if (!$is_bucket_file && class_exists('module_quote',false) && module_quote::is_plugin_enabled()) {
 	    $c = array();
-        $res = module_quote::get_quotes(array('customer_id'=>$file['customer_id']));
-        foreach($res as $row){
+        $res = module_quote::get_quotes(array('customer_id' => $file['customer_id']));
+        foreach ($res as $row) {
             $c[$row['quote_id']] = $row['name'];
         }
-        if($file['quote_id'] && !isset($c[$file['quote_id']])){
+        if ($file['quote_id'] && !isset($c[$file['quote_id']])) {
             // this file is related to another quote. from another customer.
             $related_quote = module_quote::get_quote($file['quote_id'],false,true);
-            if($related_quote && $related_quote['quote_id'] == $file['quote_id']){
+            if ($related_quote && $related_quote['quote_id'] == $file['quote_id']) {
                 $related_customer = module_customer::get_customer($related_quote['customer_id'],true);
-                if($related_customer && $related_customer['customer_id'] == $related_quote['customer_id']){
+                if ($related_customer && $related_customer['customer_id'] == $related_quote['customer_id']) {
                     $c[$file['quote_id']] = _l('%s (from %s)',$related_quote['name'],$related_customer['customer_name']);
-                }else{
+                } else {
                     $file['quote_id'] = false;
                 }
-            }else{
+            } else {
                 $file['quote_id'] = false;
             }
         }
@@ -332,17 +334,17 @@ $(function() {
 			        'value' => $file['quote_id'],
 				    'options' => $c,
 			    ),
-			    function() use (&$file){
-				    if($file['quote_id']){
+			    function () use (&$file) {
+				    if ($file['quote_id']) {
                         echo ' ';
-                        echo '<a href="'.module_quote::link_open($file['quote_id'],false).'">'._l('Open Quote &raquo;').'</a>';
+                        echo '<a href="' . module_quote::link_open($file['quote_id'],false) . '">' . _l('Open Quote &raquo;') . '</a>';
                     }
 			    }
 		    ),
 		);
     }
 
-    if(!$is_bucket_file) {
+    if (!$is_bucket_file) {
 
         $staff_members    = module_user::get_staff_members();
         $staff_member_rel = array();
@@ -430,8 +432,8 @@ $(function() {
     );
     echo module_form::generate_fieldset($fieldset_data);
     unset($fieldset_data);
-    
-    if(module_file::can_i('edit','Files') && (int)$file_id > 0){
+
+    if (module_file::can_i('edit','Files') && (int)$file_id > 0) {
         module_email::display_emails(array(
             'title' => 'File Emails',
             'search' => array(
@@ -441,28 +443,28 @@ $(function() {
     }
 
     // file comments for url files
-    if((int)$file_id > 0 && isset($file['file_url']) && strlen($file['file_url']) && module_file::can_i('view','File Comments')){
+    if ((int)$file_id > 0 && isset($file['file_url']) && strlen($file['file_url']) && module_file::can_i('view','File Comments')) {
 	    ob_start();
 	    ?>
 	    <div class="tableclass" style="margin:0 0 10px 0">
-            <?php if(module_file::can_i('create','File Comments')){ ?>
+            <?php if (module_file::can_i('create','File Comments')) { ?>
             <textarea name="new_comment_text" style="width:98%;" class="no_permissions"></textarea>
             <?php } ?>
             <div style="text-align:right;">
-                <?php if(module_file::can_i('create','File Comments')){ ?>
+                <?php if (module_file::can_i('create','File Comments')) { ?>
                 <input type="submit" name="butt_save_note" id="butt_save_note" value="<?php echo _l('Add Comment'); ?>" class="submit_button no_permissions">
                 <?php } ?>
                 <input type="hidden" name="delete_file_comment_id" id="delete_file_comment_id" value="0" class="no_permissions">
             </div>
         </div>
-        <?php foreach(module_file::get_file_comments($file_id) as $item){
+        <?php foreach (module_file::get_file_comments($file_id) as $item) {
 	        $note_text = forum_text($item['comment']);
 
 	        ?>
 	        <div style="border-top:1px dashed #CCCCCC; padding:3px; margin:3px 0;">
 	            <?php echo $note_text; ?>
 	            <div style="font-size:10px; text-align:right; color:#CCCCCC;">From <?php echo $item['create_user_id'] ? module_user::link_open($item['create_user_id'],true) : _l('Customer'); ?> on <?php echo print_date($item['date_created'],true); ?>
-	                <?php if(module_file::can_i('delete','File Comments') || $item['create_user_id'] == module_security::get_loggedin_id()){ ?>
+	                <?php if (module_file::can_i('delete','File Comments') || $item['create_user_id'] == module_security::get_loggedin_id()) { ?>
 	                <a href="#" onclick="if(confirm('<?php echo _l('Really remove this comment?'); ?>')){$('#delete_file_comment_id').val('<?php echo $item['file_comment_id']; ?>'); $('#butt_save_note').click(); } return false;" style="color:#FF0000">x</a>
 	                <?php } ?>
 	            </div>
@@ -508,14 +510,14 @@ $(function() {
                 'name' => 'cancel',
                 'value' => _l('Cancel'),
                 'class' => 'submit_button',
-                'onclick' => "window.location.href='".($is_bucket_file ? module_file::link_open($file['bucket_parent_file_id']) : module_file::link_open(false))."';",
+                'onclick' => "window.location.href='" . ($is_bucket_file ? module_file::link_open($file['bucket_parent_file_id']) : module_file::link_open(false)) . "';",
             ),
         ),
     );
     echo module_form::generate_form_actions($form_actions);
 
 
-    if((int)$file_id > 0 && isset($file['file_path']) && $file['file_path'] && is_file($file['file_path']) && module_file::can_i('view','File Comments')){   ?>
+    if ((int)$file_id > 0 && isset($file['file_path']) && $file['file_path'] && is_file($file['file_path']) && module_file::can_i('view','File Comments')) {   ?>
         <h2><?php echo _l('File Comments'); ?></h2>
 
         <div>
@@ -527,29 +529,29 @@ $(function() {
             </div>
             <div style="width:29%; float:right;" id="file_notes">
                 <div class="tableclass" style="margin:0 0 10px 0">
-                    <?php if(module_file::can_i('create','File Comments')){ ?>
+                    <?php if (module_file::can_i('create','File Comments')) { ?>
                     <textarea name="new_comment_text" style="width:98%;" class="no_permissions"></textarea>
                     <?php } ?>
                     <div style="text-align:right;">
-                        <?php if(module_file::can_i('create','File Comments')){ ?>
+                        <?php if (module_file::can_i('create','File Comments')) { ?>
                         <input type="submit" name="butt_save_note" id="butt_save_note" value="<?php echo _l('Add Comment'); ?>" class="submit_button no_permissions">
                         <?php } ?>
                         <input type="hidden" name="delete_file_comment_id" id="delete_file_comment_id" value="0" class="no_permissions">
                     </div>
                 </div>
-                <?php foreach(module_file::get_file_comments($file_id) as $item){
+                <?php foreach (module_file::get_file_comments($file_id) as $item) {
                 $note_text = forum_text($item['comment']);
-                if(preg_match_all('/#(\d+)/',$note_text,$matches)){
+                if (preg_match_all('/#(\d+)/',$note_text,$matches)) {
                     //
-                    foreach($matches[1] as $digit){
-                        $note_text = preg_replace('/#'.$digit.'([^\d]*)/','<span node_id='.$digit.' class="pointer-ids pointer-id-'.$digit.'">#'.$digit.'</span>$1',$note_text);
+                    foreach ($matches[1] as $digit) {
+                        $note_text = preg_replace('/#' . $digit . '([^\d]*)/','<span node_id=' . $digit . ' class="pointer-ids pointer-id-' . $digit . '">#' . $digit . '</span>$1',$note_text);
                     }
                 }
                 ?>
                 <div style="border-top:1px dashed #CCCCCC; padding:3px; margin:3px 0;">
                     <?php echo $note_text; ?>
                     <div style="font-size:10px; text-align:right; color:#CCCCCC;">From <?php echo $item['create_user_id'] ? module_user::link_open($item['create_user_id'],true) : _l('Customer'); ?> on <?php echo print_date($item['date_created'],true); ?>
-                        <?php if(module_file::can_i('delete','File Comments') || $item['create_user_id'] == module_security::get_loggedin_id()){ ?>
+                        <?php if (module_file::can_i('delete','File Comments') || $item['create_user_id'] == module_security::get_loggedin_id()) { ?>
                         <a href="#" onclick="if(confirm('<?php echo _l('Really remove this comment?'); ?>')){$('#delete_file_comment_id').val('<?php echo $item['file_comment_id']; ?>'); $('#butt_save_note').click(); } return false;" style="color:#FF0000">x</a>
                         <?php } ?>
                     </div>

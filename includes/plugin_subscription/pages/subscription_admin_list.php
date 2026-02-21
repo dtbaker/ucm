@@ -47,7 +47,7 @@ print_heading( $heading );
 			<?php
 			$c = 0;
 			foreach ( $pagination['rows'] as $subscription ) { ?>
-				<tr class="<?php echo ( $c ++ % 2 ) ? "odd" : "even"; ?>">
+				<tr class="<?php echo ( $c++ % 2 ) ? "odd" : "even"; ?>">
 					<td class="row_action">
 						<?php echo module_subscription::link_open( $subscription['subscription_id'], true, $subscription ); ?>
 					</td>

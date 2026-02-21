@@ -37,7 +37,7 @@ if ( $facebook->get( 'social_facebook_id' ) ) {
 		// now we load in a list of facebook pages to manage and redirect the user back to the 'edit' screen where they can continue managing the account.
 		$facebook->graph_load_available_pages();
 		redirect_browser( module_social_facebook::link_open( $social_facebook_id ) );
-	} else if ( $facebook->get( 'facebook_app_id' ) && $facebook->get( 'facebook_app_secret' ) ) {
+	} elseif ( $facebook->get( 'facebook_app_id' ) && $facebook->get( 'facebook_app_secret' ) ) {
 		// we connect using our own app id / secret
 		require_once( 'includes/plugin_social_facebook/inc/facebook.php' );
 		$settings     = array(
@@ -59,7 +59,8 @@ if ( $facebook->get( 'social_facebook_id' ) ) {
 			$facebook_api->setAccessToken( $_REQUEST['login_completed'] );
 
 
-			$access_token = $facebook_api->getAccessToken();;
+			$access_token = $facebook_api->getAccessToken();
+;
 			echo '<div style="display:none;">';
 			echo 'Current access token is: ' . $access_token . '<br>';
 			echo '</div>';
@@ -77,7 +78,8 @@ if ( $facebook->get( 'social_facebook_id' ) ) {
 			if ( $user ) {
 				$facebook_api->setExtendedAccessToken();
 				//echo 'extending access token...<br>';
-				$access_token = $facebook_api->getAccessToken();;
+				$access_token = $facebook_api->getAccessToken();
+;
 				//echo 'Current access token is: '.$access_token.'<br>';
 				if ( $access_token ) {
 					$facebook->update( 'facebook_token', $access_token );

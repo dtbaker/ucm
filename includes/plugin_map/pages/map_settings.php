@@ -1,6 +1,5 @@
 <?php
 
-
 $settings = array(
 	array(
 		'key'         => 'enable_customer_maps',

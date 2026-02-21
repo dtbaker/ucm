@@ -20,7 +20,7 @@ if ( isset( $_REQUEST['currency_id'] ) ) {
 			redirect_browser( $_SERVER['REQUEST_URI'] . ( strpos( $_SERVER['REQUEST_URI'], '?' ) === false ? '?' : '&' ) . 'deleted=true' );
 		}
 
-	} else if ( isset( $_REQUEST['save'] ) ) {
+	} elseif ( isset( $_REQUEST['save'] ) ) {
 		update_insert( 'currency_id', $currency_id, 'currency', $_POST );
 		set_message( 'Currency saved successfully' );
 		//redirect_browser('?saved=true');
@@ -133,7 +133,7 @@ if ( isset( $_REQUEST['currency_id'] ) ) {
 			<?php
 			$c = 0;
 			foreach ( get_multiple( 'currency' ) as $currency ) { ?>
-				<tr class="<?php echo ( $c ++ % 2 ) ? "odd" : "even"; ?>">
+				<tr class="<?php echo ( $c++ % 2 ) ? "odd" : "even"; ?>">
 					<td class="row_action">
 						<a
 							href="<?php echo $_SERVER['REQUEST_URI'] . ( strpos( $_SERVER['REQUEST_URI'], '?' ) === false ? '?' : '&' ); ?>currency_id=<?php echo $currency['currency_id']; ?>"><?php echo htmlspecialchars( $currency['code'] ); ?></a>

@@ -11,8 +11,8 @@ define( '_NEWSLETTER_STATUS_BOUNCED', 7 );
 define( '_MEMBER_HASH_URL_REDIRECT_BITS', 'UCMmhurb' );
 
 
-class module_newsletter extends module_base {
-
+class module_newsletter extends module_base
+{
 	public $links;
 	public $newsletter_types;
 
@@ -381,7 +381,7 @@ class module_newsletter extends module_base {
 				set_message( "Newsletter deleted successfully" );
 				redirect_browser( self::link_list( false ) );
 			}
-		} else if ( "save_newsletter" == $_REQUEST['_process'] ) {
+		} elseif ( "save_newsletter" == $_REQUEST['_process'] ) {
 			$newsletter_id = isset( $_REQUEST['newsletter_id'] ) ? (int) $_REQUEST['newsletter_id'] : false;
 			$newsletter_id = $this->save_newsletter( $newsletter_id, $_POST );
 			if ( isset( $_REQUEST['butt_send'] ) ) {
@@ -407,7 +407,7 @@ class module_newsletter extends module_base {
 			}
 			set_message( "Newsletter saved successfully" );
 			redirect_browser( $this->link_open( $newsletter_id ) );
-		} else if ( "send_send" == $_REQUEST['_process'] ) {
+		} elseif ( "send_send" == $_REQUEST['_process'] ) {
 			$newsletter_id = (int) $_REQUEST['newsletter_id'];
 			$send_id       = (int) $_REQUEST['send_id'];
 			if ( $newsletter_id && $send_id ) {
@@ -419,7 +419,7 @@ class module_newsletter extends module_base {
 				redirect_browser( $this->link_queue_watch( $newsletter_id, $send_id ) );
 			}
 
-		} else if ( "modify_send" == $_REQUEST['_process'] ) {
+		} elseif ( "modify_send" == $_REQUEST['_process'] ) {
 			$send_id       = (int) $_REQUEST['send_id'];
 			$newsletter_id = (int) $_REQUEST['newsletter_id'];
 			$send          = get_single( 'newsletter_send', array( 'send_id', 'newsletter_id' ), array(
@@ -447,7 +447,7 @@ class module_newsletter extends module_base {
 				redirect_browser( $this->link_queue_watch( $newsletter_id, $send_id ) );
 			}
 
-		} else if ( "enque_send" == $_REQUEST['_process'] ) {
+		} elseif ( "enque_send" == $_REQUEST['_process'] ) {
 			$newsletter_id = (int) $_REQUEST['newsletter_id'];
 			$send_id       = (int) $_REQUEST['send_id'];
 
@@ -495,7 +495,7 @@ class module_newsletter extends module_base {
 						// run this data callback to get the data from this group member.
 						$all_callback_data = self::member_data_callback( $callback, $args, false ); // false, just want the email address for now.
 						if ( ! $all_callback_data ) {
-							$error_count ++;
+							$error_count++;
 						}
 						if ( is_array( $all_callback_data ) ) {
 							// check if $callback_data is a multi-array - sometimes this will return more than 1 record (eg: customer = returns all contacts under that customer)
@@ -701,7 +701,7 @@ class module_newsletter extends module_base {
 						//echo 'done';
 						$done_member = true;
 					} else {
-						$error_count ++;
+						$error_count++;
 						if ( _DEBUG_MODE ) {
 							echo 'failed to create member from email';
 							print_r( $member );
@@ -727,7 +727,7 @@ class module_newsletter extends module_base {
 				}
 				redirect_browser( $this->link_queue( $newsletter_id, $send_id ) );
 			}
-		} else if ( "save_newsletter_template" == $_REQUEST['_process'] ) {
+		} elseif ( "save_newsletter_template" == $_REQUEST['_process'] ) {
 
 			if ( isset( $_REQUEST['butt_del'] ) ) {
 				$data = self::get_newsletter_template( $_REQUEST['newsletter_template_id'] );
@@ -799,7 +799,7 @@ class module_newsletter extends module_base {
 				}
 
 				return $res['newsletter_member_id'];
-			} else if ( $create_new ) {
+			} elseif ( $create_new ) {
 				// create member with this email / data
 				if ( isset( $data['name'] ) && ( ! isset( $data['first_name'] ) || ! isset( $data['last_name'] ) ) ) {
 					$name_parts         = explode( " ", preg_replace( '/\s+/', ' ', $data['name'] ) );
@@ -885,7 +885,7 @@ class module_newsletter extends module_base {
 		if ( isset( $search['pending'] ) && $search['pending'] ) {
 			$where .= " AND ns.send_id IS NOT NULL AND ( ns.status = " . _NEWSLETTER_STATUS_PAUSED;
 			$where .= " OR ns.status = " . _NEWSLETTER_STATUS_PENDING . ") ";
-		} else if ( isset( $search['draft'] ) && $search['draft'] ) {
+		} elseif ( isset( $search['draft'] ) && $search['draft'] ) {
 			// remove deleted from drafs list.
 			$where .= ' AND (ns.newsletter_id IS NULL OR ns.`status` = ' . _NEWSLETTER_STATUS_NEW . ")";
 		} else {
@@ -1085,7 +1085,7 @@ class module_newsletter extends module_base {
 				$special_link_replace_items['MEMBER_URL'] = module_member::link_public_details( $member_data['member_id'] );
 			}
 		}
-		for ( $x = 0; $x < 2; $x ++ ) {
+		for ( $x = 0; $x < 2; $x++ ) {
 			foreach ( $replace as $key => $val ) {
 				if ( isset( $special_link_replace_items[ $key ] ) ) {
 					continue;
@@ -1126,7 +1126,7 @@ class module_newsletter extends module_base {
 								$db_link_id = false;
 								if ( $existing && $existing['link_id'] ) {
 									$db_link_id = $existing['link_id'];
-								} else if ( $render_type != 'preview' ) {
+								} elseif ( $render_type != 'preview' ) {
 									// todo - don't re-create a link in the db if this send is bogus. like what if someone sends, then modifies the newsletter content, then goes back and views the stats. all the page index will be out of date. eep1!!!
 									$db_link_id = update_insert( 'link_id', false, 'newsletter_link', array(
 										'send_id'    => $send_id,
@@ -1144,7 +1144,7 @@ class module_newsletter extends module_base {
 									//preg_match('/'.$search."/",$template,$matches);print_r($matches);
 									$final_newsletter_html = preg_replace( '/' . $search . '/', $replace, $final_newsletter_html, 1 );
 								}
-								$page_index ++;
+								$page_index++;
 							}
 						}
 					}
@@ -1490,7 +1490,7 @@ class module_newsletter extends module_base {
 
 			if ( $retry_failures ) {
 				$sql .= " AND sm.`status` = " . _NEWSLETTER_STATUS_FAILED . " AND sm.newsletter_member_id > 0";
-			} else if ( $retry_pending ) {
+			} elseif ( $retry_pending ) {
 				$sql .= " AND sm.`status` = " . _NEWSLETTER_STATUS_PENDING . " AND sm.newsletter_member_id > 0";
 			} else {
 				$sql .= " AND (sm.`status` = " . _NEWSLETTER_STATUS_NEW . " OR sm.`status` = " . _NEWSLETTER_STATUS_PAUSED . ") AND sm.newsletter_member_id > 0";
@@ -1587,7 +1587,7 @@ class module_newsletter extends module_base {
 						$member_result['status'] = $email->status; // so the calling script can handle whatever as well.
 
 						$result['send_members'][ (int) $send_member['newsletter_member_id'] ] = $member_result;
-						$send_count ++;
+						$send_count++;
 
 					} else {
 						// didn't get a lock on that member for some reason.
@@ -1759,7 +1759,7 @@ class module_newsletter extends module_base {
 					'cache' => serialize( $cache_data ),
 				) );
 
-			} else if ( $newsletter_member_id ) {
+			} elseif ( $newsletter_member_id ) {
 				$use_newsletter_member = self::get_send_member( $send_id, $newsletter_member_id );
 			}
 			if ( is_array( $extra_fields ) ) {
@@ -1920,7 +1920,7 @@ class module_newsletter extends module_base {
 				'unsubscribe_send_id' => $member['unsubscribe_send_id'],
 				'time'                => strtotime( $member['unsubscribe_date'] ),
 			);
-		} else if ( isset( $member['receive_email'] ) && ! $member['receive_email'] && ! module_config::c( 'newsletter_doubleoptin_bypass', 0 ) ) {
+		} elseif ( isset( $member['receive_email'] ) && ! $member['receive_email'] && ! module_config::c( 'newsletter_doubleoptin_bypass', 0 ) ) {
 			return array(
 				'reason' => 'no_email',
 				'time'   => strtotime( $member['unsubscribe_date'] ),
@@ -1949,7 +1949,7 @@ class module_newsletter extends module_base {
 			if ( $remove ) {
 				// remove all occurances of this email address.
 				delete_from_db( 'newsletter_blacklist', 'email', $email );
-			} else if ( ! self::email_blacklisted( $email ) ) {
+			} elseif ( ! self::email_blacklisted( $email ) ) {
 				// check if it already exists ^^
 				// add to backlist.
 				update_insert( 'newsletter_blacklist_id', 'new', 'newsletter_blacklist', array(
@@ -2147,7 +2147,6 @@ class module_newsletter extends module_base {
 				exit;
 				break;
 			case 'doubleoptin': // confirning their subscription via double opt in
-
 				$email     = isset( $_REQUEST['e'] ) ? trim( $_REQUEST['e'] ) : false;
 				$real_hash = $this->double_optin_confirmation_link( $email, true );
 				$email2    = false;
@@ -2158,7 +2157,7 @@ class module_newsletter extends module_base {
 				if ( $email && $_REQUEST['hash'] == $real_hash ) {
 					// we have a go!
 					$this->subscribe_member_double_optin_done( $email );
-				} else if ( $email2 && $_REQUEST['hash'] == $real_hash2 ) {
+				} elseif ( $email2 && $_REQUEST['hash'] == $real_hash2 ) {
 					// we have a go!
 					$this->subscribe_member_double_optin_done( $email2 );
 				} else {
@@ -2180,7 +2179,7 @@ class module_newsletter extends module_base {
 						//
 						echo 'Bad hash. Please report this error.';
 						exit;
-					} else if ( $newsletter_id && $newsletter_member_id && $send_id && $hash ) {
+					} elseif ( $newsletter_id && $newsletter_member_id && $send_id && $hash ) {
 						if ( isset( $_REQUEST[ _MEMBER_HASH_URL_REDIRECT_BITS ] ) ) {
 							$correct_hash = self::newsletter_redirect_hash( $newsletter_member_id, $send_id );
 						} else {
@@ -2207,7 +2206,6 @@ class module_newsletter extends module_base {
 				exit;
 				break;
 			case 'view_online': // todo - remove 'view_online' soon and go with 'vo' plus hash. helps prevent viewing past newsletters by changing id without hash.
-
 				$newsletter_id = isset( $_REQUEST['n'] ) ? (int) $_REQUEST['n'] : 0;
 				if ( $newsletter_id > 0 ) {
 					$newsletter_member_id = isset( $_REQUEST['nm'] ) ? (int) $_REQUEST['nm'] : 0;
@@ -2256,10 +2254,10 @@ class module_newsletter extends module_base {
 						if ( $debug ) {
 							echo 'not sending this one yet due to start time';
 						}
-					} else if ( $send['status'] == _NEWSLETTER_STATUS_PENDING ) {
+					} elseif ( $send['status'] == _NEWSLETTER_STATUS_PENDING ) {
 						$newsletter_send_burst_count = module_config::c( 'newsletter_send_burst_count', 40 );
 						$newsletter_send_burst_break = module_config::c( 'newsletter_send_burst_break', 2 );
-						for ( $x = 0; $x < 10; $x ++ ) { // todo: find a better way to run the cron job, eg: a timeout in configuration, or a max sends per cron run.
+						for ( $x = 0; $x < 10; $x++ ) { // todo: find a better way to run the cron job, eg: a timeout in configuration, or a max sends per cron run.
 							$send_result = module_newsletter::process_send( $send['newsletter_id'], $send['send_id'], $newsletter_send_burst_count, false, false );
 							if ( ! isset( $send_result['send_members'] ) || ! count( $send_result['send_members'] ) ) {
 								//$output_messages[] = _l('All done');
@@ -2870,6 +2868,4 @@ class module_newsletter extends module_base {
 	public static function save_member( $member_id, $data ) {
 		return update_insert( 'newsletter_member_id', $member_id, 'newsletter_member', $data );
 	}
-
-
 }

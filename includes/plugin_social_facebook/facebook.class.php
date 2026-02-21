@@ -1,7 +1,7 @@
 <?php
 
-class ucm_facebook {
-
+class ucm_facebook
+{
 	public function __construct() {
 		$this->reset();
 	}
@@ -330,10 +330,10 @@ class ucm_facebook {
 										if ( ! $facebook_message->get( 'last_active' ) || $facebook_message->get( 'last_active' ) <= $now ) {
 											// send now! otherwise we wait for cron job..
 											if ( $facebook_message->send_queued( isset( $_POST['debug'] ) && $_POST['debug'] ) ) {
-												$message_count ++;
+												$message_count++;
 											}
 										} else {
-											$message_count ++;
+											$message_count++;
 											if ( isset( $_POST['debug'] ) && $_POST['debug'] ) {
 												echo "Message will be sent in cron job after " . print_date( $facebook_message->get( 'last_active' ), true );
 											}
@@ -466,11 +466,10 @@ class ucm_facebook {
 
 		return false;
 	}
-
 }
 
-class ucm_facebook_account {
-
+class ucm_facebook_account
+{
 	public function __construct( $social_facebook_id ) {
 		$this->load( $social_facebook_id );
 	}
@@ -703,12 +702,11 @@ class ucm_facebook_account {
 	public function link_new_message() {
 		return module_social_facebook::link_open_facebook_message( $this->get( 'social_facebook_id' ), false );
 	}
-
 }
 
 
-class ucm_facebook_page {
-
+class ucm_facebook_page
+{
 	public function __construct( $facebook_account = false, $social_facebook_page_id = false ) {
 		$this->facebook_account = $facebook_account;
 		$this->load( $social_facebook_page_id );
@@ -884,7 +882,7 @@ class ucm_facebook_page {
 				// check if we have this message in our database already.
 				$facebook_message = new ucm_facebook_message( $this->facebook_account, $this, false );
 				if ( $facebook_message->load_by_facebook_id( $page_feed_message['id'], $page_feed_message, 'feed' ) ) {
-					$count ++;
+					$count++;
 				}
 				if ( $debug ) {
 					?>
@@ -938,7 +936,7 @@ class ucm_facebook_page {
 				// check if we have this message in our database already.
 				$facebook_message = new ucm_facebook_message( $this->facebook_account, $this, false );
 				if ( $facebook_message->load_by_facebook_id( $page_feed_message['id'], $page_feed_message, 'feed' ) ) {
-					$count ++;
+					$count++;
 				}
 				if ( $debug ) {
 					?>
@@ -990,7 +988,7 @@ class ucm_facebook_page {
 				// check if we have this message in our database already.
 				$facebook_message = new ucm_facebook_message( $this->facebook_account, $this, false );
 				if ( $facebook_message->load_by_facebook_id( $conversation['id'], $conversation, 'conversation' ) ) {
-					$count ++;
+					$count++;
 				}
 			}
 		}
@@ -1012,13 +1010,11 @@ class ucm_facebook_page {
 	public function link_refresh() {
 		return 'admin.php?page=simple_social_inbox_facebook_settings&manualrefresh&social_facebook_id=' . $this->get( 'social_facebook_id' ) . '&facebook_page_id=' . $this->get( 'page_id' );
 	}
-
-
 }
 
 
-class ucm_facebook_message {
-
+class ucm_facebook_message
+{
 	public function __construct( $facebook_account = false, $facebook_page = false, $social_facebook_message_id = false ) {
 		$this->facebook_account = $facebook_account;
 		$this->facebook_page    = $facebook_page;
@@ -1371,7 +1367,7 @@ class ucm_facebook_message {
 						// todo - better this! don't call on every comment, load list in main loop and pass through all results.
 						if ( isset( $facebook_data['user_id'] ) && $facebook_data['user_id'] ) {
 							echo ' (sent by ' . module_user::link_open( $facebook_data['user_id'], true ) . ')';
-						} else if ( isset( $facebook_data['id'] ) && $facebook_data['id'] ) {
+						} elseif ( isset( $facebook_data['id'] ) && $facebook_data['id'] ) {
 							$exists = get_single( 'social_facebook_message_comment', array(
 								'facebook_id',
 								'social_facebook_message_id'
@@ -1386,10 +1382,10 @@ class ucm_facebook_message {
 				<div class="facebook_comment_body">
 					<?php if ( isset( $facebook_data['picture'] ) && $facebook_data['picture'] ) { ?>
 						<div class="facebook_picture">
-							<?php if ( isset( $facebook_data['link'] ) && $facebook_data['link'] ){ ?> <a
+							<?php if ( isset( $facebook_data['link'] ) && $facebook_data['link'] ) { ?> <a
 								href="<?php echo htmlspecialchars( $facebook_data['link'] ); ?>" target="_blank"> <?php } ?>
 								<img src="<?php echo htmlspecialchars( $facebook_data['picture'] ); ?>">
-								<?php if ( isset( $facebook_data['link'] ) && $facebook_data['link'] ){ ?> </a> <?php } ?>
+								<?php if ( isset( $facebook_data['link'] ) && $facebook_data['link'] ) { ?> </a> <?php } ?>
 						</div>
 					<?php } ?>
 					<div>
@@ -1538,7 +1534,7 @@ class ucm_facebook_message {
 
 				$result = $facebook->graph_post( '' . $facebook_page_id . '/photos', $post_data );
 
-			} else if ( isset( $user_post_data['post_type'] ) && $user_post_data['post_type'] == 'link' ) {
+			} elseif ( isset( $user_post_data['post_type'] ) && $user_post_data['post_type'] == 'link' ) {
 				// sending a normal wall post, support links.
 				$link = $this->get( 'link' );
 				if ( ! empty( $link ) ) {
@@ -1736,6 +1732,4 @@ class ucm_facebook_message {
 	public function link_open() {
 		return 'admin.php?page=simple_social_inbox_main&social_facebook_id=' . $this->facebook_account->get( 'social_facebook_id' ) . '&social_facebook_message_id=' . $this->social_facebook_message_id;
 	}
-
-
 }

@@ -10,7 +10,6 @@ switch ( $display_mode ) {
 		module_debug::push_to_parent();
 		break;
 	case 'ajax':
-
 		break;
 	case 'mobile':
 		if ( class_exists( 'module_mobile', false ) ) {
@@ -19,7 +18,6 @@ switch ( $display_mode ) {
 		break;
 	case 'normal':
 	default:
-
 		if ( function_exists( 'hook_handle_callback' ) ) {
 			hook_handle_callback( 'content_footer' );
 		}

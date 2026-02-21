@@ -150,7 +150,7 @@ if ( isset( $quote['discount_type'] ) ) {
 			}
 		}
 
-	} else if ( $quote['discount_type'] == _DISCOUNT_TYPE_AFTER_TAX ) {
+	} elseif ( $quote['discount_type'] == _DISCOUNT_TYPE_AFTER_TAX ) {
 		$rows[] = array(
 			'label' => _l( 'Sub Total:' ),
 			'value' => '<span class="currency">' . dollar( $quote['total_sub_amount'], true, $quote['currency_id'] ) . '</span>'
@@ -227,7 +227,7 @@ $item_count        = 0;// changed from 1
 foreach ( $quote_tasks as $quote_item_id => $quote_item_data ) {
 
 	$row_replace = array(
-		'item_odd_or_even' => $item_count ++ % 2 ? 'odd' : 'even',
+		'item_odd_or_even' => $item_count++ % 2 ? 'odd' : 'even',
 		'item_number'      => '',
 		'item_description' => '',
 		//'item_date' => '',

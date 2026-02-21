@@ -52,7 +52,7 @@ if ( isset( $_REQUEST['language_id'] ) ) {
 				}
 				$languages_attributes[ $language_code ] = $language['language_name'];
 				?>
-				<tr class="<?php echo ( $c ++ % 2 ) ? "odd" : "even"; ?>">
+				<tr class="<?php echo ( $c++ % 2 ) ? "odd" : "even"; ?>">
 					<td class="row_action">
 						<a
 							href="<?php echo htmlspecialchars( $_SERVER['REQUEST_URI'] ) . ( strpos( $_SERVER['REQUEST_URI'], '?' ) === false ? '?' : '&' ); ?>language_id=<?php echo $language['language_id']; ?>"><?php echo htmlspecialchars( $language['language_code'] ); ?></a>

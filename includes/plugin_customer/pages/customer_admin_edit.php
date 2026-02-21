@@ -275,7 +275,7 @@ if ( class_exists( 'module_security', false ) ) {
 			}
 			echo module_form::generate_fieldset( $fieldset_data );
 			unset( $fieldset_data );
-		} else if ( ! module_user::can_i( 'edit', 'All ' . $page_type_single . ' Contacts', 'Customer', 'customer' ) && $customer['primary_user_id'] != module_security::get_loggedin_id() ) {
+		} elseif ( ! module_user::can_i( 'edit', 'All ' . $page_type_single . ' Contacts', 'Customer', 'customer' ) && $customer['primary_user_id'] != module_security::get_loggedin_id() ) {
 			// no permissions to edit.
 			ob_start();
 			echo '<div class="content_box_wheader"><table width="100%" border="0" cellspacing="0" cellpadding="2" class="tableclass tableclass_form"><tbody><tr><td>';
@@ -360,7 +360,7 @@ if ( class_exists( 'module_security', false ) ) {
 				_hr( 'Assign a staff member to this customer. Staff members are users who have EDIT permissions on Job Tasks. Click the plus sign to add more staff members. You can apply the "Only Assigned Staff" permission in User Role settings to restrict staff members to these customers.' ),
 			)
 		);
-	} else if ( module_customer::get_customer_data_access() == _CUSTOMER_ACCESS_STAFF ) {
+	} elseif ( module_customer::get_customer_data_access() == _CUSTOMER_ACCESS_STAFF ) {
 		$staff_members    = module_user::get_staff_members();
 		$staff_member_rel = array();
 		foreach ( $staff_members as $staff_member ) {

@@ -63,7 +63,7 @@ if ( class_exists( 'module_security', false ) ) {
 		foreach ( module_template::get_templates() as $possible_template ) {
 			if ( strpos( $possible_template['template_key'], 'invoice_print' ) !== false ) {
 				$invoice_template_print[ $possible_template['template_key'] ] = $possible_template['template_key'];
-			} else if ( strpos( $possible_template['template_key'], 'invoice_email' ) !== false ) {
+			} elseif ( strpos( $possible_template['template_key'], 'invoice_email' ) !== false ) {
 				$key = preg_replace( '#\_(due|paid|overdue)$#', '', $possible_template['template_key'] );
 				if ( ! isset( $invoice_template_email[ $key ] ) ) {
 					$invoice_template_email[ $key ] = array();
@@ -209,7 +209,7 @@ if ( class_exists( 'module_security', false ) ) {
 										for="paymethodallowed<?php echo $x; ?>"><?php echo $payment_method->get_payment_method_name(); ?></label>
 									<br/>
 									<?php
-									$x ++;
+									$x++;
 								}
 							}
 						}

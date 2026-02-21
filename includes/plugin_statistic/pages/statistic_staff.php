@@ -143,7 +143,7 @@ print_heading( array(
 		$total['amount_billed']   += $staff_report['amount_billed'];
 		$total['amount_invoiced'] += $staff_report['amount_invoiced'];
 		?>
-		<tr class="<?php echo ( $c ++ % 2 ) ? "odd" : "even"; ?>">
+		<tr class="<?php echo ( $c++ % 2 ) ? "odd" : "even"; ?>">
 			<td>
 				<?php echo module_user::link_open( $staff_report['user_id'], true ); ?>
 			</td>

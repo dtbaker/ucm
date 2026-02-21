@@ -1,7 +1,7 @@
 <?php
 
-class module_faq extends module_base {
-
+class module_faq extends module_base
+{
 	public $links;
 
 	public function __construct() {
@@ -74,7 +74,7 @@ class module_faq extends module_base {
 					'holder_module_page'  => 'config_admin',  // which page this link will be automatically added to.
 					'menu_include_parent' => 0,
 				);
-			} else if ( self::can_i( 'view', 'FAQ' ) ) {
+			} elseif ( self::can_i( 'view', 'FAQ' ) ) {
 				$this->links[] = array(
 					"name" => "FAQ",
 					"p"    => "faq_ticket",
@@ -152,7 +152,7 @@ class module_faq extends module_base {
 
 			// bubble back onto ourselves for the link.
 			return self::link_generate( $faq_id, $options, $link_options );
-		} else if ( $options['page'] == 'faq_questions' ) {
+		} elseif ( $options['page'] == 'faq_questions' ) {
 			if ( isset( $options['data'] ) && $options['data'] ) {
 				//$options['data'] = $options['data'];
 			} else {
@@ -267,7 +267,7 @@ class module_faq extends module_base {
 			redirect_browser( $this->link_open_faq_product( $faq_product_id ) );
 
 
-		} else if ( 'save_faq' == $_REQUEST['_process'] ) {
+		} elseif ( 'save_faq' == $_REQUEST['_process'] ) {
 
 			if ( ! module_faq::can_i( 'edit', 'FAQ' ) ) {
 				die( 'No perms to save faq.' );
@@ -464,7 +464,7 @@ class module_faq extends module_base {
 									<tr>
 										<td width="50%" valign="top">
 											<ul><?php
-												for ( true; $x < $half; $x ++ ) {
+												for ( true; $x < $half; $x++ ) {
 													$data = array_shift( $faqs );
 													$faq  = module_faq::get_faq( $data['faq_id'] );
 													?>
@@ -559,7 +559,8 @@ class module_faq extends module_base {
 					}
 				}
 				foreach ( $faq_products as $faq_product_id => $faq_product ) {
-					$faq_products[ $faq_product_id ]['default_type'] = isset( $types[ $faq_product['default_type_id'] ] ) ? $types[ $faq_product['default_type_id'] ] : false;;
+					$faq_products[ $faq_product_id ]['default_type'] = isset( $types[ $faq_product['default_type_id'] ] ) ? $types[ $faq_product['default_type_id'] ] : false;
+;
 					if ( class_exists( 'module_envato', false ) ) {
 						$linked_items = explode( '|', $faq_product['envato_item_ids'] );
 						foreach ( $linked_items as $id => $linked_item ) {
@@ -642,7 +643,6 @@ PRIMARY KEY (`faq_ticket_id`)
 ) ENGINE=InnoDB  DEFAULT CHARSET=utf8 ;
 */
 	}
-
 }
 
 

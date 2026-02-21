@@ -56,21 +56,21 @@ if ( isset( $_POST['bulk_remove_priority'] ) && $_POST['bulk_remove_priority'] =
 	}
 	echo "Done";
 
-} else if ( isset( $_POST['bulk_process_go'] ) && $_POST['bulk_process_go'] == 'true' ) {
+} elseif ( isset( $_POST['bulk_process_go'] ) && $_POST['bulk_process_go'] == 'true' ) {
 
 	$bulk_at_a_time = 10;
 
 	//    @apache_setenv('no-gzip', 1);
 	//    @ini_set('zlib.output_compression', 0);
 	//    @ini_set('implicit_flush', 1);
-	for ( $i = 0; $i < ob_get_level(); $i ++ ) {
+	for ( $i = 0; $i < ob_get_level(); $i++ ) {
 		ob_end_clean();
 	}
 	//    ob_implicit_flush(1);
 
 	if ( count( $_SESSION['ticket_bulk_ticket_ids'] ) ) {
 
-		for ( $x = 0; $x < $bulk_at_a_time; $x ++ ) {
+		for ( $x = 0; $x < $bulk_at_a_time; $x++ ) {
 			$ticket_id = (int) array_shift( $_SESSION['ticket_bulk_ticket_ids'] );
 			if ( $ticket_id > 0 ) {
 				// found a ticket to process! sweet!
@@ -157,7 +157,7 @@ if ( isset( $_POST['bulk_remove_priority'] ) && $_POST['bulk_remove_priority'] =
 	}
 	exit;
 
-} else if ( isset( $_POST['bulk'] ) && $_POST['bulk'] == 'go' ) {
+} elseif ( isset( $_POST['bulk'] ) && $_POST['bulk'] == 'go' ) {
 
 	// get the list of tickets in this group.
 	$group_id = (int) $_REQUEST['group_id'];
@@ -213,7 +213,7 @@ if ( isset( $_POST['bulk_remove_priority'] ) && $_POST['bulk_remove_priority'] =
 			$ticket       = module_ticket::get_ticket( $ticket['ticket_id'] );
 			$ticket_ids[] = $ticket['ticket_id'];
 			?>
-			<tr class="<?php echo ( $c ++ % 2 ) ? "odd" : "even"; ?>">
+			<tr class="<?php echo ( $c++ % 2 ) ? "odd" : "even"; ?>">
 				<td class="row_action" nowrap="">
 					<?php echo module_ticket::link_open( $ticket['ticket_id'], true, $ticket ); ?>
 					(<?php echo $ticket['message_count']; ?>)

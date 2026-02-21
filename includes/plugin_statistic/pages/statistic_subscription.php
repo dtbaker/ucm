@@ -131,7 +131,7 @@ print_heading( array(
 	$total_customers = 0;
 	foreach ( $subscription_reports as $subscription_report ) {
 		?>
-		<tr class="<?php echo ( $c ++ % 2 ) ? "odd" : "even"; ?>">
+		<tr class="<?php echo ( $c++ % 2 ) ? "odd" : "even"; ?>">
 			<td>
 				<?php echo module_subscription::link_open( $subscription_report['subscription_id'], true, $subscription_report ); ?>
 			</td>

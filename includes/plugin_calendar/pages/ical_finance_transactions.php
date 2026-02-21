@@ -59,4 +59,3 @@ END:VEVENT
 ';
 }
 echo 'END:VCALENDAR';
-

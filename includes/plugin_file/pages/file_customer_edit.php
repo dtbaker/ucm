@@ -1,5 +1,5 @@
-<?php 
- 
+<?php
+
 
 $file_id = (int)$_REQUEST['file_id'];
 $file = module_file::get_file($file_id);
@@ -50,7 +50,7 @@ $file = module_file::get_file($file_id);
 								</th>
 								<td>
 									<input type="file" name="file_upload" style="width:150px;">
-                                    <a href="<?php echo $module->link('file_edit',array('_process'=>'download','file_id'=>$file['file_id']),'file',false);?>"><?php echo nl2br(htmlspecialchars($file['file_name']));?></a>
+                                    <a href="<?php echo $module->link('file_edit',array('_process' => 'download','file_id' => $file['file_id']),'file',false);?>"><?php echo nl2br(htmlspecialchars($file['file_name']));?></a>
 								</td>
 							</tr>
 							<tr>
@@ -93,7 +93,7 @@ $file = module_file::get_file($file_id);
 			<tr>
 				<td align="center" colspan="2">
 					<input type="submit" name="butt_save" id="butt_save" value="<?php echo _l('Save file'); ?>" class="submit_button save_button" />
-					<?php if((int)$file_id){ ?>
+					<?php if ((int)$file_id) { ?>
 					<input type="submit" name="butt_del" id="butt_del" value="<?php echo _l('Delete'); ?>" class="submit_button delete_button" />
 					<?php } ?>
 					<input type="button" name="cancel" value="<?php echo _l('Cancel'); ?>" onclick="window.location.href='<?php echo module_file::link_open(false); ?>';" class="submit_button" />

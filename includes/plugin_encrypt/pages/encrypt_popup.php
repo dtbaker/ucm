@@ -89,7 +89,7 @@ if ( $encrypt_id ) {
 	        src="<?php echo full_link( 'includes/plugin_encrypt/js/rsa2.js' ); ?>?ver=<?php echo _SCRIPT_VERSION; ?>"></script>
 	<script type="text/javascript">
       var existing_encrypt_keys = {};
-			<?php foreach($encryption_keys as $existing_encryption_key){ ?>
+			<?php foreach ($encryption_keys as $existing_encryption_key) { ?>
       existing_encrypt_keys[<?php echo $existing_encryption_key['encrypt_key_id'];?>] = {
           'public_key': '<?php echo $existing_encryption_key['public_key'];?>',
           'secured_private_key': '<?php echo $existing_encryption_key['secured_private_key'];?>',

@@ -169,7 +169,7 @@ if ( is_array( $home_widgets2 ) ) {
 				$x = 1;
 			}
 			$widget_columns[ $x ][] = $module_widget;
-			$x ++;
+			$x++;
 		}
 	}
 	unset( $home_widgets );

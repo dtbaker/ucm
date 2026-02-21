@@ -1,8 +1,7 @@
 <?php
 
-
-class module_theme_adminlte extends module_base {
-
+class module_theme_adminlte extends module_base
+{
 	public static function can_i( $actions, $name = false, $category = false, $module = false ) {
 		if ( ! $module ) {
 			$module = __CLASS__;
@@ -86,5 +85,3 @@ class module_theme_adminlte extends module_base {
 		return new ucm_adminlte_table_manager();
 	}
 }
-
-

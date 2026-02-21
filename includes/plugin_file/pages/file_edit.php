@@ -1,11 +1,11 @@
-<?php 
+<?php
 
 $options = isset($_REQUEST['options']) ? unserialize(base64_decode($_REQUEST['options'])) : array();
 
 $file_id = (int)$_REQUEST['file_id'];
-if($file_id){
+if ($file_id) {
 	$file = $module->get_file($file_id);
-}else{
+} else {
 	$file = array(
 		"owner_id" => (int)$_REQUEST['owner_id'],
 		"owner_table" => $_REQUEST['owner_table'],
@@ -26,13 +26,13 @@ if($file_id){
 
 	<table width="100%" border="0" cellspacing="0" cellpadding="2" class="tableclass">
 		<tbody>
-		<?php if($file_id && $file_id != 'new'){ ?>
+		<?php if ($file_id && $file_id != 'new') { ?>
 			<tr>
 				<th>
 					<?php echo _l('Download'); ?>
 				</th>
 				<td>
-					<a href="<?php echo $module->link('',array('_process'=>'download','file_id'=>$file_id),'file',false);?>">Click here to download the file</a>
+					<a href="<?php echo $module->link('',array('_process' => 'download','file_id' => $file_id),'file',false);?>">Click here to download the file</a>
 				</td>
 			</tr>
 			<tr>
@@ -54,10 +54,10 @@ if($file_id){
 					<?php echo _l('Delete'); ?>
 				</th>
 				<td>
-					<a href="<?php echo $module->link('',array('_process'=>'delete_file_popup','file_id'=>$file_id),'file',false);?>" target="file_popup_iframe<?php echo $file['owner_table'];?>_<?php echo $file['owner_id'];?>" onclick="return confirm('Really delete this file?');">Click here to delete the file</a>
+					<a href="<?php echo $module->link('',array('_process' => 'delete_file_popup','file_id' => $file_id),'file',false);?>" target="file_popup_iframe<?php echo $file['owner_table'];?>_<?php echo $file['owner_id'];?>" onclick="return confirm('Really delete this file?');">Click here to delete the file</a>
 				</td>
 			</tr>
-		<?php }else{ ?>
+		<?php } else { ?>
 			<tr>
 				<th>
 					<?php echo _l('Upload New File'); ?>
@@ -67,7 +67,7 @@ if($file_id){
 				</td>
 			</tr>
 		<?php }
-		
+
 		?>
 		</tbody>
 	</table>

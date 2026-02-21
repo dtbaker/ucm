@@ -93,26 +93,26 @@ function get_fields( $table, $ignore = array(), $hidden = array(), $from_cache =
 		if ( count( $hidden ) && in_array( $r['Field'], $hidden ) ) {
 			$type = "hidden";
 			// new field for file.
-		} else if ( preg_match( "/^file_/", $r['Field'] ) && preg_match( "/varchar\((\d+)\)/", $r['Type'], $matches ) ) {
+		} elseif ( preg_match( "/^file_/", $r['Field'] ) && preg_match( "/varchar\((\d+)\)/", $r['Type'], $matches ) ) {
 			$type      = "file";
 			$size      = 50;
 			$maxlength = 255;
-		} else if ( preg_match( "/varchar\((\d+)\)/", $r['Type'], $matches ) ) {
+		} elseif ( preg_match( "/varchar\((\d+)\)/", $r['Type'], $matches ) ) {
 			$type      = "text";
 			$size      = max( "10", min( "30", $matches[1] ) );
 			$maxlength = $matches[1];
-		} else if ( preg_match( "/int/i", $r['Type'] ) || preg_match( "/float/i", $r['Type'] ) ) {
+		} elseif ( preg_match( "/int/i", $r['Type'] ) || preg_match( "/float/i", $r['Type'] ) ) {
 			$format    = array( "/^\d+$/", "Integer" );
 			$type      = "number";
 			$maxlength = $size = 20;
-		} else if ( $r['Type'] == "text" ) {
+		} elseif ( $r['Type'] == "text" ) {
 			$type = "textarea";
 			$size = 0;
-		} else if ( $r['Type'] == "date" || $r['Type'] == "datetime" ) {
+		} elseif ( $r['Type'] == "date" || $r['Type'] == "datetime" ) {
 			$format    = array( "/^\d\d\d\d-\d\d-\d\d$/", "YYYY-MM-DD" );
 			$type      = "date";
 			$maxlength = $size = 20;
-		} else if ( preg_match( "/decimal/", $r['Type'] ) || preg_match( "/double/", $r['Type'] ) ) {
+		} elseif ( preg_match( "/decimal/", $r['Type'] ) || preg_match( "/double/", $r['Type'] ) ) {
 			$format    = array( "/^\d+\.?[\d+]?$/", "Decimal" );
 			$type      = "decimal";
 			$maxlength = $size = 20;
@@ -434,9 +434,9 @@ function get_multiple( $table, $search = false, $id = false, $search_type = "exa
 				}
 				if ( $spesh ) {
 					$sql .= " `$k` $operator '" . db_escape( $val ) . "'";
-				} else if ( $this_search_type == "fuzzy" ) {
+				} elseif ( $this_search_type == "fuzzy" ) {
 					$sql .= " `$k` LIKE '%" . db_escape( $val ) . "%'";
-				} else if ( $this_search_type == "exact" ) {
+				} elseif ( $this_search_type == "exact" ) {
 					$sql .= " `$k` = '" . db_escape( $val ) . "'";
 				}
 				$sql .= " OR ";
@@ -479,4 +479,3 @@ function get_multiple( $table, $search = false, $id = false, $search_type = "exa
 	}
 	return $result;
 }*/
-

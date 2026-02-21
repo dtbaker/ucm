@@ -1,4 +1,5 @@
 <?php
+
 if ( ! $ticket_safe ) {
 	die( 'failed' );
 }
@@ -34,4 +35,3 @@ module_email::print_compose(
 		'cancel_url'  => module_ticket::link_open( $ticket_id ),
 	)
 );
-?>

@@ -2,12 +2,10 @@
 
 switch ( $display_mode ) {
 	case 'ajax':
-
 		break;
 	case 'iframe':
 	case 'normal':
 	default:
-
 		//$header_nav_mini = '';
 		ob_start();
 		$menu_include_parent = false;
@@ -52,7 +50,7 @@ switch ( $display_mode ) {
               ucm.init_interface();
               if (typeof ucm.metis != 'undefined') {
                   ucm.metis.init();
-								<?php if(module_theme::get_config( 'metismenustyle', 'normal' ) == 'fixed'){ ?>
+								<?php if (module_theme::get_config( 'metismenustyle', 'normal' ) == 'fixed') { ?>
                   $('#menu').affix({offset: {top: $('#menu').offset().top}}, 100);
 								<?php } ?>
               }
@@ -67,7 +65,7 @@ switch ( $display_mode ) {
 
 
 		</head>
-		<?php //fixed side-right 
+		<?php //fixed side-right
 		?>
 	<body class="theme-metis <?php
 	if ( module_theme::get_config( 'metissidebar-position', 'left' ) == 'right' ) {
@@ -84,11 +82,11 @@ switch ( $display_mode ) {
 		echo ' style="background:#FFF;"';
 	} ?>>
 
-		<?php if ( $display_mode == 'iframe' ){ ?>
+		<?php if ( $display_mode == 'iframe' ) { ?>
 
 	<div id="iframe">
 
-		<?php }else{ ?>
+		<?php } else { ?>
 
 		<?php if ( _DEBUG_MODE ) {
 			module_debug::print_heading();
@@ -265,7 +263,7 @@ switch ( $display_mode ) {
 						?>
 						<script type="text/javascript">
                 $('#message_popdown').fadeIn('slow');
-								<?php if(module_config::c( 'header_messages_fade_out', 1 )){ ?>
+								<?php if (module_config::c( 'header_messages_fade_out', 1 )) { ?>
                 $(function () {
                     setTimeout(function () {
                         $('#message_popdown').fadeOut();
@@ -361,12 +359,12 @@ switch ( $display_mode ) {
 			<!-- /#left -->
 		<?php } // logged in ?>
 
-	<?php } // iframe 
+	<?php } // iframe
 		?>
 
 		<div id="content">
 		<div class="outer">
-		<?php // <div class="inner"> moved to design_menu in a hack to get it looking better 
+		<?php // <div class="inner"> moved to design_menu in a hack to get it looking better
 		?>
 		<div class="inner">
 

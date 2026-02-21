@@ -697,4 +697,3 @@ function dev_ignore_file_for_packaging( $file ) {
 		preg_match( '#plugin_theme/themes/#', $file ) ||
 		preg_match( '#config_generate#', $file );
 }
-

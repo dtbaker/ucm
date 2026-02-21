@@ -11,8 +11,8 @@ define( '_TWITTER_MESSAGE_TYPE_DIRECT', 6 );
 require_once( 'twitter.class.php' );
 
 
-class module_social_twitter extends module_base {
-
+class module_social_twitter extends module_base
+{
 	var $links;
 
 	public static function can_i( $actions, $name = false, $category = false, $module = false ) {
@@ -136,7 +136,7 @@ class module_social_twitter extends module_base {
 			redirect_browser( $redirect );
 
 			exit;
-		} else if ( "send_twitter_message" == $_REQUEST['_process'] ) {
+		} elseif ( "send_twitter_message" == $_REQUEST['_process'] ) {
 
 			if ( module_form::check_secure_key() ) {
 
@@ -158,7 +158,7 @@ class module_social_twitter extends module_base {
 					// add the time if it exists
 					$date      .= ' ' . implode( ':', $bits ) . ':00';
 					$send_time = strtotime( input_date( $date, true ) );
-				} else if ( isset( $_POST['schedule_date'] ) && ! empty( $_POST['schedule_date'] ) ) {
+				} elseif ( isset( $_POST['schedule_date'] ) && ! empty( $_POST['schedule_date'] ) ) {
 					$send_time = strtotime( input_date( $_POST['schedule_date'], true ) );
 				}
 				//echo print_date($send_time,true);
@@ -200,7 +200,7 @@ class module_social_twitter extends module_base {
 								$twitter_message->add_attachment( $_FILES['picture']['tmp_name'] );
 							}
 							$twitter_message->send_queued( isset( $_POST['debug'] ) && $_POST['debug'] );
-							$page_count ++;
+							$page_count++;
 
 						} else {
 							// log error?
@@ -217,7 +217,7 @@ class module_social_twitter extends module_base {
 			exit;
 
 
-		} else if ( "ajax_social_twitter" == $_REQUEST['_process'] ) {
+		} elseif ( "ajax_social_twitter" == $_REQUEST['_process'] ) {
 			// ajax functions from wdsocial. copied from the datafeed.php sample files.
 			header( 'Content-type: text/javascript' );
 			if ( module_form::check_secure_key() ) {
@@ -255,7 +255,7 @@ class module_social_twitter extends module_base {
 										$return['message'] = ob_get_clean();
 										if ( $debug ) {
 											// just return message
-										} else if ( $worked ) {
+										} elseif ( $worked ) {
 											// success, redicet!
 											set_message( _l( 'Message sent and conversation archived.' ) );
 											$return['redirect'] = module_social_twitter::link_open_message_view( $social_twitter_id );
@@ -546,5 +546,4 @@ class module_social_twitter extends module_base {
 
 		return ob_get_clean();
 	}
-
 }

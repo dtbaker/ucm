@@ -1,4 +1,5 @@
 <?php
+
 if ( ! $contract_safe ) {
 	die( 'failed' );
 }
@@ -48,7 +49,7 @@ if ( $contract['customer_id'] ) {
 		if ( $primary ) {
 			$to_select = $primary['email'];
 		}
-	} else if ( $customer['primary_user_id'] ) {
+	} elseif ( $customer['primary_user_id'] ) {
 		$primary = module_user::get_user( $customer['primary_user_id'] );
 		if ( $primary ) {
 			$to_select = $primary['email'];
@@ -87,4 +88,3 @@ module_email::print_compose(
 		),
 	)
 );
-

@@ -112,7 +112,7 @@ $job_tasks = module_job::get_tasks( $job_id );
             $(this).parent().find('.task_long_description').slideToggle();
             return false;
         });
-			<?php if(module_config::c( 'job_create_task_as_name', 0 )){ ?>
+			<?php if (module_config::c( 'job_create_task_as_name', 0 )) { ?>
         $('#job_name').keyup(setnewjobtask).change(setnewjobtask);
 			<?php } ?>
 
@@ -478,7 +478,7 @@ $job_tasks = module_job::get_tasks( $job_id );
 					),
 				);
 			}
-		} else if ( ! class_exists( 'module_website', false ) && module_config::c( 'show_ucm_ads', 1 ) ) {
+		} elseif ( ! class_exists( 'module_website', false ) && module_config::c( 'show_ucm_ads', 1 ) ) {
 
 			$fieldset_data['elements'][] = array(
 				'title'  => module_config::c( 'project_name_single', 'Website' ),
@@ -548,7 +548,7 @@ $job_tasks = module_job::get_tasks( $job_id );
 
 								<?php
 								_h( 'A renewal is available for this job. Clicking this button will create a new job based on this job, and set the renewal reminder up again for the next date.' );
-							} else if ( isset( $job['renew_auto'] ) && $job['renew_auto'] ) {
+							} elseif ( isset( $job['renew_auto'] ) && $job['renew_auto'] ) {
 								_h( 'This job will be automatically renewed on this date.' );
 							} else {
 								_h( 'You will be reminded to renew this job on this date. You will be given the option to renew this job closer to the renewal date (a new button will appear).' );
@@ -719,9 +719,9 @@ $job_tasks = module_job::get_tasks( $job_id );
 				<th class="task_column task_width"><?php _e( 'Description' ); ?></th>
 				<th width="10" class="task_type_label">
 					<?php if ( $job['default_task_type'] == _TASK_TYPE_AMOUNT_ONLY ) {
-					} else if ( $job['default_task_type'] == _TASK_TYPE_QTY_AMOUNT ) {
+					} elseif ( $job['default_task_type'] == _TASK_TYPE_QTY_AMOUNT ) {
 						_e( module_config::c( 'task_qty_name', _l( 'Qty' ) ) );
-					} else if ( $job['default_task_type'] == _TASK_TYPE_HOURS_AMOUNT ) {
+					} elseif ( $job['default_task_type'] == _TASK_TYPE_HOURS_AMOUNT ) {
 						_e( module_config::c( 'task_hours_name', _l( 'Hours' ) ) );
 					} ?>
 				</th>
@@ -795,7 +795,7 @@ $job_tasks = module_job::get_tasks( $job_id );
 			$c           = 0;
 			$task_number = 0;
 			foreach ( $job_tasks as $task_id => $task_data ) {
-				$task_number ++;
+				$task_number++;
 				if ( module_security::is_page_editable() && module_job::can_i( 'edit', 'Job Tasks' ) ) { ?>
 					<tbody id="task_edit_<?php echo $task_id; ?>" style="display:none;" class="task_edit"></tbody>
 				<?php } else {

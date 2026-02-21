@@ -92,13 +92,13 @@ extract( $options );
 						} ?>><?php echo htmlspecialchars( $t['email'] ) . ' - ' . htmlspecialchars( $t['name'] ); ?></option>
 					<?php } ?>
 				</select>
-			<?php }else if ( count( $to ) ){
+			<?php } elseif ( count( $to ) ) {
 				$t = array_shift( $to );
 				?>
 
 				<?php echo htmlspecialchars( $t['email'] ) . ' - ' . htmlspecialchars( $t['name'] ) . ( isset( $t['last_name'] ) && module_config::c( 'email_to_full_name', 1 ) ? ' ' . htmlspecialchars( $t['last_name'] ) : '' ); ?>
 
-			<?php }else{ ?>
+			<?php } else { ?>
 				<div id="email_to_holder">
 					<div class="dynamic_block">
 						<input type="email" name="custom_to[]"

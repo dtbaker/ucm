@@ -13,7 +13,7 @@
 <div class="login_wrap">
 	<div class="final_content_wrap">
 
-		<?php if ( isset( $_REQUEST['signup'] ) && module_config::c( 'customer_signup_on_login', 0 ) ){ ?>
+		<?php if ( isset( $_REQUEST['signup'] ) && module_config::c( 'customer_signup_on_login', 0 ) ) { ?>
 
 			<h2><?php echo _l( 'Sign Up' ); ?> </h2>
 			<table width="100%" class="tableclass">
@@ -31,7 +31,7 @@
 			</table>
 
 
-		<?php }else if ( isset( $_REQUEST['reset'] ) ){ ?>
+		<?php } elseif ( isset( $_REQUEST['reset'] ) ) { ?>
 			<h2><?php echo _l( 'Forgot password' ); ?> </h2>
 			<p><?php echo _l( 'Please enter your email address below to reset your password.' ); ?></p>
 
@@ -69,7 +69,7 @@
 				</table>
 				<?php hook_handle_callback( 'forgot_password_screen' ); ?>
 			</form>
-		<?php }else{ ?>
+		<?php } else { ?>
 
 		<h2><?php echo _l( 'Please Login' ); ?> </h2>
 		<p

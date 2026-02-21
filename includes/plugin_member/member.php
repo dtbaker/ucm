@@ -1,8 +1,7 @@
 <?php
 
-
-class module_member extends module_base {
-
+class module_member extends module_base
+{
 	public $links;
 	public $member_types;
 	public $member_id;
@@ -303,7 +302,7 @@ class module_member extends module_base {
 			$x   = 1;
 			while ( isset( $member[ $key ] ) ) {
 				$key = $extra['extra_key'] . $x;
-				$x ++;
+				$x++;
 			}
 			$member[ $key ] = trim( $extra['extra'] );
 		}
@@ -322,7 +321,7 @@ class module_member extends module_base {
 				set_message( "Member deleted successfully" );
 				redirect_browser( self::link_open( false ) );
 			}
-		} else if ( "save_member" == $_REQUEST['_process'] ) {
+		} elseif ( "save_member" == $_REQUEST['_process'] ) {
 			$member_id = $this->save_member( $_REQUEST['member_id'], $_POST );
 			hook_handle_callback( 'member_save', $member_id );
 			set_message( "Member saved successfully" );
@@ -477,7 +476,6 @@ class module_member extends module_base {
 				// handle subscriptions to the member database and also the newsletter system.
 				// todo - tie in with "subscription" module to allow users to select which subscription they want as well.
 			case 'subscribe':
-
 				$member = isset( $_REQUEST['member'] ) && is_array( $_REQUEST['member'] ) ? $_REQUEST['member'] : false;
 
 				$provided_member_id = ( isset( $_REQUEST['i'] ) ) ? (int) $_REQUEST['i'] : false;
@@ -764,6 +762,4 @@ class module_member extends module_base {
 		<?php
 		return ob_get_clean();
 	}
-
-
 }

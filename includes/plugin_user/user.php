@@ -1,13 +1,12 @@
 <?php
 
-
 define( '_USER_ACCESS_ALL', 'All Contact and User Accounts' ); // do not change string
 define( '_USER_ACCESS_ME', 'Only My Account' ); // do not change string
 define( '_USER_ACCESS_CONTACTS', 'Only Contact Accounts' ); // do not change string
 
 
-class module_user extends module_base {
-
+class module_user extends module_base
+{
 	public $links;
 	public $user_types;
 
@@ -210,10 +209,10 @@ class module_user extends module_base {
 		$use_master_key = self::get_contact_master_key();
 		if ( isset( $data[ $use_master_key ] ) && $data[ $use_master_key ] ) {
 			$options['type'] = 'contact';
-		} else if ( ( isset( $data['customer_id'] ) && $data['customer_id'] ) ) {
+		} elseif ( ( isset( $data['customer_id'] ) && $data['customer_id'] ) ) {
 			$use_master_key  = 'customer_id';
 			$options['type'] = 'contact';
-		} else if ( ( isset( $data['vendor_id'] ) && $data['vendor_id'] ) ) {
+		} elseif ( ( isset( $data['vendor_id'] ) && $data['vendor_id'] ) ) {
 			$use_master_key  = 'vendor_id';
 			$options['type'] = 'contact';
 		}
@@ -372,14 +371,14 @@ class module_user extends module_base {
 				set_message( "Contact deleted successfully" );
 				redirect_browser( module_customer::link_open( $data['customer_id'] ) );
 			}
-		} else if ( isset( $_REQUEST['butt_del'] ) && $_REQUEST['butt_del'] && $_REQUEST['user_id'] && self::can_i( 'delete', 'Users', 'Config' ) ) {
+		} elseif ( isset( $_REQUEST['butt_del'] ) && $_REQUEST['butt_del'] && $_REQUEST['user_id'] && self::can_i( 'delete', 'Users', 'Config' ) ) {
 			$data = self::get_user( $_REQUEST['user_id'] );
 			if ( module_form::confirm_delete( 'user_id', "Really delete user: " . $data['name'], self::link_open( $_REQUEST['user_id'] ) ) ) {
 				$this->delete_user( $_REQUEST['user_id'] );
 				set_message( "User deleted successfully" );
 				redirect_browser( self::link_open( false ) );
 			}
-		} else if ( "save_user" == $_REQUEST['_process'] ) {
+		} elseif ( "save_user" == $_REQUEST['_process'] ) {
 			$user_id = (int) $_REQUEST['user_id'];
 			if ( $user_id == 1 && module_security::get_loggedin_id() != 1 ) {
 				set_error( 'Sorry, only the Administrator can access this page.' );
@@ -406,7 +405,7 @@ class module_user extends module_base {
 					set_error( 'No permissions to ' . $method . ' contacts' );
 					redirect_browser( module_customer::link_open( $_POST['customer_id'] ) );
 				}
-			} else if ( ! module_user::can_i( $method, 'Users', 'Config' ) ) {
+			} elseif ( ! module_user::can_i( $method, 'Users', 'Config' ) ) {
 				set_error( 'No permissions to ' . $method . ' users' );
 				redirect_browser( module_user::link_open( false ) );
 			}
@@ -590,7 +589,7 @@ class module_user extends module_base {
 				// searching all customers
 				$where .= " AND u.customer_id > 0 ";
 			}
-		} else if ( isset( $search['vendor_id'] ) ) { //$search['vendor_id']
+		} elseif ( isset( $search['vendor_id'] ) ) { //$search['vendor_id']
 			$sql  .= ", c.* ";
 			$sql  .= " , c.primary_user_id AS is_primary ";
 			$from .= " LEFT JOIN `" . _DB_PREFIX . "vendor` c ON u.vendor_id = c.vendor_id ";
@@ -688,14 +687,14 @@ class module_user extends module_base {
 				/*foreach($result as $key=>$val){
                     if($val['user_id']!=module_security::get_loggedin_id())unset($result[$key]);
                 }*/
-			} else if ( isset( $search['vendor_id'] ) && $search['vendor_id'] && ! module_user::can_i( 'view', 'All Vendor Contacts', 'Vendor', 'vendor' ) ) {
+			} elseif ( isset( $search['vendor_id'] ) && $search['vendor_id'] && ! module_user::can_i( 'view', 'All Vendor Contacts', 'Vendor', 'vendor' ) ) {
 				$where .= " AND u.user_id = " . (int) module_security::get_loggedin_id();
 			}
 		}
 		$group_order = ' GROUP BY u.user_id  ';
 		if ( isset( $search['customer_id'] ) && $search['customer_id'] ) {
 			$group_order .= 'ORDER BY c.customer_name, u.name'; // stop when multiple company sites have same region
-		} else if ( isset( $search['vendor_id'] ) && $search['vendor_id'] ) {
+		} elseif ( isset( $search['vendor_id'] ) && $search['vendor_id'] ) {
 			$group_order .= 'ORDER BY c.vendor_name, u.name'; // stop when multiple company sites have same region
 		}
 		$sql = $sql . $from . $where . $group_order;
@@ -716,7 +715,8 @@ class module_user extends module_base {
 		return 'user_' . $user_id . '_' . md5( module_security::get_loggedin_id() . '_' . serialize( $args ) );
 	}
 
-	public static function get_user( $user_id, $perms = true, $do_link = true, $basic_for_link = false ) { //,$basic=false
+	public static function get_user( $user_id, $perms = true, $do_link = true, $basic_for_link = false ) {
+ //,$basic=false
 
 		$cache_key_args = func_get_args();
 		$cache_key      = self::_user_cache_key( $user_id, $cache_key_args );
@@ -856,7 +856,8 @@ class module_user extends module_base {
 		return $user;
 	}
 
-	public function create_user( $user_data ) { // $user_type=false
+	public function create_user( $user_data ) {
+ // $user_type=false
 		// todo - check user data is correct.
 		$user_data['status_id'] = 1;
 		if ( isset( $user_data['password'] ) ) {
@@ -880,7 +881,7 @@ class module_user extends module_base {
 
 					return false;
 				}
-			} else if ( ! self::can_i( 'edit', 'Users', 'Config' ) ) {
+			} elseif ( ! self::can_i( 'edit', 'Users', 'Config' ) ) {
 				set_error( 'Unable to edit users.' );
 
 				return false;
@@ -902,12 +903,12 @@ class module_user extends module_base {
 
 					return false;
 				}
-			} else if ( ! self::can_i( 'create', 'Users', 'Config' ) ) {
+			} elseif ( ! self::can_i( 'create', 'Users', 'Config' ) ) {
 				set_error( 'Unable to create new users.' );
 
 				return false;
 			}
-		} else if ( $user_id == 1 && module_security::get_loggedin_id() != 1 ) {
+		} elseif ( $user_id == 1 && module_security::get_loggedin_id() != 1 ) {
 			set_error( 'Sorry only the administrator can modify this account' );
 		}
 		// check the customer id is valid assignment to someone who has these perms.
@@ -938,7 +939,7 @@ class module_user extends module_base {
 			} else {
 				set_error( 'Sorry, no permissions to set a new password.' );
 			}
-		} else if ( $user_id && isset( $data['password_new1'] ) && isset( $data['password_new2'] ) && strlen( $data['password_new1'] ) ) {
+		} elseif ( $user_id && isset( $data['password_new1'] ) && isset( $data['password_new2'] ) && strlen( $data['password_new1'] ) ) {
 			// the user is trying to change their password.
 			// only do this if the user has edit password permissions and their password matches.
 			if ( module_user::can_i( 'edit', 'Users Passwords', 'Config' ) || $user_id == module_security::get_loggedin_id() ) {
@@ -1790,6 +1791,4 @@ CREATE TABLE IF NOT EXISTS `<?php echo _DB_PREFIX; ?>user_type` (
 
 		return ob_get_clean();
 	}
-
-
 }

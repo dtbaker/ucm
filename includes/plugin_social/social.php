@@ -1,14 +1,13 @@
 <?php
 
-
 define( '_SOCIAL_MESSAGE_STATUS_UNANSWERED', 0 );
 define( '_SOCIAL_MESSAGE_STATUS_ANSWERED', 1 );
 define( '_SOCIAL_MESSAGE_STATUS_PENDINGSEND', 3 );
 define( '_SOCIAL_MESSAGE_STATUS_SENDING', 4 );
 
 
-class module_social extends module_base {
-
+class module_social extends module_base
+{
 	var $links;
 
 	public static function can_i( $actions, $name = false, $category = false, $module = false ) {
@@ -195,5 +194,4 @@ class module_social extends module_base {
 
 		return $message_managers;
 	}
-
 }

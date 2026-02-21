@@ -1,8 +1,7 @@
 <?php
 
-
-class module_pdf extends module_base {
-
+class module_pdf extends module_base
+{
 	var $links;
 	public $pdf_library;
 
@@ -58,7 +57,6 @@ class module_pdf extends module_base {
 			);
 		}
 	}
-
 }
 
 

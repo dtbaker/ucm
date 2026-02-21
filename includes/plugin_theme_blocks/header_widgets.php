@@ -12,8 +12,8 @@
 // We call a widgets filter var to find out if there are any available widgets for the current page.
 
 
-class theme_widget_manager {
-
+class theme_widget_manager
+{
 	public $page_unique_id = false;
 	public $widget_structures = array();
 	public $widgets = array();
@@ -97,7 +97,7 @@ class theme_widget_manager {
 				$widget_sort_order[ $bits[2] ] = array(
 					'row_id'        => $bits[0],
 					'column_number' => $bits[1],
-					'page_order'    => $widget_sort_page_order ++,
+					'page_order'    => $widget_sort_page_order++,
 				);
 			}
 		}
@@ -140,7 +140,7 @@ class theme_widget_manager {
 					'columns'       => isset( $widget_sort_order[ $widget_sort_id ]['column'] ) ? $widget_sort_order[ $widget_sort_id ]['column'] : 1,
 					'column_number' => isset( $widget_sort_order[ $widget_sort_id ]['column_number'] ) ? $widget_sort_order[ $widget_sort_id ]['column_number'] : false,
 					'page_order'    => isset( $widget_sort_order[ $widget_sort_id ]['page_order'] ) ? $widget_sort_order[ $widget_sort_id ]['page_order'] : false,
-					'sort_id'       => $widget_sort_id ++,
+					'sort_id'       => $widget_sort_id++,
 					'title'         => _l( 'Alerts' ),
 					'content'       => ob_get_clean(),
 				) );
@@ -150,7 +150,7 @@ class theme_widget_manager {
 				'columns'       => isset( $widget_sort_order[ $widget_sort_id ]['column'] ) ? $widget_sort_order[ $widget_sort_id ]['column'] : 1,
 				'column_number' => isset( $widget_sort_order[ $widget_sort_id ]['column_number'] ) ? $widget_sort_order[ $widget_sort_id ]['column_number'] : false,
 				'page_order'    => isset( $widget_sort_order[ $widget_sort_id ]['page_order'] ) ? $widget_sort_order[ $widget_sort_id ]['page_order'] : false,
-				'sort_id'       => $widget_sort_id ++,
+				'sort_id'       => $widget_sort_id++,
 				'title'         => _l( 'Home Page' ),
 				'content'       => _DEMO_MODE ? strip_tags( $template->replace_content() ) : $template->replace_content(),
 			) );
@@ -182,7 +182,7 @@ class theme_widget_manager {
 				} else {
 					$module_widget['page_order'] = false;
 				}
-				$module_widget['sort_id'] = $widget_sort_id ++;
+				$module_widget['sort_id'] = $widget_sort_id++;
 				if ( ! isset( $module_widget['columns'] ) || ! $module_widget['columns'] ) {
 					$module_widget['columns'] = 3;
 				}
@@ -205,7 +205,7 @@ class theme_widget_manager {
 					}
 				}
 				$widget_structure[ $found_id ][ $col_num ][] = $module_widget;
-				$widget_columns_counter[ $module_widget['columns'] ] ++;
+				$widget_columns_counter[ $module_widget['columns'] ]++;
 				if ( $widget_columns_counter[ $module_widget['columns'] ] > $module_widget['columns'] ) {
 					$widget_columns_counter[ $module_widget['columns'] ] = 1;
 				}

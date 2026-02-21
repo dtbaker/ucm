@@ -23,7 +23,7 @@
 		</div>
 	</div>
 
-<?php } else if ( isset( $_REQUEST['forgot_password'] ) ) { ?>
+<?php } elseif ( isset( $_REQUEST['forgot_password'] ) ) { ?>
 
 	<div class="fake-table">
 		<div class="fake-table-cell">

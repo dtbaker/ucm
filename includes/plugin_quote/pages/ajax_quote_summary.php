@@ -50,7 +50,7 @@ if ( module_quote::can_i( 'view', 'Quotes' ) ) {
 			}
 		}
 
-	} else if ( $quote['discount_type'] == _DISCOUNT_TYPE_AFTER_TAX ) {
+	} elseif ( $quote['discount_type'] == _DISCOUNT_TYPE_AFTER_TAX ) {
 		$rows[] = array(
 			'label' => _l( 'Sub Total:' ),
 			'value' => '<span class="currency">' . dollar( $quote['total_sub_amount'], true, $quote['currency_id'] ) . '</span>'

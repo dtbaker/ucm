@@ -1,6 +1,5 @@
 <?php
 
-
 if ( defined( 'COMPANY_UNIQUE_CONFIG' ) && COMPANY_UNIQUE_CONFIG && function_exists( 'hook_add' ) ) {
 	// here so we catch config vars sooner rather than later
 	hook_add( 'config_init_vars', 'module_company::hook_config_init_vars' );
@@ -12,8 +11,8 @@ define( '_COMPANY_ACCESS_CONTACT', 'Only companies I am assigned to as a contact
 
 // todo: remove the two "Only Companies" entries from security database that would have been added to early adopters
 
-class module_company extends module_base {
-
+class module_company extends module_base
+{
 	var $links;
 
 	public function __construct() {
@@ -136,7 +135,7 @@ class module_company extends module_base {
 				set_message( "company deleted successfully" );
 				redirect_browser( $this->link_open( false ) );
 			}
-		} else if ( 'save_company' == $_REQUEST['_process'] && self::can_i( 'edit', 'Company' ) ) {
+		} elseif ( 'save_company' == $_REQUEST['_process'] && self::can_i( 'edit', 'Company' ) ) {
 			$company_id = update_insert( 'company_id', $_REQUEST['company_id'], 'company', $_POST );
 			set_message( 'Company saved successfully' );
 			redirect_browser( $this->link_open( $company_id ) );
@@ -165,7 +164,6 @@ class module_company extends module_base {
 			$company_access = self::get_company_data_access();
 			switch ( $company_access ) {
 				case _COMPANY_ACCESS_ALL:
-
 					break;
 				case _COMPANY_ACCESS_ASSIGNED:
 				case _COMPANY_ACCESS_CONTACT:
@@ -244,7 +242,6 @@ class module_company extends module_base {
 			$company_access = self::get_company_data_access();
 			switch ( $company_access ) {
 				case _COMPANY_ACCESS_ALL:
-
 					break;
 				case _COMPANY_ACCESS_ASSIGNED:
 					// we only want companies that are directly linked with the currently logged in user contact (from the staff user account settings area)
@@ -312,7 +309,6 @@ class module_company extends module_base {
 		$company_access = self::get_company_data_access();
 		switch ( $company_access ) {
 			case _COMPANY_ACCESS_ALL:
-
 				break;
 			case _COMPANY_ACCESS_ASSIGNED:
 				// we only want companies that are directly linked with the currently logged in user contact (from the staff user account settings area)
@@ -347,7 +343,6 @@ class module_company extends module_base {
 		$company_access = self::get_company_data_access();
 		switch ( $company_access ) {
 			case _COMPANY_ACCESS_ALL:
-
 				break;
 			case _COMPANY_ACCESS_ASSIGNED:
 				// we only want companies that are directly linked with the currently logged in user contact (from the staff user account settings area)
@@ -372,7 +367,6 @@ class module_company extends module_base {
 		self::$get_companys_access_restrictions_cache = array();
 		switch ( $company_access ) {
 			case _COMPANY_ACCESS_ALL:
-
 				break;
 			case _COMPANY_ACCESS_ASSIGNED:
 				// we only want companies that are directly linked with the currently logged in user contact (from the staff user account settings area)
@@ -389,7 +383,7 @@ class module_company extends module_base {
 					if ( (int) $r['user_id1'] > 0 && $r['user_id1'] == module_security::get_loggedin_id() ) {
 						// this is an assigned user! add this company to the list.
 						self::$get_companys_access_restrictions_cache[ $r['company_id'] ] = $r['company_id'];
-					} else if ( (int) $r['user_id2'] > 0 && $r['user_id2'] == module_security::get_loggedin_id() ) {
+					} elseif ( (int) $r['user_id2'] > 0 && $r['user_id2'] == module_security::get_loggedin_id() ) {
 						// this is an assigned user! add this company to the list.
 						self::$get_companys_access_restrictions_cache[ $r['company_id'] ] = $r['company_id'];
 					}
@@ -686,6 +680,4 @@ PRIMARY KEY  (`company_id`, `user_id`)
 
 		return $sql;
 	}
-
-
 }

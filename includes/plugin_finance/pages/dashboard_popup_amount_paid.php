@@ -65,7 +65,7 @@ ob_start();
 					<td>
 						<?php if ( isset( $invoice_data['job_id'] ) && $invoice_data['job_id'] ) {
 							echo module_job::link_open( $invoice_data['job_id'], true );
-						} else if ( isset( $invoice_data['job_ids'] ) && is_array( $invoice_data['job_ids'] ) ) {
+						} elseif ( isset( $invoice_data['job_ids'] ) && is_array( $invoice_data['job_ids'] ) ) {
 							foreach ( $invoice_data['job_ids'] as $job_id ) {
 								echo module_job::link_open( $job_id, true );
 							}
@@ -78,7 +78,7 @@ ob_start();
 						}
 						?>
 					</td>
-				<?php } else if ( isset( $r['finance_id'] ) ) { ?>
+				<?php } elseif ( isset( $r['finance_id'] ) ) { ?>
 					<td colspan="3">
 						<?php echo module_finance::link_open( $r['finance_id'], true ); ?>
 

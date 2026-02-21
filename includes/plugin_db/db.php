@@ -1,8 +1,7 @@
 <?php
 
-
-class module_db extends module_base {
-
+class module_db extends module_base
+{
 	public function __construct() {
 		$this->module_name     = 'db';
 		$this->module_position = 20;
@@ -76,26 +75,26 @@ class module_db extends module_base {
 			if ( count( $hidden ) && in_array( $r['Field'], $hidden ) ) {
 				$type = "hidden";
 				// new field for file.
-			} else if ( preg_match( "/^file_/", $r['Field'] ) && preg_match( "/varchar\((\d+)\)/", $r['Type'], $matches ) ) {
+			} elseif ( preg_match( "/^file_/", $r['Field'] ) && preg_match( "/varchar\((\d+)\)/", $r['Type'], $matches ) ) {
 				$type      = "file";
 				$size      = 50;
 				$maxlength = 255;
-			} else if ( preg_match( "/varchar\((\d+)\)/", $r['Type'], $matches ) ) {
+			} elseif ( preg_match( "/varchar\((\d+)\)/", $r['Type'], $matches ) ) {
 				$type      = "text";
 				$size      = max( "10", min( "30", $matches[1] ) );
 				$maxlength = $matches[1];
-			} else if ( preg_match( "/int/i", $r['Type'] ) || preg_match( "/float/i", $r['Type'] ) ) {
+			} elseif ( preg_match( "/int/i", $r['Type'] ) || preg_match( "/float/i", $r['Type'] ) ) {
 				$format    = array( "/^\d+$/", "Integer" );
 				$type      = "number";
 				$maxlength = $size = 20;
-			} else if ( $r['Type'] == "text" ) {
+			} elseif ( $r['Type'] == "text" ) {
 				$type = "textarea";
 				$size = 0;
-			} else if ( $r['Type'] == "date" || $r['Type'] == "datetime" ) {
+			} elseif ( $r['Type'] == "date" || $r['Type'] == "datetime" ) {
 				$format    = array( "/^\d\d\d\d-\d\d-\d\d$/", "YYYY-MM-DD" );
 				$type      = "date";
 				$maxlength = $size = 20;
-			} else if ( preg_match( "/decimal/", $r['Type'] ) || preg_match( "/double/", $r['Type'] ) ) {
+			} elseif ( preg_match( "/decimal/", $r['Type'] ) || preg_match( "/double/", $r['Type'] ) ) {
 				$format    = array( "/^\d+\.?[\d+]?$/", "Decimal" );
 				$type      = "decimal";
 				$maxlength = $size = 20;
@@ -276,7 +275,7 @@ class module_db extends module_base {
 			if ( ! isset( $past_queries[ $sql ] ) ) {
 				$past_queries[ $sql ] = 0;
 			} else {
-				$past_queries[ $sql ] ++;
+				$past_queries[ $sql ]++;
 			}
 			$sql_debug = $sql;
 			if ( strlen( $sql_debug ) > 60 ) {
@@ -342,7 +341,6 @@ class module_db extends module_base {
 	public static function last_error() {
 		return mysqli_error( self::$dbcnx );
 	}
-
 }
 
 /* placeholder module to contain various functions used through out the system */

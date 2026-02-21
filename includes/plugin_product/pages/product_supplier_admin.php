@@ -1,6 +1,5 @@
 <?php
 
-
 defined( '_UCM_VERSION' ) || die( '-4' );
 
 if ( ! $module->can_i( 'view', 'Products' ) || ! $module->can_i( 'edit', 'Products' ) ) {
@@ -79,6 +78,3 @@ $form_actions = array(
 echo module_form::generate_form_actions( $form_actions );
 
 module_form::print_form_close_tag();
-
-
-

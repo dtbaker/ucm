@@ -4,8 +4,8 @@ function sort_groups( $a, $b ) {
 	return $a['group_time'] < $b['group_time'];
 }
 
-class module_group extends module_base {
-
+class module_group extends module_base
+{
 	var $links;
 
 	public function __construct() {
@@ -167,7 +167,7 @@ class module_group extends module_base {
 				set_message( "group deleted successfully" );
 				redirect_browser( $this->link_open( false ) );
 			}
-		} else if ( 'save_group' == $_REQUEST['_process'] ) {
+		} elseif ( 'save_group' == $_REQUEST['_process'] ) {
 			$group_id = update_insert( 'group_id', $_REQUEST['group_id'], 'group', $_POST );
 			set_message( 'Group saved successfully' );
 			redirect_browser( $this->link_open( $group_id ) );
@@ -187,7 +187,7 @@ class module_group extends module_base {
 
 		if ( $options && isset( $options['bypass_security'] ) ) {
 			// do nothing?
-		} else if ( isset( $options ) && isset( $options['owner_table'] ) && $options['owner_table'] && isset( $options['title'] ) && $options['title'] ) {
+		} elseif ( isset( $options ) && isset( $options['owner_table'] ) && $options['owner_table'] && isset( $options['title'] ) && $options['title'] ) {
 			global $plugins;
 			if ( isset( $plugins[ $options['owner_table'] ] ) ) {
 				$can_create = $can_edit = $can_view = $can_delete = false; // default to false if permissions exist.
@@ -434,7 +434,7 @@ class module_group extends module_base {
 						$x   = 1;
 						while ( isset( $user[ $key ] ) ) {
 							$key = $extra['extra_key'] . $x;
-							$x ++;
+							$x++;
 						}
 						$user[ $key ] = trim( $extra['extra'] );
 					}
@@ -453,7 +453,7 @@ class module_group extends module_base {
 							$x   = 1;
 							while ( isset( $user[ $key ] ) ) {
 								$key = $extra['extra_key'] . $x;
-								$x ++;
+								$x++;
 							}
 							$user[ $key ] = trim( $extra['extra'] );
 						}
@@ -524,7 +524,7 @@ class module_group extends module_base {
 						$x   = 1;
 						while ( isset( $user[ $key ] ) ) {
 							$key = $extra['extra_key'] . $x;
-							$x ++;
+							$x++;
 						}
 						$user[ $key ] = trim( $extra['extra'] );
 					}
@@ -539,7 +539,7 @@ class module_group extends module_base {
 							$x   = 1;
 							while ( isset( $user[ $key ] ) ) {
 								$key = $extra['extra_key'] . $x;
-								$x ++;
+								$x++;
 							}
 							$user[ $key ] = trim( $extra['extra'] );
 						}
@@ -580,7 +580,7 @@ class module_group extends module_base {
 					$x   = 1;
 					while ( isset( $user[ $key ] ) ) {
 						$key = $extra['extra_key'] . $x;
-						$x ++;
+						$x++;
 					}
 					$user[ $key ] = trim( $extra['extra'] );
 				}
@@ -594,7 +594,7 @@ class module_group extends module_base {
 					$x   = 1;
 					while ( isset( $user[ $key ] ) ) {
 						$key = $extra['extra_key'] . $x;
-						$x ++;
+						$x++;
 					}
 					$user[ $key ] = trim( $extra['extra'] );
 				}
@@ -609,7 +609,7 @@ class module_group extends module_base {
 						$x   = 1;
 						while ( isset( $user[ $key ] ) ) {
 							$key = $extra['extra_key'] . $x;
-							$x ++;
+							$x++;
 						}
 						$user[ $key ] = trim( $extra['extra'] );
 					}
@@ -763,7 +763,7 @@ class module_group extends module_base {
 	            } else {
 	            foreach ( $groups
 
-		            as $group ){
+ as $group ) {
 		            $group_id = $group['group_id'];
 		            ?>
 	            <input type="checkbox" class="add_to_group" name="add_to_group[<?php echo $group['group_id']; ?>]"

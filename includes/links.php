@@ -33,10 +33,10 @@ function full_link( $link, $secure = false ) {
 				if ( count( $m ) == 2 ) {
 					if ( $doing_external ) {
 						$new_url_part .= '' . $m[0] . '=' . $m[1] . '&';
-					} else if ( strlen( $m[1] ) > 3 ) {
+					} elseif ( strlen( $m[1] ) > 3 ) {
 						$new_url_part .= 'm[' . $module_number . ']=' . $m[0] . '&';
 						$new_url_part .= 'p[' . $module_number . ']=' . $m[1] . '&';
-						$module_number ++;
+						$module_number++;
 					}
 				}
 			}
@@ -67,7 +67,8 @@ function full_link( $link, $secure = false ) {
 
 	// hack for iframe
 	if ( get_display_mode() == 'iframe' && ! preg_match( '#display_mode#', $url ) ) {
-		$url .= ( strpos( $url, '?' ) === false ? '?' : '&' ) . 'display_mode=iframe';;
+		$url .= ( strpos( $url, '?' ) === false ? '?' : '&' ) . 'display_mode=iframe';
+;
 	}
 
 	return $url;
@@ -114,7 +115,7 @@ function link_generate( $link_options ) {
 				$args[ $key ] = $val;
 			}
 		}
-		$m ++;
+		$m++;
 	}
 
 	$link  = rtrim( $link, '&' );
@@ -169,7 +170,7 @@ function generate_link( $page = '', $args = array(), $module = false, $include_p
 			if ( $allow_nesting === false && in_array( $module, $load_modules ) ) {
 				// reply newer definitions of older module with new settings.
 				$x = array_search( $module, $load_modules );
-			} else if ( $allow_nesting !== false ) {
+			} elseif ( $allow_nesting !== false ) {
 				// we allow nesting of this module up to the defined number of times.
 				// 1 will allow this module to exist once before the specified link.
 				foreach ( array_keys( $load_modules, $module ) as $key => $val ) {

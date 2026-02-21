@@ -1,7 +1,7 @@
 <?php
 
-class ucm_twitter {
-
+class ucm_twitter
+{
 	public function __construct() {
 		$this->reset();
 	}
@@ -269,10 +269,10 @@ class ucm_twitter {
 							if ( ! $twitter_message->get( 'message_time' ) || $twitter_message->get( 'message_time' ) <= $now ) {
 								// send now! otherwise we wait for cron job..
 								if ( $twitter_message->send_queued( isset( $_POST['debug'] ) && $_POST['debug'] ) ) {
-									$message_count ++;
+									$message_count++;
 								}
 							} else {
-								$message_count ++;
+								$message_count++;
 								if ( isset( $_POST['debug'] ) && $_POST['debug'] ) {
 									echo "Message will be sent in cron job after " . print_date( $twitter_message->get( 'message_time' ), true );
 								}
@@ -349,7 +349,7 @@ class ucm_twitter {
 								$return['message'] = ob_get_clean();
 								if ( $debug ) {
 									// just return message
-								} else if ( $worked ) {
+								} elseif ( $worked ) {
 									// success, redicet!
 									//set_message( _l( 'Message sent and conversation archived.' ) );
 									//$return['redirect'] = module_social_twitter::link_open_message_view( $social_twitter_id );
@@ -430,11 +430,10 @@ class ucm_twitter {
 
 		return false;
 	}
-
 }
 
-class ucm_twitter_account {
-
+class ucm_twitter_account
+{
 	public function __construct( $social_twitter_id ) {
 		$this->load( $social_twitter_id );
 	}
@@ -995,12 +994,11 @@ class ucm_twitter_account {
 	public function link_new_message() {
 		return 'admin.php?page=simple_social_inbox_main&social_twitter_id=' . $this->get( 'social_twitter_id' ) . '&social_twitter_message_id=new';
 	}
-
 }
 
 
-class ucm_twitter_message {
-
+class ucm_twitter_message
+{
 	public function __construct( $twitter_account = false, $social_twitter_message_id = false ) {
 		$this->twitter_account = $twitter_account;
 		$this->load( $social_twitter_message_id );
@@ -1078,9 +1076,9 @@ class ucm_twitter_message {
 						$type = _TWITTER_MESSAGE_TYPE_OTHERRETWEET;
 					}
 					$new_reply_to_id = $this->twitter_account->get_reply_tweet( $tweet['retweeted_status']['id_str'] );
-				} else if ( isset( $tweet['in_reply_to_user_id_str'] ) && $tweet['in_reply_to_user_id_str'] == $this->twitter_account->get( 'twitter_id' ) ) {
+				} elseif ( isset( $tweet['in_reply_to_user_id_str'] ) && $tweet['in_reply_to_user_id_str'] == $this->twitter_account->get( 'twitter_id' ) ) {
 					$type = _TWITTER_MESSAGE_TYPE_MENTION;
-				} else if ( isset( $tweet['user']['id_str'] ) && $tweet['user']['id_str'] == $this->twitter_account->get( 'twitter_id' ) ) {
+				} elseif ( isset( $tweet['user']['id_str'] ) && $tweet['user']['id_str'] == $this->twitter_account->get( 'twitter_id' ) ) {
 					$type = _TWITTER_MESSAGE_TYPE_MYTWEET;
 				} else {
 					$type = _TWITTER_MESSAGE_TYPE_OTHERTWEET;
@@ -1257,7 +1255,7 @@ class ucm_twitter_message {
 					?>
 				</div>
 				<?php
-			} else if ( $this->get( 'type' ) == _TWITTER_MESSAGE_TYPE_DIRECT ) {
+			} elseif ( $this->get( 'type' ) == _TWITTER_MESSAGE_TYPE_DIRECT ) {
 				// find previous message(s)
 				$from = preg_replace( '#[^0-9]#', '', $this->get( 'twitter_from_id' ) );
 				$to   = preg_replace( '#[^0-9]#', '', $this->get( 'twitter_to_id' ) );
@@ -1297,7 +1295,7 @@ class ucm_twitter_message {
 							'screen_name' => isset( $twitter_data['user']['screen_name'] ) ? $twitter_data['user']['screen_name'] : '',
 							'image'       => isset( $twitter_data['user']['profile_image_url_https'] ) ? $twitter_data['user']['profile_image_url_https'] : '',
 						);
-					} else if ( isset( $twitter_data['sender']['id_str'] ) ) {
+					} elseif ( isset( $twitter_data['sender']['id_str'] ) ) {
 						$pic = array(
 							'screen_name' => isset( $twitter_data['sender']['screen_name'] ) ? $twitter_data['sender']['screen_name'] : '',
 							'image'       => isset( $twitter_data['sender']['profile_image_url_https'] ) ? $twitter_data['sender']['profile_image_url_https'] : '',
@@ -1331,11 +1329,11 @@ class ucm_twitter_message {
 							if ( $media['type'] == 'photo' ) {
 								?>
 								<div class="twitter_picture">
-									<?php if ( isset( $media['url'] ) && $media['url'] ){ ?> <a
+									<?php if ( isset( $media['url'] ) && $media['url'] ) { ?> <a
 										href="<?php echo htmlspecialchars( $media['url'] ); ?>"
 										target="_blank"> <?php } ?>
 										<img src="<?php echo htmlspecialchars( $media['media_url_https'] ); ?>">
-										<?php if ( isset( $media['url'] ) && $media['url'] ){ ?> </a> <?php } ?>
+										<?php if ( isset( $media['url'] ) && $media['url'] ) { ?> </a> <?php } ?>
 								</div>
 								<?php
 							}
@@ -1707,6 +1705,4 @@ class ucm_twitter_message {
 	public function link_open() {
 		return 'admin.php?page=simple_social_inbox_main&social_twitter_id=' . $this->twitter_account->get( 'social_twitter_id' ) . '&social_twitter_message_id=' . $this->social_twitter_message_id;
 	}
-
-
 }

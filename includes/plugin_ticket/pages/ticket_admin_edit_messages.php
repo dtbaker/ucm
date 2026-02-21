@@ -27,7 +27,7 @@ if ( ! $ticket_safe ) {
 			$x                        = 0;
 			//foreach($ticket_messages as $ticket_message){
 			while ( $ticket_message_count && $ticket_message = mysqli_fetch_assoc( $ticket_messages ) ) {
-				$x ++;
+				$x++;
 				if ( ( $ticket_message['cache'] != 'autoreply' && $ticket_message['message_type_id'] != _TICKET_MESSAGE_TYPE_AUTOREPLY ) && isset( $admins_rel[ $ticket_message['from_user_id'] ] ) ) {
 					// the admin created this message.
 					$last_admin_message_count = $x;
@@ -59,7 +59,7 @@ if ( ! $ticket_safe ) {
 	if ( $ticket_message_count > 0 ) {
 		mysqli_data_seek( $ticket_messages, 0 );
 		while ( $ticket_message = mysqli_fetch_assoc( $ticket_messages ) ) {
-			$ticket_message_counter ++;
+			$ticket_message_counter++;
 			if ( isset( $_REQUEST['show_only_hidden'] ) ) {
 				if ( $ticket_message_counter < $show_messages_after ) {
 					// we want to show this message!!
@@ -67,7 +67,7 @@ if ( ! $ticket_safe ) {
 					// we want to skip this message, because it's already shown in the parent ajax loading screen.
 					continue;
 				}
-			} else if ( $ticket_message_counter < $show_messages_after ) {
+			} elseif ( $ticket_message_counter < $show_messages_after ) {
 				// we want to skip this message.
 				continue;
 			}
@@ -261,7 +261,8 @@ if ( ! $ticket_safe ) {
 														data-featherlight="image">
 														<img src="<?php
 														// echo _BASE_HREF . nl2br(htmlspecialchars($file_item['file_path']));
-														echo module_ticket::link_open_attachment( $ticket_id, $attachment['ticket_message_attachment_id'] );;
+														echo module_ticket::link_open_attachment( $ticket_id, $attachment['ticket_message_attachment_id'] );
+;
 														?>" width="<?php echo $thumb_width; ?>" alt="download" border="0">
 													</a>
 												</div>
@@ -350,7 +351,7 @@ if ( ! $ticket_safe ) {
 					$lines      = explode( "\n", $text );
 					$do_we_hide = count( $lines ) > 4 && module_config::c( 'ticket_hide_messages', 1 ) && $ticket_message_counter < $ticket_message_count && $ticket_message_count != 2;
 
-					if ( $do_we_hide ){
+					if ( $do_we_hide ) {
 					?>
 					<div class="ticket_message_hider">
 						<?php
@@ -424,7 +425,7 @@ if ( ! $ticket_safe ) {
 								</div>
 								<?php
 						}else */
-						if ( $do_we_hide ){
+						if ( $do_we_hide ) {
 						?>
 					</div>
 					<div>
@@ -511,7 +512,7 @@ if ( ! $ticket_safe ) {
 								if ( ! $template->template_id ) {
 									$template = module_template::get_template_by_key( 'ticket_reply_default' );
 								}
-								if($template->template_id){ ?>
+								if ($template->template_id) { ?>
                   if (!done_auto_insert) {
                       done_auto_insert = true;
                       ucm.ticket.add_to_message("<?php echo preg_replace( "#[\r\n]+#", '', addcslashes( $template->content, '"' ) );?>");
@@ -703,7 +704,7 @@ if ( ! $ticket_safe ) {
 							'name'  => 'next_ticket_id',
 							'value' => $next_ticket,
 						);
-					} else if ( $prev_ticket ) {
+					} elseif ( $prev_ticket ) {
 						$form_actions['elements'][] = array(
 							'type'  => 'save_button',
 							'name'  => 'newmsg',

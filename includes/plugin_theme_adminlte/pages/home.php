@@ -59,7 +59,7 @@ foreach ( $widget_sort_json as $id => $vals ) {
 		$widget_sort_order[ $bits[2] ] = array(
 			'column'        => $bits[0],
 			'column_number' => $bits[1],
-			'page_order'    => $widget_sort_page_order ++,
+			'page_order'    => $widget_sort_page_order++,
 			'deleted'       => ! empty( $bits[3] ),
 		);
 	}
@@ -74,7 +74,7 @@ if ( module_config::c( 'dashboard_new_layout', 1 ) && class_exists( 'module_dash
 		'column_number' => isset( $widget_sort_order[ $widget_sort_id ]['column_number'] ) ? $widget_sort_order[ $widget_sort_id ]['column_number'] : false,
 		'page_order'    => isset( $widget_sort_order[ $widget_sort_id ]['page_order'] ) ? $widget_sort_order[ $widget_sort_id ]['page_order'] : false,
 		'deleted'       => isset( $widget_sort_order[ $widget_sort_id ]['deleted'] ) ? $widget_sort_order[ $widget_sort_id ]['deleted'] : false,
-		'sort_id'       => $widget_sort_id ++,
+		'sort_id'       => $widget_sort_id++,
 		'title'         => _l( 'Alerts' ),
 		'content'       => ob_get_clean(),
 	) );
@@ -84,7 +84,7 @@ array_unshift( $home_widgets, array(
 	'column_number' => isset( $widget_sort_order[ $widget_sort_id ]['column_number'] ) ? $widget_sort_order[ $widget_sort_id ]['column_number'] : false,
 	'page_order'    => isset( $widget_sort_order[ $widget_sort_id ]['page_order'] ) ? $widget_sort_order[ $widget_sort_id ]['page_order'] : false,
 	'deleted'       => isset( $widget_sort_order[ $widget_sort_id ]['deleted'] ) ? $widget_sort_order[ $widget_sort_id ]['deleted'] : false,
-	'sort_id'       => $widget_sort_id ++,
+	'sort_id'       => $widget_sort_id++,
 	'title'         => _l( 'Home Page' ),
 	'content'       => _DEMO_MODE ? strip_tags( $template->replace_content() ) : $template->replace_content(),
 ) );
@@ -108,14 +108,14 @@ foreach ( $home_widgets as $module_widgets ) {
 		} else {
 			$module_widget['page_order'] = false;
 		}
-		$module_widget['sort_id'] = $widget_sort_id ++;
+		$module_widget['sort_id'] = $widget_sort_id++;
 		if ( ! isset( $module_widget['columns'] ) || ! $module_widget['columns'] ) {
 			$module_widget['columns'] = 3;
 		}
 		if ( ! isset( $widget_columns[ $module_widget['columns'] ] ) ) {
 			// start the widget group for this number of columns.
 			$widget_columns[ $module_widget['columns'] ] = array();
-			for ( $x = 1; $x < $module_widget['columns']; $x ++ ) {
+			for ( $x = 1; $x < $module_widget['columns']; $x++ ) {
 				$widget_columns[ $module_widget['columns'] ][ $x ] = array();
 			}
 		}
@@ -126,7 +126,7 @@ foreach ( $home_widgets as $module_widgets ) {
 		if ( empty( $module_widget['deleted'] ) ) {
 			$widget_columns[ $module_widget['columns'] ][ $col_num ][] = $module_widget;
 		}
-		$widget_columns_counter[ $module_widget['columns'] ] ++;
+		$widget_columns_counter[ $module_widget['columns'] ]++;
 		if ( $widget_columns_counter[ $module_widget['columns'] ] > $module_widget['columns'] ) {
 			$widget_columns_counter[ $module_widget['columns'] ] = 1;
 		}

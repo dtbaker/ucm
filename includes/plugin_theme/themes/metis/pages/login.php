@@ -13,7 +13,7 @@
 		</div>
 
 
-	<?php }else if ( isset( $_GET['forgot'] ) ){ ?>
+	<?php } elseif ( isset( $_GET['forgot'] ) ) { ?>
 
 		<div class="tab-content">
 			<div id="forgot" class="tab-pane active">
@@ -50,7 +50,7 @@
 			</ul>
 		</div>
 
-	<?php }else{ ?>
+	<?php } else { ?>
 
 		<div class="tab-content">
 			<div id="login" class="tab-pane active">

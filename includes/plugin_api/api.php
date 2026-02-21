@@ -1,8 +1,7 @@
 <?php
 
-
-class module_api extends module_base {
-
+class module_api extends module_base
+{
 	public $links;
 	public $api_types;
 
@@ -74,7 +73,7 @@ class module_api extends module_base {
 				$auth = false;
 				if ( ! empty( $headers['Authorization'] ) ) {
 					$auth = $headers['Authorization'];
-				} else if ( ! empty( $_POST['auth'] ) ) {
+				} elseif ( ! empty( $_POST['auth'] ) ) {
 					$auth = $_POST['auth'];
 				}
 				if ( $auth ) {

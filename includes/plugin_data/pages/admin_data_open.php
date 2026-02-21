@@ -227,12 +227,12 @@ if ( isset( $_REQUEST['print'] ) ) {
 					}
 					$temp_revision_id = $data_record_revision['data_record_revision_id'];
 					?>
-					<tr class="<?php echo ( $c ++ % 2 ) ? "odd" : "even"; ?>">
+					<tr class="<?php echo ( $c++ % 2 ) ? "odd" : "even"; ?>">
 						<td class="row_action"><a href="<?php echo $module->link( '', array(
 								"data_type_id"   => $data_type_id,
 								"data_record_id" => $data_record_id,
 								"revision_id"    => $data_record_revision['data_record_revision_id']
-							) ); ?>">#<?php echo $x ++; ?></a></td>
+							) ); ?>">#<?php echo $x++; ?></a></td>
 						<td><?php echo print_date( $data_record_revision['date_created'], true ); ?></td>
 						<!-- <td><?php echo $data_record_revision['status']; ?></td> -->
 						<td><?php echo $user['name']; ?> (<?php echo $data_record_revision['create_ip_address']; ?>)</td>
@@ -345,7 +345,6 @@ if ( isset( $_REQUEST['print'] ) ) {
 				<?php
 				break;
 			case 'pdf':
-
 				if ( ! function_exists( 'convert_html2pdf' ) ) {
 					die( 'PDF generation not available' );
 				}

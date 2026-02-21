@@ -1,6 +1,5 @@
 <?php
 
-
 // for the email table.
 define( '_MAIL_STATUS_PENDING', 1 );
 define( '_MAIL_STATUS_OVER_QUOTA', 5 );
@@ -9,8 +8,8 @@ define( '_MAIL_STATUS_FAILED', 4 );
 define( '_MAIL_STATUS_SCHEDULED', 5 );
 
 
-class module_email extends module_base {
-
+class module_email extends module_base
+{
 	public function __construct() {
 		$this->module_name     = 'email';
 		$this->module_position = 160;
@@ -354,7 +353,8 @@ class module_email extends module_base {
 				$to[]          = $ct;
 			}
 		} else {
-			$to = isset( $options['to'] ) && is_array( $options['to'] ) ? $options['to'] : array();;
+			$to = isset( $options['to'] ) && is_array( $options['to'] ) ? $options['to'] : array();
+;
 		}
 
 		$email = $this->new_email();
@@ -568,7 +568,7 @@ class module_email extends module_base {
             }*/
 			set_message( 'Email sent successfully' );
 			redirect_browser( $options['complete_url'] );
-		} else if ( $email->status == _MAIL_STATUS_SCHEDULED ) {
+		} elseif ( $email->status == _MAIL_STATUS_SCHEDULED ) {
 			set_message( 'Email scheduled successfully' );
 			redirect_browser( $options['complete_url'] );
 		} else {
@@ -732,15 +732,13 @@ class module_email extends module_base {
 
 		return $sql;
 	}
-
-
 }
 
 
 if ( class_exists( 'UCMBaseSingle' ) ) {
 
-	class UCMEmail extends UCMBaseSingle {
-
+	class UCMEmail extends UCMBaseSingle
+    {
 		public $db_id = 'email_id';
 		public $db_table = 'email';
 		public $display_key = 'description';
@@ -1037,7 +1035,7 @@ if ( class_exists( 'UCMBaseSingle' ) ) {
 			$this->replace( 'FROM_NAME', $this->from['name'] );
 			$this->replace( 'FROM_EMAIL', $this->from['email'] );
 			// hack - we do this loop twice because some replace keys may have replace keys in them.
-			for ( $x = 0; $x < 2; $x ++ ) {
+			for ( $x = 0; $x < 2; $x++ ) {
 				foreach ( $this->replace_values as $key => $val ) {
 					if ( is_array( $val ) ) {
 						continue;
@@ -1344,7 +1342,7 @@ if ( class_exists( 'UCMBaseSingle' ) ) {
 					foreach ( $attachments as $file_path => $file_name ) {
 						if ( strpos( $file_path, 'temp_' ) === 0 && is_file( $temp_folder . basename( $file_path ) ) ) {
 							$mail->AddAttachment( $temp_folder . basename( $file_path ), $file_name );
-						} else if ( is_file( $file_path ) ) {
+						} elseif ( is_file( $file_path ) ) {
 							$mail->AddAttachment( $file_path, $file_name );
 						}
 					}
@@ -1424,17 +1422,14 @@ if ( class_exists( 'UCMBaseSingle' ) ) {
 
 			return _l( 'N/A' );
 		}
-
-
 	}
 
-	class UCMEmails extends UCMBaseMulti {
-
+	class UCMEmails extends UCMBaseMulti
+    {
 		public $db_id = 'email_id';
 		public $db_table = 'email';
 		public $display_name = 'Email';
 		public $display_name_plural = 'Emails';
-
 	}
 
 }

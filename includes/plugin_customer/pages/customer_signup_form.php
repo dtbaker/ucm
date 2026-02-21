@@ -95,7 +95,7 @@
 						<input type="text" id="customer_extra_<?php echo $x; ?>"
 						       name="customer[extra][<?php echo htmlspecialchars( $default['key'] ); ?>]"/>
 					</li>
-					<?php $x ++;
+					<?php $x++;
 				}
 				$x = 1;
 				foreach ( module_group::get_groups( 'customer' ) as $group_data ) { ?>
@@ -105,11 +105,11 @@
 						       name="customer[group_ids][<?php echo htmlspecialchars( $group_data['group_id'] ); ?>]"
 						       type="checkbox" value="<?php echo htmlspecialchars( $group_data['group_id'] ); ?>"/> Yes
 					</li>
-					<?php $x ++;
+					<?php $x++;
 				} ?>
 			</ol>
 		</fieldset>
-		<?php for ( $x = 0; $x < module_config::c( 'customer_signup_contact_count', 1 ); $x ++ ) { ?>
+		<?php for ( $x = 0; $x < module_config::c( 'customer_signup_contact_count', 1 ); $x++ ) { ?>
 			<fieldset>
 				<legend><?php echo $x == 0 ? 'Primary ' : 'Additional '; ?>Contact Information</legend>
 				<ol>
@@ -148,7 +148,7 @@
 							<input type="text" id="contact_extra_<?= $x; ?>_<?php echo $xx; ?>"
 							       name="contact[extra][<?= $x; ?>][<?php echo htmlspecialchars( $default['key'] ); ?>]"/>
 						</li>
-						<?php $xx ++;
+						<?php $xx++;
 					}
 					$xx = 1;
 					foreach ( module_group::get_groups( 'user' ) as $group_data ) { ?>
@@ -159,7 +159,7 @@
 							       name="contact[group_ids][<?= $x; ?>][<?php echo htmlspecialchars( $group_data['group_id'] ); ?>]"
 							       type="checkbox" value="<?php echo htmlspecialchars( $group_data['group_id'] ); ?>"/> Yes
 						</li>
-						<?php $xx ++;
+						<?php $xx++;
 					} ?>
 				</ol>
 			</fieldset>
@@ -228,7 +228,7 @@
 						<input type="text" id="job_extra_<?php echo $x; ?>"
 						       name="job[extra][<?php echo htmlspecialchars( $default['key'] ); ?>]"/>
 					</li>
-					<?php $x ++;
+					<?php $x++;
 				}
 				?>
 				<li>
@@ -249,7 +249,7 @@
 						<input type="text" id="website_extra_<?php echo $x; ?>"
 						       name="website[extra][<?php echo htmlspecialchars( $default['key'] ); ?>]"/>
 					</li>
-					<?php $x ++;
+					<?php $x++;
 				}
 				$x = 1;
 				foreach ( module_group::get_groups( 'website' ) as $group_data ) { ?>
@@ -259,7 +259,7 @@
 						       name="website[group_ids][<?php echo htmlspecialchars( $group_data['group_id'] ); ?>]" type="checkbox"
 						       value="<?php echo htmlspecialchars( $group_data['group_id'] ); ?>"/> Yes
 					</li>
-					<?php $x ++;
+					<?php $x++;
 				}
 
 				/*$x=1;

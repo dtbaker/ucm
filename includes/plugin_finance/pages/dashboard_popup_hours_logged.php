@@ -100,7 +100,7 @@ $total = 0;
 					} else {
 						$display_amount = $task['amount'];
 					}
-				} else if ( isset( $r['task_hours'] ) ) {
+				} elseif ( isset( $r['task_hours'] ) ) {
 					$display_amount = $r['task_hours'] * $r['hourly_rate'];
 				} else {
 					$display_amount = 0;
@@ -141,7 +141,7 @@ $total = 0;
 				<td>
 					<?php if ( isset( $r['job_id'] ) && $r['job_id'] ) {
 						echo module_job::link_open( $r['job_id'], true );
-					} else if ( isset( $r['job_ids'] ) && is_array( $r['job_ids'] ) ) {
+					} elseif ( isset( $r['job_ids'] ) && is_array( $r['job_ids'] ) ) {
 						foreach ( $r['job_ids'] as $job_id ) {
 							echo module_job::link_open( $job_id, true );
 						}
@@ -150,7 +150,7 @@ $total = 0;
 				<td>
 					<?php if ( isset( $r['job_id'] ) && $r['job_id'] ) {
 						?>  <a href="<?php echo module_job::link_open( $r['job_id'] ); ?>"><?php echo $foo; ?></a> <?php
-					} else if ( isset( $r['job_ids'] ) && is_array( $r['job_ids'] ) ) {
+					} elseif ( isset( $r['job_ids'] ) && is_array( $r['job_ids'] ) ) {
 						foreach ( $r['job_ids'] as $job_id ) {
 							?>  <a href="<?php echo module_job::link_open( $job_id ); ?>"><?php echo $foo; ?></a> <?php
 						}

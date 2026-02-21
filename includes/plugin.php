@@ -1,6 +1,7 @@
 <?php
 
-class module_base {
+class module_base
+{
 	public $module_name = '';
 	public $ajax_search_keys;
 	public $page_title;
@@ -118,7 +119,7 @@ class module_base {
 			if ( $type && ( ! isset( $link['type'] ) || $link['type'] != $type ) ) {
 				unset( $links[ $link_id ] );
 				continue; // wrong type of link, dont include here.
-			} else if ( $type === false && isset( $link['type'] ) ) {
+			} elseif ( $type === false && isset( $link['type'] ) ) {
 				unset( $links[ $link_id ] );
 				continue; // wrong type of link, dont include here.
 			}
@@ -320,7 +321,8 @@ class module_base {
 		return $this->version;
 	}
 
-	function install_upgrade() { //$do_upgrade,$current_db_version
+	function install_upgrade() {
+ //$do_upgrade,$current_db_version
 		// get the SQL for this install, and run it!
 		$this->module_name = ( str_replace( 'module_', '', get_class( $this ) ) );
 		// return true on success, false (and set error) on failure.
@@ -328,7 +330,7 @@ class module_base {
 		if ( $this->get_install_sql() === false ) {
 			// nothing to install db wise.
 			return $current_plugin_version;
-		} else if ( $this->is_installed() ) {
+		} elseif ( $this->is_installed() ) {
 
 			$installed_plugin_version = $this->get_installed_plugin_version();
 			if ( ! $installed_plugin_version ) {
@@ -404,7 +406,7 @@ class module_base {
 					foreach ( $res as $r ) {
 						$match = $r[ current( $fields['search_fields'] ) ];
 						$match .= ' (';
-						for ( $x = 1; $x < count( $fields['search_fields'] ); $x ++ ) {
+						for ( $x = 1; $x < count( $fields['search_fields'] ); $x++ ) {
 							$field = $fields['search_fields'][ $x ];
 							// see if this one matches.
 							if ( preg_match( '/' . preg_quote( $key, '/' ) . '/i', $r[ $field ] ) ) {
@@ -451,7 +453,7 @@ class module_base {
 						reset( $fields );
 						$match = $r[ current( $fields ) ];
 						$match .= ' (';
-						for ( $x = 1; $x < count( $fields ); $x ++ ) {
+						for ( $x = 1; $x < count( $fields ); $x++ ) {
 							$field = $fields[ $x ];
 							// see if this one matches.
 							if ( preg_match( '/' . preg_quote( $key, '/' ) . '/i', $r[ $field ] ) ) {
@@ -508,4 +510,3 @@ class module_base {
 
 	}
 }
-

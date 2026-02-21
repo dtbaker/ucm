@@ -8,4 +8,3 @@ $coinbase = array(
 );
 
 coinbase::setApiKey( $coinbase['secret_key'] );
-?>

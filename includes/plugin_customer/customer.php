@@ -1,6 +1,5 @@
 <?php
 
-
 define( '_CUSTOMER_ACCESS_ALL', 'All customers in system' ); // do not change string
 define( '_CUSTOMER_ACCESS_ALL_COMPANY', 'Only customers from companies I have access to' ); // do not change string
 define( '_CUSTOMER_ACCESS_CONTACTS', 'Only customer I am assigned to as a contact' ); // do not change string
@@ -18,8 +17,8 @@ define( '_CUSTOMER_BILLING_TYPE_NORMAL', 0 );
 define( '_CUSTOMER_BILLING_TYPE_SUPPLIER', 1 );
 
 
-class module_customer extends module_base {
-
+class module_customer extends module_base
+{
 	public $links;
 	public $customer_types;
 	public $customer_id;
@@ -269,7 +268,6 @@ Invoice: <strong>{INVOICE_LINK}</strong>
 		$response['customer'] = true;
 		switch ( $method ) {
 			case 'create':
-
 				$customer_data = isset( $_POST['customer_data'] ) && is_array( $_POST['customer_data'] ) ? $_POST['customer_data'] : array();
 
 				$response['customer_id'] = 0;
@@ -330,7 +328,6 @@ Invoice: <strong>{INVOICE_LINK}</strong>
 
 				break;
 			case 'search':
-
 				$search                = isset( $_REQUEST['search'] ) && is_array( $_REQUEST['search'] ) ? $_REQUEST['search'] : array();
 				$customers             = self::get_customers( $search );
 				$response['customers'] = array();
@@ -340,8 +337,6 @@ Invoice: <strong>{INVOICE_LINK}</strong>
 
 				break;
 			case 'add_to_group':
-
-
 				$group_owner = self::get_group_owner_slug();
 
 				$customer_id = ! empty( $_REQUEST['customer_id'] ) ? (int) $_REQUEST['customer_id'] : 0;
@@ -818,7 +813,6 @@ Invoice: <strong>{INVOICE_LINK}</strong>
 		}
 		switch ( $customer_access ) {
 			case _CUSTOMER_ACCESS_ALL:
-
 				break;
 			case _CUSTOMER_ACCESS_ALL_COMPANY:
 				if ( class_exists( 'module_company', false ) && module_company::is_enabled() ) {
@@ -944,7 +938,6 @@ Invoice: <strong>{INVOICE_LINK}</strong>
 
 				switch ( self::get_customer_data_access() ) {
 					case _CUSTOMER_ACCESS_ALL:
-
 						break;
 					case _CUSTOMER_ACCESS_ALL_COMPANY:
 					case _CUSTOMER_ACCESS_CONTACTS:
@@ -1096,7 +1089,7 @@ Invoice: <strong>{INVOICE_LINK}</strong>
 					}
 				}
 			}
-		} else if ( isset( $_REQUEST['butt_del'] ) && $_REQUEST['butt_del'] && ! empty( $_REQUEST['customer_type_id'] ) ) {
+		} elseif ( isset( $_REQUEST['butt_del'] ) && $_REQUEST['butt_del'] && ! empty( $_REQUEST['customer_type_id'] ) ) {
 
 			if ( module_form::check_secure_key() ) {
 
@@ -1117,7 +1110,7 @@ Invoice: <strong>{INVOICE_LINK}</strong>
 					}
 				}
 			}
-		} else if ( "ajax_customer_list" == $_REQUEST['_process'] ) {
+		} elseif ( "ajax_customer_list" == $_REQUEST['_process'] ) {
 
 			header( "Content-type: text/javascript" );
 			if ( module_form::check_secure_key() && module_customer::can_i( 'view', 'Customers' ) ) {
@@ -1131,7 +1124,7 @@ Invoice: <strong>{INVOICE_LINK}</strong>
 			}
 			exit;
 
-		} else if ( "ajax_contact_list" == $_REQUEST['_process'] ) {
+		} elseif ( "ajax_contact_list" == $_REQUEST['_process'] ) {
 
 			header( "Content-type: text/javascript" );
 			if ( module_form::check_secure_key() && module_customer::can_i( 'view', 'Customers' ) ) {
@@ -1145,14 +1138,14 @@ Invoice: <strong>{INVOICE_LINK}</strong>
 			}
 			exit;
 
-		} else if ( "save_customer" == $_REQUEST['_process'] ) {
+		} elseif ( "save_customer" == $_REQUEST['_process'] ) {
 			$customer_id = $this->save_customer( $_REQUEST['customer_id'], $_POST );
 			hook_handle_callback( 'customer_save', $customer_id );
 			if ( isset( $_REQUEST['butt_send_statement_email'] ) ) {
 				redirect_browser( self::link_open( $customer_id ) . '&email=statement' );
-			} else if ( isset( $_REQUEST['butt_send_welcome_email'] ) ) {
+			} elseif ( isset( $_REQUEST['butt_send_welcome_email'] ) ) {
 				redirect_browser( self::link_open( $customer_id ) . '&email=welcome' );
-			} else if ( ! empty( $_REQUEST['butt_archive'] ) ) {
+			} elseif ( ! empty( $_REQUEST['butt_archive'] ) ) {
 				$UCMCustomer = new UCMCustomer( $customer_id );
 				if ( $UCMCustomer->is_archived() ) {
 					$UCMCustomer->unarchive();
@@ -1166,7 +1159,7 @@ Invoice: <strong>{INVOICE_LINK}</strong>
 				set_message( "Customer saved successfully" );
 				redirect_browser( isset( $_REQUEST['_redirect'] ) && ! empty( $_REQUEST['_redirect'] ) ? $_REQUEST['_redirect'] : self::link_open( $customer_id ) );
 			}
-		} else if ( "save_customer_type" == $_REQUEST['_process'] ) {
+		} elseif ( "save_customer_type" == $_REQUEST['_process'] ) {
 			$customer_type_id = $this->save_customer_type( $_REQUEST['customer_type_id'], $_POST );
 			hook_handle_callback( 'customer_save_type', $customer_type_id );
 			set_message( "Customer saved successfully" );
@@ -1284,7 +1277,7 @@ Invoice: <strong>{INVOICE_LINK}</strong>
 			if ( count( $invoices ) ) {
 				foreach ( $invoices as $invoice ) {
 					if ( ! $invoice['credit_note_id'] && $invoice['date_cancel'] == '0000-00-00' ) {
-						$total_invoices ++;
+						$total_invoices++;
 						//$invoice = module_invoice::get_invoice($invoice['invoice_id']);
 						$total_due  += $invoice['c_total_amount_due'];
 						$total_paid += ( $invoice['c_total_amount'] - $invoice['c_total_amount_due'] );
@@ -1299,9 +1292,9 @@ Invoice: <strong>{INVOICE_LINK}</strong>
 			}
 			if ( $total_overdue > 0 ) {
 				update_insert( 'customer_id', $customer_id, 'customer', array( 'customer_status' => _CUSTOMER_STATUS_OVERDUE ) );
-			} else if ( $total_due > 0 ) {
+			} elseif ( $total_due > 0 ) {
 				update_insert( 'customer_id', $customer_id, 'customer', array( 'customer_status' => _CUSTOMER_STATUS_OWING ) );
-			} else if ( $total_invoices > 0 ) {
+			} elseif ( $total_invoices > 0 ) {
 				update_insert( 'customer_id', $customer_id, 'customer', array( 'customer_status' => _CUSTOMER_STATUS_PAID ) );
 			} else {
 				update_insert( 'customer_id', $customer_id, 'customer', array( 'customer_status' => 0 ) );
@@ -1351,7 +1344,7 @@ Invoice: <strong>{INVOICE_LINK}</strong>
 			$sql .= " `user_id` = " . (int) $data['single_staff_id'];
 			$sql .= ", `customer_id` = " . (int) $customer_id;
 			query( $sql );
-		} else if ( isset( $data['staff_ids'] ) && is_array( $data['staff_ids'] ) && module_customer::can_i( 'edit', 'Customer Staff' ) ) {
+		} elseif ( isset( $data['staff_ids'] ) && is_array( $data['staff_ids'] ) && module_customer::can_i( 'edit', 'Customer Staff' ) ) {
 			$existing_staff = array();
 			if ( $temp_customer ) {
 				$existing_staff = $temp_customer['staff_ids'];
@@ -1703,11 +1696,11 @@ Invoice: <strong>{INVOICE_LINK}</strong>
 					$staff_id    = false;
 					if ( isset( $staff_member_rel[ $staff_name ] ) ) {
 						$staff_id = $staff_member_rel[ $staff_name ];
-					} else if ( isset( $staff_member_rel[ $staff_name2 ] ) ) {
+					} elseif ( isset( $staff_member_rel[ $staff_name2 ] ) ) {
 						$staff_id = $staff_member_rel[ $staff_name2 ];
-					} else if ( isset( $staff_member_rel2[ $staff_name ] ) ) {
+					} elseif ( isset( $staff_member_rel2[ $staff_name ] ) ) {
 						$staff_id = $staff_member_rel2[ $staff_name ];
-					} else if ( isset( $staff_member_rel2[ $staff_name2 ] ) ) {
+					} elseif ( isset( $staff_member_rel2[ $staff_name2 ] ) ) {
 						$staff_id = $staff_member_rel2[ $staff_name2 ];
 					}
 					if ( $staff_id ) {
@@ -1848,7 +1841,7 @@ Invoice: <strong>{INVOICE_LINK}</strong>
 						);
 						$extra_id = (int) $extra_id;
 						update_insert( 'extra_id', $extra_id, 'extra', $extra_db );
-					} else if ( $user_match && isset( $contact_fields[ $extra_key ] ) ) {
+					} elseif ( $user_match && isset( $contact_fields[ $extra_key ] ) ) {
 						// this is a primary contact extra field
 						$existing_extra = module_extra::get_extras( array(
 							'owner_table' => 'user',
@@ -1997,7 +1990,6 @@ Invoice: <strong>{INVOICE_LINK}</strong>
 				exit;
 				break;
 			case 'public_signup':
-
 				// sign out if testing.
 				if ( module_security::is_logged_in() ) {
 					set_message( 'Logged out due to signup' );
@@ -2091,7 +2083,7 @@ Invoice: <strong>{INVOICE_LINK}</strong>
 						if ( ! is_array( $contact[ $multi_value ] ) ) {
 							$contact[ $multi_value ] = array( $contact[ $multi_value ] );
 						}
-					} else if ( isset( $customer[ $multi_value ] ) ) {
+					} elseif ( isset( $customer[ $multi_value ] ) ) {
 						$contact[ $multi_value ] = array( $customer[ $multi_value ] );
 					} else {
 						$contact[ $multi_value ] = array();
@@ -2869,7 +2861,7 @@ Invoice: <strong>{INVOICE_LINK}</strong>
 	public static function get_group_owner_slug() {
 
 		$group_owner = 'customer';
-		if(module_config::c('groups_unique_per_customer_type',0)) {
+		if (module_config::c('groups_unique_per_customer_type',0)) {
 			$current_customer_type_id = module_customer::get_current_customer_type_id();
 			if ( $current_customer_type_id > 0 ) {
 				$customer_type = module_customer::get_customer_type( $current_customer_type_id );

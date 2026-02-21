@@ -65,7 +65,7 @@ if ( isset( $_REQUEST['save_menu_config'] ) && is_array( $_REQUEST['save_menu_co
 		}
 		foreach ( $menu_items as $menu_id => $menu_data ) {
 			?>
-			<tr class="<?php echo $c ++ % 2 ? 'odd' : 'even'; ?>">
+			<tr class="<?php echo $c++ % 2 ? 'odd' : 'even'; ?>">
 				<td>
 					<?php echo ! empty( $menu_data['module'] ) ? htmlspecialchars( $menu_data['module'] ) : ''; ?>
 				</td>

@@ -4,8 +4,8 @@ function config_sort_css( $a, $b ) {
 	return $a[3] > $b[3] ? 1 : -1;
 }
 
-class module_config extends module_base {
-
+class module_config extends module_base
+{
 	private static $config_vars = array();
 
 	public function __construct() {
@@ -459,7 +459,7 @@ class module_config extends module_base {
 		if ( isset( $_POST['config'] ) && is_array( $_POST['config'] ) ) {
 			foreach ( $_POST['config'] as $key => $val ) {
 				$this->save_config( $key, $val );
-				$x ++;
+				$x++;
 			}
 		}
 
@@ -543,7 +543,7 @@ class module_config extends module_base {
 				$res = qa1( $sql );
 				if ( $res && $res['key'] == $key ) {
 					return $res['val'];
-				} else if ( $default !== false ) {
+				} elseif ( $default !== false ) {
 					self::save_config( $key, $default );
 				}
 				break;
@@ -621,7 +621,7 @@ class module_config extends module_base {
 					unset( self::$css_files[ $hash ] );
 				}
 			}
-		} else if ( ! $reinit ) {
+		} elseif ( ! $reinit ) {
 			// time to generate a new cache file based on these css files.
 			$css_content = '';
 			foreach ( self::$css_files as $hash => $css_file_info ) {
@@ -713,7 +713,7 @@ class module_config extends module_base {
 					unset( self::$js_files[ $hash ] );
 				}
 			}
-		} else if ( ! $reinit ) {
+		} elseif ( ! $reinit ) {
 			// time to generate a new cache file based on these js files.
 			$js_content = '';
 			foreach ( self::$js_files as $hash => $js_file_info ) {
@@ -1009,6 +1009,4 @@ public static function js_combine($version, $reinit=false){
 	public static function set_system_version( $version ) {
 		return self::save_config( '_admin_system_version', $version );
 	}
-
-
 }

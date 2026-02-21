@@ -1,9 +1,7 @@
 <?php
 
-
-class module_paymethod_paynl extends module_base {
-
-
+class module_paymethod_paynl extends module_base
+{
 	public static function can_i( $actions, $name = false, $category = false, $module = false ) {
 		if ( ! $module ) {
 			$module = __CLASS__;
@@ -73,7 +71,7 @@ class module_paymethod_paynl extends module_base {
 
 		if ( $dollar_limit == 'above' && $invoice_data['total_amount_due'] < $dollar_value ) {
 			return false;
-		} else if ( $dollar_limit == 'below' && $invoice_data['total_amount_due'] > $dollar_value ) {
+		} elseif ( $dollar_limit == 'below' && $invoice_data['total_amount_due'] > $dollar_value ) {
 			return false;
 		}
 		if ( strlen( $cur ) > 1 ) {
@@ -251,7 +249,7 @@ class module_paymethod_paynl extends module_base {
 						) );
 						module_invoice::save_invoice( $payment['invoice_id'], array() );
 						break;
-					case 'CANCEL';
+					case 'CANCEL':
 						update_insert( "invoice_payment_id", $payment['invoice_payment_id'], "invoice_payment", array(
 							'other_id' => '', // stops cron hitting it agagin
 						) );
@@ -264,6 +262,4 @@ class module_paymethod_paynl extends module_base {
 			}
 		}
 	}
-
-
 }

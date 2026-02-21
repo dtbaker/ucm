@@ -16,8 +16,8 @@ define( '_FILE_ACCESS_ASSIGNED', 'Only files I have been assigned to' ); // do n
 define( '_FILE_UPLOAD_PATH', ( defined( '_UCM_FILE_STORAGE_DIR' ) ? _UCM_FILE_STORAGE_DIR : '' ) . 'includes/plugin_file/upload/' );
 
 
-class module_file extends module_base {
-
+class module_file extends module_base
+{
 	var $links;
 
 	public function __construct() {
@@ -431,7 +431,6 @@ Comment: {COMMENT}
 				}
 				break;
 			case "file_delete":
-
 				if ( $owner_table && $owner_id ) {
 					$this->delete_files( $owner_table, $owner_id );
 				}
@@ -615,7 +614,7 @@ Comment: {COMMENT}
 
 				$count = 1;
 				while ( file_exists( $targetDir . DIRECTORY_SEPARATOR . $fileName_a . '_' . $count . $fileName_b ) ) {
-					$count ++;
+					$count++;
 				}
 
 				$fileName = $fileName_a . '_' . $count . $fileName_b;
@@ -687,13 +686,13 @@ Comment: {COMMENT}
 			die( '{"jsonrpc" : "2.0", "result" : null, "id" : "id"}' );
 
 
-		} else if ( 'download' == $_REQUEST['_process'] ) {
+		} elseif ( 'download' == $_REQUEST['_process'] ) {
 			@ob_end_clean();
 			$file_id   = (int) $_REQUEST['file_id'];
 			$file_data = $this->get_file( $file_id );
 			if ( isset( $file_data['file_url'] ) && strlen( $file_data['file_url'] ) ) {
 				redirect_browser( $file_data['file_url'] );
-			} else if ( is_file( $file_data['file_path'] ) ) {
+			} elseif ( is_file( $file_data['file_path'] ) ) {
 				header( "Pragma: public" );
 				header( "Expires: 0" );
 				header( "Cache-Control: must-revalidate, post-check=0, pre-check=0" );
@@ -712,7 +711,7 @@ Comment: {COMMENT}
 				echo 'Not found';
 			}
 			exit;
-		} else if ( 'save_file_popup' == $_REQUEST['_process'] ) {
+		} elseif ( 'save_file_popup' == $_REQUEST['_process'] ) {
 			$file_id = $_REQUEST['file_id'];
 
 			$file_path = false;
@@ -788,7 +787,7 @@ Comment: {COMMENT}
 			</script>
 			<?php
 			exit;
-		} else if ( 'save_file' == $_REQUEST['_process'] ) {
+		} elseif ( 'save_file' == $_REQUEST['_process'] ) {
 			$file_id = (int) $_REQUEST['file_id'];
 
 			$file_path = false;
@@ -818,7 +817,7 @@ Comment: {COMMENT}
 
 					if ( isset( $_REQUEST['plupload_key'] ) && isset( $_REQUEST['plupload_file_name'] ) && is_array( $_REQUEST['plupload_file_name'] ) && strlen( preg_replace( '/[^a-zA-Z0-9-_]+/', '', basename( $_REQUEST['plupload_key'] ) ) ) ) {
 						$plupload_key = preg_replace( '/[^a-zA-Z0-9-_]+/', '', basename( $_REQUEST['plupload_key'] ) );
-						
+
 						foreach ( $_REQUEST['plupload_file_name'] as $plupload_file_name_key => $file_name ) {
 							$plupload_file_name_key = preg_replace( '/[^a-zA-Z0-9-_]+/', '', basename( $plupload_file_name_key ) );
 							if ( $plupload_key && $plupload_file_name_key && $file_name && is_file( _FILE_UPLOAD_PATH . 'plupload' . DIRECTORY_SEPARATOR . $plupload_key . '-' . $plupload_file_name_key ) ) {
@@ -1039,7 +1038,7 @@ Comment: {COMMENT}
 				}
 				redirect_browser( $this->link_open( $file_id ) );
 			}
-		} else if ( 'delete_file_popup' == $_REQUEST['_process'] ) {
+		} elseif ( 'delete_file_popup' == $_REQUEST['_process'] ) {
 			$file_id = (int) $_REQUEST['file_id'];
 
 			if ( ! $file_id || $file_id == 'new' ) {
@@ -1433,9 +1432,9 @@ Comment: {COMMENT}
 		}
 		if ( isset( $search['job_id'] ) && (int) $search['job_id'] > 0 ) {
 			$where .= " AND f.job_id = " . (int) $search['job_id'];
-		} else if ( isset( $search['quote_id'] ) && (int) $search['quote_id'] > 0 ) {
+		} elseif ( isset( $search['quote_id'] ) && (int) $search['quote_id'] > 0 ) {
 			$where .= " AND f.quote_id = " . (int) $search['quote_id'];
-		} else if ( isset( $search['customer_id'] ) && (int) $search['customer_id'] ) {
+		} elseif ( isset( $search['customer_id'] ) && (int) $search['customer_id'] ) {
 			$where .= " AND f.customer_id = " . (int) $search['customer_id'];
 		}
 
@@ -1453,7 +1452,7 @@ Comment: {COMMENT}
 
 	public static function format_bytes( $size ) {
 		$units = array( ' B', ' KB', ' MB', ' GB', ' TB' );
-		for ( $i = 0; $size >= 1024 && $i < 4; $i ++ ) {
+		for ( $i = 0; $size >= 1024 && $i < 4; $i++ ) {
 			$size /= 1024;
 		}
 
@@ -1553,7 +1552,7 @@ Comment: {COMMENT}
 								$pointers = array();
 							}
 							$pointer_id = 0;
-							foreach($pointers as $pointer){
+							foreach ($pointers as $pointer) {
 							if ( ! trim( $pointer ) ) {
 								continue;
 							}
@@ -1615,7 +1614,7 @@ Comment: {COMMENT}
               }
 
               $(document).ready(function () {
-								<?php if(module_file::can_i( 'create', 'File Comments' )){ ?>
+								<?php if (module_file::can_i( 'create', 'File Comments' )) { ?>
                   $("#file_preview").click(function (e) {
                       if (!add_pointer) {
                           add_pointer = true;
@@ -1882,7 +1881,7 @@ Comment: {COMMENT}
 						$file_data = $this->get_file( $file_id, false );
 						if ( isset( $file_data['file_url'] ) && strlen( $file_data['file_url'] ) ) {
 							redirect_browser( $file_data['file_url'] );
-						} else if ( is_file( $file_data['file_path'] ) ) {
+						} elseif ( is_file( $file_data['file_path'] ) ) {
 							header( "Pragma: public" );
 							header( "Expires: 0" );
 							header( "Cache-Control: must-revalidate, post-check=0, pre-check=0" );
@@ -2089,14 +2088,13 @@ Comment: {COMMENT}
 		<?php
 		return ob_get_clean();
 	}
-
 }
 
 
 // moving to a better OOP layout for stuff.
 // this is a representation of a "file" in ucm. mapped to the ucm_file database table.
-class ucm_file {
-
+class ucm_file
+{
 	protected $file_id = 0;
 	protected $do_permissions = true;
 
@@ -2190,7 +2188,7 @@ class ucm_file {
 		if ( $this->file_id > 0 && ( ! $data || isset( $data['new'] ) || $data['file_id'] != $this->file_id ) ) {
 			$this->file_id = 0;
 			die( 'Failed to access file. No permissions to view this file, please check with the administrator.' );
-		} else if ( $this->file_id > 0 ) {
+		} elseif ( $this->file_id > 0 ) {
 			if ( class_exists( 'module_security', false ) ) {
 				if ( ! module_security::check_page( array(
 					'module'  => 'file',

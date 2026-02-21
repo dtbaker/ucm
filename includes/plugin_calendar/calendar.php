@@ -3,8 +3,8 @@
 define( '_CALENDAR_ACCESS_ALL', 'All calendar entries in system' ); // do not change string
 define( '_CALENDAR_ACCESS_ASSIGNED', 'Only from Customers or assigned items' ); // do not change string
 
-class module_calendar extends module_base {
-
+class module_calendar extends module_base
+{
 	var $links;
 
 	public function __construct() {
@@ -347,8 +347,6 @@ class module_calendar extends module_base {
 
 		return ob_get_clean();
 	}
-
-
 }
 
 if ( ! function_exists( 'js2PhpTime' ) ) {
@@ -357,7 +355,7 @@ if ( ! function_exists( 'js2PhpTime' ) ) {
 		if ( preg_match( '@(\d+)/(\d+)/(\d+)\s+(\d+):(\d+)@', $jsdate, $matches ) == 1 ) {
 			$ret = mktime( $matches[4], $matches[5], 0, $matches[1], $matches[2], $matches[3] );
 			//echo $matches[4] ."-". $matches[5] ."-". 0  ."-". $matches[1] ."-". $matches[2] ."-". $matches[3];
-		} else if ( preg_match( '@(\d+)/(\d+)/(\d+)@', $jsdate, $matches ) == 1 ) {
+		} elseif ( preg_match( '@(\d+)/(\d+)/(\d+)@', $jsdate, $matches ) == 1 ) {
 			$ret = mktime( 0, 0, 0, $matches[1], $matches[2], $matches[3] );
 			//echo 0 ."-". 0 ."-". 0 ."-". $matches[1] ."-". $matches[2] ."-". $matches[3];
 		}
@@ -449,7 +447,6 @@ function listCalendarByRange( $sd, $ed ) {
 					if ( isset( $result['staff_ids'] ) && count( $result['staff_ids'] ) ) {
 						switch ( $calendar_data_access ) {
 							case _CALENDAR_ACCESS_ALL:
-
 								break;
 							case _CALENDAR_ACCESS_ASSIGNED:
 							default:
@@ -507,7 +504,6 @@ function listCalendarByRange( $sd, $ed ) {
 				} else {
 					switch ( $calendar_data_access ) {
 						case _CALENDAR_ACCESS_ALL:
-
 							break;
 						case _CALENDAR_ACCESS_ASSIGNED:
 						default:
@@ -526,7 +522,6 @@ function listCalendarByRange( $sd, $ed ) {
 			if ( count( $calendar_event['staff_ids'] ) ) {
 				switch ( $calendar_data_access ) {
 					case _CALENDAR_ACCESS_ALL:
-
 						break;
 					case _CALENDAR_ACCESS_ASSIGNED:
 					default:

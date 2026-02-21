@@ -4,8 +4,8 @@ function sort_notes( $a, $b ) {
 	return $a['note_time'] < $b['note_time'];
 }
 
-class module_note extends module_base {
-
+class module_note extends module_base
+{
 	var $links;
 	public $user_types;
 
@@ -236,7 +236,7 @@ class module_note extends module_base {
 				$alert_res['link']      = module_vendor::link_open( $task['owner_id'], false, $vendor_data );
 				$alert_res['full_link'] = module_vendor::link_open( $task['owner_id'], true, $vendor_data );
 				break;
-			case 'job';
+			case 'job':
 				$job_data = module_job::get_job( $task['owner_id'] );
 				if ( ! $job_data || ! isset( $job_data['job_id'] ) || $job_data['job_id'] != $task['owner_id'] ) {
 					return false;
@@ -267,7 +267,7 @@ class module_note extends module_base {
 		$can_create = $can_edit = $can_view = $can_delete = true;
 		if ( $options && isset( $options['bypass_security'] ) ) {
 			// do nothing?
-		} else if ( isset( $options ) && isset( $options['owner_table'] ) && $options['owner_table'] && isset( $options['title'] ) && $options['title'] ) {
+		} elseif ( isset( $options ) && isset( $options['owner_table'] ) && $options['owner_table'] && isset( $options['title'] ) && $options['title'] ) {
 			$can_view   = $plugins[ $options['owner_table'] ]->can_i( 'view', $options['title'] );
 			$can_edit   = $plugins[ $options['owner_table'] ]->can_i( 'edit', $options['title'] );
 			$can_create = $plugins[ $options['owner_table'] ]->can_i( 'create', $options['title'] );

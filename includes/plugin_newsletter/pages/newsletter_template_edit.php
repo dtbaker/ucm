@@ -217,7 +217,7 @@ $newsletter_template    = module_newsletter::get_newsletter_template( $newslette
 							</td>
 						</tr>
 						<?php
-						$x ++;
+						$x++;
 					} ?>
 					<tr>
 						<td colspan="2" align="center">

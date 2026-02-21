@@ -1,8 +1,7 @@
 <?php
 
-
-class module_subscription extends module_base {
-
+class module_subscription extends module_base
+{
 	public $links;
 	public $subscription_types;
 	public $subscription_id;
@@ -105,7 +104,8 @@ class module_subscription extends module_base {
 
 
 		module_config::register_css( 'subscription', 'subscription.css' );
-		module_config::register_js( 'subscription', 'subscription.js' );;
+		module_config::register_js( 'subscription', 'subscription.js' );
+;
 		hook_add( 'invoice_sidebar', 'module_subscription::hook_invoice_sidebar' );
 		hook_add( 'invoice_deleted', 'module_subscription::hook_invoice_deleted' );
 		hook_add( 'invoice_replace_fields', 'module_subscription::hook_invoice_replace_fields' );
@@ -615,7 +615,7 @@ class module_subscription extends module_base {
 				set_message( "Subscription deleted successfully" );
 				redirect_browser( self::link_open( false ) );
 			}
-		} else if ( "save_subscription" == $_REQUEST['_process'] ) {
+		} elseif ( "save_subscription" == $_REQUEST['_process'] ) {
 			$subscription_id = $this->save_subscription( $_REQUEST['subscription_id'], $_POST );
 			set_message( "Subscription saved successfully" );
 			redirect_browser( self::link_open( $subscription_id ) );
@@ -857,7 +857,7 @@ class module_subscription extends module_base {
 				if ( $invoice_data['date_cancel'] != '0000-00-00' ) {
 					continue;
 				}
-				$number_of_past_invoices ++;
+				$number_of_past_invoices++;
 			}
 		}
 		//if(isset($subscription['settings']) && isset($subscription['settings']['trial_period']) && $subscription['settings']['trial_period'] > 0 && $number_of_past_invoices < $subscription['settings']['trial_period']){
@@ -1007,7 +1007,7 @@ class module_subscription extends module_base {
 							if ( $invoice_data['date_cancel'] != '0000-00-00' ) {
 								continue;
 							}
-							$number_of_past_invoices ++;
+							$number_of_past_invoices++;
 						}
 					}
 				}
@@ -1172,7 +1172,7 @@ class module_subscription extends module_base {
 							$next_time   = $t;
 							$has_history = true;
 						}
-					} else if ( $invoice['date_create'] && $invoice['date_create'] != '0000-00-00' ) {
+					} elseif ( $invoice['date_create'] && $invoice['date_create'] != '0000-00-00' ) {
 						$t = strtotime( $invoice['date_create'] );
 						if ( $t >= $next_time ) {
 							$next_time   = $t;
@@ -1376,7 +1376,7 @@ class module_subscription extends module_base {
 		// check if this invoice id is a subscription payment
 		if ( $full_finance_item && isset( $full_finance_item['finance_id'] ) && (int) $full_finance_item['finance_id'] > 0 ) {
 			// already have saved a finance item against this invoice id, so we don't try to assume this is a subscription payment
-		} else if ( $full_finance_item && isset( $full_finance_item['invoice_payment_id'] ) && (int) $full_finance_item['invoice_payment_id'] > 0 ) {
+		} elseif ( $full_finance_item && isset( $full_finance_item['invoice_payment_id'] ) && (int) $full_finance_item['invoice_payment_id'] > 0 ) {
 			$subscription = get_single( 'subscription_history', 'invoice_id', $invoice_id );
 			if ( $subscription ) {
 				$subscription_owner = get_single( 'subscription_owner', 'subscription_owner_id', $subscription['subscription_owner_id'] );
@@ -1511,7 +1511,7 @@ class module_subscription extends module_base {
 				$original = true;
 				$c        = 0;
 				while ( $time < $end_date ) {
-					if ( $c ++ > 200 ) {
+					if ( $c++ > 200 ) {
 						break;
 					}
 					$next_time = 0;
@@ -1519,7 +1519,7 @@ class module_subscription extends module_base {
 						// it's a once off..
 						// add it to the list but dont calculate the next one.
 
-					} else if ( ! $original ) {
+					} elseif ( ! $original ) {
 						// work out when the next one will be.
 						$next_time = self::_calculate_next_time( $time, $subscription );
 						$time      = $next_time;
@@ -1918,7 +1918,6 @@ class module_subscription extends module_base {
 			switch ( $search_options['lookup'] ) {
 				case 'active_subscriptions':
 				default:
-
 					break;
 			}
 		}
@@ -2112,6 +2111,4 @@ class module_subscription extends module_base {
 		<?php
 		return ob_get_clean();
 	}
-
-
 }

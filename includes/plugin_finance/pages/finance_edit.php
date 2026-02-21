@@ -106,10 +106,10 @@ if ( $finance_id > 0 && ( count( $linked_invoice_payments ) || count( $linked_fi
 ?>
 
 <script type="text/javascript">
-	<?php if(! $locked){ ?>
+	<?php if (! $locked) { ?>
   $(function () {
       if (typeof ucm.finance != 'undefined') {
-				<?php if($finance['amount'] > 0 && $finance['taxable_amount'] == 0){ ?>
+				<?php if ($finance['amount'] > 0 && $finance['taxable_amount'] == 0) { ?>
           ucm.finance.changing = 'subtotal';
 				<?php } ?>
           ucm.finance.init();
@@ -195,7 +195,7 @@ if ( $finance_id > 0 && ( count( $linked_invoice_payments ) || count( $linked_fi
 					foreach ( $linked_invoice_payments as $linked_invoice_payment ) {
 						if ( isset( $linked_invoice_payment['is_refund'] ) && $linked_invoice_payment['is_refund'] && isset( $linked_invoice_payment['refund_invoice_payments'] ) ) {
 							$is_refunds = array_merge( $is_refunds, $linked_invoice_payment['refund_invoice_payments'] );
-						} else if ( isset( $linked_invoice_payment['refunded'] ) && $linked_invoice_payment['refunded'] && isset( $linked_invoice_payment['refund_invoice_payments'] ) ) {
+						} elseif ( isset( $linked_invoice_payment['refunded'] ) && $linked_invoice_payment['refunded'] && isset( $linked_invoice_payment['refund_invoice_payments'] ) ) {
 							$refunded = array_merge( $refunded, $linked_invoice_payment['refund_invoice_payments'] );
 						}
 						echo module_invoice::link_open( $linked_invoice_payment['invoice_id'], true );
@@ -362,7 +362,7 @@ if ( $finance_id > 0 && ( count( $linked_invoice_payments ) || count( $linked_fi
 					(<?php echo dollar( $tax['amount'], true, $finance['currency_id'] ); ?>)
 				<br/>
 				<?php }
-				}else{
+				} else {
 
 				$incrementing = false;
 				//echo print_select_box(module_finance::get_tax_modes(),'tax_mode',isset($finance['tax_mode'])?$finance['tax_mode']:0,'',false);
@@ -638,7 +638,7 @@ if ( $finance_id > 0 && ( count( $linked_invoice_payments ) || count( $linked_fi
 					'onclick' => "$('#recurring_next').val('" . htmlspecialchars( $next_data[1] ) . "');",
 				);
 				break;
-			} else if ( $next == 0 && $next_data[0] == $finance_recurring_id ) {
+			} elseif ( $next == 0 && $next_data[0] == $finance_recurring_id ) {
 				$next = - 1;
 			}
 		}

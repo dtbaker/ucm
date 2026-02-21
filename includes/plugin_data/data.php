@@ -9,8 +9,8 @@ define( '_CUSTOM_DATA_MENU_LOCATION_NONE', 3 );
 define( '_MIN_INPUT_HEIGHT', 18 );
 
 
-class module_data extends module_base {
-
+class module_data extends module_base
+{
 	var $links;
 	public $user_types;
 
@@ -399,7 +399,7 @@ class module_data extends module_base {
 			} else {
 				set_error( _l( "Sorry invalid hash" ) );
 			}
-		} else if ( "save_ajax" == $_REQUEST['_process'] ) {
+		} elseif ( "save_ajax" == $_REQUEST['_process'] ) {
 			switch ( $_REQUEST['type'] ) {
 				case 'input':
 					$data_field_id = (int) $_REQUEST['data_field_id'];
@@ -413,7 +413,7 @@ class module_data extends module_base {
 						if ( $width && preg_match( '/^width=/', $line ) ) {
 							$line  = 'width=' . $width;
 							$width = false;
-						} else if ( $height && preg_match( '/^height=/', $line ) ) {
+						} elseif ( $height && preg_match( '/^height=/', $line ) ) {
 							$line   = 'height=' . $height;
 							$height = false;
 						}
@@ -448,14 +448,14 @@ class module_data extends module_base {
 						foreach ( $data_field_positions as $data_field_id ) {
 							echo "Update item $data_field_id with $position \n";
 							update_insert( "data_field_id", $data_field_id, "data_field", array( 'order' => $position ) );
-							$position ++;
+							$position++;
 						}
 					}
 					break;
 			}
 			echo 'done';
 			exit;
-		} else if ( "save_data_type" == $_REQUEST['_process'] ) {
+		} elseif ( "save_data_type" == $_REQUEST['_process'] ) {
 			if ( isset( $_REQUEST['butt_del'] ) ) {
 				$data_type_id = (int) $_REQUEST['data_type_id'];
 				if ( module_form::confirm_delete( 'data_type_id', 'Really delete this entire custom data group? All it\'s records and revisions as well?', $this->link( '', array( "data_type_id" => $data_type_id ) ) ) ) {
@@ -511,7 +511,7 @@ class module_data extends module_base {
 				$_REQUEST['_redirect'] = $this->link( '', array( "data_type_id" => $data_type_id ) );
 				set_message( _l( "Data saved successfully" ) );
 			}
-		} else if ( "save_data_field_group" == $_REQUEST['_process'] ) {
+		} elseif ( "save_data_field_group" == $_REQUEST['_process'] ) {
 			$data_type_id = (int) $_REQUEST['data_type_id'];
 			if ( isset( $_REQUEST['butt_del'] ) ) {
 				$data_field_group_id = (int) $_REQUEST['data_field_group_id'];
@@ -531,7 +531,7 @@ class module_data extends module_base {
 				) );
 				set_message( _l( "Data fieldset saved successfully" ) );
 			}
-		} else if ( "save_data_field" == $_REQUEST['_process'] ) {
+		} elseif ( "save_data_field" == $_REQUEST['_process'] ) {
 			$data_type_id        = (int) $_REQUEST['data_type_id'];
 			$data_field_id       = (int) $_REQUEST['data_field_id'];
 			$data_field_group_id = (int) $_REQUEST['data_field_group_id'];
@@ -653,15 +653,15 @@ class module_data extends module_base {
 			set_error( 'No permissions to create data' );
 
 			return false;
-		} else if ( (int) $data_record_id > 0 && ! $this->can_i( 'edit', $data_type['data_type_name'] ) ) {
+		} elseif ( (int) $data_record_id > 0 && ! $this->can_i( 'edit', $data_type['data_type_name'] ) ) {
 			set_error( 'No permissions to edit data' );
 
 			return false;
-		} else if ( (int) $data_record_id > 0 && ! $this->can_i( 'delete', $data_type['data_type_name'] ) && isset( $_POST['butt_del'] ) ) {
+		} elseif ( (int) $data_record_id > 0 && ! $this->can_i( 'delete', $data_type['data_type_name'] ) && isset( $_POST['butt_del'] ) ) {
 			set_error( 'No permissions to delete data' );
 
 			return false;
-		} else if ( (int) $data_record_id > 0 && $this->can_i( 'delete', $data_type['data_type_name'] ) && isset( $_POST['butt_del'] ) ) {
+		} elseif ( (int) $data_record_id > 0 && $this->can_i( 'delete', $data_type['data_type_name'] ) && isset( $_POST['butt_del'] ) ) {
 			if ( module_form::confirm_delete(
 				'data_record_id',
 				"Really delete this entire data record?",
@@ -711,7 +711,7 @@ class module_data extends module_base {
 				foreach ( $data_fields as $data_field ) {
 					$data_field_id = $data_field['data_field_id'];
 					if ( $data_field['required'] ) {
-						// depending on the type of field, there are different ways to 
+						// depending on the type of field, there are different ways to
 						// check if the required field has been inserted.
 						switch ( $data_field['field_type'] ) {
 							case 'radio':
@@ -719,12 +719,11 @@ class module_data extends module_base {
 								if ( isset( $data['data_field'][ $data_field_id ] ) && strtolower( $data['data_field'][ $data_field_id ] ) == 'other' && ( ! isset( $data['other_data_field'][ $data_field_id ] ) || ! $data['other_data_field'][ $data_field_id ] ) ) {
 									$missing_required_fields[ $data_field_id ]       = 'other';
 									$missing_required_fields_names[ $data_field_id ] = $data_field['title'];
-								} else if ( ! isset( $data['data_field'][ $data_field_id ] ) || ! $data['data_field'][ $data_field_id ] ) {
+								} elseif ( ! isset( $data['data_field'][ $data_field_id ] ) || ! $data['data_field'][ $data_field_id ] ) {
 									$missing_required_fields[ $data_field_id ] = true;
 								}
 								break;
 							case 'file':
-
 								if ( ! is_array( $_FILES['data_field']['tmp_name'][ $data_field_id ] ) && ! is_array( $_FILES['data_field']['name'][ $data_field_id ] ) ) {
 									$_FILES['data_field']['tmp_name'][ $data_field_id ] = array( $_FILES['data_field']['tmp_name'][ $data_field_id ] );
 									$_FILES['data_field']['name'][ $data_field_id ]     = array( $_FILES['data_field']['name'][ $data_field_id ] );
@@ -1054,7 +1053,7 @@ class module_data extends module_base {
 		return $data;
 	}
 
-	function get_data_field_group( & $data_field_group_id ) {
+	function get_data_field_group( &$data_field_group_id ) {
 		$data = get_single( "data_field_group", "data_field_group_id", $data_field_group_id );
 		if ( $data ) {
 			// optional processing here later on.
@@ -1653,7 +1652,7 @@ class module_data extends module_base {
 						} else {
 							if ( $value && ! is_array( $value ) ) {
 								$value_temp = unserialize( $value );
-							} else if ( is_array( $value ) ) {
+							} elseif ( is_array( $value ) ) {
 								$value_temp = $value;
 							} else {
 								$value_temp = false;
@@ -1886,7 +1885,7 @@ class module_data extends module_base {
 										break;
 									}
 								}
-							} else if ( stripos( $data_item['data_text'], $search_options['search'] ) !== false ) {
+							} elseif ( stripos( $data_item['data_text'], $search_options['search'] ) !== false ) {
 								// otherweise we search all fields in this data record.
 								$this_match = $data_item;
 								break;
@@ -2153,6 +2152,4 @@ class module_data extends module_base {
 
 		return $sql;
 	}
-
-
 }

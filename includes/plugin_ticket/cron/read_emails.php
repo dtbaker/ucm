@@ -1,6 +1,5 @@
 <?php
 
-
 $autoreply_queue = array();
 
 //set_time_limit(10);

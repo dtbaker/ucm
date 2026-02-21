@@ -4,8 +4,8 @@
  * Session handler implementing SessionHandlerInterface for PHP 8+.
  * Delegates to module_session static methods.
  */
-class UcmSessionHandler implements SessionHandlerInterface {
-
+class UcmSessionHandler implements SessionHandlerInterface
+{
 	public function open( string $path, string $name ): bool {
 		return true;
 	}
@@ -31,8 +31,8 @@ class UcmSessionHandler implements SessionHandlerInterface {
 	}
 }
 
-class module_session extends module_base {
-
+class module_session extends module_base
+{
 	public static $session_id = false;
 	public static $member_id = false;
 	private static $destroyed = false;
@@ -138,7 +138,7 @@ class module_session extends module_base {
 				if ( function_exists( 'mb_detect_encoding' ) && mb_detect_encoding( $res['session_data'] ) != $matches[1] ) {
 					$res['session_data'] = iconv( mb_detect_encoding( $res['session_data'] ), $matches[1], $res['session_data'] );
 				}
-			} else if ( $foo ) {
+			} elseif ( $foo ) {
 				$res['session_data'] = $foo;
 			}
 			self::$session_hash = md5( $res['session_data'] );
@@ -168,7 +168,7 @@ class module_session extends module_base {
 			// are we creating or reading?
 			$sql = "SELECT session_id FROM `" . _DB_PREFIX . "session` WHERE `session_id` = '" . db_escape( self::$session_id ) . "'";
 			$res = query( $sql );
-			if ( ( $res instanceOf mysqli_result && mysqli_num_rows( $res ) ) || ( is_resource( $res ) && mysql_num_rows( $res ) ) ) {
+			if ( ( $res instanceof mysqli_result && mysqli_num_rows( $res ) ) || ( is_resource( $res ) && mysql_num_rows( $res ) ) ) {
 				// we have a session! woo!
 				// update existing
 				$data = base64_encode( $data );
@@ -254,6 +254,4 @@ class module_session extends module_base {
 		<?php
 		return ob_get_clean();
 	}
-
-
 }

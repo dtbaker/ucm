@@ -1,6 +1,5 @@
 <?php
 
-
 if ( ! module_config::can_i( 'view', 'API Settings' ) ) {
 	redirect_browser( _BASE_HREF );
 }

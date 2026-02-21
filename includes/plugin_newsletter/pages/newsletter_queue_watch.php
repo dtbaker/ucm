@@ -83,10 +83,10 @@ $start_time = $send['start_time'];
 						$sent_to_members    = 0;
 						while ( $send_member = mysqli_fetch_assoc( $send_members ) ) {
 							if ( $send_member['open_time'] ) {
-								$open_count ++;
+								$open_count++;
 							}
 							?>
-							<tr class="<?php echo $x ++ % 2 ? 'odd' : 'even'; ?>"
+							<tr class="<?php echo $x++ % 2 ? 'odd' : 'even'; ?>"
 							    id="newsletter_member_<?php echo $send_member['newsletter_member_id']; ?>">
 								<td><?php echo htmlspecialchars( $send_member['company_name'] ); ?></td>
 								<td><?php echo htmlspecialchars( $send_member['first_name'] . ' ' . $send_member['last_name'] ); ?></td>
@@ -100,9 +100,9 @@ $start_time = $send['start_time'];
 
 									if ( module_config::c( 'newsletter_doubleoptin_bypass', 0 ) && isset( $send_member['blacklist_reason'] ) && $send_member['blacklist_reason'] == 'doubleoptin' ) {
 										_e( 'No' );
-									} else if ( $send_member['unsubscribe_time'] ) {
+									} elseif ( $send_member['unsubscribe_time'] ) {
 										echo print_date( $send_member['unsubscribe_time'], true );
-									} else if ( $send_member['unsubscribe_time2'] ) {
+									} elseif ( $send_member['unsubscribe_time2'] ) {
 										echo print_date( $send_member['unsubscribe_time2'], true );
 									} else {
 										_e( 'No' );
@@ -114,12 +114,12 @@ $start_time = $send['start_time'];
 										case _NEWSLETTER_STATUS_NEW:
 											// hasnt been processed yet
 											break;
-										case _NEWSLETTER_STATUS_SENT;
+										case _NEWSLETTER_STATUS_SENT:
 											// sent!
 											_e( 'sent' );
 											break;
-										case _NEWSLETTER_STATUS_PENDING;
-										case _NEWSLETTER_STATUS_PAUSED;
+										case _NEWSLETTER_STATUS_PENDING:
+										case _NEWSLETTER_STATUS_PAUSED:
 											// pending send..
 											_e( 'pending' );
 											break;
@@ -313,12 +313,12 @@ $start_time = $send['start_time'];
 								?>
 								<input type="button" name="cancel" value="<?php echo _l( 'Pause Sending' ); ?>" class="submit_button"
 								       onclick="$('#status').val(<?php echo _NEWSLETTER_STATUS_PAUSED; ?>); $(this).parents('form')[0].submit();">
-							<?php } else if ( $send['status'] == _NEWSLETTER_STATUS_NEW ) {
+							<?php } elseif ( $send['status'] == _NEWSLETTER_STATUS_NEW ) {
 								// sending hasn't started yet - offer a start button.
 								?>
 								<input type="button" name="resume" value="<?php echo _l( 'Start Sending' ); ?>" class="submit_button"
 								       onclick="$('#status').val(<?php echo _NEWSLETTER_STATUS_PENDING; ?>); $(this).parents('form')[0].submit();">
-							<?php } else if ( $send['status'] == _NEWSLETTER_STATUS_PAUSED ) {
+							<?php } elseif ( $send['status'] == _NEWSLETTER_STATUS_PAUSED ) {
 								// sending paused.. offer a resume button
 								?>
 								<input type="button" name="cancel" value="<?php echo _l( 'Resume Sending' ); ?>" class="submit_button"
@@ -339,7 +339,7 @@ $start_time = $send['start_time'];
 					) ); ?>
 					<script type="text/javascript">
               var run_manual_send = false;
-							<?php if($retry_failures || $retry_pending){ ?>
+							<?php if ($retry_failures || $retry_pending) { ?>
               $(function () {
                   start_send_manual();
               });

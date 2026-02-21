@@ -21,7 +21,7 @@
 		</div>
 	</div>
 
-<?php } else if ( isset( $_REQUEST['forgot_password'] ) ) { ?>
+<?php } elseif ( isset( $_REQUEST['forgot_password'] ) ) { ?>
 
 	<div id="forgot" class="tab-pane">
 		<div class="form-box" id="forgot-box">

@@ -164,7 +164,7 @@ if ( isset( $user[ $use_master_key ] ) && $user[ $use_master_key ] ) {
 					<?php _e( 'Notice: This contact is primary and has access to the other linked customers: %s', implode( ', ', $c ) ); ?>
 				</div>
 				<?php
-			} else if ( $user['linked_parent_user_id'] ) {
+			} elseif ( $user['linked_parent_user_id'] ) {
 				?>
 				<div>
 					<?php _e( 'Notice: This contact has been linked to %s. Please go there to edit their details.', module_user::link_open_contact( $user['linked_parent_user_id'], true ) ); ?>
@@ -213,7 +213,7 @@ if ( isset( $user[ $use_master_key ] ) && $user[ $use_master_key ] ) {
 				if ( $other['user_id'] == $user['user_id'] ) {
 					// this "other" person is from teh same customer as us.
 					unset( $others[ $other_id ] );
-				} else if ( count( $contact_links ) ) {
+				} elseif ( count( $contact_links ) ) {
 					// check if this one is already linked somewhere.
 					foreach ( $contact_links as $contact_link ) {
 						if ( $contact_link['user_id'] == $other['user_id'] ) {

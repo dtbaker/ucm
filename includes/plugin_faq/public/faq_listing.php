@@ -62,7 +62,7 @@ $show_product = isset( $_REQUEST['show_product'] ) ? $_REQUEST['show_product'] :
 		foreach ( $faqs as $data ) {
 			$faq = module_faq::get_faq( $data['faq_id'] );
 			?>
-			<tr class="<?php echo ( $c ++ % 2 ) ? "odd" : "even"; ?>">
+			<tr class="<?php echo ( $c++ % 2 ) ? "odd" : "even"; ?>">
 				<td nowrap="">
 					<a
 						href="<?php echo module_faq::link_open_public( $data['faq_id'], false ); ?>&faq_product_id=<?php echo isset( $search['faq_product_id'] ) ? (int) $search['faq_product_id'] : ''; ?>"><?php echo htmlspecialchars( $faq['question'] ); ?></a>

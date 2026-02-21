@@ -40,7 +40,7 @@ if ( isset( $_REQUEST['process_upgrade'] ) && isset( $_REQUEST['via_ajax'] ) ) {
 	$result = $ucm_upgrade_manager->complete_plugin_installation( isset( $_REQUEST['plugin_name'] ) ? $_REQUEST['plugin_name'] : $_REQUEST['process_upgrade'] );
 	echo json_encode( $result );
 	exit;
-} else if ( isset( $_REQUEST['install_upgrade'] ) && isset( $_REQUEST['via_ajax'] ) ) {
+} elseif ( isset( $_REQUEST['install_upgrade'] ) && isset( $_REQUEST['via_ajax'] ) ) {
 	// installs the latest version of files.
 	ob_end_clean();
 	header( "Content-type: text/javascript" );
@@ -48,11 +48,11 @@ if ( isset( $_REQUEST['process_upgrade'] ) && isset( $_REQUEST['via_ajax'] ) ) {
 	echo json_encode( $result );
 	exit;
 
-} else if ( isset( $_REQUEST['check_upgrade'] ) && isset( $_REQUEST['via_ajax'] ) ) {
+} elseif ( isset( $_REQUEST['check_upgrade'] ) && isset( $_REQUEST['via_ajax'] ) ) {
 	// checks for available plugin updates via ajax.
 
 
-} else if ( isset( $_REQUEST['install_upgrade'] ) ) {
+} elseif ( isset( $_REQUEST['install_upgrade'] ) ) {
 	// installs the latest version of files (all at once - old slow way - not used in new ajax method above)
 
 	if ( ! strlen( trim( module_config::c( '_installation_code' ) ) ) ) {
@@ -159,11 +159,11 @@ if ( isset( $_REQUEST['process_upgrade'] ) && isset( $_REQUEST['via_ajax'] ) ) {
                             if ( in_array( $file, $ucm_upgrade_manager->held_files ) ) {
 	                            $error    = '<strong>Custom:</strong> file not upgraded: ' . $file;
 	                            $errors[] = $error;
-                            } else if ( ! isset( $available_update['file_contents'][ $file ] ) ) {
+                            } elseif ( ! isset( $available_update['file_contents'][ $file ] ) ) {
 	                            $error    = '<strong>WARNING:</strong> failed to get file contents from server: ' . $file;
 	                            $errors[] = $error;
 	                            echo $error;
-                            } else if ( ! file_put_contents( _UCM_FOLDER . $file, base64_decode( $available_update['file_contents'][ $file ] ) ) ) {
+                            } elseif ( ! file_put_contents( _UCM_FOLDER . $file, base64_decode( $available_update['file_contents'][ $file ] ) ) ) {
 	                            $error    = '<strong>WARNING:</strong> failed to install the file: ' . $file;
 	                            $errors[] = $error;
 	                            echo $error;
@@ -225,7 +225,7 @@ if ( isset( $_REQUEST['process_upgrade'] ) && isset( $_REQUEST['via_ajax'] ) ) {
 	<?php
 
 
-} else if ( isset( $_REQUEST['download_upgrade'] ) ) {
+} elseif ( isset( $_REQUEST['download_upgrade'] ) ) {
 
 	if ( _DEMO_MODE ) {
 		echo 'Sorry, downloading updates as a zip file is not allowed in demo mode :)';
@@ -233,7 +233,7 @@ if ( isset( $_REQUEST['process_upgrade'] ) && isset( $_REQUEST['via_ajax'] ) ) {
 		exit;
 	}
 
-} else if ( isset( $_REQUEST['check_upgrade'] ) ) {
+} elseif ( isset( $_REQUEST['check_upgrade'] ) ) {
 
 	// checks for any available upgrades, calls the new ajax handler to check each plugin individually.
 
@@ -265,7 +265,7 @@ if ( isset( $_REQUEST['process_upgrade'] ) && isset( $_REQUEST['via_ajax'] ) ) {
 			$x = 0;
 			foreach ( $plugins as $plugin_name => $pl ) {
 				?>
-				<tr class="<?php echo $x ++ % 2 ? 'odd' : 'even'; ?>" data-type="ajax_plugin"
+				<tr class="<?php echo $x++ % 2 ? 'odd' : 'even'; ?>" data-type="ajax_plugin"
 				    data-plugin="<?php echo $plugin_name; ?>">
 					<td class="update_checkbox">
 						<input type="checkbox" name="doupdate[<?php echo $plugin_name; ?>]" value="1" disabled>
@@ -290,7 +290,7 @@ if ( isset( $_REQUEST['process_upgrade'] ) && isset( $_REQUEST['via_ajax'] ) ) {
 			<?php }
 			foreach ( array( 'database', 'core' ) as $plugin_name ) {
 				?>
-				<tr class="<?php echo $x ++ % 2 ? 'odd' : 'even'; ?>" data-type="ajax_plugin"
+				<tr class="<?php echo $x++ % 2 ? 'odd' : 'even'; ?>" data-type="ajax_plugin"
 				    data-plugin="<?php echo $plugin_name; ?>">
 					<td class="update_checkbox">
 						<input type="checkbox" name="doupdate[<?php echo $plugin_name; ?>]" value="1" disabled>
@@ -377,7 +377,7 @@ if ( isset( $_REQUEST['process_upgrade'] ) && isset( $_REQUEST['via_ajax'] ) ) {
 						}
 
 						?>
-						<tr class="<?php echo $x ++ % 2 ? 'odd' : 'even'; ?>" data-plugin="<?php echo $available_update['key']; ?>">
+						<tr class="<?php echo $x++ % 2 ? 'odd' : 'even'; ?>" data-plugin="<?php echo $available_update['key']; ?>">
 							<td class="update_checkbox">
 								<input type="checkbox" name="doupdate[<?php echo $available_update['key']; ?>]"
 								       value="1" <?php echo isset( $available_update['recommended'] ) && $available_update['recommended'] ? 'checked="checked"' : ''; ?>>
@@ -425,7 +425,7 @@ if ( isset( $_REQUEST['process_upgrade'] ) && isset( $_REQUEST['via_ajax'] ) ) {
 		                            if ( in_array( $file, $ucm_upgrade_manager->held_files ) ) {
 			                            $error    = '<strong>Custom:</strong> this custom file will not be automatically upgraded: ' . $file;
 			                            $errors[] = $error;
-		                            } else if ( is_writable( _UCM_FOLDER . $file ) ) {
+		                            } elseif ( is_writable( _UCM_FOLDER . $file ) ) {
 			                            echo 'this file exists and will be <strong>upgraded</strong>.';
 		                            } else {
 			                            $error    = '<strong>WARNING:</strong> no permissions to update file: ' . $file;
@@ -482,7 +482,7 @@ if ( isset( $_REQUEST['process_upgrade'] ) && isset( $_REQUEST['via_ajax'] ) ) {
 
 				<input type="button" name="install_upgrade" value="<?php _e( 'Start the Upgrade' ); ?>" id="upgrade_start"
 				       class="submit_button save_button">
-				<?php }else{ ?>
+				<?php } else { ?>
 				<input type="submit" name="install_upgrade" value="<?php _e( 'Start the Upgrade' ); ?>" id="upgrade_start"
 				       class="submit_button save_button">
 				<?php } ?>
@@ -503,7 +503,7 @@ if ( isset( $_REQUEST['process_upgrade'] ) && isset( $_REQUEST['via_ajax'] ) ) {
 			}
 		}
 	}
-} else if ( isset( $_REQUEST['run_upgrade'] ) ) {
+} elseif ( isset( $_REQUEST['run_upgrade'] ) ) {
 
 	// runs the manual update button
 

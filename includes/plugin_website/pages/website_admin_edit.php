@@ -281,7 +281,7 @@ if ( $website_id > 0 && $website ) {
 							<?php foreach ( $quotes as $quote ) {
 								$quote = module_quote::get_quote( $quote['quote_id'] );
 								?>
-								<tr class="<?php echo ( $c ++ % 2 ) ? "odd" : "even"; ?>">
+								<tr class="<?php echo ( $c++ % 2 ) ? "odd" : "even"; ?>">
 									<td class="row_action">
 										<?php echo module_quote::link_open( $quote['quote_id'], true ); ?>
 									</td>
@@ -381,7 +381,7 @@ if ( $website_id > 0 && $website ) {
 							<?php foreach ( $jobs as $job ) {
 								$job = module_job::get_job( $job['job_id'] );
 								?>
-								<tr class="<?php echo ( $c ++ % 2 ) ? "odd" : "even"; ?>">
+								<tr class="<?php echo ( $c++ % 2 ) ? "odd" : "even"; ?>">
 									<td class="row_action">
 										<?php echo module_job::link_open( $job['job_id'], true ); ?>
 									</td>
@@ -489,7 +489,7 @@ if ( $website_id > 0 && $website ) {
 						foreach ( $website_invoices as $invoice ) {
 							$invoice = module_invoice::get_invoice( $invoice['invoice_id'] );
 							?>
-							<tr class="<?php echo ( $c ++ % 2 ) ? "odd" : "even"; ?>">
+							<tr class="<?php echo ( $c++ % 2 ) ? "odd" : "even"; ?>">
 								<td class="row_action">
 									<?php echo module_invoice::link_open( $invoice['invoice_id'], true, $invoice ); ?>
 								</td>

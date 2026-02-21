@@ -144,7 +144,7 @@ if ( $data_field_group_id && $data_field_group_id != 'new' ) {
 		foreach ( $data_fields as $data_field ) {
 			$next_order = max( $data_field['order'], $next_order );
 		}
-		$next_order ++;
+		$next_order++;
 
 		ob_start();
 
@@ -156,7 +156,7 @@ if ( $data_field_group_id && $data_field_group_id != 'new' ) {
 			<script type="text/javascript">
           $(function () {
 						<?php
-						switch($admin_edit_what){
+						switch ($admin_edit_what) {
 						case 'input':
 						?>
               $(".data_group_fields textarea").resizable({
@@ -186,7 +186,7 @@ if ( $data_field_group_id && $data_field_group_id != 'new' ) {
                   }
               );
 						<?php
-						break;
+						    break;
 						case 'boundary':
 						?>
               $("ul.data_group_fields li").resizable({
@@ -199,7 +199,7 @@ if ( $data_field_group_id && $data_field_group_id != 'new' ) {
                   }
               });
 						<?php
-						break;
+						    break;
 						case 'position':
 						default:
 						?>
@@ -234,7 +234,7 @@ if ( $data_field_group_id && $data_field_group_id != 'new' ) {
               });
 
 						<?php
-						break;
+						    break;
 						}
 						?>
 
@@ -288,7 +288,7 @@ if ( $data_field_group_id && $data_field_group_id != 'new' ) {
 				foreach ( $data_fields as $data ) {
 					$data_field = $module->get_data_field( $data['data_field_id'] );
 					?>
-					<tr class="<?php echo ( $c ++ % 2 ) ? "odd" : "even"; ?>">
+					<tr class="<?php echo ( $c++ % 2 ) ? "odd" : "even"; ?>">
 						<td><?php echo htmlspecialchars( $data_field['order'] ); ?></td>
 						<td class="row_action"><a href="<?php echo $module->link( '', array(
 								"data_type_id"        => $data_type['data_type_id'],

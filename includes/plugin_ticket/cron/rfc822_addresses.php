@@ -1,4 +1,5 @@
 <?php
+
 /*
  * rfc822_addresses.php
  *
@@ -33,7 +34,8 @@
 {/metadocument}
 */
 
-class rfc822_addresses_class {
+class rfc822_addresses_class
+{
 	/* Private variables */
 
 	var $v = '';
@@ -129,25 +131,25 @@ class rfc822_addresses_class {
 
 	/* Private functions */
 
-	Function SetError( $error ) {
+	function SetError( $error ) {
 		$this->error = $error;
 
 		return ( 0 );
 	}
 
-	Function SetPositionedError( $error, $position ) {
+	function SetPositionedError( $error, $position ) {
 		$this->error_position = $position;
 
 		return ( $this->SetError( $error ) );
 	}
 
-	Function SetWarning( $warning, $position ) {
+	function SetWarning( $warning, $position ) {
 		$this->warnings[ $position ] = $warning;
 
 		return ( 1 );
 	}
 
-	Function SetPositionedWarning( $error, $position ) {
+	function SetPositionedWarning( $error, $position ) {
 		if ( ! $this->ignore_syntax_errors ) {
 			return ( $this->SetPositionedError( $error, $position ) );
 		}
@@ -155,7 +157,7 @@ class rfc822_addresses_class {
 		return ( $this->SetWarning( $error, $position ) );
 	}
 
-	Function QDecode( $p, &$value, &$encoding ) {
+	function QDecode( $p, &$value, &$encoding ) {
 		$encoding = $charset = null;
 		$s        = 0;
 		$decoded  = '';
@@ -178,7 +180,7 @@ class rfc822_addresses_class {
 			     || $q == $c ) {
 				return ( $this->SetPositionedWarning( 'invalid Q-encoding character set', $p + $q ) );
 			}
-			if ( IsSet( $charset ) ) {
+			if ( isset( $charset ) ) {
 				$another_charset = strtolower( substr( $value, $q, $c - $q ) );
 				if ( strcmp( $charset, $another_charset )
 				     && strcmp( $another_charset, 'ascii' ) ) {
@@ -190,13 +192,13 @@ class rfc822_addresses_class {
 					$charset = null;
 				}
 			}
-			++ $c;
+			++$c;
 			if ( GetType( $t = strpos( $value, '?', $c ) ) != 'integer'
 			     || $c == $t ) {
 				return ( $this->SetPositionedWarning( 'invalid Q-encoding type', $p + $c ) );
 			}
 			$type = strtolower( substr( $value, $c, $t - $c ) );
-			++ $t;
+			++$t;
 			if ( GetType( $e = strpos( $value, '?=', $t ) ) != 'integer' ) {
 				return ( $this->SetPositionedWarning( 'invalid Q-encoding encoded data', $p + $e ) );
 			}
@@ -216,12 +218,12 @@ class rfc822_addresses_class {
 
 							case '_':
 								$decoded .= ' ';
-								++ $s;
+								++$s;
 								break;
 
 							default:
 								$decoded .= $b;
-								++ $s;
+								++$s;
 						}
 					}
 					break;
@@ -247,20 +249,20 @@ class rfc822_addresses_class {
 		return ( 1 );
 	}
 
-	Function ParseCText( &$p, &$c_text ) {
+	function ParseCText( &$p, &$c_text ) {
 		$c_text = null;
 		$v      = $this->v;
 		if ( $p < strlen( $v )
 		     && GetType( strchr( "\t\r\n ()\\\0", $c = $v[ $p ] ) ) != 'string'
 		     && Ord( $c ) < 128 ) {
 			$c_text = $c;
-			++ $p;
+			++$p;
 		}
 
 		return ( 1 );
 	}
 
-	Function ParseQText( &$p, &$q_text ) {
+	function ParseQText( &$p, &$q_text ) {
 		$q_text = null;
 		$v      = $this->v;
 		if ( $p > strlen( $v )
@@ -274,12 +276,12 @@ class rfc822_addresses_class {
 			$this->SetPositionedWarning( 'it was used an unencoded 8 bit character', $p );
 		}
 		$q_text = $c;
-		++ $p;
+		++$p;
 
 		return ( 1 );
 	}
 
-	Function ParseQuotedPair( &$p, &$quoted_pair ) {
+	function ParseQuotedPair( &$p, &$quoted_pair ) {
 		$quoted_pair = null;
 		$v           = $this->v;
 		$l           = strlen( $v );
@@ -294,21 +296,21 @@ class rfc822_addresses_class {
 		return ( 1 );
 	}
 
-	Function ParseCContent( &$p, &$c_content ) {
+	function ParseCContent( &$p, &$c_content ) {
 		$c_content = null;
 		$c         = $p;
 		if ( ! $this->ParseQuotedPair( $c, $content ) ) {
 			return ( 0 );
 		}
-		if ( ! IsSet( $content ) ) {
+		if ( ! isset( $content ) ) {
 			if ( ! $this->ParseCText( $c, $content ) ) {
 				return ( 0 );
 			}
-			if ( ! IsSet( $content ) ) {
+			if ( ! isset( $content ) ) {
 				if ( ! $this->ParseComment( $c, $content ) ) {
 					return ( 0 );
 				}
-				if ( ! IsSet( $content ) ) {
+				if ( ! isset( $content ) ) {
 					return ( 1 );
 				}
 			}
@@ -319,10 +321,10 @@ class rfc822_addresses_class {
 		return ( 1 );
 	}
 
-	Function SkipWhiteSpace( &$p ) {
+	function SkipWhiteSpace( &$p ) {
 		$v = $this->v;
 		$l = strlen( $v );
-		for ( ; $p < $l; ++ $p ) {
+		for ( ; $p < $l; ++$p ) {
 			switch ( $v[ $p ] ) {
 				case ' ':
 				case "\n":
@@ -337,7 +339,7 @@ class rfc822_addresses_class {
 		return ( 1 );
 	}
 
-	Function ParseComment( &$p, &$comment ) {
+	function ParseComment( &$p, &$comment ) {
 		$comment = null;
 		$v       = $this->v;
 		$l       = strlen( $v );
@@ -346,7 +348,7 @@ class rfc822_addresses_class {
 		     || strcmp( $v[ $c ], '(' ) ) {
 			return ( 1 );
 		}
-		++ $c;
+		++$c;
 		for ( ; $c < $l; ) {
 			if ( ! $this->SkipWhiteSpace( $c ) ) {
 				return ( 0 );
@@ -354,7 +356,7 @@ class rfc822_addresses_class {
 			if ( ! $this->ParseCContent( $c, $c_content ) ) {
 				return ( 0 );
 			}
-			if ( ! IsSet( $c_content ) ) {
+			if ( ! isset( $c_content ) ) {
 				break;
 			}
 		}
@@ -365,14 +367,14 @@ class rfc822_addresses_class {
 		     || strcmp( $v[ $c ], ')' ) ) {
 			return ( 1 );
 		}
-		++ $c;
+		++$c;
 		$comment = substr( $v, $p, $c - $p );
 		$p       = $c;
 
 		return ( 1 );
 	}
 
-	Function SkipCommentGetWhiteSpace( &$p, &$space ) {
+	function SkipCommentGetWhiteSpace( &$p, &$space ) {
 		$v = $this->v;
 		$l = strlen( $v );
 		for ( $space = ''; $p < $l; ) {
@@ -381,7 +383,7 @@ class rfc822_addresses_class {
 				case "\n":
 				case "\r":
 				case "\t":
-					++ $p;
+					++$p;
 					$space .= $w;
 					break;
 				case '(':
@@ -396,7 +398,7 @@ class rfc822_addresses_class {
 		return ( 1 );
 	}
 
-	Function SkipCommentWhiteSpace( &$p ) {
+	function SkipCommentWhiteSpace( &$p ) {
 		$v = $this->v;
 		$l = strlen( $v );
 		for ( ; $p < $l; ) {
@@ -405,7 +407,7 @@ class rfc822_addresses_class {
 				case "\n":
 				case "\r":
 				case "\t":
-					++ $p;
+					++$p;
 					break;
 				case '(':
 					if ( ! $this->ParseComment( $p, $comment ) ) {
@@ -419,17 +421,17 @@ class rfc822_addresses_class {
 		return ( 1 );
 	}
 
-	Function ParseQContent( &$p, &$q_content ) {
+	function ParseQContent( &$p, &$q_content ) {
 		$q_content = null;
 		$q         = $p;
 		if ( ! $this->ParseQuotedPair( $q, $content ) ) {
 			return ( 0 );
 		}
-		if ( ! IsSet( $content ) ) {
+		if ( ! isset( $content ) ) {
 			if ( ! $this->ParseQText( $q, $content ) ) {
 				return ( 0 );
 			}
-			if ( ! IsSet( $content ) ) {
+			if ( ! isset( $content ) ) {
 				return ( 1 );
 			}
 		}
@@ -439,7 +441,7 @@ class rfc822_addresses_class {
 		return ( 1 );
 	}
 
-	Function ParseAtom( &$p, &$atom, $dot ) {
+	function ParseAtom( &$p, &$atom, $dot ) {
 		$atom = null;
 		$v    = $this->v;
 		$l    = strlen( $v );
@@ -456,7 +458,7 @@ class rfc822_addresses_class {
 			} elseif ( ! $this->SetPositionedWarning( 'it was used an unencoded 8 bit character', $a ) ) {
 				return ( 0 );
 			} else {
-				++ $a;
+				++$a;
 			}
 		}
 		if ( $s == $a ) {
@@ -472,7 +474,7 @@ class rfc822_addresses_class {
 		return ( 1 );
 	}
 
-	Function ParseQuotedString( &$p, &$quoted_string ) {
+	function ParseQuotedString( &$p, &$quoted_string ) {
 		$quoted_string = null;
 		$v             = $this->v;
 		$l             = strlen( $v );
@@ -484,7 +486,7 @@ class rfc822_addresses_class {
 		     || strcmp( $v[ $s ], '"' ) ) {
 			return ( 1 );
 		}
-		++ $s;
+		++$s;
 		for ( $string = ''; $s < $l; ) {
 			$w = $s;
 			if ( ! $this->SkipWhiteSpace( $s ) ) {
@@ -496,7 +498,7 @@ class rfc822_addresses_class {
 			if ( ! $this->ParseQContent( $s, $q_content ) ) {
 				return ( 0 );
 			}
-			if ( ! IsSet( $q_content ) ) {
+			if ( ! isset( $q_content ) ) {
 				break;
 			}
 			$string .= $q_content;
@@ -512,7 +514,7 @@ class rfc822_addresses_class {
 		     || strcmp( $v[ $s ], '"' ) ) {
 			return ( 1 );
 		}
-		++ $s;
+		++$s;
 		if ( ! $this->SkipCommentWhiteSpace( $s ) ) {
 			return ( 0 );
 		}
@@ -522,12 +524,12 @@ class rfc822_addresses_class {
 		return ( 1 );
 	}
 
-	Function ParseWord( &$p, &$word ) {
+	function ParseWord( &$p, &$word ) {
 		$word = null;
 		if ( ! $this->ParseQuotedString( $p, $word ) ) {
 			return ( 0 );
 		}
-		if ( IsSet( $word ) ) {
+		if ( isset( $word ) ) {
 			return ( 1 );
 		}
 		if ( ! $this->ParseAtom( $p, $word, 0 ) ) {
@@ -537,7 +539,7 @@ class rfc822_addresses_class {
 		return ( 1 );
 	}
 
-	Function ParseObsPhrase( &$p, &$obs_phrase ) {
+	function ParseObsPhrase( &$p, &$obs_phrase ) {
 		$obs_phrase = null;
 		$v          = $this->v;
 		$l          = strlen( $v );
@@ -546,11 +548,11 @@ class rfc822_addresses_class {
 			return ( 0 );
 		}
 		$string = $word;
-		for ( ; ; ) {
+		for ( ;; ) {
 			if ( ! $this->ParseWord( $ph, $word ) ) {
 				return ( 0 );
 			}
-			if ( IsSet( $word ) ) {
+			if ( isset( $word ) ) {
 				$string .= $word;
 				continue;
 			}
@@ -567,7 +569,7 @@ class rfc822_addresses_class {
 				break;
 			}
 			$string .= '.';
-			++ $ph;
+			++$ph;
 		}
 		$obs_phrase = $string;
 		$p          = $ph;
@@ -575,12 +577,12 @@ class rfc822_addresses_class {
 		return ( 1 );
 	}
 
-	Function ParsePhrase( &$p, &$phrase ) {
+	function ParsePhrase( &$p, &$phrase ) {
 		$phrase = null;
 		if ( ! $this->ParseObsPhrase( $p, $phrase ) ) {
 			return ( 0 );
 		}
-		if ( IsSet( $phrase ) ) {
+		if ( isset( $phrase ) ) {
 			return ( 1 );
 		}
 		$ph = $p;
@@ -588,11 +590,11 @@ class rfc822_addresses_class {
 			return ( 0 );
 		}
 		$string = $word;
-		for ( ; ; ) {
+		for ( ;; ) {
 			if ( ! $this->ParseWord( $ph, $word ) ) {
 				return ( 0 );
 			}
-			if ( ! IsSet( $word ) ) {
+			if ( ! isset( $word ) ) {
 				break;
 			}
 			$string .= $word;
@@ -603,7 +605,7 @@ class rfc822_addresses_class {
 		return ( 1 );
 	}
 
-	Function ParseAddrSpec( &$p, &$addr_spec ) {
+	function ParseAddrSpec( &$p, &$addr_spec ) {
 		$addr_spec = null;
 		$v         = $this->v;
 		$l         = strlen( $v );
@@ -611,7 +613,7 @@ class rfc822_addresses_class {
 		if ( ! $this->ParseQuotedString( $a, $local_part ) ) {
 			return ( 0 );
 		}
-		if ( ! IsSet( $local_part ) ) {
+		if ( ! isset( $local_part ) ) {
 			if ( ! $this->ParseAtom( $a, $local_part, 1 ) ) {
 				return ( 0 );
 			}
@@ -621,11 +623,11 @@ class rfc822_addresses_class {
 		     || strcmp( $v[ $a ], '@' ) ) {
 			return ( 1 );
 		}
-		++ $a;
+		++$a;
 		if ( ! $this->ParseAtom( $a, $domain, 1 ) ) {
 			return ( 0 );
 		}
-		if ( ! IsSet( $domain ) ) {
+		if ( ! isset( $domain ) ) {
 			return ( 1 );
 		}
 		$addr_spec = $local_part . '@' . trim( $domain );
@@ -634,7 +636,7 @@ class rfc822_addresses_class {
 		return ( 1 );
 	}
 
-	Function ParseAngleAddr( &$p, &$addr ) {
+	function ParseAngleAddr( &$p, &$addr ) {
 		$addr = null;
 		$v    = $this->v;
 		$l    = strlen( $v );
@@ -646,7 +648,7 @@ class rfc822_addresses_class {
 		     || strcmp( $v[ $a ], '<' ) ) {
 			return ( 1 );
 		}
-		++ $a;
+		++$a;
 		if ( ! $this->ParseAddrSpec( $a, $addr_spec ) ) {
 			return ( 0 );
 		}
@@ -654,7 +656,7 @@ class rfc822_addresses_class {
 		     || strcmp( $v[ $a ], '>' ) ) {
 			return ( 1 );
 		}
-		++ $a;
+		++$a;
 		if ( ! $this->SkipCommentWhiteSpace( $a ) ) {
 			return ( 0 );
 		}
@@ -664,18 +666,18 @@ class rfc822_addresses_class {
 		return ( 1 );
 	}
 
-	Function ParseName( &$p, &$address ) {
+	function ParseName( &$p, &$address ) {
 		$address = null;
 		$a       = $p;
 		if ( ! $this->ParsePhrase( $a, $display_name ) ) {
 			return ( 0 );
 		}
-		if ( IsSet( $display_name ) ) {
+		if ( isset( $display_name ) ) {
 			if ( ! $this->QDecode( $p, $display_name, $encoding ) ) {
 				return ( 0 );
 			}
 			$address['name'] = trim( $display_name );
-			if ( IsSet( $encoding ) ) {
+			if ( isset( $encoding ) ) {
 				$address['encoding'] = $encoding;
 			}
 		}
@@ -684,7 +686,7 @@ class rfc822_addresses_class {
 		return ( 1 );
 	}
 
-	Function ParseNameAddr( &$p, &$address ) {
+	function ParseNameAddr( &$p, &$address ) {
 		$address = null;
 		$a       = $p;
 		if ( ! $this->ParsePhrase( $a, $display_name ) ) {
@@ -693,16 +695,16 @@ class rfc822_addresses_class {
 		if ( ! $this->ParseAngleAddr( $a, $addr ) ) {
 			return ( 0 );
 		}
-		if ( ! IsSet( $addr ) ) {
+		if ( ! isset( $addr ) ) {
 			return ( 1 );
 		}
 		$address = array( 'address' => $addr );
-		if ( IsSet( $display_name ) ) {
+		if ( isset( $display_name ) ) {
 			if ( ! $this->QDecode( $p, $display_name, $encoding ) ) {
 				return ( 0 );
 			}
 			$address['name'] = trim( $display_name );
-			if ( IsSet( $encoding ) ) {
+			if ( isset( $encoding ) ) {
 				$address['encoding'] = $encoding;
 			}
 		}
@@ -711,19 +713,19 @@ class rfc822_addresses_class {
 		return ( 1 );
 	}
 
-	Function ParseAddrNameAddr( &$p, &$address ) {
+	function ParseAddrNameAddr( &$p, &$address ) {
 		$address = null;
 		$a       = $p;
 		if ( ! $this->ParseAddrSpec( $a, $display_name ) ) {
 			return ( 0 );
 		}
-		if ( ! IsSet( $display_name ) ) {
+		if ( ! isset( $display_name ) ) {
 			return ( 1 );
 		}
 		if ( ! $this->ParseAngleAddr( $a, $addr ) ) {
 			return ( 0 );
 		}
-		if ( ! IsSet( $addr ) ) {
+		if ( ! isset( $addr ) ) {
 			return ( 1 );
 		}
 		if ( ! $this->QDecode( $p, $display_name, $encoding ) ) {
@@ -733,7 +735,7 @@ class rfc822_addresses_class {
 			'address' => $addr,
 			'name'    => trim( $display_name )
 		);
-		if ( IsSet( $encoding ) ) {
+		if ( isset( $encoding ) ) {
 			$address['encoding'] = $encoding;
 		}
 		$p = $a;
@@ -741,27 +743,27 @@ class rfc822_addresses_class {
 		return ( 1 );
 	}
 
-	Function ParseMailbox( &$p, &$address ) {
+	function ParseMailbox( &$p, &$address ) {
 		$address = null;
 		if ( $this->ignore_syntax_errors ) {
 			$a = $p;
 			if ( ! $this->ParseAddrNameAddr( $p, $address ) ) {
 				return ( 0 );
 			}
-			if ( IsSet( $address ) ) {
+			if ( isset( $address ) ) {
 				return ( $this->SetPositionedWarning( 'it was specified an unquoted address as name', $a ) );
 			}
 		}
 		if ( ! $this->ParseNameAddr( $p, $address ) ) {
 			return ( 0 );
 		}
-		if ( IsSet( $address ) ) {
+		if ( isset( $address ) ) {
 			return ( 1 );
 		}
 		if ( ! $this->ParseAddrSpec( $p, $addr_spec ) ) {
 			return ( 0 );
 		}
-		if ( IsSet( $addr_spec ) ) {
+		if ( isset( $addr_spec ) ) {
 			$address = array( 'address' => $addr_spec );
 
 			return ( 1 );
@@ -769,21 +771,21 @@ class rfc822_addresses_class {
 		$a = $p;
 		if ( $this->ignore_syntax_errors
 		     && $this->ParseName( $p, $address )
-		     && IsSet( $address ) ) {
+		     && isset( $address ) ) {
 			return ( $this->SetPositionedWarning( 'it was specified a name without an address', $a ) );
 		}
 
 		return ( 1 );
 	}
 
-	Function ParseMailboxGroup( &$p, &$mailbox_group ) {
+	function ParseMailboxGroup( &$p, &$mailbox_group ) {
 		$v = $this->v;
 		$l = strlen( $v );
 		$g = $p;
 		if ( ! $this->ParseMailbox( $g, $address ) ) {
 			return ( 0 );
 		}
-		if ( ! IsSet( $address ) ) {
+		if ( ! isset( $address ) ) {
 			return ( 1 );
 		}
 		$addresses = array( $address );
@@ -791,11 +793,11 @@ class rfc822_addresses_class {
 			if ( strcmp( $v[ $g ], ',' ) ) {
 				break;
 			}
-			++ $g;
+			++$g;
 			if ( ! $this->ParseMailbox( $g, $address ) ) {
 				return ( 0 );
 			}
-			if ( ! IsSet( $address ) ) {
+			if ( ! isset( $address ) ) {
 				return ( 1 );
 			}
 			$addresses[] = $address;
@@ -806,7 +808,7 @@ class rfc822_addresses_class {
 		return ( 1 );
 	}
 
-	Function ParseGroup( &$p, &$address ) {
+	function ParseGroup( &$p, &$address ) {
 		$address = null;
 		$v       = $this->v;
 		$l       = strlen( $v );
@@ -814,16 +816,16 @@ class rfc822_addresses_class {
 		if ( ! $this->ParsePhrase( $g, $display_name ) ) {
 			return ( 0 );
 		}
-		if ( ! IsSet( $display_name )
+		if ( ! isset( $display_name )
 		     || $g >= $l
 		     || strcmp( $v[ $g ], ':' ) ) {
 			return ( 1 );
 		}
-		++ $g;
+		++$g;
 		if ( ! $this->ParseMailboxGroup( $g, $mailbox_group ) ) {
 			return ( 0 );
 		}
-		if ( ! IsSet( $mailbox_group ) ) {
+		if ( ! isset( $mailbox_group ) ) {
 			if ( ! $this->SkipCommentWhiteSpace( $g ) ) {
 				return ( 0 );
 			}
@@ -833,7 +835,7 @@ class rfc822_addresses_class {
 		     || strcmp( $v[ $g ], ';' ) ) {
 			return ( 1 );
 		}
-		$c = ++ $g;
+		$c = ++$g;
 		if ( $this->SkipCommentWhiteSpace( $g )
 		     && $g > $c
 		     && ! $this->SetPositionedWarning( 'it were used invalid comments after a group of addresses', $c ) ) {
@@ -846,7 +848,7 @@ class rfc822_addresses_class {
 			'name'  => $display_name,
 			'group' => $mailbox_group
 		);
-		if ( IsSet( $encoding ) ) {
+		if ( isset( $encoding ) ) {
 			$address['encoding'] = $encoding;
 		}
 		$p = $g;
@@ -854,12 +856,12 @@ class rfc822_addresses_class {
 		return ( 1 );
 	}
 
-	Function ParseAddress( &$p, &$address ) {
+	function ParseAddress( &$p, &$address ) {
 		$address = null;
 		if ( ! $this->ParseGroup( $p, $address ) ) {
 			return ( 0 );
 		}
-		if ( ! IsSet( $address ) ) {
+		if ( ! isset( $address ) ) {
 			if ( ! $this->ParseMailbox( $p, $address ) ) {
 				return ( 0 );
 			}
@@ -921,7 +923,7 @@ class rfc822_addresses_class {
 			<do>
 	{/metadocument}
 	*/
-	Function ParseAddressList( $value, &$addresses ) {
+	function ParseAddressList( $value, &$addresses ) {
 		$this->warnings = array();
 		$addresses      = array();
 		$this->v        = $v = $value;
@@ -930,7 +932,7 @@ class rfc822_addresses_class {
 		if ( ! $this->ParseAddress( $p, $address ) ) {
 			return ( 0 );
 		}
-		if ( ! IsSet( $address ) ) {
+		if ( ! isset( $address ) ) {
 			return ( $this->SetPositionedError( 'it was not specified a valid address', $p ) );
 		}
 		$addresses[] = $address;
@@ -938,11 +940,11 @@ class rfc822_addresses_class {
 			if ( strcmp( $v[ $p ], ',' ) ) {
 				return ( $this->SetPositionedError( 'multiple addresses must be separated by commas: ', $p ) );
 			}
-			++ $p;
+			++$p;
 			if ( ! $this->ParseAddress( $p, $address ) ) {
 				return ( 0 );
 			}
-			if ( ! IsSet( $address ) ) {
+			if ( ! isset( $address ) ) {
 				return ( $this->SetPositionedError( 'it was not specified a valid address after comma', $p ) );
 			}
 			$addresses[] = $address;
@@ -956,7 +958,6 @@ class rfc822_addresses_class {
 		</function>
 	{/metadocument}
 	*/
-
 }
 
 ;
@@ -968,5 +969,3 @@ class rfc822_addresses_class {
 {/metadocument}
 
 */
-
-?>

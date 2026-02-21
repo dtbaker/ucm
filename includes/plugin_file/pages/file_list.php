@@ -1,6 +1,6 @@
-<?php 
+<?php
 
-if(!isset($display_summary)){
+if (!isset($display_summary)) {
 	$display_summary = false;
 }
 //print_r($file_items);exit;
@@ -8,7 +8,7 @@ if(!isset($display_summary)){
 // we need a unique each js function.
 // can have multiple per page.
 
-if($editable){
+if ($editable) {
 ?>
 
 
@@ -87,15 +87,15 @@ if($editable){
 
 }
 
-switch($layout_type){
+switch ($layout_type) {
 	case 'gallery':
         ?>
 
 		<?php
-		if($title){
+		if ($title) {
 			?>
 			<h3>
-				<?php if($editable){ ?>
+				<?php if ($editable) { ?>
 				<span class="button">
 					<a href="#" class="submit_button file_add<?php echo $owner_table;?>_<?php echo $owner_id;?>">Add new</a>
 				</span>
@@ -105,8 +105,8 @@ switch($layout_type){
 				</span>
 			</h3>
 			<?php
-		}else{
-	        if($editable){
+		} else {
+	        if ($editable) {
 			?>
                 <input type="button" class="file_add<?php echo $owner_table;?>_<?php echo $owner_id;?> small_button" value="<?php _e('Add New');?>">
 			<?php
@@ -115,7 +115,7 @@ switch($layout_type){
 		?>
         <div class="file_<?php echo $owner_table;?>_<?php echo $owner_id;?>">
 	        <?php
-	        foreach($file_items as $n){
+	        foreach ($file_items as $n) {
 		        echo $n['html'];
 	        }
 	        ?>
@@ -124,14 +124,14 @@ switch($layout_type){
 		<?php
         break;
 	case 'list':
-        if($editable){ ?>
+        if ($editable) { ?>
             <input type="button" class="file_add<?php echo $owner_table;?>_<?php echo $owner_id;?> small_button" value="<?php _e('Upload');?>">
         <?php
 		}
         ?>
         <div class="file_<?php echo $owner_table;?>_<?php echo $owner_id;?>">
 	        <?php
-	        foreach($file_items as $n){
+	        foreach ($file_items as $n) {
 		        echo $n['html'];
             echo '<br/>';
 	        }

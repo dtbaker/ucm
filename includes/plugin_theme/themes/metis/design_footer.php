@@ -11,12 +11,9 @@ switch ( $display_mode ) {
 		module_debug::push_to_parent();
 		break;
 	case 'ajax':
-
 		break;
 	case 'normal':
 	default:
-
-
 		if ( function_exists( 'hook_handle_callback' ) ) {
 			hook_handle_callback( 'content_footer' );
 		}

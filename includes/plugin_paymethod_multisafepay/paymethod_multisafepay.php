@@ -1,9 +1,7 @@
 <?php
 
-
-class module_paymethod_multisafepay extends module_base {
-
-
+class module_paymethod_multisafepay extends module_base
+{
 	public static function can_i( $actions, $name = false, $category = false, $module = false ) {
 		if ( ! $module ) {
 			$module = __CLASS__;
@@ -196,7 +194,7 @@ class module_paymethod_multisafepay extends module_base {
 			if ( $invoice_item_data['amount'] != 0 && $invoice_item_data['amount'] != ( $invoice_item_data['hours'] * $task_hourly_rate ) ) {
 				$invoice_item_amount = $invoice_item_data['amount'];
 				$task_hourly_rate    = false;
-			} else if ( $invoice_item_data['hours'] > 0 ) {
+			} elseif ( $invoice_item_data['hours'] > 0 ) {
 				$invoice_item_amount = $invoice_item_data['hours'] * $task_hourly_rate;
 			} else {
 				$invoice_item_amount = 0;
@@ -228,7 +226,7 @@ class module_paymethod_multisafepay extends module_base {
 		redirect_browser( $url );
 		/*
 						$url = 'https://www.'. (self::is_sandbox()? 'sandbox.' : '') . 'multisafepay.com/cgi-bin/webscr?';
-		
+
 						$fields = array(
 								'cmd' => '_xclick',
 								'business' => module_config::c('payment_method_multisafepay_email',_ERROR_EMAIL),
@@ -239,13 +237,13 @@ class module_paymethod_multisafepay extends module_base {
 								'notify_url' => full_link(_EXTERNAL_TUNNEL.'?m=paymethod_multisafepay&h=ipn&method=multisafepay'),
 								'custom' => self::multisafepay_custom($user_id,$payment_id,$invoice_id),
 						);
-		
+
 						foreach($fields as $key=>$val){
 								$url .= $key.'='.urlencode($val).'&';
 						}
-		
+
 						//echo '<a href="'.$url.'">'.$url.'</a>';exit;
-		
+
 						redirect_browser($url);
 		*/
 	}
@@ -420,7 +418,7 @@ class module_paymethod_multisafepay extends module_base {
 							// populate $_REQUEST vars then do something like $payment_history_id = update_insert("payment_history_id","new","payment_history");
 							send_error( "Multisafepay Error! The payment $payment_id has been refunded or reversed! BAD BAD! You have to follup up customer for money manually now." );
 
-						} else if ( $_REQUEST['payment_status'] == "Completed" ) {
+						} elseif ( $_REQUEST['payment_status'] == "Completed" ) {
 
 							// payment is completed! yeye getting closer...
 

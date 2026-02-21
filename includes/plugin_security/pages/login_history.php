@@ -128,7 +128,7 @@ hook_handle_callback( 'layout_column_half', 2 ); ?>
 				<td>
 					<?php if ( $h['session_id'] == session_id() ) { ?>
 						Current
-					<?php } else if ( $h['logged_in'] ) { ?>
+					<?php } elseif ( $h['logged_in'] ) { ?>
 						<a href="<?php
 						$url = preg_replace( '#[?&]end=.*#', '', $_SERVER['REQUEST_URI'] );
 						$url .= strpos( $url, '?' ) === false ? '?' : '&';

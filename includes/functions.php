@@ -27,7 +27,7 @@ function ucm_password_verify( $password, $hash ) {
 	}
 
 	// Support for the default hard coded password (we prompt the user to change these)
-	if( $password === 'password' && $hash === 'password' ){
+	if ( $password === 'password' && $hash === 'password' ) {
 		return true;
 	}
 
@@ -156,7 +156,7 @@ function print_multi_select_box( $data, $id, $cur = array(), $blank = true, $arr
 		       id="multi_<?php echo $x; ?>" <?php echo in_array( $key, $cur ) ? ' checked' : ''; ?>>
 		<label for="multi_<?php echo $x; ?>"><?php echo htmlspecialchars( $printval ); ?></label> <br/>
 		<?php
-		$x ++;
+		$x++;
 	}
 	if ( $hidden ) {
 		echo '</div>';
@@ -449,7 +449,7 @@ function process_alert( $check_date, $item, $alert_days_in_future = false ) {
 			if ( $days == 0 ) {
 				$alert_field = " " . _l( 'today!' );
 				$warning     = true;
-			} else if ( $days < $alert_days_in_future ) {
+			} elseif ( $days < $alert_days_in_future ) {
 				$alert_field = " " . _l( 'in %s days', $days );
 			}
 		}
@@ -501,7 +501,7 @@ function print_header_message() {
 					foreach ( $_SESSION['_message'] as $msg ) {
 						if ( count( $_SESSION['_message'] ) > 1 ) {
 							echo "<strong>#$x</strong> ";
-							$x ++;
+							$x++;
 						}
 						echo nl2br( ( $msg ) ) . "<br>";
 					}
@@ -710,7 +710,7 @@ function process_pagination( $rows, $per_page = 20, $page_number = 0, $table_id 
 		unset( $rows );
 		$total = mysqli_num_rows( $db_resource );
 
-	} else if ( is_array( $rows ) ) {
+	} elseif ( is_array( $rows ) ) {
 		// we have the rows in an array.
 		$total = count( $rows );
 	} else {
@@ -795,7 +795,7 @@ function process_pagination( $rows, $per_page = 20, $page_number = 0, $table_id 
 
 			if ( isset( $_REQUEST[ 'pg' . $table_id ] ) ) {
 				$page_number = $_REQUEST[ 'pg' . $table_id ];
-			} else if ( $_SESSION['_table_page_num'][ $table_id ]['total_count'] == $total ) {
+			} elseif ( $_SESSION['_table_page_num'][ $table_id ]['total_count'] == $total ) {
 				$page_number = $_SESSION['_table_page_num'][ $table_id ]['page_number'];
 			}
 			$_SESSION['_table_page_num'][ $table_id ]['page_number'] = $page_number;
@@ -814,7 +814,7 @@ function process_pagination( $rows, $per_page = 20, $page_number = 0, $table_id 
 				if ( $row_data ) {
 					$data['rows'] [] = $row_data;
 				}
-				$x ++;
+				$x++;
 			}
 			unset( $row_data );
 		} else {
@@ -860,7 +860,7 @@ function process_pagination( $rows, $per_page = 20, $page_number = 0, $table_id 
 					echo ' ... ';
 				}
 			}
-			for ( $x = $rangestart; $x <= $rangeend; $x ++ ) {
+			for ( $x = $rangestart; $x <= $rangeend; $x++ ) {
 				if ( $x == $page_number ) {
 					?>
 					<span><a href="<?= $request_uri; ?>pg<?php echo $table_id; ?>=<?= $x; ?>#t_<?php echo $table_id; ?>"
@@ -1150,7 +1150,7 @@ function file_exists_ip( $filename ) {
 
 	if ( false !== strpos( $include_path, PATH_SEPARATOR ) ) {
 		if ( false !== ( $temp = explode( PATH_SEPARATOR, $include_path ) ) && count( $temp ) > 0 ) {
-			for ( $n = 0; $n < count( $temp ); $n ++ ) {
+			for ( $n = 0; $n < count( $temp ); $n++ ) {
 				if ( false !== @file_exists( $temp[ $n ] . $filename ) ) {
 					return true;
 				}
@@ -1181,7 +1181,7 @@ function frndlyfilesize( $filesize ) {
 
 		while ( ( $filesize / $decr ) > 0.9 ) {
 			$filesize = $filesize / $decr;
-			$step ++;
+			$step++;
 		}
 
 		return round( $filesize, 2 ) . ' ' . $prefix[ $step ];

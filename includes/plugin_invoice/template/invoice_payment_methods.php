@@ -71,7 +71,7 @@ if ( $invoice_data['total_amount_due'] > 0 ) {
 									for="paymethod<?php echo $x; ?>"><?php echo $payment_methods_on['name']; ?></label>
 								<br/>
 								<?php
-								$x ++;
+								$x++;
 							}
 							?>
 						</td>

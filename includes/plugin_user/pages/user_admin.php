@@ -1,6 +1,5 @@
 <?php
 
-
 if ( isset( $_REQUEST['user_id'] ) ) {
 
 	$user_id = (int) $_REQUEST['user_id'];
@@ -49,5 +48,4 @@ if ( isset( $_REQUEST['user_id'] ) ) {
 	include( module_theme::include_ucm( "includes/plugin_user/pages/user_admin_list.php" ) );
 	//include("user_admin_list.php");
 
-} 
-
+}

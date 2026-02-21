@@ -55,7 +55,7 @@
 								$data_items[ $this_val ]['entry_count'] = 0;
 								$data_items[ $this_val ]['index_id']    = $index && ! empty( $val[ $index ] ) ? (int) $val[ $index ] : false;
 							}
-							$data_items[ $this_val ]['entry_count'] ++;
+							$data_items[ $this_val ]['entry_count']++;
 						}
 					}
 					// now we find out how many 'rel' entries are related to this item.

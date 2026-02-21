@@ -1,4 +1,5 @@
 <?php
+
 /**
  * tmhOAuth
  *
@@ -11,9 +12,11 @@
  *
  * 19 August 2013
  */
+
 defined( '__DIR__' ) or define( '__DIR__', dirname( __FILE__ ) );
 
-class tmhOAuth {
+class tmhOAuth
+{
 	const VERSION = '0.8.3';
 	var $response = array();
 
@@ -174,7 +177,7 @@ class tmhOAuth {
 	private function safe_encode( $data ) {
 		if ( is_array( $data ) ) {
 			return array_map( array( $this, 'safe_encode' ), $data );
-		} else if ( is_scalar( $data ) ) {
+		} elseif ( is_scalar( $data ) ) {
 			return str_ireplace(
 				array( '+', '%7E' ),
 				array( ' ', '~' ),
@@ -196,7 +199,7 @@ class tmhOAuth {
 	private function safe_decode( $data ) {
 		if ( is_array( $data ) ) {
 			return array_map( array( $this, 'safe_decode' ), $data );
-		} else if ( is_scalar( $data ) ) {
+		} elseif ( is_scalar( $data ) ) {
 			return rawurldecode( $data );
 		} else {
 			return '';
@@ -768,7 +771,7 @@ class tmhOAuth {
 		$buffered = explode( $this->config['streaming_eol'], $data );
 		$content  = $this->buffer . $buffered[0];
 
-		$this->metrics['messages'] ++;
+		$this->metrics['messages']++;
 		$this->metrics['bytes'] += strlen( $content );
 
 		if ( ! is_callable( $this->config['streaming_callback'] ) ) {

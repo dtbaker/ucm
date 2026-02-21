@@ -2,12 +2,10 @@
 
 switch ( $display_mode ) {
 	case 'ajax':
-
 		break;
 	case 'iframe':
 	case 'normal':
 	default:
-
 		$page_widgets = new theme_widget_manager( $page_unique_id );
 		?>
 		<!DOCTYPE html>
@@ -34,7 +32,7 @@ switch ( $display_mode ) {
 					color: <?php echo htmlspecialchars(module_theme::get_config('blocks_menu_fg','#1f3334'));?>;
 				}
 
-				<?php if(module_theme::get_config('blocks_menu_collapse','allow') != 'allow'){ ?>
+				<?php if (module_theme::get_config('blocks_menu_collapse','allow') != 'allow') { ?>
 				nav a.menu-btn {
 					display: none;
 				}
@@ -43,7 +41,7 @@ switch ( $display_mode ) {
 					padding: 0;
 				}
 
-				<?php }else{ ?>
+				<?php } else { ?>
 				body.box-large {
 					padding: 0 0 0<?php echo module_theme::get_config('blocks_boxstyle','box-large') == 'box-large' ? '61px' : '35px';?>;
 				}
@@ -280,7 +278,7 @@ switch ( $display_mode ) {
 		<div id="inner-content">
 
 		<?php
-	} else{
+	} else {
 		// not logged in
 	    ?>
         <body class="bg-black theme-blocks" id="login-page">

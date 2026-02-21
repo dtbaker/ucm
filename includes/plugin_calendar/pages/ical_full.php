@@ -16,7 +16,7 @@ if ( isset( $options['staff_id'] ) && (int) $options['staff_id'] > 0 && isset( $
 }
 
 // get 4 months either side of todays date.
-for ( $x = - 4; $x <= 4; $x ++ ) {
+for ( $x = - 4; $x <= 4; $x++ ) {
 	$ret = listCalendar( date( 'm/d/Y', strtotime( '+' . $x . ' months' ) ), 'month' );
 	if ( is_array( $ret ) && isset( $ret['events'] ) && count( $ret['events'] ) ) {
 		$calendar_entries = array_merge( $calendar_entries, $ret['events'] );
@@ -135,4 +135,3 @@ END:VEVENT
 
 
 echo 'END:VCALENDAR';
-

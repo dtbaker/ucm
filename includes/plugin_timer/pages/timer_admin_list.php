@@ -264,7 +264,7 @@ print_heading( array(
 							class="fa fa-check-square"></i></a>
 					<?php
 				}
-			} else if ( module_timer::can_i( 'delete', 'Timers' ) ) {
+			} elseif ( module_timer::can_i( 'delete', 'Timers' ) ) {
 				?>
 				<a href="<?php echo $ucmtimer->link_open( false ); ?>&_process=save_timer&butt_del=true&return="
 				   data-ajax-modal='{"type":"normal","title":"<?php _e( 'Delete' ); ?>"}'><i

@@ -3,8 +3,8 @@
 require_once( 'facebook.class.php' );
 
 
-class module_social_facebook extends module_base {
-
+class module_social_facebook extends module_base
+{
 	var $links;
 
 	public static function can_i( $actions, $name = false, $category = false, $module = false ) {
@@ -130,7 +130,7 @@ class module_social_facebook extends module_base {
 			redirect_browser( $redirect );
 
 			exit;
-		} else if ( "send_facebook_message" == $_REQUEST['_process'] ) {
+		} elseif ( "send_facebook_message" == $_REQUEST['_process'] ) {
 
 			if ( module_form::check_secure_key() ) {
 				$social_facebook_id = isset( $_REQUEST['social_facebook_id'] ) ? (int) $_REQUEST['social_facebook_id'] : 0;
@@ -154,7 +154,7 @@ class module_social_facebook extends module_base {
 						// add the time if it exists
 						$date      .= ' ' . implode( ':', $bits ) . ':00';
 						$send_time = strtotime( input_date( $date, true ) );
-					} else if ( isset( $_POST['schedule_date'] ) && ! empty( $_POST['schedule_date'] ) ) {
+					} elseif ( isset( $_POST['schedule_date'] ) && ! empty( $_POST['schedule_date'] ) ) {
 						$send_time = strtotime( input_date( $_POST['schedule_date'], true ) );
 					}
 					//echo print_date($send_time,true);
@@ -197,7 +197,7 @@ class module_social_facebook extends module_base {
 									$facebook_message->add_attachment( $_FILES['picture']['tmp_name'] );
 								}
 								$facebook_message->send_queued( isset( $_POST['debug'] ) );
-								$page_count ++;
+								$page_count++;
 
 							} else {
 								// log error?
@@ -213,7 +213,7 @@ class module_social_facebook extends module_base {
 			}
 
 
-		} else if ( "ajax_facebook_url_info" == $_REQUEST['_process'] ) {
+		} elseif ( "ajax_facebook_url_info" == $_REQUEST['_process'] ) {
 
 			header( 'Content-type: text/javascript' );
 			$url = isset( $_REQUEST['url'] ) ? $_REQUEST['url'] : false;
@@ -230,7 +230,7 @@ class module_social_facebook extends module_base {
 			}
 			exit;
 
-		} else if ( "ajax_social_facebook" == $_REQUEST['_process'] ) {
+		} elseif ( "ajax_social_facebook" == $_REQUEST['_process'] ) {
 			// ajax functions from wdsocial. copied from the datafeed.php sample files.
 			header( 'Content-type: text/javascript' );
 			if ( module_form::check_secure_key() ) {
@@ -599,5 +599,4 @@ class module_social_facebook extends module_base {
 
 		return ob_get_clean();
 	}
-
 }

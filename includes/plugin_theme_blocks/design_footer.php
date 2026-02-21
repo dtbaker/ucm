@@ -13,7 +13,6 @@ if ( module_security::is_logged_in() ) {
 			module_debug::push_to_parent();
 			break;
 		case 'ajax':
-
 			break;
 		case 'normal':
 		default:

@@ -28,7 +28,7 @@ if ( $language['language_code'] ) {
 	$old_labels = isset( $labels ) ? $labels : false;
 	if ( is_file( 'includes/plugin_language/custom/' . basename( $language['language_code'] ) . '.php' ) ) {
 		include( 'includes/plugin_language/custom/' . basename( $language['language_code'] ) . '.php' );
-	} else if ( is_file( 'includes/plugin_language/labels/' . basename( $language['language_code'] ) . '.php' ) ) {
+	} elseif ( is_file( 'includes/plugin_language/labels/' . basename( $language['language_code'] ) . '.php' ) ) {
 		include( 'includes/plugin_language/labels/' . basename( $language['language_code'] ) . '.php' );
 	}
 	$file_system_labels = isset( $labels ) ? $labels : array();

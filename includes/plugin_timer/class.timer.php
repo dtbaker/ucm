@@ -7,8 +7,8 @@ defined( '_UCM_VERSION' ) || die( '-5' );
 
 if ( class_exists( 'UCMBaseSingle' ) ) {
 
-	class UCMTimer extends UCMBaseSingle {
-
+	class UCMTimer extends UCMBaseSingle
+    {
 		public $db_id = 'timer_id';
 		public $db_table = 'timer';
 		public $display_key = 'description';
@@ -120,7 +120,7 @@ if ( class_exists( 'UCMBaseSingle' ) ) {
 				foreach ( $rows as $row ) {
 					if ( $row['duration_calc'] ) {
 						$total_time += $row['duration_calc'];
-					} else if ( $row['timer_status'] == _TIMER_STATUS_RUNNING ) {
+					} elseif ( $row['timer_status'] == _TIMER_STATUS_RUNNING ) {
 						$total_time += ( time() - $row['start_time'] );
 					}
 				}
@@ -210,11 +210,10 @@ if ( class_exists( 'UCMBaseSingle' ) ) {
 				}
 			}
 		}
-
 	}
 
-	class UCMTimerSegment extends UCMBaseSingle {
-
+	class UCMTimerSegment extends UCMBaseSingle
+    {
 		public $db_id = 'timer_segment_id';
 		public $db_table = 'timer_segment';
 		public $display_key = 'start_time';
@@ -270,7 +269,7 @@ if ( class_exists( 'UCMBaseSingle' ) ) {
 						$return = self::link_open( $_REQUEST['timer_id'] );
 						$timer_segment->delete_with_confirm( false, $return );
 
-					} else if ( module_timer::can_i( 'edit', 'Timers' ) ) {
+					} elseif ( module_timer::can_i( 'edit', 'Timers' ) ) {
 
 						$seg_data = array();
 						if ( ! empty( $_POST['start_time'] ) ) {
@@ -295,25 +294,21 @@ if ( class_exists( 'UCMBaseSingle' ) ) {
 			}
 
 		}
-
-
 	}
 
-	class UCMTimers extends UCMBaseMulti {
-
+	class UCMTimers extends UCMBaseMulti
+    {
 		public $db_id = 'timer_id';
 		public $db_table = 'timer';
 		public $display_name = 'Timer';
 		public $display_name_plural = 'Timers';
-
 	}
 
-	class UCMTimerSegments extends UCMBaseMulti {
-
+	class UCMTimerSegments extends UCMBaseMulti
+    {
 		public $db_id = 'timer_segment_id';
 		public $db_table = 'timer_segment';
 		public $display_name = 'Timer Segment';
 		public $display_name_plural = 'Timer Segments';
-
 	}
 }

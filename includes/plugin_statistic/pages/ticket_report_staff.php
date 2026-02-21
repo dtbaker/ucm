@@ -79,7 +79,7 @@ $messages = qa( $sql );
 			}
 		}
 		?>
-		<tr class="<?php echo ( $c ++ % 2 ) ? "odd" : "even"; ?>">
+		<tr class="<?php echo ( $c++ % 2 ) ? "odd" : "even"; ?>">
 			<td class="row_action" nowrap="">
 				<?php echo module_user::link_open( $staff_member['user_id'], true ); ?>
 			</td>
@@ -103,7 +103,7 @@ $messages = qa( $sql );
 				$r = 0;
 				foreach ( $tickets as $ticket ) {
 					if ( $ticket['status_id'] == _TICKET_STATUS_RESOLVED_ID ) {
-						$r ++;
+						$r++;
 					}
 				}
 				echo $r;

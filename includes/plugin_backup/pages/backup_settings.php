@@ -151,10 +151,10 @@ if ( isset( $_REQUEST['backup_id'] ) && $_REQUEST['backup_id'] ) {
 							$tables[] = $row[0];
 						}
 					}
-					if(! count( $tables )){
+					if (! count( $tables )) {
 						//_e('Error: could not find any database tables to backup.');
-					}else{
-					foreach($tables as $table){
+					} else {
+					foreach ($tables as $table) {
 					?>
           ucm.backup.database_list.push({
               name: '<?php echo $table;?>',
@@ -234,7 +234,7 @@ if ( isset( $_REQUEST['backup_id'] ) && $_REQUEST['backup_id'] ) {
 						function () use ( $backup_id, $backup ) {
 							if ( ! $backup_id ) {
 								_e( 'Please click Create Backup button first' );
-							} else if ( ! $backup['backup_file'] || ! strlen( $backup['backup_file'] ) ) {
+							} elseif ( ! $backup['backup_file'] || ! strlen( $backup['backup_file'] ) ) {
 								_e( 'Error: Backup File Not Found: %s', _BACKUP_BASE_DIR . basename( $backup['backup_file'] ) );
 							} else {
 								if ( file_exists( _BACKUP_BASE_DIR . basename( $backup['backup_file'] ) . '.sql' ) ) {

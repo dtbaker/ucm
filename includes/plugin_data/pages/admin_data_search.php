@@ -138,7 +138,7 @@ if ( $data_type_id ) {
 														unset( $datas[ $data_id ] );
 														continue;
 													}
-												} else if ( strtolower( trim( $data_items[ $data_field_id ]['data_text'] ) ) != strtolower( $data_field_value ) ) {
+												} elseif ( strtolower( trim( $data_items[ $data_field_id ]['data_text'] ) ) != strtolower( $data_field_value ) ) {
 													unset( $datas[ $data_id ] );
 													continue;
 												}

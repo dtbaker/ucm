@@ -1,6 +1,5 @@
 <?php
 
-
 define( '_VENDOR_ACCESS_ALL', 'All vendors in system' ); // do not change string
 define( '_VENDOR_ACCESS_ALL_COMPANY', 'Only vendors from companies I have access to' ); // do not change string
 define( '_VENDOR_ACCESS_CONTACTS', 'Only vendor I am assigned to as a contact' ); // do not change string
@@ -12,8 +11,8 @@ define( '_VENDOR_STATUS_OWING', 2 );
 define( '_VENDOR_STATUS_PAID', 1 );
 
 
-class module_vendor extends module_base {
-
+class module_vendor extends module_base
+{
 	public $links;
 	public $vendor_types;
 	public $vendor_id;
@@ -337,7 +336,6 @@ class module_vendor extends module_base {
 		}
 		switch ( $vendor_access ) {
 			case _VENDOR_ACCESS_ALL:
-
 				break;
 			case _VENDOR_ACCESS_ALL_COMPANY:
 				if ( class_exists( 'module_company', false ) && module_company::is_enabled() ) {
@@ -453,7 +451,6 @@ class module_vendor extends module_base {
 
 				switch ( self::get_vendor_data_access() ) {
 					case _VENDOR_ACCESS_ALL:
-
 						break;
 					case _VENDOR_ACCESS_ALL_COMPANY:
 					case _VENDOR_ACCESS_CONTACTS:
@@ -527,7 +524,7 @@ class module_vendor extends module_base {
 					redirect_browser( self::link_open( false ) );
 				}
 			}
-		} else if ( "ajax_contact_list" == $_REQUEST['_process'] ) {
+		} elseif ( "ajax_contact_list" == $_REQUEST['_process'] ) {
 
 			$vendor_id = isset( $_REQUEST['vendor_id'] ) ? (int) $_REQUEST['vendor_id'] : 0;
 			$res       = module_user::get_contacts( array( 'vendor_id' => $vendor_id ) );
@@ -538,7 +535,7 @@ class module_vendor extends module_base {
 			echo json_encode( $options );
 			exit;
 
-		} else if ( "save_vendor" == $_REQUEST['_process'] ) {
+		} elseif ( "save_vendor" == $_REQUEST['_process'] ) {
 			$vendor_id = $this->save_vendor( $_REQUEST['vendor_id'], $_POST );
 			hook_handle_callback( 'vendor_save', $vendor_id );
 			set_message( "Vendor saved successfully" );
@@ -898,7 +895,7 @@ class module_vendor extends module_base {
 						);
 						$extra_id = (int) $extra_id;
 						update_insert( 'extra_id', $extra_id, 'extra', $extra_db );
-					} else if ( $user_match && isset( $contact_fields[ $extra_key ] ) ) {
+					} elseif ( $user_match && isset( $contact_fields[ $extra_key ] ) ) {
 						// this is a primary contact extra field
 						$existing_extra = module_extra::get_extras( array(
 							'owner_table' => 'user',
@@ -1122,5 +1119,4 @@ class module_vendor extends module_base {
 		<?php
 		return ob_get_clean();
 	}
-
 }

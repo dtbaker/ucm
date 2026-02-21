@@ -1,8 +1,7 @@
 <?php
 
-
-class module_import_export extends module_base {
-
+class module_import_export extends module_base
+{
 	var $links;
 
 	public function __construct() {
@@ -114,7 +113,6 @@ class module_import_export extends module_base {
 								echo '"';
 								switch ( $extra_field['field_type'] ) {
 									case 'reference':
-
 										$reference = @json_decode( $extra_field['options'], true );
 										if ( ! is_array( $reference ) ) {
 											$reference = array();
@@ -201,10 +199,10 @@ class module_import_export extends module_base {
                 $(function () {
                     $('#import_export_button').click(function () {
                         $('#import_export_go').val('yes');
-			                <?php if(isset( self::$pagination_options['parent_form'] ) && self::$pagination_options['parent_form']){ ?>
+			                <?php if (isset( self::$pagination_options['parent_form'] ) && self::$pagination_options['parent_form']) { ?>
                         $('#<?php echo self::$pagination_options['parent_form'];?>').append($('#import_export_go').clone());
                         $('#<?php echo self::$pagination_options['parent_form'];?>')[0].submit();
-			                <?php }else{ ?>
+			                <?php } else { ?>
                         $('#import_export_go').parents('form')[0].submit();
 			                <?php } ?>
 

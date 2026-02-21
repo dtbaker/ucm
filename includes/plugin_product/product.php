@@ -1,8 +1,7 @@
 <?php
 
-
-class module_product extends module_base {
-
+class module_product extends module_base
+{
 	public $links;
 	public $product_types;
 	public $product_id;
@@ -85,7 +84,6 @@ Current Inventory Level: {PRODUCT_QUANTITY} <br/><br/>
 			if ( isset( $_REQUEST['_products_ajax'] ) ) {
 				switch ( $_REQUEST['_products_ajax'] ) {
 					case 'products_ajax_search':
-
 						//                        $sent = headers_sent($file, $line);
 						//                        echo 'here';
 						//                        print_r($sent);
@@ -123,11 +121,11 @@ Current Inventory Level: {PRODUCT_QUANTITY} <br/><br/>
 								<ul>
 									<?php foreach ( $products_in_categories
 
-									as $category_name => $cat_products ){ ?>
+ as $category_name => $cat_products ) { ?>
 									<li>
 										<a href="#" class="product_category_parent"><?php echo htmlspecialchars( $category_name ); ?></a>
 										(<?php _e( '%s products', count( $cat_products ) ); ?>)
-										<ul style="display:none;" id="product_category_<?php echo $cat_id ++; ?>">
+										<ul style="display:none;" id="product_category_<?php echo $cat_id++; ?>">
 											<?php foreach ( $cat_products as $product ) { ?>
 												<li>
 													<a href="#"
@@ -139,7 +137,7 @@ Current Inventory Level: {PRODUCT_QUANTITY} <br/><br/>
 										<?php } ?>
 										<?php foreach ( $products
 
-										as $product ){ ?>
+ as $product ) { ?>
 									<li>
 										<a href="#"
 										   onclick="return ucm.product.select_product(<?php echo $product['product_id']; ?>);"><?php
@@ -153,7 +151,7 @@ Current Inventory Level: {PRODUCT_QUANTITY} <br/><br/>
 								</ul>
 								<?php
 							}
-						} else if ( ! strlen( $product_name ) ) {
+						} elseif ( ! strlen( $product_name ) ) {
 							_e( 'Pleae create Products first by going to Settings > Products' );
 						}
 
@@ -506,12 +504,12 @@ Current Inventory Level: {PRODUCT_QUANTITY} <br/><br/>
 			$product = new UCMProduct();
 			$product->handle_submit();
 
-		} else if ( "save_product_supplier" == $_REQUEST['_process'] ) {
+		} elseif ( "save_product_supplier" == $_REQUEST['_process'] ) {
 
 			$product_supplier = new UCMProductSupplier();
 			$product_supplier->handle_submit();
 
-		} else if ( "save_product_category" == $_REQUEST['_process'] ) {
+		} elseif ( "save_product_category" == $_REQUEST['_process'] ) {
 			if ( isset( $_REQUEST['butt_del'] ) && $_REQUEST['butt_del'] && $_REQUEST['product_category_id'] ) {
 				$data = self::get_product_category( $_REQUEST['product_category_id'] );
 				if ( module_form::confirm_delete( 'product_category_id', _l( "Really delete product category: %s", $data['product_category_name'] ), self::link_open_category( $_REQUEST['product_category_id'] ) ) ) {
@@ -660,7 +658,7 @@ Current Inventory Level: {PRODUCT_QUANTITY} <br/><br/>
 						) );
 					}
 				}
-				$count ++;
+				$count++;
 			}
 		}
 
@@ -914,8 +912,6 @@ Current Inventory Level: {PRODUCT_QUANTITY} <br/><br/>
 		<?php
 		return ob_get_clean();
 	}
-
-
 }
 
 

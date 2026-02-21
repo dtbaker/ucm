@@ -70,7 +70,7 @@ if ( $invoice['customer_id'] ) {
 $show_task_dates = module_config::c( 'invoice_task_list_show_date', 1 );
 $colspan         = 2;
 if ( $show_task_dates ) {
-	$colspan ++;
+	$colspan++;
 }
 
 
@@ -420,7 +420,7 @@ $default_payment_method = module_config::c( 'invoice_default_payment_method', 'p
 							<label for="paymethod<?php echo $x; ?>"><?php echo $payment_method->get_payment_method_name(); ?></label>
 							<br/>
 							<?php
-							$x ++;
+							$x++;
 						}
 					}
 					foreach ( $payment_methods as $payment_method ) {
@@ -438,7 +438,7 @@ $default_payment_method = module_config::c( 'invoice_default_payment_method', 'p
 							<input type="hidden" id="text_paymethod<?php echo $x; ?>"
 							       value="<?php echo htmlspecialchars( $payment_method->get_invoice_payment_description( $invoice_id ) ); ?>">
 							<?php
-							$x ++;
+							$x++;
 						}
 					}
 					?>
@@ -516,7 +516,7 @@ $default_payment_method = module_config::c( 'invoice_default_payment_method', 'p
 									for="paymethodallowed<?php echo $x; ?>"><?php echo $payment_method->get_payment_method_name(); ?></label>
 								<br/>
 								<?php
-								$x ++;
+								$x++;
 							}
 						}
 					}
@@ -578,7 +578,7 @@ $default_payment_method = module_config::c( 'invoice_default_payment_method', 'p
 
 									<?php
 									_h( 'A renewal is available for this invoice. Clicking this button will create a new invoice based on this invoice, and set the renewal reminder up again for the next date.' );
-								} else if ( isset( $invoice['renew_auto'] ) && $invoice['renew_auto'] ) {
+								} elseif ( isset( $invoice['renew_auto'] ) && $invoice['renew_auto'] ) {
 									_h( 'This invoice will be automatically renewed on this date.' );
 
 								} else {
@@ -689,7 +689,7 @@ $default_payment_method = module_config::c( 'invoice_default_payment_method', 'p
 			$timers    = $ucmtimers->get( array(
 				'invoice_id' => $invoice['invoice_id']
 			), array( 'timer_id' => 'DESC' ) );
-			foreach($timers as $timer){
+			foreach ($timers as $timer) {
 				$UCMTimer = new UCMTimer($timer['timer_id']);
 				$linked_timers[] = array(
 					'description' => $UCMTimer->get('description'),
@@ -703,14 +703,14 @@ $default_payment_method = module_config::c( 'invoice_default_payment_method', 'p
 					'title'  => 'Linked Timers',
 					'fields' => array(
 						'<div id="timer_rel_ids_holder">',
-						function() use ($linked_timers){
+						function () use ($linked_timers) {
 							$total_time = 0;
-							foreach($linked_timers as $linked_timer){
-								echo '<a href="' . $linked_timer['link'] . '">' . htmlspecialchars($linked_timer['description']).'</a> (' . $linked_timer['time'] .' ) <br>';
+							foreach ($linked_timers as $linked_timer) {
+								echo '<a href="' . $linked_timer['link'] . '">' . htmlspecialchars($linked_timer['description']) . '</a> (' . $linked_timer['time'] . ' ) <br>';
 								$total_time += $linked_timer['seconds'];
 							}
-							if(count($linked_timers)>1){
-								echo 'Total Time: '.module_timer::format_seconds($total_time);
+							if (count($linked_timers) > 1) {
+								echo 'Total Time: ' . module_timer::format_seconds($total_time);
 							}
 						},
 						'</div>'
@@ -745,7 +745,7 @@ $default_payment_method = module_config::c( 'invoice_default_payment_method', 'p
 						align="center"><?php _e( 'A Credit Note has been generated against this cancelled invoice: %s', module_invoice::link_open( $other_i['invoice_id'], true, $other_i ) ); ?></p>
 					<?php
 				}
-			} else if ( module_invoice::can_i( 'create', 'Invoices' ) ) {
+			} elseif ( module_invoice::can_i( 'create', 'Invoices' ) ) {
 				?>
 				<p style="text-align: center">
 					<input type="submit" name="butt_generate_credit" value="<?php _e( 'Generate Credit Note' ); ?>"
@@ -768,7 +768,7 @@ $default_payment_method = module_config::c( 'invoice_default_payment_method', 'p
 		echo module_form::generate_fieldset( $fieldset_data );
 		unset( $fieldset_data );
 
-	} else if ( $invoice['overdue'] ) {
+	} elseif ( $invoice['overdue'] ) {
 
 		/***** INVOICE OVERDUE ****/
 		ob_start();
@@ -832,7 +832,7 @@ $default_payment_method = module_config::c( 'invoice_default_payment_method', 'p
 		echo module_form::generate_fieldset( $fieldset_data );
 		unset( $fieldset_data );
 
-	} else if ( $invoice_id > 0 && $invoice['total_amount_due'] > 0 && module_security::is_page_editable() && module_invoice::can_i( 'create', 'Invoice Payments' ) ) {
+	} elseif ( $invoice_id > 0 && $invoice['total_amount_due'] > 0 && module_security::is_page_editable() && module_invoice::can_i( 'create', 'Invoice Payments' ) ) {
 		foreach ( $invoice['job_ids'] as $possible_job_id ) {
 			// find any deposit invoices matching this job.
 			$possible_invoices = module_invoice::get_invoices( array( 'deposit_job_id' => $possible_job_id ) );
@@ -1205,7 +1205,7 @@ $default_payment_method = module_config::c( 'invoice_default_payment_method', 'p
 							?>
 							-
 							<?php
-						} else if ( $invoice['default_task_type'] == _TASK_TYPE_QTY_AMOUNT || $invoice['default_task_type'] == _TASK_TYPE_HOURS_AMOUNT ) {
+						} elseif ( $invoice['default_task_type'] == _TASK_TYPE_QTY_AMOUNT || $invoice['default_task_type'] == _TASK_TYPE_HOURS_AMOUNT ) {
 							?>
 							<input type="text" name="invoice_invoice_item[new][hours]" value="" id="newinvoice_itemqty" size="3"
 							       style="width:30px;" onchange="setamount(this.value,'new');" onkeyup="setamount(this.value,'new');">
@@ -1295,7 +1295,7 @@ $default_payment_method = module_config::c( 'invoice_default_payment_method', 'p
 								<input type="text" name="invoice_invoice_item[<?php echo $invoice_item_id; ?>][task_order]" value="<?php
 								if ( isset( $invoice_item_data['custom_task_order'] ) && (int) $invoice_item_data['custom_task_order'] > 0 ) {
 									echo $invoice_item_data['custom_task_order'];
-								} else if ( isset( $invoice_item_data['task_order'] ) && $invoice_item_data['task_order'] > 0 ) {
+								} elseif ( isset( $invoice_item_data['task_order'] ) && $invoice_item_data['task_order'] > 0 ) {
 									echo $invoice_item_data['task_order'];
 								}
 								?>" size="3" class="edit_task_order">
@@ -1424,13 +1424,13 @@ $default_payment_method = module_config::c( 'invoice_default_payment_method', 'p
 					</tbody>
 				<?php } ?>
 				<tbody id="invoice_item_preview_<?php echo $invoice_item_id; ?>">
-				<tr class="<?php echo $c ++ % 2 ? 'odd' : 'even'; ?>">
+				<tr class="<?php echo $c++ % 2 ? 'odd' : 'even'; ?>">
 					<?php if ( module_config::c( 'invoice_task_numbers', 1 ) ) { ?>
 						<td>
 							<?php
 							if ( isset( $invoice_item_data['custom_task_order'] ) && (int) $invoice_item_data['custom_task_order'] > 0 ) {
 								echo $invoice_item_data['custom_task_order'];
-							} else if ( isset( $invoice_item_data['task_order'] ) && $invoice_item_data['task_order'] > 0 ) {
+							} elseif ( isset( $invoice_item_data['task_order'] ) && $invoice_item_data['task_order'] > 0 ) {
 								echo $invoice_item_data['task_order'];
 							}
 							?>
@@ -1547,7 +1547,7 @@ $default_payment_method = module_config::c( 'invoice_default_payment_method', 'p
 					}
 				}
 
-			} else if ( $invoice['discount_type'] == _DISCOUNT_TYPE_AFTER_TAX ) {
+			} elseif ( $invoice['discount_type'] == _DISCOUNT_TYPE_AFTER_TAX ) {
 				$rows[] = array(
 					'label' => _l( 'Sub:' ),
 					'value' => '<span class="currency">' . dollar( $invoice['total_sub_amount'], true, $invoice['currency_id'] ) . '</span>'
@@ -1700,6 +1700,7 @@ $default_payment_method = module_config::c( 'invoice_default_payment_method', 'p
 	<?php
 
 	/*** PAYMENT HISTORY ****/
+
 	ob_start();
 	?>
 

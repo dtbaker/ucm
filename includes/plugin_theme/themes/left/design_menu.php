@@ -41,7 +41,7 @@ if ( ! function_exists( 'sort_menu_links' ) ) {
 				// login is always there.
 				if ( ! _UCM_INSTALLED ) {
 					//$links [] = array("name"=>"Setup","url"=>"index.php?p=setup","icon"=>"images/icon_home.gif");
-				} else if ( ! getcred() ) {
+				} elseif ( ! getcred() ) {
 					$links [] = array(
 						"name" => "Login",
 						"url"  => _BASE_HREF . "index.php?p=home",
@@ -135,7 +135,7 @@ if ( ! function_exists( 'sort_menu_links' ) ) {
 				if ( isset( $load_modules ) && isset( $link['m'] ) && in_array( $link['m'], $load_modules ) && ! isset( $link['force_current_check'] ) ) {
 					$current_link = $link_id;
 					break;// if there are menu "current" issues then the problem will be here. remove break;
-				} else if ( $link['name'] == 'Dashboard' && ! $_REQUEST['m'] && isset( $_REQUEST['p'] ) && in_array( 'home', $_REQUEST['p'] ) ) {
+				} elseif ( $link['name'] == 'Dashboard' && ! $_REQUEST['m'] && isset( $_REQUEST['p'] ) && in_array( 'home', $_REQUEST['p'] ) ) {
 					$current_link = $link_id;
 				}
 			}
@@ -145,7 +145,7 @@ if ( ! function_exists( 'sort_menu_links' ) ) {
 			$current = ( $link_id === $current_link );
 			if ( isset( $link['url'] ) && $link['url'] ) {
 				$link_url = $link['url'];
-			} else if ( isset( $link['p'] ) && $link['m'] ) {
+			} elseif ( isset( $link['p'] ) && $link['m'] ) {
 				if ( isset( $link['menu_include_parent'] ) ) {
 					$menu_include_parent = $link['menu_include_parent'];
 				}

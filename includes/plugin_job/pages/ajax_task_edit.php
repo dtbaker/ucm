@@ -62,7 +62,7 @@ if ( module_job::job_task_has_split_hours( $job_id, $task_id, $task_data, $job )
 
 			if ( $task_data['hours'] == 0 && $task_data['manual_task_type'] == _TASK_TYPE_AMOUNT_ONLY ) {
 				// no hour input
-			} else if ( $task_data['manual_task_type'] == _TASK_TYPE_QTY_AMOUNT ) { ?>
+			} elseif ( $task_data['manual_task_type'] == _TASK_TYPE_QTY_AMOUNT ) { ?>
 				<input type="text" name="job_task[<?php echo $task_id; ?>][<?php echo $hours_prefix; ?>hours]"
 				       value="<?php echo $hours_value; ?>" size="3" style="width:30px;" tabindex="12">
 			<?php } else {
@@ -95,21 +95,21 @@ if ( module_job::job_task_has_split_hours( $job_id, $task_id, $task_data, $job )
 		</td>
 	<?php } ?>
 	<?php if ( module_config::c( 'job_show_due_date', 1 ) ) {
-		$colspan ++; ?>
+		$colspan++; ?>
 		<td>
 			<input type="text" name="job_task[<?php echo $task_id; ?>][date_due]"
 			       value="<?php echo print_date( $task_data['date_due'] ); ?>" class="date_field" tabindex="14">
 		</td>
 	<?php } ?>
 	<?php if ( module_config::c( 'job_show_done_date', 1 ) ) {
-		$colspan ++; ?>
+		$colspan++; ?>
 		<td>
 			<input type="text" name="job_task[<?php echo $task_id; ?>][date_done]"
 			       value="<?php echo print_date( $task_data['date_done'] ); ?>" class="date_field" tabindex="14">
 		</td>
 	<?php } ?>
 	<?php if ( module_config::c( 'job_allow_staff_assignment', 1 ) ) {
-		$colspan ++; ?>
+		$colspan++; ?>
 		<td>
 			<?php echo print_select_box( $staff_member_rel, 'job_task[' . $task_id . '][user_id]',
 				isset( $staff_member_rel[ $task_data['user_id'] ] ) ? $task_data['user_id'] : false, 'job_task_staff_list', true ); ?>
@@ -156,7 +156,7 @@ if ( module_job::job_task_has_split_hours( $job_id, $task_id, $task_data, $job )
 
 				if ( $task_data['staff_hours'] == 0 && $task_data['manual_task_type'] == _TASK_TYPE_AMOUNT_ONLY ) {
 					// no hour input
-				} else if ( $task_data['manual_task_type'] == _TASK_TYPE_QTY_AMOUNT ) { ?>
+				} elseif ( $task_data['manual_task_type'] == _TASK_TYPE_QTY_AMOUNT ) { ?>
 					<input type="text" name="job_task[<?php echo $task_id; ?>][staff_hours]" value="<?php echo $hours_value; ?>"
 					       size="3" style="width:30px;" tabindex="14">
 				<?php } else {

@@ -13,7 +13,7 @@
 		foreach ( $accounts as $account ) {
 			$facebook_account = new ucm_facebook_account( $account['social_facebook_id'] );
 			?>
-			<tr class="<?php echo ( $c ++ % 2 ) ? "odd" : "even"; ?>">
+			<tr class="<?php echo ( $c++ % 2 ) ? "odd" : "even"; ?>">
 				<td class="row_action">
 					<img src="<?php echo _BASE_HREF; ?>includes/plugin_social_facebook/images/facebook.png"
 					     class="facebook_icon">
@@ -36,7 +36,7 @@
 		foreach ( $accounts as $account ) {
 			$twitter_account = new ucm_twitter_account( $account['social_twitter_id'] );
 			?>
-			<tr class="<?php echo ( $c ++ % 2 ) ? "odd" : "even"; ?>">
+			<tr class="<?php echo ( $c++ % 2 ) ? "odd" : "even"; ?>">
 				<td class="row_action">
 					<img src="<?php echo _BASE_HREF; ?>includes/plugin_social_twitter/images/twitter-logo.png"
 					     class="twitter_icon">

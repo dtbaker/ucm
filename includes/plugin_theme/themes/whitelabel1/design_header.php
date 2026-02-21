@@ -7,13 +7,11 @@ switch ( $display_mode ) {
 		}
 		break;
 	case 'ajax':
-
 		break;
 	case 'iframe':
 	case 'normal':
 	default:
-
-			$header_logo = module_theme::get_config('theme_logo',_BASE_HREF.'images/logo.png');
+			$header_logo = module_theme::get_config('theme_logo',_BASE_HREF . 'images/logo.png');
 
 			?>
 
@@ -33,7 +31,7 @@ switch ( $display_mode ) {
 
 
 			<?php $header_favicon = module_theme::get_config('theme_favicon','');
-					if($header_favicon){ ?>
+					if ($header_favicon) { ?>
 							<link rel="icon" href="<?php echo htmlspecialchars($header_favicon);?>">
 			<?php } ?>
 
@@ -52,32 +50,32 @@ switch ( $display_mode ) {
 					});
 			</script>
 
-<?php if(function_exists('hook_handle_callback')){
+<?php if (function_exists('hook_handle_callback')) {
 	hook_handle_callback('page_header');
 } ?>
 
 			</head>
-			<body id="<?php echo isset($page_unique_id) ? $page_unique_id : 'page';?>" <?php if($display_mode=='iframe') {echo ' style="background:#FFF;"';}?> class="theme-whitelabel1">
+			<body id="<?php echo isset($page_unique_id) ? $page_unique_id : 'page';?>" <?php if ($display_mode == 'iframe') {echo ' style="background:#FFF;"';}?> class="theme-whitelabel1">
 
-<?php if($display_mode=='iframe'){ ?>
+<?php if ($display_mode == 'iframe') { ?>
 
 	<section id="iframe">
 
-<?php }else{ ?>
+<?php } else { ?>
 
-			<?php if(_DEBUG_MODE){
+			<?php if (_DEBUG_MODE) {
 					module_debug::print_heading();
 			} ?>
 			<div id="pageoptions">
 		<ul>
-					<?php if (module_security::getcred()){ ?>
+					<?php if (module_security::getcred()) { ?>
 							<li><a href="<?php echo _BASE_HREF;?>index.php?_logout=true"><?php _e('Logout');?></a></li>
 						<?php
 							$header_buttons = array();
-				if(module_security::is_logged_in()) {
+				if (module_security::is_logged_in()) {
 					$header_buttons = hook_filter_var( 'header_buttons', $header_buttons );
 				}
-				foreach($header_buttons as $header_button){
+				foreach ($header_buttons as $header_button) {
 					?>
 					<li>
 						<a href="#" id="<?php echo $header_button['id'];?>">
@@ -99,18 +97,18 @@ switch ( $display_mode ) {
 	<!-- start header -->
 	<header>
 			<div id="header_logo">
-					<?php if($header_logo){ ?>
+					<?php if ($header_logo) { ?>
 							<a href="<?php echo _BASE_HREF;?>"><img src="<?php echo htmlspecialchars($header_logo);?>" border="0" title="<?php echo htmlspecialchars(module_config::s('header_title','UCM'));?>"></a>
-					<?php }else{ ?>
+					<?php } else { ?>
 							<a href="<?php echo _BASE_HREF;?>"><?php echo module_config::s('header_title','UCM');?></a>
 					<?php } ?>
-					<?php if(_DEMO_MODE){ ?>
+					<?php if (_DEMO_MODE) { ?>
 							<a href="http://themeforest.net/item/ucm-theme-white-label/4120556?ref=dtbaker" target="_blank"><img src="http://ultimateclientmanager.com/webimages/logo_whitelabel.png" border="0"></a>
 					<?php } ?>
 	</div>
 			<div id="header_menu_holder">
-					<?php if(module_security::getcred() && module_security::can_user(module_security::get_loggedin_id(),'Show Quick Search') && $display_mode != 'mobile'){
-							if(module_config::c('global_search_focus',1)==1){
+					<?php if (module_security::getcred() && module_security::can_user(module_security::get_loggedin_id(),'Show Quick Search') && $display_mode != 'mobile') {
+							if (module_config::c('global_search_focus',1) == 1) {
 											module_form::set_default_field('ajax_search_text');
 									}
 							?>
@@ -121,7 +119,7 @@ switch ( $display_mode ) {
 							</div>
 					<?php } ?>
 					<div class="headernavwrap">
-							<?php if(isset($header_submenu_content)){echo $header_submenu_content;}?>
+							<?php if (isset($header_submenu_content)) {echo $header_submenu_content;}?>
 					</div>
 					<div class="clear"></div>
 			</div>
@@ -133,9 +131,9 @@ switch ( $display_mode ) {
 
 			<nav>
 					<?php
-					$menu_include_parent=false;
-					$show_quick_search=true;
-					if(is_file('design_menu.php')){
+					$menu_include_parent = false;
+					$show_quick_search = true;
+					if (is_file('design_menu.php')) {
 							//include("design_menu.php");
 							include(module_theme::include_ucm("design_menu.php"));
 					}
@@ -148,36 +146,36 @@ switch ( $display_mode ) {
 	<?php
 	$show_messages = false;
 	//print_header_message() // << fail
-	if(isset($_SESSION['_message']) && count($_SESSION['_message'])){
+	if (isset($_SESSION['_message']) && count($_SESSION['_message'])) {
 			$show_messages = true;
 			?>
 			<div class="alert success message_click_fade">
 							<?php
-							$x=1;
-							foreach($_SESSION['_message'] as $msg){
-									if(count($_SESSION['_message'])>1){
+							$x = 1;
+							foreach ($_SESSION['_message'] as $msg) {
+									if (count($_SESSION['_message']) > 1) {
 											echo "<strong>#$x</strong> ";
 											$x++;
 									}
-									echo nl2br(($msg))."<br>";
+									echo nl2br(($msg)) . "<br>";
 							}
 							?>
 			</div>
 	<?php
 			$_SESSION['_message'] = array();
 }
-if(isset($_SESSION['_errors']) && count($_SESSION['_errors'])){
+if (isset($_SESSION['_errors']) && count($_SESSION['_errors'])) {
 			$show_messages = true;
-			foreach($_SESSION['_errors'] as $msg){
+			foreach ($_SESSION['_errors'] as $msg) {
 					?>
 					<div class="alert warning message_click_fade">
-							<?php echo nl2br($msg)."<br>"; ?>
+							<?php echo nl2br($msg) . "<br>"; ?>
 					</div>
 			<?php
 			}
 			$_SESSION['_errors'] = array();
 }
-	if($show_messages){
+	if ($show_messages) {
 	?>
 	<script type="text/javascript">
 			$(function(){
@@ -188,7 +186,7 @@ if(isset($_SESSION['_errors']) && count($_SESSION['_errors'])){
 	}
 
 
-if(function_exists('hook_handle_callback')){
+if (function_exists('hook_handle_callback')) {
 	hook_handle_callback('content_header');
 }
 }

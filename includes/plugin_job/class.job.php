@@ -7,8 +7,8 @@ defined( '_UCM_VERSION' ) || die( '-5' );
 
 if ( class_exists( 'UCMBaseDocument' ) ) {
 
-	class UCMJob extends UCMBaseDocument {
-
+	class UCMJob extends UCMBaseDocument
+    {
 		public $db_id = 'job_id';
 		public $db_table = 'job';
 		public $display_key = 'name';
@@ -56,21 +56,18 @@ if ( class_exists( 'UCMBaseDocument' ) ) {
 
 			return full_link( _EXTERNAL_TUNNEL_REWRITE . 'm.job/h.public/i.' . $this->id . '/hash.' . $this->link_public( true ) );
 		}
-
 	}
 
-	class UCMJobs extends UCMBaseMulti {
-
+	class UCMJobs extends UCMBaseMulti
+    {
 		public $db_id = 'job_id';
 		public $db_table = 'job';
 		public $display_name = 'Job';
 		public $display_name_plural = 'Jobs';
-
-
 	}
 
-	class UCMJobTask extends UCMBaseTask {
-
+	class UCMJobTask extends UCMBaseTask
+    {
 		public $document_type = 'job'; // quote, job, invoice
 		public $db_id = 'task_id';
 		public $db_table = 'task';
@@ -220,8 +217,6 @@ if ( class_exists( 'UCMBaseDocument' ) ) {
 				}
 			}
 		}
-
-
 	}
 
 

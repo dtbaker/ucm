@@ -7,8 +7,8 @@ defined( '_UCM_VERSION' ) || die( '-5' );
 
 if ( class_exists( 'UCMBaseDocument' ) ) {
 
-	class UCMContract extends UCMBaseDocument {
-
+	class UCMContract extends UCMBaseDocument
+    {
 		public $db_id = 'contract_id';
 		public $db_table = 'contract';
 		public $display_key = 'name';
@@ -77,38 +77,32 @@ if ( class_exists( 'UCMBaseDocument' ) ) {
 
 			return $contract_products;
 		}
-
 	}
 
-	class UCMContracts extends UCMBaseMulti {
-
+	class UCMContracts extends UCMBaseMulti
+    {
 		public $db_id = 'contract_id';
 		public $db_table = 'contract';
 		public $display_name = 'Contract';
 		public $display_name_plural = 'Contracts';
-
-
 	}
 
-	class UCMContractProduct extends UCMBaseSingle {
-
+	class UCMContractProduct extends UCMBaseSingle
+    {
 		public $db_id = array( 'contract_id', 'product_id' );
 		public $db_table = 'contract_product';
 		public $display_key = 'contract_id';
 		public $display_name = 'Contract Product';
 		public $display_name_plural = 'Contract Products';
 		public $db_fields = array();
-
 	}
 
-	class UCMContractProducts extends UCMBaseMulti {
-
+	class UCMContractProducts extends UCMBaseMulti
+    {
 		public $db_id = array( 'contract_id', 'product_id' );
 		public $db_table = 'contract_product';
 		public $display_name = 'Contract';
 		public $display_name_plural = 'Contracts';
-
-
 	}
 
 

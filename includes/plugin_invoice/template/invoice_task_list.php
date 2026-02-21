@@ -196,7 +196,7 @@ if ( $invoice['discount_type'] == _DISCOUNT_TYPE_BEFORE_TAX ) {
 		}
 	}
 
-} else if ( $invoice['discount_type'] == _DISCOUNT_TYPE_AFTER_TAX ) {
+} elseif ( $invoice['discount_type'] == _DISCOUNT_TYPE_AFTER_TAX ) {
 	$rows[] = array(
 		'label' => _l( 'Sub Total:' ),
 		'value' => '<span class="currency">' . dollar( $invoice['total_sub_amount'], true, $invoice['currency_id'] ) . '</span>'
@@ -338,7 +338,7 @@ $replace['multiple_jobs'] = count( $website_ids ) > 1 || count( $job_ids ) > 1;
 foreach ( $invoice_tasks as $invoice_item_id => $invoice_item_data ) {
 
 	$row_replace                     = $invoice_item_data;
-	$row_replace['item_odd_or_even'] = $item_count ++ % 2 ? 'odd' : 'even';
+	$row_replace['item_odd_or_even'] = $item_count++ % 2 ? 'odd' : 'even';
 	$row_replace['item_number']      = '';
 	$row_replace['item_description'] = '';
 	$row_replace['item_date']        = '';
@@ -362,7 +362,7 @@ foreach ( $invoice_tasks as $invoice_item_id => $invoice_item_data ) {
 
 	if ( isset( $invoice_item_data['custom_task_order'] ) && (int) $invoice_item_data['custom_task_order'] > 0 ) {
 		$row_replace['item_number'] = $invoice_item_data['custom_task_order'];
-	} else if ( isset( $invoice_item_data['task_order'] ) && $invoice_item_data['task_order'] > 0 ) {
+	} elseif ( isset( $invoice_item_data['task_order'] ) && $invoice_item_data['task_order'] > 0 ) {
 		$row_replace['item_number'] = $invoice_item_data['task_order'];
 	} else {
 		$row_replace['item_number'] = $item_count;

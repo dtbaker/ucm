@@ -22,7 +22,7 @@ if ( module_job::job_task_has_split_hours( $job_id, $task_id, $task_data, $job )
 		$hours_prefix = 'staff_';
 
 		// do we show the staff_ settings or default them to the job settings?
-	} else if ( module_job::can_i( 'view', 'Job Split Pricing' ) ) {
+	} elseif ( module_job::can_i( 'view', 'Job Split Pricing' ) ) {
 		$show_split_hours = true;
 		//$hours_prefix = 'staff_';
 	}
@@ -39,7 +39,7 @@ if ( module_job::job_task_has_split_hours( $job_id, $task_id, $task_data, $job )
 		<?php
 		if ( $task_data['approval_required'] == 1 ) {
 			echo '<span style="font-style: italic;" class="error_text">' . _l( '(approval required)' ) . '</span> ';
-		} else if ( $task_data['approval_required'] == 2 ) {
+		} elseif ( $task_data['approval_required'] == 2 ) {
 			echo '<span style="font-style: italic;" class="error_text">' . _l( '(task rejected)' ) . '</span> ';
 		}
 		/*  <a href="<?php echo $UCMJobTask->link_open();?>" data-ajax-modal='{"type":"normal","title":"<?php _e('Job Task');?>"}' class="<?php
@@ -50,13 +50,13 @@ if ( module_job::job_task_has_split_hours( $job_id, $task_id, $task_data, $job )
 												echo 'error_text';
 										}
 										?>"><?php echo (!trim($task_data['description'])) ? 'N/A' : htmlspecialchars($task_data['description']);?></a> */
-		if ( $task_editable ) { // $task_editable 
+		if ( $task_editable ) { // $task_editable
 			?>
 			<a href="#" onclick="edittask(<?php echo $task_id; ?>,0); return false;" class="<?php
 			// set color
 			if ( $percentage == 1 ) {
 				echo 'success_text';
-			} else if ( $percentage != 1 && $task_due_time < time() ) {
+			} elseif ( $percentage != 1 && $task_due_time < time() ) {
 				echo 'error_text';
 			}
 			?>"><?php echo ( ! trim( $task_data['description'] ) ) ? 'N/A' : htmlspecialchars( $task_data['description'] ); ?></a>
@@ -65,7 +65,7 @@ if ( module_job::job_task_has_split_hours( $job_id, $task_id, $task_data, $job )
 			// set color
 			if ( $percentage == 1 ) {
 				echo 'success_text';
-			} else if ( $percentage != 1 && $task_due_time < time() ) {
+			} elseif ( $percentage != 1 && $task_due_time < time() ) {
 				echo 'error_text';
 			}
 			?>"><?php echo ( ! trim( $task_data['description'] ) ) ? 'N/A' : htmlspecialchars( $task_data['description'] ); ?></span>
@@ -134,7 +134,7 @@ if ( module_job::job_task_has_split_hours( $job_id, $task_id, $task_data, $job )
 				echo '<span class="success_text">';
 				echo $hours_value !== false ? $hours_value : '-';
 				echo '</span>';
-			} else if ( $percentage == 1 && $task_data['completed'] > $task_data[ $hours_prefix . 'hours' ] ) {
+			} elseif ( $percentage == 1 && $task_data['completed'] > $task_data[ $hours_prefix . 'hours' ] ) {
 				echo '<span class="error_text">';
 				echo $hours_value !== false ? $hours_value : '-';
 				echo '</span>';
@@ -165,7 +165,7 @@ if ( module_job::job_task_has_split_hours( $job_id, $task_id, $task_data, $job )
 					echo '<span class="">';
 					echo $hours_value !== false ? $hours_value : '-';
 					echo '</span>';
-				} else if ( $percentage == 1 && $task_data['completed'] > $task_data['staff_hours'] ) {
+				} elseif ( $percentage == 1 && $task_data['completed'] > $task_data['staff_hours'] ) {
 					echo '<span class="">';
 					echo $hours_value !== false ? $hours_value : '-';
 					echo '</span>';
@@ -266,7 +266,7 @@ if ( module_job::job_task_has_split_hours( $job_id, $task_id, $task_data, $job )
 
 			/* <a href="<?php echo $UCMJobTask->link_open();?>" data-ajax-modal='{"type":"normal","title":"<?php _e('Job Task');?>"}'><i
 									class="fa fa-pencil"></i></a> */
-		} else if ( $task_editable ) { ?>
+		} elseif ( $task_editable ) { ?>
 			<?php if ( module_config::c( 'job_task_edit_icon', 0 ) ) { // old icon:  ?>
 				<a href="#" class="" title="<?php _e( $percentage == 1 ? 'Edit' : 'Complete' ); ?>"
 				   onclick="edittask(<?php echo $task_id; ?>,<?php echo( $task_data['hours'] != 0 ? ( $task_data['hours'] - $task_data['completed'] ) : 1 ); ?>); return false;"><i

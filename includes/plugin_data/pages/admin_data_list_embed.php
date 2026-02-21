@@ -29,7 +29,7 @@ $search = array();
 foreach ( $module->get_data_link_keys() as $key ) {
 	if ( isset( $_REQUEST[ $key ] ) ) {
 		$search[ $key ] = $_REQUEST[ $key ];
-	} else if ( "{$owner_table}_id" == $key ) {
+	} elseif ( "{$owner_table}_id" == $key ) {
 		$search["{$owner_table}_id"] = $owner_id;
 	}
 }

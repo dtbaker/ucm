@@ -1,4 +1,5 @@
 <?php
+
 if ( ! module_social::can_i( 'edit', 'Twitter', 'Social', 'social' ) ) {
 	die( 'No access to Twitter accounts' );
 }
@@ -13,7 +14,8 @@ if ( $twitter_account->get( 'social_twitter_id' ) && $twitter_account->get( 'soc
 	require_once 'includes/plugin_social_twitter/includes/tmhOAuth.php';
 
 
-	class dtbaker_tmhOAuth extends tmhOAuth {
+	class dtbaker_tmhOAuth extends tmhOAuth
+    {
 		public function __construct( $config = array() ) {
 
 			$this->config = array_merge(
@@ -157,7 +159,7 @@ if ( $twitter_account->get( 'social_twitter_id' ) && $twitter_account->get( 'soc
 		<p>Congratulations, below is the user token and secret for @<?php echo htmlspecialchars($oauth_creds['screen_name']) ?>.
 		Use these to make authenticated calls to Twitter using the application with
 		consumer key: <?php echo htmlspecialchars($tmhOAuth->config['consumer_key']) ?></p>
-	
+
 		<p>User Token: <?php echo htmlspecialchars($oauth_creds['oauth_token']) ?><br />
 		User Secret: <?php echo htmlspecialchars($oauth_creds['oauth_token_secret']) ?></p>
 		<?php*/

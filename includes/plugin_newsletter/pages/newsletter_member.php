@@ -6,7 +6,7 @@ $member_id            = isset( $_REQUEST['member_id'] ) ? (int) $_REQUEST['membe
 $newsletter_member_id = isset( $_REQUEST['newsletter_member_id'] ) ? (int) $_REQUEST['newsletter_member_id'] : false;
 if ( $member_id ) {
 	$member_data = module_newsletter::get_member( $member_id );
-} else if ( $newsletter_member_id ) {
+} elseif ( $newsletter_member_id ) {
 	$member_data = module_newsletter::get_newsletter_member( $newsletter_member_id );
 } else {
 	set_error( 'Sorry no member id specified' );
@@ -57,10 +57,10 @@ print_heading( 'Member Newsletter History/Statistics' );
 				$sent_to_members    = 0;
 				while ( $send_member = mysqli_fetch_assoc( $send_members ) ) {
 					if ( $send_member['open_time'] ) {
-						$open_count ++;
+						$open_count++;
 					}
 					?>
-					<tr class="<?php echo $x ++ % 2 ? 'odd' : 'even'; ?>"
+					<tr class="<?php echo $x++ % 2 ? 'odd' : 'even'; ?>"
 					    id="newsletter_member_<?php echo $send_member['newsletter_member_id']; ?>">
 						<td>
 							<?php echo module_newsletter::link_statistics( $send_member['newsletter_id'], $send_member['send_id'], true, $send_member ); ?>
@@ -75,12 +75,12 @@ print_heading( 'Member Newsletter History/Statistics' );
 								case _NEWSLETTER_STATUS_NEW:
 									// hasnt been processed yet
 									break;
-								case _NEWSLETTER_STATUS_SENT;
+								case _NEWSLETTER_STATUS_SENT:
 									// sent!
 									_e( 'sent' );
 									break;
-								case _NEWSLETTER_STATUS_PENDING;
-								case _NEWSLETTER_STATUS_PAUSED;
+								case _NEWSLETTER_STATUS_PENDING:
+								case _NEWSLETTER_STATUS_PAUSED:
 									// pending send..
 									_e( 'pending' );
 									break;
@@ -107,7 +107,7 @@ print_heading( 'Member Newsletter History/Statistics' );
 				<?php
 				foreach ( $member_data
 
-				as $member ){
+ as $member ) {
 				print_heading( array(
 					'type'  => 'h3',
 					'title' => 'Member Statistics',
@@ -144,9 +144,9 @@ print_heading( 'Member Newsletter History/Statistics' );
 										// they unsubscribed from a send.
 										$send_data = module_newsletter::get_send( $res['unsubscribe_send_id'] );
 										_e( 'Unsubscribed on %s from newsletter %s', print_date( $res['time'] ), module_newsletter::link_statistics( $send_data['newsletter_id'], $send_data['send_id'], true ) );
-									} else if ( isset( $res['reason'] ) && $res['reason'] == 'no_email' ) {
+									} elseif ( isset( $res['reason'] ) && $res['reason'] == 'no_email' ) {
 										_e( 'Manually marked as no receive email' );
-									} else if ( isset( $res['reason'] ) && $res['reason'] == 'doubleoptin' ) {
+									} elseif ( isset( $res['reason'] ) && $res['reason'] == 'doubleoptin' ) {
 										_e( 'Waiting for double opt in confirmation, sent at %s', print_date( $res['time'] ) );
 									} else {
 										_e( 'Unsubscribed on %s', print_date( $res['time'] ) );

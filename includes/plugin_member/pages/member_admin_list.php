@@ -235,7 +235,8 @@ print_heading( $header );
 					$groups = module_group::get_groups_search( array(
 						'owner_table' => 'newsletter_subscription',
 						'owner_id'    => $member['member_id'],
-					) );;
+					) );
+;
 					foreach ( $groups as $group ) {
 						$g[] = $group['name'];
 					}
@@ -248,9 +249,9 @@ print_heading( $header );
 								// they unsubscribed from a send.
 								$send_data = module_newsletter::get_send( $res['unsubscribe_send_id'] );
 								_e( '(unsubscribed %s)', print_date( $res['time'] ) );
-							} else if ( isset( $res['reason'] ) && $res['reason'] == 'no_email' ) {
+							} elseif ( isset( $res['reason'] ) && $res['reason'] == 'no_email' ) {
 								_e( '(do not send)' );
-							} else if ( isset( $res['reason'] ) && $res['reason'] == 'doubleoptin' ) {
+							} elseif ( isset( $res['reason'] ) && $res['reason'] == 'doubleoptin' ) {
 								_e( '(double opt-in incomplete)', print_date( $res['time'] ) );
 							} else {
 								_e( '(unsubscribed %s)', print_date( $res['time'] ) );

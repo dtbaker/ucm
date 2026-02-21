@@ -22,8 +22,8 @@ define( '_INVOICE_SUBSCRIPTION_PENDING', 1 );
 define( '_INVOICE_SUBSCRIPTION_ACTIVE', 2 );
 define( '_INVOICE_SUBSCRIPTION_FAILED', 3 );
 
-class module_invoice extends module_base {
-
+class module_invoice extends module_base
+{
 	public $links;
 	public $invoice_types;
 
@@ -677,7 +677,7 @@ Thank you,<br><br>
 											}
 											$send_email_on                = strtotime( '+' . module_config::c( 'overdue_email_auto_days_repeat', 7 ) . ' days', $last_invoice_sent );
 											$alert_res['auto_email_date'] = print_date( $send_email_on );
-										} else if ( $invoice['date_sent'] && $invoice['date_sent'] != '0000-00-00' ) {
+										} elseif ( $invoice['date_sent'] && $invoice['date_sent'] != '0000-00-00' ) {
 											$invoice_is_due               = strtotime( $invoice['date_due'] );
 											$send_email_on                = strtotime( '+' . module_config::c( 'overdue_email_auto_days', 3 ) . ' days', $invoice_is_due );
 											$alert_res['auto_email_date'] = print_date( $send_email_on );
@@ -944,9 +944,9 @@ Thank you,<br><br>
 		// todo - read total_amoutn_due from new c_ cached field
 		if ( ! isset( $data['total_amount_due'] ) ) {
 
-		} else if ( isset( $data['date_cancel'] ) && $data['date_cancel'] != '0000-00-00' ) {
+		} elseif ( isset( $data['date_cancel'] ) && $data['date_cancel'] != '0000-00-00' ) {
 			$link_options['class'] = 'invoice_cancel';
-		} else if ( $data['total_amount_due'] <= 0 ) {
+		} elseif ( $data['total_amount_due'] <= 0 ) {
 			$link_options['class'] = 'success_text';
 		} else {
 			$link_options['class'] = 'error_text';
@@ -1449,7 +1449,7 @@ Job: <strong>{JOB_NAME}</strong> <br/>
 				$data['invoice_notes'] .= '</ul>';
 			} else {
 				$note                  = array_shift( $notes );
-				if(!empty($note['note'])) {
+				if (!empty($note['note'])) {
 					$data['invoice_notes'] .= htmlspecialchars( $note['note'] );
 				}
 			}
@@ -1598,7 +1598,7 @@ Job: <strong>{JOB_NAME}</strong> <br/>
 		$errors = array();
 		if ( $_REQUEST['_process'] == 'make_payment' ) {
 			$this->handle_payment();
-		} else if ( isset( $_REQUEST['butt_del'] ) && $_REQUEST['butt_del'] && $_REQUEST['invoice_id'] && module_invoice::can_i( 'delete', 'Invoices' ) ) {
+		} elseif ( isset( $_REQUEST['butt_del'] ) && $_REQUEST['butt_del'] && $_REQUEST['invoice_id'] && module_invoice::can_i( 'delete', 'Invoices' ) ) {
 			$data = self::get_invoice( $_REQUEST['invoice_id'] );
 			if ( module_form::confirm_delete( 'invoice_id', _l( "Really delete invoice: %s", htmlspecialchars( $data['name'] ) ), self::link_open( $_REQUEST['invoice_id'] ) ) ) {
 				$invoice_data = self::get_invoice( $_REQUEST['invoice_id'], true );
@@ -1610,7 +1610,7 @@ Job: <strong>{JOB_NAME}</strong> <br/>
 					redirect_browser( self::link_open( false ) );
 				}
 			}
-		} else if ( "assign_credit_to_customer" == $_REQUEST['_process'] ) {
+		} elseif ( "assign_credit_to_customer" == $_REQUEST['_process'] ) {
 			$invoice_id = (int) $_REQUEST['invoice_id'];
 			if ( $invoice_id > 0 ) {
 				$invoice_data = $this->get_invoice( $invoice_id );
@@ -1635,7 +1635,7 @@ Job: <strong>{JOB_NAME}</strong> <br/>
 				}
 				redirect_browser( $this->link_open( $invoice_id ) );
 			}
-		} else if ( "save_invoice" == $_REQUEST['_process'] ) {
+		} elseif ( "save_invoice" == $_REQUEST['_process'] ) {
 
 			$invoice_id = isset( $_REQUEST['invoice_id'] ) ? (int) $_REQUEST['invoice_id'] : false;
 			// check the user has permissions to edit this page.
@@ -1774,9 +1774,10 @@ Job: <strong>{JOB_NAME}</strong> <br/>
 			if ( isset( $_REQUEST['butt_makepayment'] ) && $_REQUEST['butt_makepayment'] == 'yes' ) {
 				//redirect_browser(self::link_public_pay($invoice_id));
 				self::handle_payment();
-			} else if ( isset( $_REQUEST['butt_print'] ) && $_REQUEST['butt_print'] ) {
-				$_REQUEST['_redirect'] = self::link_generate( $invoice_id, array( 'arguments' => array( 'print' => 1 ) ) );;
-			} else if ( isset( $_REQUEST['butt_merge'] ) && $_REQUEST['butt_merge'] && isset( $_REQUEST['merge_invoice'] ) && is_array( $_REQUEST['merge_invoice'] ) ) {
+			} elseif ( isset( $_REQUEST['butt_print'] ) && $_REQUEST['butt_print'] ) {
+				$_REQUEST['_redirect'] = self::link_generate( $invoice_id, array( 'arguments' => array( 'print' => 1 ) ) );
+;
+			} elseif ( isset( $_REQUEST['butt_merge'] ) && $_REQUEST['butt_merge'] && isset( $_REQUEST['merge_invoice'] ) && is_array( $_REQUEST['merge_invoice'] ) ) {
 				$merge_invoice_ids = self::check_invoice_merge( $invoice_id );
 				foreach ( $merge_invoice_ids as $merge_invoice ) {
 					if ( isset( $_REQUEST['merge_invoice'][ $merge_invoice['invoice_id'] ] ) ) {
@@ -1788,9 +1789,10 @@ Job: <strong>{JOB_NAME}</strong> <br/>
 				}
 				$_REQUEST['_redirect'] = $this->link_open( $invoice_id );
 				set_message( 'Invoices merged successfully' );
-			} else if ( isset( $_REQUEST['butt_email'] ) && $_REQUEST['butt_email'] ) {
-				$_REQUEST['_redirect'] = self::link_generate( $invoice_id, array( 'arguments' => array( 'email' => 1 ) ) );;
-			} else if ( ! empty( $_REQUEST['butt_archive'] ) ) {
+			} elseif ( isset( $_REQUEST['butt_email'] ) && $_REQUEST['butt_email'] ) {
+				$_REQUEST['_redirect'] = self::link_generate( $invoice_id, array( 'arguments' => array( 'email' => 1 ) ) );
+;
+			} elseif ( ! empty( $_REQUEST['butt_archive'] ) ) {
 				$UCMInvoice = new UCMInvoice( $invoice_id );
 				if ( $UCMInvoice->is_archived() ) {
 					$UCMInvoice->unarchive();
@@ -1800,7 +1802,7 @@ Job: <strong>{JOB_NAME}</strong> <br/>
 					set_message( "Invoice archived successfully" );
 				}
 				$_REQUEST['_redirect'] = self::link_generate( $invoice_id );
-			} else if ( isset( $_REQUEST['butt_generate_credit'] ) && $_REQUEST['butt_generate_credit'] ) {
+			} elseif ( isset( $_REQUEST['butt_generate_credit'] ) && $_REQUEST['butt_generate_credit'] ) {
 				// generate a credit note against this invioce.
 				// to do this we duplicate the invoice, remove the cancel date, remove the sent date,
 				// set a new create date, set the credit_note_id variable, remove the paid date,
@@ -2084,7 +2086,7 @@ Job: <strong>{JOB_NAME}</strong> <br/>
 					$time_in_seconds = $ucmtimer->get_total_time( true, true );
 					$hours           = round( $time_in_seconds / 3600, 2 );
 
-					$invoice_items[ 'new' . $new_id ++ ] = array(
+					$invoice_items[ 'new' . $new_id++ ] = array(
 						'description'             => $ucmtimer->description,
 						'custom_description'      => '',
 						'long_description'        => '',
@@ -2099,7 +2101,7 @@ Job: <strong>{JOB_NAME}</strong> <br/>
 				}
 			}
 
-		} else if ( ! $invoice_id && isset( $_REQUEST['job_id'] ) && (int) $_REQUEST['job_id'] > 0 ) {
+		} elseif ( ! $invoice_id && isset( $_REQUEST['job_id'] ) && (int) $_REQUEST['job_id'] > 0 ) {
 
 			// hack for half completed invoices
 			if ( isset( $_REQUEST['amount_due'] ) && $_REQUEST['amount_due'] > 0 ) {
@@ -2152,12 +2154,12 @@ Job: <strong>{JOB_NAME}</strong> <br/>
 							$task['hourly_rate'] = $job['hourly_rate'];
 						}
 						$invoice_items[ 'new' . $x ] = $task;
-						$x ++;
+						$x++;
 					}
 					//print_r($tasks);exit;
 				}
 			}
-		} else if ( $invoice_id ) {
+		} elseif ( $invoice_id ) {
 
 			if ( ! $invoice ) {
 				$invoice = self::get_invoice( $invoice_id, true );
@@ -2246,7 +2248,7 @@ Job: <strong>{JOB_NAME}</strong> <br/>
 				} else {
 					$invoice_item_data['invoice_item_amount'] = $invoice_item_data['task_hourly_rate'] * $invoice_item_data['hours'];
 				}
-			} else if ( $invoice_item_data['manual_task_type'] == _TASK_TYPE_QTY_AMOUNT ) {
+			} elseif ( $invoice_item_data['manual_task_type'] == _TASK_TYPE_QTY_AMOUNT ) {
 				if ( $invoice_item_data['amount'] != 0 ) {
 					$invoice_item_data['invoice_item_amount'] = $invoice_item_data['amount'];
 				} else {
@@ -2309,7 +2311,7 @@ Job: <strong>{JOB_NAME}</strong> <br/>
 						// moved it into SQL above, instead of doing a get_single() call below for each invoice line item
 						if ( $invoice_item_data['task_date_done'] && $invoice_item_data['task_date_done'] != '0000-00-00' ) {
 							$invoice_item_data['date_done'] = $invoice_item_data['task_date_done'];
-						} else if ( isset( $invoice['date_create'] ) && $invoice['date_create'] != '0000-00-00' ) {
+						} elseif ( isset( $invoice['date_create'] ) && $invoice['date_create'] != '0000-00-00' ) {
 							$invoice_item_data['date_done'] = $invoice['date_create'];
 						}
 					} else {
@@ -2368,7 +2370,7 @@ Job: <strong>{JOB_NAME}</strong> <br/>
 						$payment['refund_invoice_payments'][] = $other_payment;
 					}
 				}
-			} else if ( $payment['amount'] < 0 && count( $other_payments ) > 0 ) {
+			} elseif ( $payment['amount'] < 0 && count( $other_payments ) > 0 ) {
 				// this is a refund of another payment.
 				$amount_left_to_refund = $payment['amount'];
 				foreach ( $other_payments as $other_payment ) {
@@ -2415,7 +2417,7 @@ Job: <strong>{JOB_NAME}</strong> <br/>
 				$job = module_job::get_job( $_REQUEST['job_id'] );
 				// todo: confirm tis isn't a data leak risk oh well.
 				$invoice_number = $invoice_prefix . $job['name'];
-			} else if ( module_config::c( 'invoice_incrementing', 0 ) ) {
+			} elseif ( module_config::c( 'invoice_incrementing', 0 ) ) {
 				$invoice_number = module_config::c( 'invoice_incrementing_next', 1 );
 				// see if there is an invoice number matching this one.
 				$this_invoice_number = $invoice_number;
@@ -2441,7 +2443,7 @@ Job: <strong>{JOB_NAME}</strong> <br/>
 								break;
 							}
 						}
-						$this_invoice_number ++;
+						$this_invoice_number++;
 					}
 				} while ( count( $invoices ) );
 				module_config::save_config( 'invoice_incrementing_next', $invoice_number );
@@ -2465,7 +2467,7 @@ Job: <strong>{JOB_NAME}</strong> <br/>
 							// first loop, start with A
 							$suffix_ascii2 = 65; // set 2nd suffix to A, work with this.
 						} else {
-							$suffix_ascii2 ++; // move from A to B
+							$suffix_ascii2++; // move from A to B
 						}
 
 					}
@@ -2475,7 +2477,7 @@ Job: <strong>{JOB_NAME}</strong> <br/>
 					} else {
 						$this_invoice_number = $invoice_number . ( $suffix_ascii2 ? chr( $suffix_ascii2 ) : '' ) . chr( $suffix_ascii );
 					}
-					$suffix_ascii ++;
+					$suffix_ascii++;
 				} while ( count( $invoices ) && $suffix_ascii <= 91 && $suffix_ascii2 <= 90 ); //90 is Z
 			}
 		}
@@ -2569,7 +2571,6 @@ Job: <strong>{JOB_NAME}</strong> <br/>
 			if ( $invoice && isset( $invoice['invoice_id'] ) && $invoice['invoice_id'] == $invoice_id ) {
 				switch ( self::get_invoice_access_permissions() ) {
 					case _INVOICE_ACCESS_ALL:
-
 						break;
 					case _INVOICE_ACCESS_STAFF:
 						if ( $invoice['vendor_user_id'] != module_security::get_loggedin_id() ) {
@@ -2673,7 +2674,7 @@ Job: <strong>{JOB_NAME}</strong> <br/>
 			$currency_id = module_config::c( 'default_currency_id', 1 );
 			if ( $customer_id > 0 ) {
 				// find a default website to use ?
-			} else if ( $job_id > 0 ) {
+			} elseif ( $job_id > 0 ) {
 				// only a job, no customer. set the customer id.
 				$job_data    = module_job::get_job( $job_id, false );
 				$customer_id = $job_data['customer_id'];
@@ -2757,7 +2758,7 @@ Job: <strong>{JOB_NAME}</strong> <br/>
 		if ( ! (int) $invoice_id ) {
 			if ( isset( $invoice['job_ids'] ) && $invoice['job_ids'] ) {
 				$first_job_id = current( $invoice['job_ids'] );
-			} else if ( isset( $invoice['job_id'] ) && $invoice['job_id'] ) {
+			} elseif ( isset( $invoice['job_id'] ) && $invoice['job_id'] ) {
 				$first_job_id = $invoice['job_id']; // abckwards compatibility
 			} else {
 				$first_job_id = 0;
@@ -2837,7 +2838,7 @@ Job: <strong>{JOB_NAME}</strong> <br/>
 				// after tax discount ::::::::::
 				// handled below.
 				//$invoice['final_modification'] = -$invoice['discount_amount'];
-			} else if ( $invoice['discount_type'] == _DISCOUNT_TYPE_BEFORE_TAX ) {
+			} elseif ( $invoice['discount_type'] == _DISCOUNT_TYPE_BEFORE_TAX ) {
 				// before tax discount:::::
 				//$invoice['final_modification'] = -$invoice['discount_amount'];
 				// problem : this 'discount_amount_on_tax' calculation may not match the correct final discount calculation as per below
@@ -2895,7 +2896,7 @@ Job: <strong>{JOB_NAME}</strong> <br/>
 		if ( module_config::c( 'tax_calculate_mode', _TAX_CALCULATE_AT_END ) == _TAX_CALCULATE_INCREMENTAL && isset( $invoice['total_tax'] ) && $invoice['total_tax'] > 0 ) {
 			// tax already calculated above.
 
-		} else if ( module_config::c( 'tax_calculate_mode', _TAX_CALCULATE_AT_END ) == _TAX_CALCULATE_AT_END ) {
+		} elseif ( module_config::c( 'tax_calculate_mode', _TAX_CALCULATE_AT_END ) == _TAX_CALCULATE_AT_END ) {
 			// tax needs to be calculated based on the total_sub_amount_taxable
 			$previous_invoice_tax_id = false;
 			foreach ( $invoice['taxes'] as $invoice_tax_id => $invoice_tax ) {
@@ -2919,7 +2920,7 @@ Job: <strong>{JOB_NAME}</strong> <br/>
 			// this will only work if a single tax has been included.
 			if ( is_array( $invoice['taxes'] ) && count( $invoice['taxes'] ) > 1 ) {
 				set_error( 'Included tax calculation only works with 1 tax rate' );
-			} else if ( is_array( $invoice['taxes'] ) && count( $invoice['taxes'] ) ) {
+			} elseif ( is_array( $invoice['taxes'] ) && count( $invoice['taxes'] ) ) {
 				reset( $invoice['taxes'] );
 				$invoice_tax_id = key( $invoice['taxes'] );
 				if ( isset( $invoice['taxes'][ $invoice_tax_id ] ) ) {
@@ -3101,7 +3102,7 @@ Job: <strong>{JOB_NAME}</strong> <br/>
 						'percent'    => isset( $data['tax_percents'][ $key ] ) ? $data['tax_percents'][ $key ] : 0,
 						'amount'     => 0, // calculate this where? nfi? maybe on final invoice get or something.
 						'name'       => isset( $data['tax_names'][ $key ] ) ? $data['tax_names'][ $key ] : 'TAX',
-						'order'      => $order ++,
+						'order'      => $order++,
 						'increment'  => isset( $data['tax_increment_checkbox'] ) && $data['tax_increment_checkbox'] ? 1 : 0,
 					);
 					$invoice_tax_id   = update_insert( 'invoice_tax_id', $invoice_tax_id, 'invoice_tax', $invoice_tax_data );
@@ -3153,7 +3154,7 @@ Job: <strong>{JOB_NAME}</strong> <br/>
 						if ( strpos( $invoice_item_data['hours'], ':' ) !== false ) {
 							$invoice_item_data['hours_mins'] = str_replace( ":", ".", $invoice_item_data['hours'] );
 						}
-					} else if ( isset( $invoice_item_data['hours'] ) && strlen( $invoice_item_data['hours'] ) ) {
+					} elseif ( isset( $invoice_item_data['hours'] ) && strlen( $invoice_item_data['hours'] ) ) {
 						$invoice_item_data['hours'] = number_in( $invoice_item_data['hours'] );
 					} else {
 						$invoice_item_data['hours'] = 0;
@@ -3186,7 +3187,7 @@ Job: <strong>{JOB_NAME}</strong> <br/>
 								if ( isset( $invoice_item_data['hours'] ) && strlen( $invoice_item_data['hours'] ) == 0 ) {
 									// no hours entered (eg: empty) so we treat whatever was in 'hourly_rate' as the amount
 									$invoice_item_data['amount'] = $invoice_item_data['hourly_rate'];
-								} else if ( isset( $invoice_item_data['hours'] ) && strlen( $invoice_item_data['hours'] ) > 0 ) {
+								} elseif ( isset( $invoice_item_data['hours'] ) && strlen( $invoice_item_data['hours'] ) > 0 ) {
 									// hours inputted, along with hourly rate. work out the new amount.
 
 									$invoice_item_data['amount'] = round( $invoice_item_data['hours'] * $invoice_item_data['hourly_rate'], module_config::c( 'currency_decimal_places', 2 ) );
@@ -3212,7 +3213,7 @@ Job: <strong>{JOB_NAME}</strong> <br/>
                     }*/
 					if ( ! isset( $invoice_item_data['taxable_t'] ) ) {
 						$invoice_item_data['taxable'] = module_config::c( 'task_taxable_default', 1 );
-					} else if ( isset( $invoice_item_data['taxable_t'] ) && $invoice_item_data['taxable_t'] && ! isset( $invoice_item_data['taxable'] ) ) {
+					} elseif ( isset( $invoice_item_data['taxable_t'] ) && $invoice_item_data['taxable_t'] && ! isset( $invoice_item_data['taxable'] ) ) {
 						$invoice_item_data['taxable'] = 0;
 					}
 					if ( ! strlen( $invoice_item_data['hours'] ) ) {
@@ -3240,7 +3241,7 @@ Job: <strong>{JOB_NAME}</strong> <br/>
 							if ( $invoice_payment_data['amount'] < 0 && $invoice_payment_data['payment_type'] == _INVOICE_PAYMENT_TYPE_NORMAL ) {
 								// this is a refund.
 								$invoice_payment_data['payment_type'] = _INVOICE_PAYMENT_TYPE_REFUND;
-							} else if ( $invoice_payment_data['payment_type'] == _INVOICE_PAYMENT_TYPE_REFUND ) {
+							} elseif ( $invoice_payment_data['payment_type'] == _INVOICE_PAYMENT_TYPE_REFUND ) {
 								$invoice_payment_data['payment_type'] = _INVOICE_PAYMENT_TYPE_NORMAL;
 							}
 						}
@@ -3465,7 +3466,7 @@ Job: <strong>{JOB_NAME}</strong> <br/>
 					}
 				}
 			}
-		} else if ( isset( $_REQUEST['payment_method'] ) && $invoice_id && isset( $_REQUEST['payment_amount'] ) ) {
+		} elseif ( isset( $_REQUEST['payment_method'] ) && $invoice_id && isset( $_REQUEST['payment_amount'] ) ) {
 			$payment_method = $_REQUEST['payment_method'];
 			$payment_amount = number_in( $_REQUEST['payment_amount'] );
 			$invoice_data   = $this->get_invoice( $invoice_id );
@@ -3664,7 +3665,8 @@ Job: <strong>{JOB_NAME}</strong> <br/>
 		return qa( $sql );
 	}
 
-	public static function email_sent( $args ) { //$invoice_id,$template_name=''){
+	public static function email_sent( $args ) {
+ //$invoice_id,$template_name=''){
 		$invoice_id    = $args['invoice_id'];
 		$template_name = $args['template_name'];
 		$template_type = ! empty( $args['template_type'] ) ? $args['template_type'] : 'due';
@@ -3722,7 +3724,7 @@ Job: <strong>{JOB_NAME}</strong> <br/>
 			// 'recurring_text'
 			if ( $invoice['member_id'] ) {
 				$member_name = module_member::link_open( $invoice['member_id'], true );
-			} else if ( $invoice['customer_id'] ) {
+			} elseif ( $invoice['customer_id'] ) {
 				$member_name = module_customer::link_open( $invoice['customer_id'], true );
 			} else {
 				$member_name = _l( 'N/A' );
@@ -3769,7 +3771,7 @@ Job: <strong>{JOB_NAME}</strong> <br/>
 			// 'recurring_text'
 			if ( $invoice['member_id'] ) {
 				$member_name = module_member::link_open( $invoice['member_id'], true );
-			} else if ( $invoice['customer_id'] ) {
+			} elseif ( $invoice['customer_id'] ) {
 				$member_name = module_customer::link_open( $invoice['customer_id'], true );
 			} else {
 				$member_name = _l( 'N/A' );
@@ -3819,10 +3821,10 @@ Job: <strong>{JOB_NAME}</strong> <br/>
 		if ( isset( $invoice['credit_note_id'] ) && $invoice['credit_note_id'] ) {
 			$template_name = 'credit_note_email';
 			$template_type = 'credit_note'; // this is used in our new json based hook feature
-		} else if ( $invoice['date_paid'] && $invoice['date_paid'] != '0000-00-00' ) {
+		} elseif ( $invoice['date_paid'] && $invoice['date_paid'] != '0000-00-00' ) {
 			$template_name = $template_prefix . '_paid';
 			$template_type = 'paid'; // this is used in our new json based hook feature
-		} else if ( $invoice['overdue'] && $invoice['date_sent'] && $invoice['date_sent'] != '0000-00-00' ) {
+		} elseif ( $invoice['overdue'] && $invoice['date_sent'] && $invoice['date_sent'] != '0000-00-00' ) {
 			$template_name = $template_prefix . '_overdue';
 			$template_type = 'overdue'; // this is used in our new json based hook feature
 		} else {
@@ -3838,7 +3840,7 @@ Job: <strong>{JOB_NAME}</strong> <br/>
 			$template_prefix = 'invoice_email';
 			if ( $invoice['date_paid'] && $invoice['date_paid'] != '0000-00-00' ) {
 				$template_name = $template_prefix . '_paid';
-			} else if ( $invoice['overdue'] && $invoice['date_sent'] && $invoice['date_sent'] != '0000-00-00' ) {
+			} elseif ( $invoice['overdue'] && $invoice['date_sent'] && $invoice['date_sent'] != '0000-00-00' ) {
 				$template_name = $template_prefix . '_overdue';
 			} else {
 				$template_name = $template_prefix . '_due';
@@ -3888,7 +3890,7 @@ Job: <strong>{JOB_NAME}</strong> <br/>
 					}
 				}
 			}
-		} else if ( $invoice['member_id'] ) {
+		} elseif ( $invoice['member_id'] ) {
 			$member                   = module_member::get_member( $invoice['member_id'] );
 			$to                       = array( $member );
 			$replace['customer_name'] = $member['first_name'];
@@ -3907,7 +3909,7 @@ Job: <strong>{JOB_NAME}</strong> <br/>
 			foreach ( $send_email_to as $send_email_t ) {
 				if ( ! empty( $send_email_t['user_id'] ) ) {
 					$email->set_to( 'user', $send_email_t['user_id'] );
-				} else if ( ! empty( $send_email_t['email'] ) ) {
+				} elseif ( ! empty( $send_email_t['email'] ) ) {
 					$email->set_to_manual( $send_email_t['email'] );
 				}
 			}
@@ -3915,7 +3917,7 @@ Job: <strong>{JOB_NAME}</strong> <br/>
 			foreach ( $to as $t ) {
 				if ( ! empty( $t['user_id'] ) ) {
 					$email->set_to( 'user', $t['user_id'] );
-				} else if ( ! empty( $t['email'] ) ) {
+				} elseif ( ! empty( $t['email'] ) ) {
 					$email->set_to_manual( $t['email'] );
 				}
 				break;// only 1? todo: all?
@@ -4005,7 +4007,7 @@ Job: <strong>{JOB_NAME}</strong> <br/>
 							'key' => $extra_field['extra_key'],
 							'val' => $extra_field['extra'],
 						);
-						$x ++;
+						$x++;
 					}
 				}
 
@@ -4100,7 +4102,7 @@ Job: <strong>{JOB_NAME}</strong> <br/>
 						continue; // skip sendin repeat reminders.
 					}
 					$send_email_on = strtotime( '+' . module_config::c( 'overdue_email_auto_days_repeat', 7 ) . ' days', $last_invoice_sent );
-				} else if ( $invoice['date_sent'] && $invoice['date_sent'] != '0000-00-00' ) {
+				} elseif ( $invoice['date_sent'] && $invoice['date_sent'] != '0000-00-00' ) {
 					$invoice_is_due = strtotime( $invoice['date_due'] );
 					$send_email_on  = strtotime( '+' . module_config::c( 'overdue_email_auto_days', 3 ) . ' days', $invoice_is_due );
 					if ( $debug ) {
@@ -4419,7 +4421,6 @@ Job: <strong>{JOB_NAME}</strong> <br/>
 		$response['invoice'] = true;
 		switch ( $method ) {
 			case 'create':
-
 				$invoice_data = isset( $_POST['invoice_data'] ) && is_array( $_POST['invoice_data'] ) ? $_POST['invoice_data'] : array();
 
 				$response['invoice_id'] = 0;
@@ -4448,7 +4449,7 @@ Job: <strong>{JOB_NAME}</strong> <br/>
 					$new_invoice['invoice_invoice_item'] = array();
 					$x                                   = 0;
 					foreach ( $invoice_data['line_items'] as $line_item ) {
-						$new_invoice['invoice_invoice_item'][ 'new' . $x ++ ] = array(
+						$new_invoice['invoice_invoice_item'][ 'new' . $x++ ] = array(
 							'description'      => $line_item['title'],
 							'hours'            => $line_item['quantity'],
 							'hourly_rate'      => $line_item['cost'],
@@ -4465,7 +4466,6 @@ Job: <strong>{JOB_NAME}</strong> <br/>
 
 				break;
 			case 'search':
-
 				/*$search = isset($_REQUEST['search'])  && is_array($_REQUEST['search']) ? $_REQUEST['search'] : array();
 				$customers = self::get_customers($search);
 				$response['customers'] = array();
@@ -4943,8 +4943,6 @@ Job: <strong>{JOB_NAME}</strong> <br/>
 
 		return ob_get_clean();
 	}
-
-
 }
 
 

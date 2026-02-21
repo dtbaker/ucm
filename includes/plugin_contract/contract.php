@@ -1,6 +1,5 @@
 <?php
 
-
 define( '_CONTRACT_ACCESS_ALL', 'All contracts in system' );
 define( '_CONTRACT_ACCESS_CUSTOMER', 'Contracts from customers I have access to' );
 
@@ -8,8 +7,8 @@ define( '_CUSTOM_DATA_HOOK_LOCATION_CONTRACT_FOOTER', 10 );
 define( '_CUSTOM_DATA_HOOK_LOCATION_CONTRACT_SIDEBAR', 11 );
 
 
-class module_contract extends module_base {
-
+class module_contract extends module_base
+{
 	public $links;
 	public $contract_types;
 
@@ -281,7 +280,6 @@ Thank you,<br><br>
 				// see finance for example of widget usage.
 				break;
 			case "home_alerts":
-
 				$cache_timeout = module_config::c( 'cache_objects', 60 );
 				$cache_key     = 'home_alerts_' . module_security::get_loggedin_id();
 
@@ -772,7 +770,7 @@ Thank you,<br><br>
 				set_message( "contract deleted successfully" );
 				redirect_browser( $this->link_open( false ) );
 			}
-		} else if ( "save_contract" == $_REQUEST['_process'] ) {
+		} elseif ( "save_contract" == $_REQUEST['_process'] ) {
 
 
 			$contract_id = $this->save_contract( $_REQUEST['contract_id'], $_POST );
@@ -916,7 +914,6 @@ Thank you,<br><br>
 
 		switch ( self::get_contract_access_permissions() ) {
 			case _CONTRACT_ACCESS_ALL:
-
 				break;
 			case _CONTRACT_ACCESS_CUSTOMER:
 				// tie in with customer permissions to only get contracts from customers we can access.
@@ -1002,7 +999,6 @@ Thank you,<br><br>
 		if ( $contract && isset( $contract['contract_id'] ) && $contract['contract_id'] == $contract_id ) {
 			switch ( self::get_contract_access_permissions() ) {
 				case _CONTRACT_ACCESS_ALL:
-
 					break;
 				case _CONTRACT_ACCESS_CUSTOMER:
 					// tie in with customer permissions to only get contracts from customers we can access.
@@ -1158,7 +1154,7 @@ Thank you,<br><br>
 						set_message( 'Changed this Contract to match the Website customer' );
 					}
 					$data['customer_id'] = $website['customer_id'];
-				} else if ( isset( $data['customer_id'] ) && $data['customer_id'] > 0 ) {
+				} elseif ( isset( $data['customer_id'] ) && $data['customer_id'] > 0 ) {
 					// set the website customer id to this as well.
 					update_insert( 'website_id', $website['website_id'], 'website', array( 'customer_id' => $data['customer_id'] ) );
 				}
@@ -1439,7 +1435,7 @@ Thank you,<br><br>
 		if ( isset( $extra_options['duplicates'] ) && $extra_options['duplicates'] == 'ignore' && $row['customer_id'] > 0 ) {
 			// don't update customer record with new one.
 
-		} else if ( ( isset( $row['customer_name'] ) && strlen( trim( $row['customer_name'] ) ) > 0 ) || $row['customer_id'] > 0 ) {
+		} elseif ( ( isset( $row['customer_name'] ) && strlen( trim( $row['customer_name'] ) ) > 0 ) || $row['customer_id'] > 0 ) {
 			// update customer record with new one.
 			$row['customer_id'] = update_insert( 'customer_id', $row['customer_id'], 'customer', $row );
 
@@ -1505,7 +1501,7 @@ Thank you,<br><br>
 		// first we find any matching existing contracts. skipping duplicates if option is set.
 		foreach ( $data as $rowid => $row ) {
 			if ( self::handle_import_row( $row, false, $add_to_group, $extra_options ) ) {
-				$count ++;
+				$count++;
 			}
 		}
 
@@ -1685,7 +1681,6 @@ Thank you,<br><br>
 
 		return ob_get_clean();
 	}
-
 }
 
 

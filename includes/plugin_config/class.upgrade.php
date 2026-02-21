@@ -1,8 +1,7 @@
 <?php
 
-
-class ucm_upgrade_manager {
-
+class ucm_upgrade_manager
+{
 	/**
 	 * @var array
 	 * These are files we don't want to overwrite during the upgrade process.
@@ -94,11 +93,11 @@ class ucm_upgrade_manager {
 									$error             = '<strong>Custom:</strong> file not upgraded: ' . $file;
 									$errors[]          = $error;
 									$result['message'] .= $error;
-								} else if ( ! isset( $available_update['file_contents'][ $file ] ) ) {
+								} elseif ( ! isset( $available_update['file_contents'][ $file ] ) ) {
 									$error             = '<strong>WARNING:</strong> failed to get file contents from server: ' . $file;
 									$errors[]          = $error;
 									$result['message'] .= $error;
-								} else if ( ! file_put_contents( _UCM_FOLDER . $file, base64_decode( $available_update['file_contents'][ $file ] ) ) ) {
+								} elseif ( ! file_put_contents( _UCM_FOLDER . $file, base64_decode( $available_update['file_contents'][ $file ] ) ) ) {
 									$error             = '<strong>WARNING:</strong> failed to install the file: ' . $file;
 									$errors[]          = $error;
 									$result['message'] .= $error;
@@ -171,7 +170,7 @@ class ucm_upgrade_manager {
 				$result['message'] .= implode( '<br/>', $_SESSION['_errors'] );
 				unset( $_SESSION['_errors'] );
 			}
-		} else if ( $plugin_name == 'corefiles' || $plugin_name == 'database' ) {
+		} elseif ( $plugin_name == 'corefiles' || $plugin_name == 'database' ) {
 
 		} else {
 			$fail = true;
@@ -184,5 +183,4 @@ class ucm_upgrade_manager {
 
 		return $result;
 	}
-
 }

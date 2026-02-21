@@ -1,4 +1,5 @@
 <?php
+
 if ( ! $job_safe ) {
 	die( 'failed' );
 }
@@ -47,7 +48,7 @@ foreach ( $job_tasks as $job_task ) {
 		$job['job_tasks'] .= _l( 'Completed Hours:' ) . ' ' . $job_task['completed'] . '<br/>';
 	}
 	$job['job_tasks'] .= '</li>';
-	$job['task_count'] ++;
+	$job['task_count']++;
 }
 $job['job_tasks'] .= '</ul>';
 

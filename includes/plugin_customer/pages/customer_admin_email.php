@@ -235,9 +235,9 @@ if ( isset( $_REQUEST['preview_email'] ) ) {
 					'callback' => function ( $invoice ) {
 						if ( $invoice['date_paid'] && $invoice['date_paid'] != '0000-00-00' ) { ?>
 							<?php echo print_date( $invoice['date_paid'] ); ?>
-						<?php } else if ( ( $invoice['date_cancel'] && $invoice['date_cancel'] != '0000-00-00' ) ) { ?>
+						<?php } elseif ( ( $invoice['date_cancel'] && $invoice['date_cancel'] != '0000-00-00' ) ) { ?>
 							<span class="error_text"><?php _e( 'Cancelled' ); ?></span>
-						<?php } else if ( $invoice['overdue'] ) { ?>
+						<?php } elseif ( $invoice['overdue'] ) { ?>
 							<span class="error_text"
 							      style="font-weight: bold; text-decoration: underline;"><?php _e( 'Overdue' ); ?></span>
 						<?php } else { ?>
@@ -246,7 +246,7 @@ if ( isset( $_REQUEST['preview_email'] ) ) {
 					},
 				);
 				if ( class_exists( 'module_website', false ) && module_website::is_plugin_enabled() && module_website::can_i( 'view', module_config::c( 'project_name_plural', 'Websites' ) ) ) {
-					$colspan ++;
+					$colspan++;
 					$columns['invoice_website'] = array(
 						'title'    => module_config::c( 'project_name_single', 'Website' ),
 						'callback' => function ( $invoice ) {
@@ -279,7 +279,7 @@ if ( isset( $_REQUEST['preview_email'] ) ) {
 					},
 				);
 				if ( ! isset( $_REQUEST['customer_id'] ) && module_customer::can_i( 'view', 'Customers' ) ) {
-					$colspan ++;
+					$colspan++;
 					$columns['invoice_customer'] = array(
 						'title'    => 'Customer',
 						'callback' => function ( $invoice ) {

@@ -1,6 +1,5 @@
 <?php
 
-
 // sort the alerts
 function sort_ajax_alert( $a, $b ) {
 	if ( isset( $a['time'] ) && isset( $b['time'] ) ) {
@@ -10,8 +9,8 @@ function sort_ajax_alert( $a, $b ) {
 	return strtotime( input_date( $a['date'] ) ) > strtotime( input_date( $b['date'] ) );
 }
 
-class module_dashboard extends module_base {
-
+class module_dashboard extends module_base
+{
 	public function __construct() {
 		$this->module_name     = 'dashboard';
 		$this->module_position = 140;
@@ -194,7 +193,7 @@ class module_dashboard extends module_base {
 									if ( ! count( $alerts ) ) {
 										continue;
 									}
-									$tabid ++;
+									$tabid++;
 									?>
 									$( "<li><a href='#newtab<?php echo $tabid; ?>'><?php echo $key; ?> (<?php echo count( $alerts ); ?>)</a></li>" ).appendTo( ul );
 									<?php
@@ -217,7 +216,7 @@ class module_dashboard extends module_base {
 												$y = 0;
 												foreach ( $alerts as $alert ) {
 													?>
-													<tr class="<?php echo ( $y ++ % 2 ) ? 'even' : 'odd'; ?>">
+													<tr class="<?php echo ( $y++ % 2 ) ? 'even' : 'odd'; ?>">
 														<?php foreach ( module_dashboard::$group_settings[ $key ]['columns'] as $column_key => $column_title ) { ?>
 															<td><?php echo isset( $alert[ $column_key ] ) ? $alert[ $column_key ] : ''; ?></td>
 														<?php } ?>
@@ -252,7 +251,7 @@ class module_dashboard extends module_base {
 												$y = 0;
 												foreach ( $alerts as $alert ) {
 													?>
-													<tr class="<?php echo ( $y ++ % 2 ) ? 'even' : 'odd'; ?>">
+													<tr class="<?php echo ( $y++ % 2 ) ? 'even' : 'odd'; ?>">
 														<td class="row_action">
 															<a
 																href="<?php echo $alert['link']; ?>"><?php echo htmlspecialchars( $alert['item'] ); ?></a>
@@ -300,7 +299,7 @@ class module_dashboard extends module_base {
 								tabs.tabs( "refresh" );
 								<?php
 								if ( module_config::c( 'dashboard_tab_ajax_stream', 1 ) ) {
-									for ( $x = 1; $x < 50; $x ++ ) {
+									for ( $x = 1; $x < 50; $x++ ) {
 										echo " \t \n";
 									}
 									@flush();
@@ -366,5 +365,4 @@ class module_dashboard extends module_base {
 			include( module_theme::include_ucm( 'includes/plugin_dashboard/pages/dashboard_alerts.php' ) );
 		}
 	}
-
 }

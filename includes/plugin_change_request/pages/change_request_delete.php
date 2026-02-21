@@ -1,4 +1,5 @@
 <?php
+
 if ( ! module_change_request::can_i( 'delete', 'Change Requests' ) ) {
 	die( 'no perms' );
 }

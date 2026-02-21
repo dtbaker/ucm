@@ -57,6 +57,7 @@ if ( isset( $_REQUEST['export_json'] ) ) {
 		<input type="hidden" name="security_role_id" value="<?php echo $security_role_id; ?>"/>
 
 		<?php
+
 		/** ROLE DETAILS */
 
 		$fieldset_data                     = array(
@@ -154,7 +155,7 @@ if ( isset( $_REQUEST['export_json'] ) ) {
 				}
 				$available_perms = @unserialize( $available_permission['available_perms'] );
 				if ( ! $last_category || $last_category != $available_permission['category'] ) {
-					$x ++;
+					$x++;
 				}
 				?>
 				<tr class="<?php echo $x % 2 ? 'odd' : 'even'; ?>">
@@ -233,7 +234,7 @@ if ( isset( $_REQUEST['export_json'] ) ) {
 			$permission = 'view';
 			foreach ( $drop_down_permissions_grouped as $category_name => $available_permissions ) {
 				?>
-				<tr class="<?php echo $x ++ % 2 ? 'odd' : 'even'; ?>">
+				<tr class="<?php echo $x++ % 2 ? 'odd' : 'even'; ?>">
 					<td>
 						<?php echo $category_name; ?>
 						&nbsp;
@@ -263,7 +264,7 @@ if ( isset( $_REQUEST['export_json'] ) ) {
 			foreach ( $checkbox_permissions as $available_permission ) {
 				$available_perms = @unserialize( $available_permission['available_perms'] );
 				?>
-				<tr class="<?php echo $x ++ % 2 ? 'odd' : 'even'; ?>">
+				<tr class="<?php echo $x++ % 2 ? 'odd' : 'even'; ?>">
 					<td>
 						<?php echo $available_permission['name']; ?>
 					</td>

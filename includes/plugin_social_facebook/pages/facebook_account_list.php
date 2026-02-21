@@ -34,7 +34,7 @@ print_heading( array(
 	<?php
 	$c = 0;
 	foreach ( $facebook_accounts as $facebook_account ) { ?>
-		<tr class="<?php echo ( $c ++ % 2 ) ? "odd" : "even"; ?>">
+		<tr class="<?php echo ( $c++ % 2 ) ? "odd" : "even"; ?>">
 			<td class="row_action">
 				<?php echo module_social_facebook::link_open( $facebook_account['social_facebook_id'], true, $facebook_account ); ?>
 			</td>

@@ -293,7 +293,7 @@ $action_buttons = module_form::generate_form_actions( $form_actions );
 						}
 					)
 				);
-			} else if ( ! empty( $ticket['due_timestamp'] ) ) {
+			} elseif ( ! empty( $ticket['due_timestamp'] ) ) {
 
 				$fieldset_data['elements'][] = array(
 					'title'  => _l( 'Due Date/Time' ),
@@ -487,7 +487,7 @@ $action_buttons = module_form::generate_form_actions( $form_actions );
 		if ( $ticket['user_id'] ) {
 			if ( module_config::c( 'ticket_other_list_by', 'user' ) == 'user' ) {
 				$other_tickets = module_ticket::get_tickets( array( 'user_id' => $ticket['user_id'] ) );
-			} else if ( module_config::c( 'ticket_other_list_by', 'user' ) == 'customer' && $ticket['customer_id'] ) {
+			} elseif ( module_config::c( 'ticket_other_list_by', 'user' ) == 'customer' && $ticket['customer_id'] ) {
 				$other_tickets = module_ticket::get_tickets( array( 'customer_id' => $ticket['customer_id'] ) );
 			} else {
 				$other_tickets = false;
@@ -515,7 +515,7 @@ $action_buttons = module_form::generate_form_actions( $form_actions );
 								if ( ! isset( $other_status[ module_ticket::$ticket_statuses[ $other_ticket['status_id'] ] ] ) ) {
 									$other_status[ module_ticket::$ticket_statuses[ $other_ticket['status_id'] ] ] = 0;
 								}
-								$other_status[ module_ticket::$ticket_statuses[ $other_ticket['status_id'] ] ] ++;
+								$other_status[ module_ticket::$ticket_statuses[ $other_ticket['status_id'] ] ]++;
 								?>
 							</td>
 						</tr>

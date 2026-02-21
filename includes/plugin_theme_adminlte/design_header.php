@@ -2,12 +2,10 @@
 
 switch ( $display_mode ) {
 	case 'ajax':
-
 		break;
 	case 'iframe':
 	case 'normal':
 	default:
-
 		?>
 		<!DOCTYPE html>
 	<html dir="<?php echo module_config::c( 'text_direction', 'ltr' ); ?>"
@@ -326,7 +324,7 @@ switch ( $display_mode ) {
 		<div id="content">
 
 		<?php
-	} else{
+	} else {
 		// not logged in
 	    ?>
         <body class="theme-adminlte bg-black" id="login-page">

@@ -8,8 +8,8 @@
  * No this isn't 100% secure but it's better than keeping keys stored in temporary sessions or cookie
  */
 
-class module_encrypt extends module_base {
-
+class module_encrypt extends module_base
+{
 	public static $encrypt = array();
 	public static $show_encrypt = false;
 	public static $start_time = 0;
@@ -62,12 +62,10 @@ class module_encrypt extends module_base {
 	public function process() {
 		switch ( $_REQUEST['_process'] ) {
 			case 'save_encrypt':
-
-
 				$data = $_REQUEST;
 				if ( isset( $data['encrypt_key_id'] ) && ! $data['encrypt_key_id'] ) {
 					unset( $data['encrypt_key_id'] );
-				} else if ( isset( $data['encrypt_key_id'] ) && $data['encrypt_key_id'] && isset( $data['encrypt_field_id'] ) && $data['encrypt_field_id'] ) {
+				} elseif ( isset( $data['encrypt_key_id'] ) && $data['encrypt_key_id'] && isset( $data['encrypt_field_id'] ) && $data['encrypt_field_id'] ) {
 					// change our key over to this new one.
 					// only really used in dev. if someone did this irl they would loose all encryption.
 					//update_insert('encrypt_field_id',(int)$data['encrypt_field_id'],'encrypt_field',array('encrypt_key_id'=>$data['encrypt_key_id']));
@@ -78,7 +76,6 @@ class module_encrypt extends module_base {
 
 				break;
 			case 'save_encrypt_key':
-
 				$encrypt_key_id = update_insert( 'encrypt_key_id', (int) $_REQUEST['encrypt_key_id'], 'encrypt_key', $_REQUEST );
 				// update the field info to say we are using this key.
 				if ( isset( $_REQUEST['encrypt_field_id'] ) && (int) $_REQUEST['encrypt_field_id'] > 0 ) {
@@ -90,7 +87,6 @@ class module_encrypt extends module_base {
 
 				break;
 			case 'encrypt_successful':
-
 				$encrypt_field_id = isset( $_REQUEST['encrypt_field_id'] ) ? (int) $_REQUEST['encrypt_field_id'] : 0;
 				$encrypt_id       = isset( $_REQUEST['encrypt_id'] ) ? (int) $_REQUEST['encrypt_id'] : 0;
 				if ( $encrypt_id && $encrypt_field_id ) {
@@ -171,7 +167,7 @@ class module_encrypt extends module_base {
 				$encrypt_field_name = '';
 				if ( preg_match( '#id="([^"]*)"#', $match, $name_matches ) ) {
 					$encrypt_field_name = $name_matches[1];
-				} else if ( preg_match( '#name="([^"]*)"#', $match, $name_matches ) ) {
+				} elseif ( preg_match( '#name="([^"]*)"#', $match, $name_matches ) ) {
 					$encrypt_field_name = $name_matches[1];
 				}
 
@@ -253,7 +249,7 @@ class module_encrypt extends module_base {
 						$replace .= ' &nbsp; ' . $button;
 					}
 					$html_data = preg_replace( '#' . preg_quote( $match, '#' ) . '#msU', str_replace( '$', '\$', $replace ), $html_data );
-				} else if ( self::can_i( 'create', 'Encrypts' ) && $edit ) {
+				} elseif ( self::can_i( 'create', 'Encrypts' ) && $edit ) {
 					// no encrypt field for this one.
 					$element_id = '';
 					if ( preg_match( '#id="([^"]+)"#', $match, $id_matches ) ) {
@@ -442,7 +438,4 @@ class module_encrypt extends module_base {
 		return 'encrypt:' . $encrypt_id;
 
 	}
-
-
 }
-

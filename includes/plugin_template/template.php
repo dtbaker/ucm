@@ -1,8 +1,7 @@
 <?php
 
-
-class module_template extends module_base {
-
+class module_template extends module_base
+{
 	public $values = array();
 	public $tags = array();
 	public $content = '';
@@ -305,7 +304,7 @@ class module_template extends module_base {
 			);
 			if ( $type == 'text' && stripos( $data['content'], '<br' ) === false && stripos( $data['content'], '<p>' ) === false && stripos( $data['content'], '<table' ) === false ) {
 				$data['content'] = nl2br( $content );
-			} else if ( $type == 'code' ) {
+			} elseif ( $type == 'code' ) {
 				$data['wysiwyg'] = 0;
 			}
 			update_insert( 'template_id', ( $template && $template['template_id'] ) ? $template['template_id'] : 'new', 'template', $data );
@@ -340,7 +339,7 @@ class module_template extends module_base {
 		$template = new self();
 		if ( isset( self::$_templates[ $template_key ] ) ) {
 			$data = self::$_templates[ $template_key ];
-		} else if ( self::db_table_exists( 'template' ) ) {
+		} elseif ( self::db_table_exists( 'template' ) ) {
 			$data = get_single( "template", "template_key", $template_key );
 		} else {
 			$data = array();
@@ -556,9 +555,9 @@ class module_template extends module_base {
 					$mathval = $originalval;
 					if ( $matches[2][ $i ] == '-' ) {
 						$mathval = $mathval - $matches[3][ $i ];
-					} else if ( $matches[2][ $i ] == '+' ) {
+					} elseif ( $matches[2][ $i ] == '+' ) {
 						$mathval = $mathval + $matches[3][ $i ];
-					} else if ( $matches[2][ $i ] == '*' ) {
+					} elseif ( $matches[2][ $i ] == '*' ) {
 						$mathval = $mathval * $matches[3][ $i ];
 					}
 
@@ -728,6 +727,5 @@ class module_template extends module_base {
 
 		return ob_get_clean();
 	}
-
 }
 

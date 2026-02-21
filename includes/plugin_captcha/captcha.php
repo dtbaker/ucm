@@ -1,8 +1,7 @@
 <?php
 
-
-class module_captcha extends module_base {
-
+class module_captcha extends module_base
+{
 	// 2.2 - fix for ssl captcha
 	private static $captcha_store = array();
 
@@ -36,7 +35,7 @@ class module_captcha extends module_base {
 
 		$publickey = module_config::c( 'recaptcha_public_key', '6Leym88SAAAAAK6APyjTzJwtwY0zAdcU8yIXwgvR' );
 
-		if( empty($publickey) || $publickey === '6Leym88SAAAAAK6APyjTzJwtwY0zAdcU8yIXwgvR' ){
+		if ( empty($publickey) || $publickey === '6Leym88SAAAAAK6APyjTzJwtwY0zAdcU8yIXwgvR' ) {
 			// no private key, so we can't check the captcha.
 			return;
 		}
@@ -53,7 +52,7 @@ class module_captcha extends module_base {
 
 		$privatekey = module_config::c( 'recaptcha_private_key', '6Leym88SAAAAANbBjtrjNfeu6NXDSCXGBSbKzqnN' );
 
-		if( empty($privatekey) || $privatekey === '6Leym88SAAAAANbBjtrjNfeu6NXDSCXGBSbKzqnN' ){
+		if ( empty($privatekey) || $privatekey === '6Leym88SAAAAANbBjtrjNfeu6NXDSCXGBSbKzqnN' ) {
 			// no private key, so we can't check the captcha.
 			return true;
 		}
@@ -94,5 +93,4 @@ class module_captcha extends module_base {
 		}
 
 	}
-
 }

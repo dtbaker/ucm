@@ -108,7 +108,7 @@ if ( class_exists( 'module_import_export', false ) ) {
     $(function () {
         if (typeof ucm.job != 'undefined') {
             ucm.job.ajax_task_url = '<?php echo module_job::link_ajax_task( $job_id, false ); ?>';
-					<?php if(module_invoice::can_i( 'create', 'Invoices' )){ ?>
+					<?php if (module_invoice::can_i( 'create', 'Invoices' )) { ?>
             ucm.job.create_invoice_popup_url = '<?php echo module_job::link_create_job_invoice( $job_id, false ); ?>';
             ucm.job.create_invoice_url = '<?php echo module_invoice::link_generate( 'new', array( 'arguments' => array( 'job_id' => $job_id, ) ) ); ?>';
 					<?php } ?>
@@ -215,7 +215,7 @@ if ( class_exists( 'module_import_export', false ) ) {
             existing_rows.remove();
             set_task_numbers();
 
-					<?php if(module_config::c( 'job_tasks_allow_sort', 1 )){ ?>
+					<?php if (module_config::c( 'job_tasks_allow_sort', 1 )) { ?>
             $('#job_task_listing tbody.job_task_wrapper').sortable('enable');
 					<?php } ?>
         } else {
@@ -235,7 +235,7 @@ if ( class_exists( 'module_import_export', false ) ) {
                     }
                     existing_rows.remove();
                     set_task_numbers();
-									<?php if(module_config::c( 'job_tasks_allow_sort', 1 )){ ?>
+									<?php if (module_config::c( 'job_tasks_allow_sort', 1 )) { ?>
                     $('#job_task_listing tbody.job_task_wrapper').sortable('enable');
 									<?php } ?>
                     // update the job summary
@@ -257,7 +257,7 @@ if ( class_exists( 'module_import_export', false ) ) {
         }
         editing_task_id = task_id;
 
-			<?php if(module_config::c( 'job_tasks_allow_sort', 1 )){ ?>
+			<?php if (module_config::c( 'job_tasks_allow_sort', 1 )) { ?>
         $('#job_task_listing tbody.job_task_wrapper').sortable('disable');
 			<?php } ?>
 
@@ -280,9 +280,9 @@ if ( class_exists( 'module_import_export', false ) ) {
                 existing_rows.remove();
                 load_calendars();
                 if (r.hours > 0) {
-									<?php if(module_config::c( 'job_task_log_all_hours', 1 )){
+									<?php if (module_config::c( 'job_task_log_all_hours', 1 )) {
 									// dont want to set hours. just tick the box.
-								}else{ ?>
+								} else { ?>
                     $('#complete_' + r.task_id).val(r.hours);
 									<?php } ?>
                     if (typeof $('#complete_t_' + r.task_id)[0] != 'undefined') {
@@ -342,7 +342,7 @@ if ( class_exists( 'module_import_export', false ) ) {
                 $(this).addClass(odd_even++ % 2 ? 'odd' : 'even');
             }
             var current_order = parseInt($('.task_order', this).html());
-					<?php if($job['auto_task_numbers'] == 0){ ?>
+					<?php if ($job['auto_task_numbers'] == 0) { ?>
             // automatic task numbers.
             if (current_order != task_number) {
                 do_update = true;
@@ -350,7 +350,7 @@ if ( class_exists( 'module_import_export', false ) ) {
             }
             $('.task_order', this).html(task_number);
             task_number++;
-					<?php }else if($job['auto_task_numbers'] == 1){ ?>
+					<?php } elseif ($job['auto_task_numbers'] == 1) { ?>
             // manual task numbers.
             task_number = Math.max(current_order, task_number) + 1;
 					<?php } ?>
@@ -368,7 +368,7 @@ if ( class_exists( 'module_import_export', false ) ) {
         $('#next_task_number').val(task_number);
 
 
-			<?php if(module_config::c( 'job_tasks_allow_sort', 1 )){ ?>
+			<?php if (module_config::c( 'job_tasks_allow_sort', 1 )) { ?>
         $('#job_task_listing tbody.job_task_wrapper').sortable('refresh');
 			<?php } ?>
     }
@@ -379,7 +379,7 @@ if ( class_exists( 'module_import_export', false ) ) {
             edittask($(this).attr('rel'),-1);
             return false;
         });*/
-			<?php if(module_config::c( 'job_tasks_allow_sort', 1 )){ ?>
+			<?php if (module_config::c( 'job_tasks_allow_sort', 1 )) { ?>
         $("#job_task_listing tbody.job_task_wrapper").sortable({
             items: ".task_preview",
             handle: '.task_drag_handle',
@@ -815,7 +815,7 @@ hook_handle_callback( 'layout_column_half', 1, '35' );
 							if ( ! isset( $allocated_staff_members[ $job_task['user_id'] ] ) ) {
 								$allocated_staff_members[ $job_task['user_id'] ] = 0;
 							}
-							$allocated_staff_members[ $job_task['user_id'] ] ++;
+							$allocated_staff_members[ $job_task['user_id'] ]++;
 						}
 						foreach ( $allocated_staff_members as $staff_id => $count ) {
 							$staff = module_user::get_user( $staff_id );
@@ -895,7 +895,7 @@ hook_handle_callback( 'layout_column_half', 1, '35' );
 
 								<?php
 								_h( 'A renewal is available for this job. Clicking this button will create a new job based on this job, and set the renewal reminder up again for the next date.' );
-							} else if ( isset( $job['renew_auto'] ) && $job['renew_auto'] ) {
+							} elseif ( isset( $job['renew_auto'] ) && $job['renew_auto'] ) {
 								_h( 'This job will be automatically renewed on this date.' );
 							} else {
 								_h( 'You will be reminded to renew this job on this date. You will be given the option to renew this job closer to the renewal date (a new button will appear).' );
@@ -955,7 +955,7 @@ hook_handle_callback( 'layout_column_half', 1, '35' );
 					}
 				),
 			);
-		} else if ( (int) $job_id > 0 && ! class_exists( 'module_import_export', false ) && module_config::c( 'show_ucm_ads', 1 ) ) {
+		} elseif ( (int) $job_id > 0 && ! class_exists( 'module_import_export', false ) && module_config::c( 'show_ucm_ads', 1 ) ) {
 			$fieldset_data['elements'][] = array(
 				'title'  => 'Task CSV Data',
 				'fields' => array(
@@ -1230,10 +1230,10 @@ hook_handle_callback( 'layout_column_half', 2, '65' );
 						<td valign="top">
 							<?php if ( $job['default_task_type'] == _TASK_TYPE_AMOUNT_ONLY ) {
 								// no hour input
-							} else if ( $job['default_task_type'] == _TASK_TYPE_QTY_AMOUNT ) { ?>
+							} elseif ( $job['default_task_type'] == _TASK_TYPE_QTY_AMOUNT ) { ?>
 								<input type="text" name="job_task[new][hours]" value="" size="3" style="width:25px;"
 								       class="no_permissions" id="task_hours_new">
-							<?php } else if ( $job['default_task_type'] == _TASK_TYPE_HOURS_AMOUNT ) {
+							<?php } elseif ( $job['default_task_type'] == _TASK_TYPE_HOURS_AMOUNT ) {
 								?>
 								<input type="text" name="job_task[new][hours]" value="" size="3" style="width:25px;"
 								       onchange="setamount(this.value,'new');" onkeyup="setamount(this.value,'new');"
@@ -1297,7 +1297,7 @@ hook_handle_callback( 'layout_column_half', 2, '65' );
 						$show_hours_summary = true;
 					}
 
-					$task_number ++;
+					$task_number++;
 					//module_security::is_page_editable() &&
 					if ( module_job::can_i( 'edit', 'Job Tasks' ) ) {
 						$task_editable = true;
@@ -1344,7 +1344,7 @@ hook_handle_callback( 'layout_column_half', 2, '65' );
 				</p>
 			<?php } else { ?>
 
-				<?php //$invoice_safe = true; $invoice_from_job_page = $job_id; include('includes/plugin_invoice/pages/invoice_admin_list.php'); 
+				<?php //$invoice_safe = true; $invoice_from_job_page = $job_id; include('includes/plugin_invoice/pages/invoice_admin_list.php');
 				?>
 				<table class="tableclass tableclass_rows tableclass_full">
 					<thead>
@@ -1364,7 +1364,7 @@ hook_handle_callback( 'layout_column_half', 2, '65' );
 					foreach ( $job_invoices as $invoice ) {
 						$invoice = module_invoice::get_invoice( $invoice['invoice_id'] );
 						?>
-						<tr class="<?php echo ( $c ++ % 2 ) ? "odd" : "even"; ?>">
+						<tr class="<?php echo ( $c++ % 2 ) ? "odd" : "even"; ?>">
 							<td class="row_action">
 								<?php echo module_invoice::link_open( $invoice['invoice_id'], true, $invoice ); ?>
 							</td>

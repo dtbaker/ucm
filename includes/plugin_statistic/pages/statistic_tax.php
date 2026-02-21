@@ -32,7 +32,7 @@ foreach ( $tax_reports as $id => $finance ) {
 	}
 	if ( isset( $finance['finance_id'] ) && $finance['finance_id'] ) {
 		$finance_record = module_finance::get_finance( $finance['finance_id'] );
-	} else if ( isset( $finance['invoice_payment_id'] ) && $finance['invoice_payment_id'] > 0 ) {
+	} elseif ( isset( $finance['invoice_payment_id'] ) && $finance['invoice_payment_id'] > 0 ) {
 		$finance_record = module_finance::get_finance( false, true, $finance['invoice_payment_id'] );
 	} else {
 		$finance_record = false;
@@ -169,7 +169,7 @@ print_heading( array(
 
 		if ( isset( $finance['finance_id'] ) && $finance['finance_id'] ) {
 			$finance_record = module_finance::get_finance( $finance['finance_id'] );
-		} else if ( isset( $finance['invoice_payment_id'] ) && $finance['invoice_payment_id'] > 0 ) {
+		} elseif ( isset( $finance['invoice_payment_id'] ) && $finance['invoice_payment_id'] > 0 ) {
 			$finance_record = module_finance::get_finance( false, true, $finance['invoice_payment_id'] );
 		} else {
 			$finance_record = false;
@@ -178,10 +178,10 @@ print_heading( array(
 		if ( ! isset( $total_by_currency[ $finance['currency_id'] ] ) ) {
 			$total_by_currency[ $finance['currency_id'] ] = $total;
 		}
-		$total_by_currency[ $finance['currency_id'] ]['transaction_count'] ++;
+		$total_by_currency[ $finance['currency_id'] ]['transaction_count']++;
 
 		?>
-		<tr class="<?php echo ( $c ++ % 2 ) ? "odd" : "even"; ?>">
+		<tr class="<?php echo ( $c++ % 2 ) ? "odd" : "even"; ?>">
 			<td>
 				<?php
 				$dates = array();
@@ -219,7 +219,7 @@ print_heading( array(
 			<td><?php
 				if ( isset( $finance['job_id'] ) && $finance['job_id'] ) {
 					echo module_job::link_open( $finance['job_id'], true );
-				} else if ( $finance['invoice_id'] && count( $invoice_data['job_ids'] ) ) {
+				} elseif ( $finance['invoice_id'] && count( $invoice_data['job_ids'] ) ) {
 					foreach ( $invoice_data['job_ids'] as $job_id ) {
 						echo module_job::link_open( $job_id, true ) . ' ';
 					}

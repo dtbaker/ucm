@@ -68,7 +68,7 @@ if ( $invoice['customer_id'] ) {
 $show_task_dates = module_config::c( 'invoice_task_list_show_date', 1 );
 $colspan         = 2;
 if ( $show_task_dates ) {
-	$colspan ++;
+	$colspan++;
 }
 
 
@@ -314,7 +314,7 @@ $x = 1;
 				)
 			),
 		);
-	} else if ( $invoice['customer_id'] && module_customer::can_i( 'view', 'Customers' ) ) {
+	} elseif ( $invoice['customer_id'] && module_customer::can_i( 'view', 'Customers' ) ) {
 		$fieldset_data['elements'][] = array(
 			'title'  => 'Customer',
 			'fields' => array(
@@ -454,7 +454,7 @@ $x = 1;
 					}
 				),
 			);
-		} else if ( ! class_exists( 'module_website', false ) && module_config::c( 'show_ucm_ads', 1 ) ) {
+		} elseif ( ! class_exists( 'module_website', false ) && module_config::c( 'show_ucm_ads', 1 ) ) {
 
 			$fieldset_data['elements'][] = array(
 				'title'  => module_config::c( 'project_name_single', 'Website' ),
@@ -625,7 +625,7 @@ $x = 1;
 						align="center"><?php _e( 'A Credit Note has been generated against this cancelled invoice: %s', module_invoice::link_open( $other_i['invoice_id'], true, $other_i ) ); ?></p>
 					<?php
 				}
-			} else if ( module_invoice::can_i( 'create', 'Invoices' ) ) {
+			} elseif ( module_invoice::can_i( 'create', 'Invoices' ) ) {
 				?>
 				<p style="text-align: center">
 					<input type="submit" name="butt_generate_credit" value="<?php _e( 'Generate Credit Note' ); ?>"
@@ -648,7 +648,7 @@ $x = 1;
 		echo module_form::generate_fieldset( $fieldset_data );
 		unset( $fieldset_data );
 
-	} else if ( $invoice['overdue'] ) {
+	} elseif ( $invoice['overdue'] ) {
 
 		/***** INVOICE OVERDUE ****/
 		ob_start();
@@ -768,6 +768,7 @@ $x = 1;
 	<?php
 
 	/***** INVOICE ITEMS! *****/
+
 	ob_start();
 	?>
 	<div class="content_box_wheader">
@@ -841,7 +842,7 @@ $x = 1;
 							?>
 							-
 							<?php
-						} else if ( $invoice['default_task_type'] == _TASK_TYPE_QTY_AMOUNT || $invoice['default_task_type'] == _TASK_TYPE_HOURS_AMOUNT ) {
+						} elseif ( $invoice['default_task_type'] == _TASK_TYPE_QTY_AMOUNT || $invoice['default_task_type'] == _TASK_TYPE_HOURS_AMOUNT ) {
 							?>
 							<input type="text" name="invoice_invoice_item[new][hours]" value="" id="newinvoice_itemqty" size="3"
 							       style="width:30px;" onchange="setamount(this.value,'new');" onkeyup="setamount(this.value,'new');">
@@ -931,7 +932,7 @@ $x = 1;
 								<input type="text" name="invoice_invoice_item[<?php echo $invoice_item_id; ?>][task_order]" value="<?php
 								if ( isset( $invoice_item_data['custom_task_order'] ) && (int) $invoice_item_data['custom_task_order'] > 0 ) {
 									echo $invoice_item_data['custom_task_order'];
-								} else if ( isset( $invoice_item_data['task_order'] ) && $invoice_item_data['task_order'] > 0 ) {
+								} elseif ( isset( $invoice_item_data['task_order'] ) && $invoice_item_data['task_order'] > 0 ) {
 									echo $invoice_item_data['task_order'];
 								}
 								?>" size="3" class="edit_task_order">
@@ -1060,13 +1061,13 @@ $x = 1;
 					</tbody>
 				<?php } ?>
 				<tbody id="invoice_item_preview_<?php echo $invoice_item_id; ?>">
-				<tr class="<?php echo $c ++ % 2 ? 'odd' : 'even'; ?>">
+				<tr class="<?php echo $c++ % 2 ? 'odd' : 'even'; ?>">
 					<?php if ( module_config::c( 'invoice_task_numbers', 1 ) ) { ?>
 						<td>
 							<?php
 							if ( isset( $invoice_item_data['custom_task_order'] ) && (int) $invoice_item_data['custom_task_order'] > 0 ) {
 								echo $invoice_item_data['custom_task_order'];
-							} else if ( isset( $invoice_item_data['task_order'] ) && $invoice_item_data['task_order'] > 0 ) {
+							} elseif ( isset( $invoice_item_data['task_order'] ) && $invoice_item_data['task_order'] > 0 ) {
 								echo $invoice_item_data['task_order'];
 							}
 							?>
@@ -1183,7 +1184,7 @@ $x = 1;
 					}
 				}
 
-			} else if ( $invoice['discount_type'] == _DISCOUNT_TYPE_AFTER_TAX ) {
+			} elseif ( $invoice['discount_type'] == _DISCOUNT_TYPE_AFTER_TAX ) {
 				$rows[] = array(
 					'label' => _l( 'Sub:' ),
 					'value' => '<span class="currency">' . dollar( $invoice['total_sub_amount'], true, $invoice['currency_id'] ) . '</span>'

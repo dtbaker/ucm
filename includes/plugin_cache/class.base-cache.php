@@ -1,9 +1,7 @@
 <?php
 
-
-class UCMBaseCache {
-
-
+class UCMBaseCache
+{
 	public $cache_key = 'cache';
 	public $unique_by_user_id = true;
 	// hooks that we use to clear this cache entry from the database.
@@ -61,6 +59,4 @@ class UCMBaseCache {
 
 		return false;
 	}
-
-
 }

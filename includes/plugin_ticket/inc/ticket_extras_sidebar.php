@@ -49,7 +49,7 @@ if ( module_config::c( 'ticket_allow_extra_data', 1 ) ) {
 							if ( preg_match( '#(https?://[^\s]*)$#', isset( $ticket['extra_data'][ $extra['ticket_data_key_id'] ] ) ? $ticket['extra_data'][ $extra['ticket_data_key_id'] ]['value'] : '', $matches ) ) {
 								?> <a href="<?php echo htmlspecialchars( $matches[1] ); ?>" target="_blank"><?php _e( 'Open' ); ?>
 									&raquo;</a> <?php
-							} else if ( preg_match( '#(www\.[^\s]*)$#', isset( $ticket['extra_data'][ $extra['ticket_data_key_id'] ] ) ? $ticket['extra_data'][ $extra['ticket_data_key_id'] ]['value'] : '', $matches ) ) {
+							} elseif ( preg_match( '#(www\.[^\s]*)$#', isset( $ticket['extra_data'][ $extra['ticket_data_key_id'] ] ) ? $ticket['extra_data'][ $extra['ticket_data_key_id'] ]['value'] : '', $matches ) ) {
 								?> <a href="http://<?php echo htmlspecialchars( $matches[1] ); ?>"
 								      target="_blank"><?php _e( 'Open' ); ?> &raquo;</a> <?php
 							}

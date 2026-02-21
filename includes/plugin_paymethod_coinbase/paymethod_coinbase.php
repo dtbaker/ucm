@@ -1,9 +1,7 @@
 <?php
 
-
-class module_paymethod_coinbase extends module_base {
-
-
+class module_paymethod_coinbase extends module_base
+{
 	public static function can_i( $actions, $name = false, $category = false, $module = false ) {
 		if ( ! $module ) {
 			$module = __CLASS__;
@@ -84,7 +82,7 @@ class module_paymethod_coinbase extends module_base {
 
 		if ( $dollar_limit == 'above' && $invoice_data['total_amount_due'] < $dollar_value ) {
 			return false;
-		} else if ( $dollar_limit == 'below' && $invoice_data['total_amount_due'] > $dollar_value ) {
+		} elseif ( $dollar_limit == 'below' && $invoice_data['total_amount_due'] > $dollar_value ) {
 			return false;
 		}
 		if ( strlen( $cur ) > 1 ) {
@@ -238,15 +236,15 @@ class module_paymethod_coinbase extends module_base {
 					$is_subscription['days'] = $days;
 					if ( $days == 1 ) {
 						$is_subscription['coinbase_period'] = 'daily';
-					} else if ( $days == 7 || $days == 6 || $days == 8 ) {
+					} elseif ( $days == 7 || $days == 6 || $days == 8 ) {
 						$is_subscription['coinbase_period'] = 'weekly';
-					} else if ( $days == 14 || $days == 13 || $days == 15 ) {
+					} elseif ( $days == 14 || $days == 13 || $days == 15 ) {
 						$is_subscription['coinbase_period'] = 'every_two_weeks';
-					} else if ( $days == 29 || $days == 30 || $days == 31 ) {
+					} elseif ( $days == 29 || $days == 30 || $days == 31 ) {
 						$is_subscription['coinbase_period'] = 'monthly';
-					} else if ( $days >= 87 && $days <= 95 ) {
+					} elseif ( $days >= 87 && $days <= 95 ) {
 						$is_subscription['coinbase_period'] = 'quarterly';
-					} else if ( $days >= 363 && $days <= 370 ) {
+					} elseif ( $days >= 363 && $days <= 370 ) {
 						$is_subscription['coinbase_period'] = 'yearly';
 					} else {
 						send_error( 'Someone tried to pay with coinbase but coinbase does not support a recurring subscription period of ' . $days . ' days. Only:  daily, weekly, every_two_weeks, monthly, quarterly, and yearly ' );
@@ -300,7 +298,7 @@ class module_paymethod_coinbase extends module_base {
 						exit;
 
 
-					} else if ( isset( $_REQUEST['payment_single'] ) ) {
+					} elseif ( isset( $_REQUEST['payment_single'] ) ) {
 						// use is choosing to continue payment as a once off amount
 
 					} else {
@@ -355,7 +353,6 @@ class module_paymethod_coinbase extends module_base {
 	public function external_hook( $hook ) {
 		switch ( $hook ) {
 			case 'event_ipn':
-
 				$body       = @file_get_contents( 'php://input' );
 				$event_json = json_decode( $body );
 
@@ -617,5 +614,4 @@ class module_paymethod_coinbase extends module_base {
 
 		return $invoice_id . ':' . $invoice_payment_id . ':' . $invoice_payment_subscription_id . ':' . $hashbit;
 	}
-
 }

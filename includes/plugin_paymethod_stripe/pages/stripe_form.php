@@ -84,7 +84,7 @@ if ( isset( $_POST['stripeToken'] ) && isset( $invoice_payment_data ) && $invoic
 		send_error( $error );
 	}
 
-} else if ( isset( $invoice_id ) && $invoice_id && isset( $payment_amount ) && $payment_amount > 0 && isset( $description ) ) {
+} elseif ( isset( $invoice_id ) && $invoice_id && isset( $payment_amount ) && $payment_amount > 0 && isset( $description ) ) {
 	?>
 
 	<h1><?php echo htmlspecialchars( $description ); ?></h1>

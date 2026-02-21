@@ -180,7 +180,7 @@
 						if ( $ticket_message['private_message'] ) {
 							continue;
 						}
-						$ticket_message_counter ++;
+						$ticket_message_counter++;
 						$attachments = module_ticket::get_ticket_message_attachments( $ticket_message['ticket_message_id'] );
 						?>
 						<div class="ticket_message ticket_message_<?php
@@ -464,7 +464,7 @@
 								$lines      = explode( "\n", $text );
 								$do_we_hide = count( $lines ) > 4 && module_config::c( 'ticket_hide_messages', 1 ) && $ticket_message_counter < $ticket_message_count && $ticket_message_count != 2;
 
-								if ( $do_we_hide ){
+								if ( $do_we_hide ) {
 								?>
 								<div class="ticket_message_hider">
 									<?php
@@ -538,7 +538,7 @@
 											</div>
 											<?php
 									}else */
-									if ( $do_we_hide ){
+									if ( $do_we_hide ) {
 									?>
 								</div>
 								<div>
@@ -560,17 +560,17 @@
 
 
 					<?php
-					if ( true ){ //$logged_in_user || is_user_logged_in()){
+					if ( true ) { //$logged_in_user || is_user_logged_in()){
 					?>
 
-					<?php if ( count( $ticket_messages ) ){ ?>
+					<?php if ( count( $ticket_messages ) ) { ?>
 					<div id="ticket_reply_button">
 						<input type="button" name="reply"
 						       onclick="jQuery('#ticket_reply_button').hide(); jQuery('#ticket_reply_holder').show(); jQuery('#new_ticket_message')[0].focus(); return false;"
 						       value="<?php echo _l( 'Reply to ticket' ); ?>" class="submit_button">
 					</div>
 					<div style="display: none;" class="ticket_reply" id="ticket_reply_holder">
-						<?php }else{ ?>
+						<?php } else { ?>
 						<div id="ticket_reply_holder" class="ticket_reply">
 							<?php } ?>
 

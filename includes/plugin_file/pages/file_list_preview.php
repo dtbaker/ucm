@@ -1,7 +1,7 @@
-<div class="file_<?php 
+<div class="file_<?php
 echo $owner_table;?>_<?php echo $owner_id;?>">
     <?php
-    foreach($file_items as $file_item){
+    foreach ($file_items as $file_item) {
         $file_item = self::get_file($file_item['file_id']);
         ?>
         
@@ -9,8 +9,8 @@ echo $owner_table;?>_<?php echo $owner_id;?>">
 
             <?php
             // /display a thumb if its supported.
-            if(preg_match('/\.(\w\w\w\w?)$/',$file_item['file_name'],$matches)){
-                switch(strtolower($matches[1])){
+            if (preg_match('/\.(\w\w\w\w?)$/',$file_item['file_name'],$matches)) {
+                switch (strtolower($matches[1])) {
                     case 'jpg':
                     case 'jpeg':
                     case 'gif':

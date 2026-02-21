@@ -1,6 +1,5 @@
 <?php
 
-
 if ( isset( $_REQUEST['user_id'] ) ) {
 
 
@@ -13,5 +12,4 @@ if ( isset( $_REQUEST['user_id'] ) ) {
 	include( module_theme::include_ucm( "includes/plugin_user/pages/contact_admin_list.php" ) );
 	//include("contact_admin_list.php");
 
-} 
-
+}

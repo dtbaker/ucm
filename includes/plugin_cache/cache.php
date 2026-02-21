@@ -1,8 +1,7 @@
 <?php
 
-
-class module_cache extends module_base {
-
+class module_cache extends module_base
+{
 	private static $_use_memcache = false;
 	private static $_memcache_instance = false;
 	private static $_memcache_prefix = '';
@@ -53,7 +52,7 @@ class module_cache extends module_base {
 		if ( module_security::get_loggedin_id() ) {
 			// use memcache if it exists
 			if ( class_exists( 'Memcache', false ) && module_config::c( 'cache_enabled', 1 ) && module_config::c( 'memcache_active', 0 ) ) {
-				self::$_memcache_instance = new Memcache;
+				self::$_memcache_instance = new Memcache();
 				if ( self::$_memcache_instance->connect( module_config::c( 'memcache_address', '127.0.0.1' ), module_config::c( 'memcache_port', '11211' ) ) ) { //module_config::c('memcache_address','localhost'), )){
 					self::$_memcache_prefix = md5( session_id() . _UCM_SECRET . _DB_PREFIX . _DB_NAME . _DB_USER . _DB_PASS );
 					// what version of information are we requesting (inremented each time something is deleted, inserted or updated)
@@ -433,5 +432,4 @@ class module_cache extends module_base {
 		<?php
 		return ob_get_clean();
 	}
-
 }

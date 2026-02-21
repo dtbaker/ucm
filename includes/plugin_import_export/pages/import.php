@@ -107,7 +107,7 @@ if ( isset( $_REQUEST['run_import'] ) && $_REQUEST['run_import'] == 'true' ) {
 		       onclick="window.location.href='<?php echo htmlspecialchars( $import_options['return_url'] ); ?>';">
 	<?php }
 
-} else if ( isset( $_REQUEST['upload_import'] ) && $_REQUEST['upload_import'] == 'true' ) {
+} elseif ( isset( $_REQUEST['upload_import'] ) && $_REQUEST['upload_import'] == 'true' ) {
 
 	$csv_file = $_FILES['csv']['tmp_name'];
 	if ( ! $csv_file ) {
@@ -194,7 +194,7 @@ if ( isset( $_REQUEST['run_import'] ) && $_REQUEST['run_import'] == 'true' ) {
 					<?php
 					$column_matches = array();
 
-					for ( $column = 0; $column < $column_count; $column ++ ) {
+					for ( $column = 0; $column < $column_count; $column++ ) {
 						$display_key = isset( $provided_header[ $column ] ) ? $provided_header[ $column ] : '';
 						?>
 						<th><select name="c[<?php echo $column; ?>]">
@@ -241,7 +241,7 @@ if ( isset( $_REQUEST['run_import'] ) && $_REQUEST['run_import'] == 'true' ) {
 				foreach ( $rows as $row ) { ?>
 					<tr class="<?php echo $rowid % 2 ? 'odd' : 'even'; ?>" rel="<?php echo $rowid; ?>">
 						<?php
-						for ( $column = 0; $column < $column_count; $column ++ ) { ?>
+						for ( $column = 0; $column < $column_count; $column++ ) { ?>
 							<td class="e">
 								<?php echo htmlspecialchars( $row[ $column ] ); ?>
 								<?php /*
@@ -279,7 +279,7 @@ if ( isset( $_REQUEST['run_import'] ) && $_REQUEST['run_import'] == 'true' ) {
 						</td>
 					</tr>
 					<?php
-					$rowid ++;
+					$rowid++;
 				} ?>
 				</tbody>
 			</table>
@@ -396,7 +396,7 @@ if ( isset( $_REQUEST['run_import'] ) && $_REQUEST['run_import'] == 'true' ) {
 			<tbody>
 			<?php
 			$extra_colspan = 0;
-			for ( $x = 1; $x < 3; $x ++ ) { ?>
+			for ( $x = 1; $x < 3; $x++ ) { ?>
 				<tr>
 					<?php foreach ( $import_options['fields'] as $key => $val ) { ?>
 						<td><?php _e( 'Record %s', $x ); ?></td>

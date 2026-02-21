@@ -45,7 +45,7 @@ $colspan = 2;
 
 			<?php if ( $task_data['hours'] == 0 && $task_data['manual_task_type'] == _TASK_TYPE_AMOUNT_ONLY ) {
 				// no hour input
-			} else if ( $task_data['manual_task_type'] == _TASK_TYPE_QTY_AMOUNT ) { ?>
+			} elseif ( $task_data['manual_task_type'] == _TASK_TYPE_QTY_AMOUNT ) { ?>
 				<input type="text" name="quote_task[<?php echo $quote_task_id; ?>][hours]" value="<?php echo $hours_value; ?>"
 				       size="3" style="width:30px;" tabindex="12">
 			<?php } else {
@@ -77,7 +77,7 @@ $colspan = 2;
 		<?php } ?>
 	</td>
 	<?php if ( module_config::c( 'quote_allow_staff_assignment', 1 ) ) {
-		$colspan ++; ?>
+		$colspan++; ?>
 		<td>
 			<?php echo print_select_box( $staff_member_rel, 'quote_task[' . $quote_task_id . '][user_id]',
 				isset( $staff_member_rel[ $task_data['user_id'] ] ) ? $task_data['user_id'] : false, 'quote_task_staff_list', true ); ?>

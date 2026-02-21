@@ -27,7 +27,7 @@
 							update_insert( 'ticket_id', $ticket['ticket_id'], 'ticket', array( 'invoice_id' => 0 ) );
 						}
 						echo 'invoice removed... please refresh';
-					} else if ( $invoice_data['total_amount_due'] > 0 ) {
+					} elseif ( $invoice_data['total_amount_due'] > 0 ) {
 						$responsive_summary[] = _l( "Please pay <strong>%s</strong>.", dollar( $invoice_data['total_amount_due'], true, $invoice_data['currency_id'] ) );
 						echo '<p>';
 						echo _l( "Please pay <strong>%s</strong> to receive Priority Support. To make payment please click the button below.", dollar( $invoice_data['total_amount_due'], true, $invoice_data['currency_id'] ) );

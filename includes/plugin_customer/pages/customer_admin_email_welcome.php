@@ -1,6 +1,5 @@
 <?php
 
-
 $page_type        = 'Customers';
 $page_type_single = 'Customer';
 
@@ -117,5 +116,3 @@ module_email::print_compose(
 		'cancel_url'           => module_customer::link_open( $customer['customer_id'] ),
 	)
 );
-
-

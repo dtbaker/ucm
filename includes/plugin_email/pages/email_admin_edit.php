@@ -77,7 +77,7 @@ $options = module_email::get_email_compose_options( $options );
 
 ?>
 
-<?php if ( $can_edit_emails ){ ?>
+<?php if ( $can_edit_emails ) { ?>
 	<form action="" method="post" id="template_change_form">
 		<input type="hidden" name="template_name" value="" id="template_name_change">
 	</form>
@@ -228,7 +228,7 @@ $options = module_email::get_email_compose_options( $options );
 				$websites = module_website::get_websites( array( 'customer_id' => $customer_id ) );
 				if ( $can_edit_emails ) {
 					echo print_select_box( $websites, 'website_id', isset( $email['website_id'] ) ? $email['website_id'] : false, '', true, 'name' );
-				} else if ( isset( $email['website_id'] ) && $email['website_id'] ) {
+				} elseif ( isset( $email['website_id'] ) && $email['website_id'] ) {
 					echo isset( $websites[ $email['website_id'] ] ) ? htmlspecialchars( $websites[ $email['website_id'] ]['name'] ) : _l( 'Deleted' );
 				} else {
 					_e( 'N/A' );
@@ -243,7 +243,7 @@ $options = module_email::get_email_compose_options( $options );
 				$jobs = module_job::get_jobs( array( 'customer_id' => $customer_id ) );
 				if ( $can_edit_emails ) {
 					echo print_select_box( $jobs, 'job_id', isset( $email['job_id'] ) ? $email['job_id'] : false, '', true, 'name' );
-				} else if ( isset( $email['job_id'] ) && $email['job_id'] ) {
+				} elseif ( isset( $email['job_id'] ) && $email['job_id'] ) {
 					echo isset( $jobs[ $email['job_id'] ] ) ? htmlspecialchars( $jobs[ $email['job_id'] ]['name'] ) : _l( 'Deleted' );
 				} else {
 					_e( 'N/A' );
@@ -371,7 +371,7 @@ $options = module_email::get_email_compose_options( $options );
 	$fieldset_data['elements'][] = array(
 		'title' => _l( 'Attachment:' ),
 		'field' => function () use ( $can_edit_emails, $email ) {
-		foreach ( $email['attachments'] as $uri => $attachment ){
+		foreach ( $email['attachments'] as $uri => $attachment ) {
 			if ( is_array( $attachment ) ) {
 				if ( $attachment['preview'] ) {
 					echo '<a href="' . $attachment['preview'] . '">';
@@ -383,14 +383,14 @@ $options = module_email::get_email_compose_options( $options );
 			} else {
 				echo htmlspecialchars( $attachment );
 			}
-		if ( $can_edit_emails ){
+		if ( $can_edit_emails ) {
 			?>
 		<input type="hidden" name="existing_attachments[]" value="<?php echo htmlspecialchars( $uri ); ?>">
 		<?php
 		}
 		echo '<br/>';
 		}
-		if ( $can_edit_emails ){
+		if ( $can_edit_emails ) {
 		?>
 			<div id="email_attach_holder">
 				<div class="dynamic_block">
@@ -449,7 +449,7 @@ $options = module_email::get_email_compose_options( $options );
 	}
 
 
-	if ( $can_edit_emails ){ ?>
+	if ( $can_edit_emails ) { ?>
 </form>
 <?php } else { ?>
 

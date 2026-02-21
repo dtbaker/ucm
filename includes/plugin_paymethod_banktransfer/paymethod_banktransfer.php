@@ -1,8 +1,7 @@
 <?php
 
-
-class module_paymethod_banktransfer extends module_base {
-
+class module_paymethod_banktransfer extends module_base
+{
 	public static function can_i( $actions, $name = false, $category = false, $module = false ) {
 		if ( ! $module ) {
 			$module = __CLASS__;
@@ -158,5 +157,4 @@ Amount: <strong>{AMOUNT}</strong>', 'Bank transfer details for invoice payments.
 		echo $template->render( 'pretty_html' );
 		exit;
 	}
-
 }

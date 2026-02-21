@@ -1,6 +1,5 @@
 <?php
 
-
 $ticket_safe = true;
 $limit_time  = strtotime( '-' . module_config::c( 'ticket_turn_around_days', 5 ) . ' days', time() );
 

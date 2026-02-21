@@ -43,7 +43,7 @@ if ( isset( $_REQUEST['faq_product_id'] ) ) {
     };
     $(function () {
         $('#faq_product_id').change(dofaqcheck).keyup(dofaqcheck);
-			<?php if($current_faq_product_id){ ?>
+			<?php if ($current_faq_product_id) { ?>
         $('#faq_product_id').change();
 			<?php } ?>
     });
