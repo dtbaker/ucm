@@ -89,13 +89,6 @@ switch ( $display_mode ) {
 				</div>
 			</div>
 
-			<?php if ( _DEMO_MODE && preg_match( '#/demo_lite/#', $_SERVER['REQUEST_URI'] ) ) { ?>
-				<div style="margin: 10px 0 0 296px;position:absolute;">
-					<a href="http://goo.gl/YYgVJ" title="Download Ultimate Client Manager"><img
-							src="http://ultimateclientmanager.com/webimages/like-what-you-see-here.png" border="0"
-							alt="Freelance Database - php client manager"></a>
-				</div>
-			<?php } ?>
 
 			<div id="header_logo">
 				<?php if ( $header_logo = module_theme::get_config( 'theme_logo', _BASE_HREF . 'images/logo.png' ) ) { ?>

@@ -1341,6 +1341,3 @@ function dtbaker_mime_type( $file_name, $file_path = false ) {
 	return $mime;
 }
 
-@include_once( 'old.php' );
-@include_once( 'pro.php' );
-@include_once( 'dev.php' );
