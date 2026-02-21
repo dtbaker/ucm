@@ -1,0 +1,49 @@
+<?xml version="1.0"?>
+<ruleset name="UCM Coding Standards">
+    <description>PSR-12 coding standards for Ultimate Client Manager (relaxed for tabs and spaces-in-parens to match .php-cs-fixer.php)</description>
+
+    <rule ref="PSR12">
+        <!-- Allow tabs (project uses tabs per .php-cs-fixer.php) -->
+        <exclude name="Generic.WhiteSpace.DisallowTabIndent"/>
+        <exclude name="Generic.WhiteSpace.ScopeIndent"/>
+        <!-- Allow spaces in parentheses: func( $arg ), if ( $x ) (WordPress-style) -->
+        <exclude name="Generic.Functions.FunctionCallArgumentSpacing"/>
+        <exclude name="PSR2.Methods.FunctionCallSignature"/>
+        <exclude name="Squiz.WhiteSpace.ControlStructureSpacing"/>
+        <exclude name="PSR12.ControlStructures.ControlStructureSpacing"/>
+        <exclude name="Squiz.ControlStructures.ForEachLoopDeclaration.SpaceAfterOpen"/>
+        <exclude name="Squiz.ControlStructures.ForEachLoopDeclaration.SpaceBeforeClose"/>
+        <exclude name="Squiz.Functions.FunctionDeclarationArgumentSpacing.SpacingAfterOpen"/>
+        <exclude name="Squiz.Functions.FunctionDeclarationArgumentSpacing.SpacingBeforeClose"/>
+        <!-- Allow opening brace on same line (project style per .php-cs-fixer.php) -->
+        <exclude name="Squiz.Functions.MultiLineFunctionDeclaration.BraceOnSameLine"/>
+        <exclude name="PSR2.Methods.FunctionClosingBrace.SpacingBeforeClose"/>
+        <exclude name="Squiz.ControlStructures.ControlSignature.NewlineAfterOpenBrace"/>
+        <exclude name="Squiz.WhiteSpace.ScopeClosingBrace"/>
+    </rule>
+
+    <!-- Relax line length for legacy codebase (PSR-12 suggests 120) -->
+    <rule ref="Generic.Files.LineLength">
+        <properties>
+            <property name="lineLimit" value="150"/>
+            <property name="absoluteLineLimit" value="0"/>
+        </properties>
+    </rule>
+
+    <file>includes</file>
+
+    <arg name="extensions" value="php"/>
+    <arg name="tab-width" value="4"/>
+
+    <!-- Exclude third-party/vendor code (same as .php-cs-fixer.php) -->
+    <exclude-pattern>*/plugin_pdf/dompdf/*</exclude-pattern>
+    <exclude-pattern>*/plugin_encrypt/phpseclib/*</exclude-pattern>
+    <exclude-pattern>*/plugin_security/htmlpurifier/*</exclude-pattern>
+    <exclude-pattern>*/plugin_calendar/wdCalendar/*</exclude-pattern>
+    <exclude-pattern>*/plugin_captcha/inc/*</exclude-pattern>
+    <exclude-pattern>*/plugin_paymethod_stripe/stripe-php/*</exclude-pattern>
+    <exclude-pattern>*/plugin_paymethod_authorize/anet_php_1.1.8/*</exclude-pattern>
+    <exclude-pattern>*/plugin_paymethod_coinbase/lib/*</exclude-pattern>
+    <exclude-pattern>*/plugin_paymethod_multisafepay/MultiSafepay.combined.php</exclude-pattern>
+    <exclude-pattern>*/plugin_ticket/cron/mime_parser.php</exclude-pattern>
+</ruleset>

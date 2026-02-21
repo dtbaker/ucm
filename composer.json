@@ -21,6 +21,16 @@
     "scripts": {
         "test": "phpunit",
         "test:e2e": "npm run test:e2e",
-        "phpstan": "phpstan analyse includes/ --memory-limit=512M"
+        "phpstan": "phpstan analyse includes/ --memory-limit=2G",
+        "phpstan:baseline": "phpstan analyse includes/ --memory-limit=2G --generate-baseline=phpstan-baseline.neon",
+        "rector": "rector process --dry-run",
+        "rector:fix": "rector process",
+        "fix:errors": "phpstan analyse includes/ --memory-limit=2G --error-format=json --no-progress -c scripts/phpstan-no-baseline.neon 2>/dev/null | python3 scripts/phpstan-errors-to-prompt.py",
+        "fix:summary": "phpstan analyse includes/ --memory-limit=2G --error-format=json --no-progress -c scripts/phpstan-no-baseline.neon 2>/dev/null | python3 scripts/phpstan-errors-to-prompt.py --summary",
+        "cs:check": "php-cs-fixer fix --dry-run --diff",
+        "cs:fix": "php-cs-fixer fix --diff",
+        "phpcs": "phpcs -d memory_limit=2G",
+        "phpcs:fix": "phpcbf -d memory_limit=2G",
+        "security": "phpcs --standard=./vendor/pheromone/phpcs-security-audit/example_base_ruleset.xml --extensions=php includes/"
     }
 }
