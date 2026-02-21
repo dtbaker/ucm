@@ -5,7 +5,7 @@ define( '_CALENDAR_ACCESS_ASSIGNED', 'Only from Customers or assigned items' ); 
 
 class module_calendar extends module_base
 {
-	var $links;
+	public $links;
 
 	public function __construct() {
 		$this->module_name     = 'calendar';

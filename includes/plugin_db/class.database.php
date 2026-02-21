@@ -2,7 +2,8 @@
 
 class iimysqli_result
 {
-	public $stmt, $nCols;
+	public $stmt;
+	public $nCols;
 }
 
 if ( ! function_exists( 'mysqli_stmt_get_result' ) ) {

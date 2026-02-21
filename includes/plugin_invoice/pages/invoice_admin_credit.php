@@ -766,9 +766,7 @@ $x = 1;
 	</script>
 
 	<?php
-
-	/***** INVOICE ITEMS! *****/
-
+	/* INVOICE ITEMS! */
 	ob_start();
 	?>
 	<div class="content_box_wheader">
@@ -1335,8 +1333,7 @@ $x = 1;
 		</script>
 
 	<?php
-
-	/*** PAYMENT HISTORY ****/
+	/* PAYMENT HISTORY */
 	ob_start();
 	?>
 

@@ -190,7 +190,8 @@ if ( get_display_mode() != 'mobile' ) {
 			}
 
 			return $widgets;
-		} // end hook function
+		}
+		// end hook function
 		hook_add( 'dashboard_widgets', 'whitelabel1_dashboard_widgets' );
 
 	}

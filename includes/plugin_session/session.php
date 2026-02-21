@@ -71,7 +71,7 @@ class module_session extends module_base
 		return true;
 	}
 
-	static $_db_sessions = null;
+	public static $_db_sessions = null;
 
 	public static function is_db_sessions_enabled() {
 		if ( _DEMO_MODE ) {

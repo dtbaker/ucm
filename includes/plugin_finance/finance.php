@@ -254,7 +254,7 @@ class module_finance extends module_base
 						$_POST['amount'] = $debit;
 					}
 				}
-
+				// no break
 			case 'save_finance':
 				if ( isset( $_REQUEST['butt_del'] ) ) {
 					$this->delete( $_REQUEST['finance_id'] );

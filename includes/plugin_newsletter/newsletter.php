@@ -1434,7 +1434,7 @@ class module_newsletter extends module_base
 	}
 
 
-	static $failed_retries = array();
+	public static $failed_retries = array();
 
 	/**
 	 *

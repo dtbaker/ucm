@@ -272,6 +272,7 @@ function create_link( $label, $type, $href = '', $id = '' ) {
 			break;
 		case "thickbox":
 			$class .= ' thickbox';
+			// no break
 		case 'link':
 			if ( ! $href ) {
 				ob_end_clean();

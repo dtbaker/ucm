@@ -38,7 +38,7 @@ class rfc822_addresses_class
 {
 	/* Private variables */
 
-	var $v = '';
+	public $v = '';
 
 	/* Public variables */
 
@@ -67,7 +67,7 @@ class rfc822_addresses_class
 		</variable>
 	{/metadocument}
 	*/
-	var $error = '';
+	public $error = '';
 
 	/*
 	{metadocument}
@@ -84,7 +84,7 @@ class rfc822_addresses_class
 		</variable>
 	{/metadocument}
 	*/
-	var $error_position = - 1;
+	public $error_position = - 1;
 
 	/*
 	{metadocument}
@@ -106,7 +106,7 @@ class rfc822_addresses_class
 		</variable>
 	{/metadocument}
 	*/
-	var $ignore_syntax_errors = 1;
+	public $ignore_syntax_errors = 1;
 
 	/*
 	{metadocument}
@@ -127,7 +127,7 @@ class rfc822_addresses_class
 		</variable>
 	{/metadocument}
 	*/
-	var $warnings = array();
+	public $warnings = array();
 
 	/* Private functions */
 
@@ -390,6 +390,7 @@ class rfc822_addresses_class
 					if ( ! $this->ParseComment( $p, $comment ) ) {
 						return ( 0 );
 					}
+					// no break
 				default:
 					return ( 1 );
 			}
@@ -413,6 +414,7 @@ class rfc822_addresses_class
 					if ( ! $this->ParseComment( $p, $comment ) ) {
 						return ( 0 );
 					}
+					// no break
 				default:
 					return ( 1 );
 			}

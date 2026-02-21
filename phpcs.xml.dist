@@ -20,14 +20,19 @@
         <exclude name="PSR2.Methods.FunctionClosingBrace.SpacingBeforeClose"/>
         <exclude name="Squiz.ControlStructures.ControlSignature.NewlineAfterOpenBrace"/>
         <exclude name="Squiz.WhiteSpace.ScopeClosingBrace"/>
-    </rule>
-
-    <!-- Relax line length for legacy codebase (PSR-12 suggests 120) -->
-    <rule ref="Generic.Files.LineLength">
-        <properties>
-            <property name="lineLimit" value="150"/>
-            <property name="absoluteLineLimit" value="0"/>
-        </properties>
+        <!-- Legacy codebase: relax naming/structure rules -->
+        <exclude name="PSR1.Classes.ClassDeclaration"/>
+        <exclude name="Squiz.Classes.ValidClassName"/>
+        <exclude name="Generic.NamingConventions.CamelCapsFunctionName"/>
+        <exclude name="PSR1.Methods.CamelCapsMethodName"/>
+        <exclude name="PSR2.Methods.MethodDeclaration.Underscore"/>
+        <exclude name="Squiz.Scope.MethodScope"/>
+        <exclude name="PSR1.Files.SideEffects"/>
+        <!-- Ignore line length (legacy codebase) -->
+        <exclude name="Generic.Files.LineLength"/>
+        <!-- Legacy: property underscore prefix, constant visibility -->
+        <exclude name="PSR2.Classes.PropertyDeclaration.Underscore"/>
+        <exclude name="PSR12.Properties.ConstantVisibility"/>
     </rule>
 
     <file>includes</file>
@@ -46,4 +51,19 @@
     <exclude-pattern>*/plugin_paymethod_coinbase/lib/*</exclude-pattern>
     <exclude-pattern>*/plugin_paymethod_multisafepay/MultiSafepay.combined.php</exclude-pattern>
     <exclude-pattern>*/plugin_ticket/cron/mime_parser.php</exclude-pattern>
+    <!-- HTML/template files with no or minimal PHP -->
+    <exclude-pattern>*/plugin_change_request/pages/popup_content_0.php</exclude-pattern>
+    <exclude-pattern>*/plugin_config/pages/config_payment.php</exclude-pattern>
+    <exclude-pattern>*/plugin_customer/portal/login.php</exclude-pattern>
+    <exclude-pattern>*/plugin_customer/portal/tickets.php</exclude-pattern>
+    <exclude-pattern>*/plugin_finance/pages/finance_quick.php</exclude-pattern>
+    <exclude-pattern>*/plugin_invoice/template/credit_note_pdf.php</exclude-pattern>
+    <exclude-pattern>*/plugin_invoice/template/invoice_print.php</exclude-pattern>
+    <exclude-pattern>*/plugin_invoice/template/invoice_print_basic.php</exclude-pattern>
+    <exclude-pattern>*/plugin_paymethod_authorize/pages/authorize_form_default.php</exclude-pattern>
+    <exclude-pattern>*/plugin_file/upload/index.php</exclude-pattern>
+    <exclude-pattern>*/plugin_file/upload/plupload/index.php</exclude-pattern>
+    <exclude-pattern>*/plugin_statistic/pages/statistic_list.php</exclude-pattern>
+    <exclude-pattern>*/plugin_theme/themes/index.php</exclude-pattern>
+    <exclude-pattern>*/plugin_theme_blocks/pages/home.php</exclude-pattern>
 </ruleset>

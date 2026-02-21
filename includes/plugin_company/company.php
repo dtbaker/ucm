@@ -13,7 +13,7 @@ define( '_COMPANY_ACCESS_CONTACT', 'Only companies I am assigned to as a contact
 
 class module_company extends module_base
 {
-	var $links;
+	public $links;
 
 	public function __construct() {
 		$this->module_name     = 'company';
@@ -297,7 +297,7 @@ class module_company extends module_base
 		}
 	}
 
-	static $get_companys_cache = false;
+	public static $get_companys_cache = false;
 
 	public static function get_companys( $search = false ) {
 		if ( self::$get_companys_cache !== false ) {
@@ -331,7 +331,7 @@ class module_company extends module_base
 		return self::$get_companys_cache;
 	}
 
-	static $get_companys_access_restrictions_cache = false;
+	public static $get_companys_access_restrictions_cache = false;
 
 	public static function get_companys_access_restrictions() {
 		if ( self::$get_companys_access_restrictions_cache !== false ) {

@@ -1311,7 +1311,7 @@ class module_user extends module_base
     )
     */
 
-	static $users_by_perm_cache = array();
+	public static $users_by_perm_cache = array();
 
 	public static function get_users_by_permission( $access_requirements ) {
 

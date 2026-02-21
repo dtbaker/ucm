@@ -2,7 +2,7 @@
 
 class module_pdf extends module_base
 {
-	var $links;
+	public $links;
 	public $pdf_library;
 
 	public static function can_i( $actions, $name = false, $category = false, $module = false ) {

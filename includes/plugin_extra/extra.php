@@ -9,7 +9,7 @@ function sort_extra_defaults( $a, $b ) {
 
 class module_extra extends module_base
 {
-	var $links;
+	public $links;
 
 	public function __construct() {
 		$this->module_name     = 'extra';
@@ -805,7 +805,7 @@ class module_extra extends module_base
 		}
 	}
 
-	static $column_headers = array();
+	public static $column_headers = array();
 
 	public static function print_table_header( $owner_table, $options = array() ) {
 		$cols = 0;

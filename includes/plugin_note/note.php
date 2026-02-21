@@ -6,7 +6,7 @@ function sort_notes( $a, $b ) {
 
 class module_note extends module_base
 {
-	var $links;
+	public $links;
 	public $user_types;
 
 	public function __construct() {

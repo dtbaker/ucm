@@ -131,8 +131,10 @@ class module_config extends module_base
 			// The 'G' modifier is available since PHP 5.1.0
 			case 'g':
 				$desired_limit *= 1024;
+				// no break
 			case 'm':
 				$desired_limit *= 1024;
+				// no break
 			case 'k':
 				$desired_limit *= 1024;
 		}
@@ -146,8 +148,10 @@ class module_config extends module_base
 			// The 'G' modifier is available since PHP 5.1.0
 			case 'g':
 				$val *= 1024;
+				// no break
 			case 'm':
 				$val *= 1024;
+				// no break
 			case 'k':
 				$val *= 1024;
 		}
@@ -241,8 +245,10 @@ class module_config extends module_base
 							// The 'G' modifier is available since PHP 5.1.0
 							case 'g':
 								$desired_limit *= 1024;
+								// no break
 							case 'm':
 								$desired_limit *= 1024;
+								// no break
 							case 'k':
 								$desired_limit *= 1024;
 						}
@@ -255,8 +261,10 @@ class module_config extends module_base
 							// The 'G' modifier is available since PHP 5.1.0
 							case 'g':
 								$val *= 1024;
+								// no break
 							case 'm':
 								$val *= 1024;
+								// no break
 							case 'k':
 								$val *= 1024;
 						}

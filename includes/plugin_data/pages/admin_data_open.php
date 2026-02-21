@@ -438,6 +438,7 @@ if ( isset( $_REQUEST['print'] ) ) {
 					$data_field_groups = unserialize( $current_revision['field_group_cache'] );
 					// we dont always read from cache, because then any ui changes wouldn't be reflected in older reports (if we want to change older reports)
 				}
+				// no break
 			case 'edit':
 				// edit the latest revision.
 

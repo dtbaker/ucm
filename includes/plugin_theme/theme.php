@@ -4,7 +4,7 @@ define( '_THEME_CONFIG_PREFIX', '_theme_' );
 
 class module_theme extends module_base
 {
-	var $links;
+	public $links;
 
 	public static $current_theme = '';
 	public static $current_theme_settings = array();

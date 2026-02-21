@@ -211,6 +211,7 @@ function input_date( $date, $include_time = false ) {
 						break;
 					}
 				}
+				// no break
 			case 2:
 				if ( preg_match( '#^\d{2,4}([-/])\d?\d\1\d?\d(.*)$#', $date, $matches ) ) {
 					$time_bits = $matches[2];
@@ -222,6 +223,7 @@ function input_date( $date, $include_time = false ) {
 						break;
 					}
 				}
+				// no break
 			case 3:
 				if ( preg_match( '#^\d?\d([-/])\d?\d\1\d{2,4}(.*)$#', $date, $matches ) ) {
 					$time_bits = $matches[2];
@@ -234,6 +236,7 @@ function input_date( $date, $include_time = false ) {
 						break;
 					}
 				}
+				// no break
 			case 4:
 				if ( preg_match( '#^\d?\d([-/\.])\d?\d\1\d{2,4}(.*)$#', $date, $matches ) ) {
 					$time_bits = $matches[2];
@@ -245,6 +248,7 @@ function input_date( $date, $include_time = false ) {
 						break;
 					}
 				}
+				// no break
 			default:
 				$date = date( 'Y-m-d' . ( ( $include_time ) ? ' H:i:s' : '' ), strtotime( $date ) );
 		}

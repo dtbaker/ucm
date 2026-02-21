@@ -24,9 +24,7 @@ print_heading( $header );
 
 
 	<?php
-
-	/** START TABLE LAYOUT **/
-
+	/* START TABLE LAYOUT */
 	$table_manager   = module_theme::new_table_manager();
 	$columns         = array();
 	$columns['name'] = array(

@@ -1698,9 +1698,7 @@ $default_payment_method = module_config::c( 'invoice_default_payment_method', 'p
 		</script>
 
 	<?php
-
-	/*** PAYMENT HISTORY ****/
-
+	/* PAYMENT HISTORY */
 	ob_start();
 	?>
 

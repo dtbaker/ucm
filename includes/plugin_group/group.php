@@ -6,7 +6,7 @@ function sort_groups( $a, $b ) {
 
 class module_group extends module_base
 {
-	var $links;
+	public $links;
 
 	public function __construct() {
 		$this->module_name     = 'group';
@@ -668,7 +668,7 @@ class module_group extends module_base
 	}
 
 
-	static $pagination_options = array();
+	public static $pagination_options = array();
 
 	public static function run_pagination_hook( &$rows ) {
 

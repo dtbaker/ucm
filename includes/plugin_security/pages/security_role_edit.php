@@ -57,9 +57,7 @@ if ( isset( $_REQUEST['export_json'] ) ) {
 		<input type="hidden" name="security_role_id" value="<?php echo $security_role_id; ?>"/>
 
 		<?php
-
-		/** ROLE DETAILS */
-
+		/* ROLE DETAILS */
 		$fieldset_data                     = array(
 			'heading'  => array(
 				'type'  => 'h3',

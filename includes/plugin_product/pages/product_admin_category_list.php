@@ -27,9 +27,7 @@ print_heading( $heading );
 <form action="" method="post">
 
 	<?php
-
-	/** START TABLE LAYOUT **/
-
+	/* START TABLE LAYOUT */
 	$table_manager           = module_theme::new_table_manager();
 	$columns                 = array();
 	$columns['product_name'] = array(

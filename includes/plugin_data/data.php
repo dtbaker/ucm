@@ -11,7 +11,7 @@ define( '_MIN_INPUT_HEIGHT', 18 );
 
 class module_data extends module_base
 {
-	var $links;
+	public $links;
 	public $user_types;
 
 	public function __construct() {
@@ -1484,6 +1484,7 @@ class module_data extends module_base
 												<?php
 												break;
 											}
+											// no break
 										default:
 											echo '<a href="' . $download_link . '" target="_blank">' . htmlspecialchars( $file_data['name'] ) . '</a>';
 									}

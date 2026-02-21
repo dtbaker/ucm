@@ -18,7 +18,7 @@ define( '_FILE_UPLOAD_PATH', ( defined( '_UCM_FILE_STORAGE_DIR' ) ? _UCM_FILE_ST
 
 class module_file extends module_base
 {
-	var $links;
+	public $links;
 
 	public function __construct() {
 		$this->module_name     = 'file';

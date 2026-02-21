@@ -275,6 +275,7 @@ if ( ! $ticket_safe ) {
 											<?php
 											break;
 										}
+										// no break
 									default:
 										?>
 										<a

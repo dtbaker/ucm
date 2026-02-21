@@ -6,7 +6,7 @@
  */
 class module_form extends module_base
 {
-	static $form_options = array();
+	public static $form_options = array();
 
 	public function __construct() {
 		$this->module_name     = 'form';
@@ -1153,6 +1153,7 @@ class module_form extends module_base
 					if ( ! is_array( $val ) ) {
 						$val = array( 'return' => 'message' );
 					}
+					// no break
 				default:
 					if ( is_array( $val ) ) {
 						$val = htmlspecialchars( json_encode( $val ), ENT_QUOTES, 'UTF-8' );

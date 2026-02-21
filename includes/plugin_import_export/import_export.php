@@ -2,7 +2,7 @@
 
 class module_import_export extends module_base
 {
-	var $links;
+	public $links;
 
 	public function __construct() {
 		$this->module_name     = 'import_export';
@@ -47,7 +47,7 @@ class module_import_export extends module_base
 	}
 
 
-	static $pagination_options = array();
+	public static $pagination_options = array();
 
 	public static function run_pagination_hook( &$rows ) {
 

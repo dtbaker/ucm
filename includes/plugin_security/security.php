@@ -19,7 +19,7 @@ class module_security extends module_base
 		'delete',
 	);
 
-	static $bypass_security = false;
+	public static $bypass_security = false;
 
 	public static function can_i( $actions, $name = false, $category = false, $module = false ) {
 		if ( ! $module ) {
@@ -213,7 +213,7 @@ class module_security extends module_base
 	}
 
 	private static $user_perms = array();
-	static $perms_cache = array();
+	public static $perms_cache = array();
 
 	public static function get_user_permissions( $user_id ) {
 		$user_id = (int) $user_id;
