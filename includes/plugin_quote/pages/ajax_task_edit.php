@@ -80,7 +80,7 @@ $colspan = 2;
 		$colspan ++; ?>
 		<td>
 			<?php echo print_select_box( $staff_member_rel, 'quote_task[' . $quote_task_id . '][user_id]',
-				isset( $staff_member_rel[ $task_data['user_id'] ] ) ? $task_data['user_id'] : false, 'quote_task_staff_list', '' ); ?>
+				isset( $staff_member_rel[ $task_data['user_id'] ] ) ? $task_data['user_id'] : false, 'quote_task_staff_list', true ); ?>
 		</td>
 	<?php } ?>
 	<td></td>

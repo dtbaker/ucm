@@ -1260,7 +1260,7 @@ hook_handle_callback( 'layout_column_half', 2, '65' );
 						<?php if ( module_config::c( 'job_allow_staff_assignment', 1 ) ) { ?>
 							<td valign="top">
 								<?php echo print_select_box( $staff_member_rel, 'job_task[new][user_id]',
-									isset( $staff_member_rel[ module_security::get_loggedin_id() ] ) ? module_security::get_loggedin_id() : false, 'job_task_staff_list no_permissions', '' ); ?>
+									isset( $staff_member_rel[ module_security::get_loggedin_id() ] ) ? module_security::get_loggedin_id() : $job['user_id'], 'job_task_staff_list no_permissions', true ); ?>
 							</td>
 						<?php } ?>
 						<td valign="top">

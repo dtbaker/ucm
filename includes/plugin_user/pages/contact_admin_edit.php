@@ -206,7 +206,7 @@ if ( isset( $user[ $use_master_key ] ) && $user[ $use_master_key ] ) {
 		// check if contact exists under other customer accounts.
 		$others = module_user::get_contacts( array(
 			'email'                     => $user['email'],
-			"${contact_module_name}_id" => 0,
+			"{$contact_module_name}_id" => 0,
 		) );
 		if ( count( $others ) > 1 ) {
 			foreach ( $others as $other_id => $other ) {

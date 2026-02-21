@@ -112,7 +112,7 @@ if ( module_job::job_task_has_split_hours( $job_id, $task_id, $task_data, $job )
 		$colspan ++; ?>
 		<td>
 			<?php echo print_select_box( $staff_member_rel, 'job_task[' . $task_id . '][user_id]',
-				isset( $staff_member_rel[ $task_data['user_id'] ] ) ? $task_data['user_id'] : false, 'job_task_staff_list', '' ); ?>
+				isset( $staff_member_rel[ $task_data['user_id'] ] ) ? $task_data['user_id'] : false, 'job_task_staff_list', true ); ?>
 		</td>
 	<?php } ?>
 	<td colspan="2" class="percentage_edit">
@@ -277,7 +277,7 @@ if ( module_job::job_task_has_split_hours( $job_id, $task_id, $task_data, $job )
 					} else {
 						$hours_value = number_out( $task_log['hours'], true );
 					}
-					echo _l( '%s hrs <span class="text_shrink">%s</a> - <span class="text_shrink">%s</span>', $hours_value, print_date( $task_log['log_time'], true ), $staff_member_rel[ $task_log['create_user_id'] ] );
+					echo _l( '%s hrs <span class="text_shrink">%s</a> - <span class="text_shrink">%s</span>', $hours_value, print_date( $task_log['log_time'], true ), $staff_member_rel[ $task_log['create_user_id'] ] ?? '' );
 					?> <a href="#" class="error_text"
 					      onclick="return delete_task_hours(<?php echo $task_id; ?>,<?php echo $task_log['task_log_id']; ?>);">x</a> <?php
 					echo '<br/>';

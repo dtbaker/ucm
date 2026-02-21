@@ -771,7 +771,7 @@ $job_tasks = module_job::get_tasks( $job_id );
 					<?php if ( module_config::c( 'job_allow_staff_assignment', 1 ) ) { ?>
 						<td valign="top">
 							<?php echo print_select_box( $staff_member_rel, 'job_task[new][user_id]',
-								isset( $staff_member_rel[ module_security::get_loggedin_id() ] ) ? module_security::get_loggedin_id() : false, 'job_task_staff_list', '' ); ?>
+								isset( $staff_member_rel[ module_security::get_loggedin_id() ] ) ? module_security::get_loggedin_id() : false, 'job_task_staff_list', true ); ?>
 						</td>
 					<?php } ?>
 					<td valign="top">

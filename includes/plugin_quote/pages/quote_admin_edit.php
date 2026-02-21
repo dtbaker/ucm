@@ -1121,7 +1121,7 @@ if ( class_exists( 'module_import_export', false ) ) {
 						<?php if ( module_config::c( 'quote_allow_staff_assignment', 1 ) ) { ?>
 							<td valign="top">
 								<?php echo print_select_box( $staff_member_rel, 'quote_task[new][user_id]',
-									isset( $staff_member_rel[ module_security::get_loggedin_id() ] ) ? module_security::get_loggedin_id() : false, 'quote_task_staff_list no_permissions', '' ); ?>
+									isset( $staff_member_rel[ module_security::get_loggedin_id() ] ) ? module_security::get_loggedin_id() : false, 'quote_task_staff_list no_permissions', true ); ?>
 							</td>
 						<?php } ?>
 						<td align="center" valign="top">

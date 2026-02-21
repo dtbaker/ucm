@@ -161,7 +161,7 @@ if ( ! function_exists( 'decimal_time_in' ) ) {
 if ( ! function_exists( 'decimal_time_out' ) ) {
 	function decimal_time_out( $value ) {
 		if ( module_config::c( 'task_time_as_hours_minutes', 1 ) ) {
-			$bits    = explode( '.', $value );
+			$bits    = explode( '.', (string) ( $value ?? '' ) );
 			$hours   = (int) $bits[0];
 			$minutes = isset( $bits[1] ) ? preg_replace( '#[^0-9]#', '', $bits[1] ) : 0;
 			$minutes = round( ( "." . $minutes ) * 60 );
