@@ -1,0 +1,110 @@
+name: CI
+
+on:
+  push:
+    branches: [master, '2026-revive-*']
+  pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    name: php -l
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          coverage: none
+      - name: Lint every source file
+        run: |
+          set -euo pipefail
+          fail=0
+          while IFS= read -r -d '' f; do
+            if ! php -l "$f" > /dev/null 2>&1; then
+              php -l "$f" || true
+              fail=1
+            fi
+          done < <(find . -name '*.php' \
+                     -not -path './vendor/*' \
+                     -not -path './node_modules/*' \
+                     -not -path './temp/*' -print0)
+          exit $fail
+
+  phpcs:
+    name: Coding standard
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          coverage: none
+          tools: cs2pr
+      - uses: ramsey/composer-install@v3
+      - name: phpcs
+        run: ./vendor/bin/phpcs -q --report=checkstyle -d memory_limit=2G | cs2pr
+
+  phpstan:
+    name: PHPStan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          coverage: none
+      - uses: ramsey/composer-install@v3
+      - name: PHPStan
+        run: ./vendor/bin/phpstan analyse --memory-limit=2G --no-progress --error-format=github
+
+  phpunit:
+    name: PHPUnit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: mysqli, mbstring
+          coverage: none
+      - uses: ramsey/composer-install@v3
+      - run: ./vendor/bin/phpunit
+
+  install:
+    name: Install from scratch
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - name: Start the database
+        run: docker compose up -d db
+      - name: Start a copy of the app against an empty database
+        run: ./scripts/install-test.sh
+      - name: Confirm the setup wizard is waiting for us
+        # The install tests skip themselves when there is nothing to install, so make
+        # sure there really is, otherwise a broken installer would look like a pass.
+        run: curl -fsSL http://localhost:8092/ | grep -q 'Step #1: Database Connection Details'
+      - name: Walk the setup wizard
+        run: npx playwright test tests/e2e/install.spec.ts
+      - name: Collect the app log
+        if: always()
+        run: docker compose --profile install-test logs app-install-test > app.log 2>&1 || true
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: install-report
+          path: |
+            playwright-report/
+            app.log
+          retention-days: 7

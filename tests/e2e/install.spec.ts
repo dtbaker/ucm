@@ -26,14 +26,17 @@ const DB = {
 test.describe('Setup wizard', () => {
   test.describe.configure({ mode: 'serial' });
 
+  // Only run when the install app is up AND still has an empty database - the wizard
+  // can only be walked once per reset. ./scripts/install-test.sh puts it back.
   test.beforeAll(async ({ request }) => {
-    let reachable = false;
+    let waiting = false;
     try {
-      reachable = (await request.get(INSTALL_URL + '/', { timeout: 3000 })).ok();
+      const response = await request.get(INSTALL_URL + '/', { timeout: 3000 });
+      waiting = response.ok() && (await response.text()).includes('Step #');
     } catch {
-      reachable = false;
+      waiting = false;
     }
-    test.skip(!reachable, `No install-test app at ${INSTALL_URL}. Run ./scripts/install-test.sh first.`);
+    test.skip(!waiting, `No un-installed app at ${INSTALL_URL}. Run ./scripts/install-test.sh first.`);
   });
 
   test('walks every step and lands on a working install', async ({ page }) => {
