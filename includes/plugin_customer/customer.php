@@ -2444,12 +2444,25 @@ Invoice: <strong>{INVOICE_LINK}</strong>
 				// save files against customer
 				$uploaded_files = array();
 				if ( isset( $_FILES['customerfiles'] ) && isset( $_FILES['customerfiles']['tmp_name'] ) ) {
+					// This runs for anonymous visitors - the hook logs the caller out above -
+					// so it is a public write to disk. Cap how many files one submission can
+					// leave behind, and check each one before it is moved into place.
+					$signup_file_limit = (int) module_config::c( 'customer_signup_max_files', 5 );
+					$signup_file_count = 0;
+
 					foreach ( $_FILES['customerfiles']['tmp_name'] as $file_id => $tmp_file ) {
+						if ( $signup_file_count >= $signup_file_limit ) {
+							break;
+						}
 						if ( is_uploaded_file( $tmp_file ) ) {
 							// save to file module for this customer
 							$file_name = basename( $_FILES['customerfiles']['name'][ $file_id ] );
+							if ( ucm_upload_error( $file_name, $tmp_file ) ) {
+								continue;
+							}
 							if ( strlen( $file_name ) ) {
-								$file_path = 'includes/plugin_file/upload/' . md5( time() . $file_name );
+								$signup_file_count++;
+								$file_path = 'includes/plugin_file/upload/' . ucm_upload_filename( $file_name );
 								if ( move_uploaded_file( $tmp_file, $file_path ) ) {
 									// success! write to db.
 									$file_data        = array(

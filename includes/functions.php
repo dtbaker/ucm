@@ -68,6 +68,78 @@ function ucm_unserialize_options( $data ) {
 }
 
 /**
+ * Extensions never accepted from an upload, because the web server may hand them to an
+ * interpreter. The upload folders also carry a deny-all .htaccess, but that only protects
+ * Apache - this list is the part that still holds on nginx, or if a folder is moved.
+ */
+function ucm_blocked_upload_extensions() {
+	return array(
+		'php', 'php3', 'php4', 'php5', 'php7', 'php8', 'phps', 'phtml', 'phar', 'pht',
+		'cgi', 'pl', 'py', 'rb', 'sh', 'bash',
+		'asp', 'aspx', 'jsp', 'jspx',
+		'exe', 'dll', 'so', 'bat', 'cmd', 'com', 'msi', 'scr',
+		'htaccess', 'htpasswd',
+	);
+}
+
+/**
+ * Check an entry from $_FILES before it is moved into place.
+ *
+ * Returns an error string, or false when the upload is acceptable. Callers decide whether
+ * to abort or skip the file.
+ *
+ * @param string $file_name  Client supplied name.
+ * @param string $tmp_name   Temporary path PHP wrote the upload to.
+ * @param int    $max_bytes  Size ceiling. 0 uses the configured default.
+ *
+ * @return string|false
+ */
+function ucm_upload_error( $file_name, $tmp_name, $max_bytes = 0 ) {
+	if ( ! $file_name || ! $tmp_name || ! is_uploaded_file( $tmp_name ) ) {
+		return 'That file did not upload correctly.';
+	}
+
+	if ( ! $max_bytes ) {
+		$max_bytes = (int) module_config::c( 'upload_max_bytes', 20 * 1024 * 1024 );
+	}
+	$size = @filesize( $tmp_name );
+	if ( $size === false || $size <= 0 ) {
+		return 'That file is empty.';
+	}
+	if ( $size > $max_bytes ) {
+		return 'That file is larger than the ' . round( $max_bytes / 1024 / 1024 ) . 'MB limit.';
+	}
+
+	// Check every dot-separated part, so "shell.php.jpg" is caught as well as "shell.php".
+	$parts = array_slice( explode( '.', strtolower( $file_name ) ), 1 );
+	foreach ( $parts as $part ) {
+		if ( in_array( $part, ucm_blocked_upload_extensions(), true ) ) {
+			return 'That file type is not accepted.';
+		}
+	}
+
+	return false;
+}
+
+/**
+ * Build an unguessable on-disk name for an upload, keeping the original extension.
+ *
+ * The old scheme was md5( time() . $name ), which is guessable: the timestamp is narrow
+ * and in some folders was printed in the name itself.
+ */
+function ucm_upload_filename( $file_name ) {
+	$extension = strtolower( pathinfo( $file_name, PATHINFO_EXTENSION ) );
+	if ( $extension && ! preg_match( '/^[a-z0-9]{1,10}$/', $extension ) ) {
+		$extension = '';
+	}
+	if ( $extension && in_array( $extension, ucm_blocked_upload_extensions(), true ) ) {
+		$extension = '';
+	}
+
+	return bin2hex( random_bytes( 16 ) ) . ( $extension ? '.' . $extension : '' );
+}
+
+/**
  * Check if a hash is legacy MD5 (should be rehashed).
  */
 function ucm_password_needs_rehash( $hash ) {
