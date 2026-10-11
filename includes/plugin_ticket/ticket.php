@@ -534,7 +534,7 @@ Thanks,
 				$data            = self::get_ticket_account( $ticket_id );
 				$options['data'] = $data;
 			}
-			$options['text'] = $options['data']['name'];
+			$options['text'] = isset( $options['data']['name'] ) ? $options['data']['name'] : '';
 			array_unshift( $link_options, $options );
 			$options['page'] = 'ticket_settings';
 

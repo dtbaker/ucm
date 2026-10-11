@@ -224,38 +224,28 @@ if ( isset( $user[ $use_master_key ] ) && $user[ $use_master_key ] ) {
 				}
 			}
 			if ( count( $others ) ) {
-				ob_start();
-				?>
-				<table class="tableclass tableclass_form tableclass_full">
-					<tbody>
-					<?php foreach ( $others as $other ) { ?>
-						<tr>
-							<td>
-								<input type="hidden" name="link_user_ids[]" value="<?php echo $other['user_id']; ?>">
-								<!-- todo- checkbox -->
-								<?php echo _l( '%s under customer %s', module_user::link_open_contact( $other['user_id'], true, $other ), module_customer::link_open( $other['customer_id'], true ) ); ?>
-							</td>
-						</tr>
-					<?php } ?>
-					<tr>
-						<td align="center">
-							<input type="hidden" name="link_customers" id="link_customers" value="">
-							<input type="button" name="link"
-							       value="<?php _e( 'Link above contacts to this one, and make THIS one primary' ); ?>"
-							       onclick="$('#link_customers').val('yes'); this.form.submit();">
-						</td>
-					</tr>
-					</tbody>
-				</table>
-				<?php
+				$elements = array();
+				foreach ( $others as $other ) {
+					$elements[ 'link_' . $other['user_id'] ] = array(
+						'title'  => '',
+						'fields' => array(
+							'<input type="hidden" name="link_user_ids[]" value="' . (int) $other['user_id'] . '"> ' . _l( '%s under customer %s', module_user::link_open_contact( $other['user_id'], true, $other ), module_customer::link_open( $other['customer_id'], true ) ),
+						),
+						'row_title_class' => '',
+					);
+				}
+				$elements['link_button'] = array(
+					'message' => '<div align="center"><input type="hidden" name="link_customers" id="link_customers" value=""><input type="button" name="link" value="' . htmlspecialchars( _l( 'Link above contacts to this one, and make THIS one primary' ) ) . '" onclick="$(\'#link_customers\').val(\'yes\'); this.form.submit();" class="submit_button"></div>',
+				);
+
 				$fieldset_data = array(
-					'heading'         => array(
+					'heading'  => array(
 						'type'  => 'h3',
 						'title' => _l( 'Create Linked Contacts' ),
-						'help'  => 'This email address exists as a contact in another user account. By linking these accounts together, this user will be able to access all the linked customers from this single login. '
+						'help'  => 'This email address exists as a contact in another user account. By linking these accounts together, this user will be able to access all the linked customers from this single login. ',
 					),
-					'class'           => 'tableclass tableclass_form tableclass_full',
-					'elements_before' => ob_get_clean(),
+					'class'    => 'tableclass tableclass_form tableclass_full',
+					'elements' => $elements,
 				);
 				echo module_form::generate_fieldset( $fieldset_data );
 			}

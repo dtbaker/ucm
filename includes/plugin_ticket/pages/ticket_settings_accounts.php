@@ -40,224 +40,214 @@ if ( isset( $_REQUEST['ticket_account_id'] ) && $_REQUEST['ticket_account_id'] )
 		<input type="hidden" name="_process" value="save_ticket_account">
 		<input type="hidden" name="ticket_account_id" value="<?php echo $ticket_account_id; ?>"/>
 
-
-		<?php ob_start();
-		?>
-
-		<table width="100%" border="0" cellspacing="0" cellpadding="2" class="tableclass tableclass_form">
-			<tbody>
-			<tr>
-				<th>
-					<?php echo _l( 'Name/Label' ); ?>
-				</th>
-				<td>
-					<input type="text" name="name" value="<?php echo htmlspecialchars( $ticket_account['name'] ); ?>"/>
-				</td>
-			</tr>
-			<tr>
-				<th>
-					<?php echo _l( 'Email Address' ); ?>
-				</th>
-				<td>
-					<input type="text" name="email" value="<?php echo htmlspecialchars( $ticket_account['email'] ); ?>"/>
-				</td>
-			</tr>
-			<tr>
-				<th>
-					<?php echo _l( 'Connection Type' ); ?>
-				</th>
-				<td>
-					<input type="radio" name="imap"
-					       value="0"<?php echo ! $ticket_account['imap'] ? ' checked' : ''; ?>><?php _e( 'POP3' ); ?>
-					<input type="radio" name="imap"
-					       value="1"<?php echo $ticket_account['imap'] ? ' checked' : ''; ?>><?php _e( 'IMAP' ); ?>
-				</td>
-			</tr>
-			<tr>
-				<th>
-					<?php echo _l( 'Secure/SSL' ); ?>
-				</th>
-				<td>
-					<input type="radio" name="secure"
-					       value="0"<?php echo ! $ticket_account['secure'] ? ' checked' : ''; ?>><?php _e( 'No' ); ?>
-					<input type="radio" name="secure"
-					       value="1"<?php echo $ticket_account['secure'] ? ' checked' : ''; ?>><?php _e( 'Yes' ); ?>
-				</td>
-			</tr>
-			<tr>
-				<th>
-					<?php echo _l( 'Username' ); ?>
-				</th>
-				<td>
-					<input type="text" name="username" value="<?php echo htmlspecialchars( $ticket_account['username'] ); ?>"/>
-				</td>
-			</tr>
-			<tr>
-				<th>
-					<?php echo _l( 'Password' ); ?>
-				</th>
-				<td>
-					<input type="password" name="password"
-					       value="<?php echo htmlspecialchars( $ticket_account['password'] ); ?>"/>
-				</td>
-			</tr>
-			<tr>
-				<th>
-					<?php echo _l( 'Hostname' ); ?>
-				</th>
-				<td>
-					<input type="text" name="host" value="<?php echo htmlspecialchars( $ticket_account['host'] ); ?>"/>
-				</td>
-			</tr>
-			<tr>
-				<th>
-					<?php echo _l( 'Port' ); ?>
-				</th>
-				<td>
-					<input type="text" name="port" value="<?php echo htmlspecialchars( $ticket_account['port'] ); ?>"/>
-				</td>
-			</tr>
-			<tr>
-				<th>
-					<?php echo _l( 'Delete' ); ?>
-				</th>
-				<td>
-					<select name="delete">
-						<option value="1"<?php echo $ticket_account['delete'] == 1 ? ' selected' : ''; ?>>Yes, delete emails from
-							account after importing
-						</option>
-						<option value="0"<?php echo $ticket_account['delete'] == 0 ? ' selected' : ''; ?>>No, leave copy of email in
-							account after importing
-						</option>
-					</select>
-				</td>
-			</tr>
-			<tr>
-				<th>
-					<?php echo _l( 'Default Customer' ); ?>
-				</th>
-				<td>
-					<?php
-					$c   = array();
-					$res = module_customer::get_customers();
-					while ( $row = array_shift( $res ) ) {
-						$c[ $row['customer_id'] ] = $row['customer_name'];
-					}
-					echo print_select_box( $c, 'default_customer_id', $ticket_account['default_customer_id'] );
-					?>
-				</td>
-			</tr>
-			<tr>
-				<th>
-					<?php echo _l( 'Default Assigned Staff Members' ); ?>
-				</th>
-				<td>
-					<?php
-					$admins_rel = module_ticket::get_ticket_staff_rel();
-					echo print_select_box( $admins_rel, 'default_user_id', $ticket_account['default_user_id'] );
-					?>
-				</td>
-			</tr>
-			<tr>
-				<th>
-					<?php echo _l( 'Default Type' ); ?>
-				</th>
-				<td>
-					<?php echo print_select_box( module_ticket::get_types(), 'default_type', $ticket_account['default_type'], '', true, 'name' ); ?>
-					<?php _h( 'If a Ticket Type is selected, and it has a Default Staff member assigned in the Settings area, it will overwrite the default Staff Member from this page' ); ?>
-				</td>
-			</tr>
-			<tr>
-				<th>
-					<?php echo _l( 'IMAP Settings:' ); ?>
-				</th>
-				<td>
-
-				</td>
-			</tr>
-			<tr>
-				<th>
-					<?php echo _l( 'IMAP Search String' ); ?>
-				</th>
-				<td>
-					<input type="text" name="search_string"
-					       value="<?php echo htmlspecialchars( $ticket_account['search_string'] ); ?>" style="width:80%"><br/>
-					(eg: TO "you@site.com" SINCE 10-May-2011 - see <a href="http://php.net/imap_search" target="_blank">http://php.net/imap_search</a>
-					for more details)
-				</td>
-			</tr>
-			<tr>
-				<th>
-					<?php echo _l( 'Advanced Settings:' ); ?>
-				</th>
-				<td>
-
-				</td>
-			</tr>
-			<tr>
-				<th>
-					<?php echo _l( 'Mailbox' ); ?>
-				</th>
-				<td>
-					<input type="text" name="mailbox" value="<?php echo htmlspecialchars( $ticket_account['mailbox'] ); ?>"/>
-					(which mailbox to read / gmail label to read. Default is INBOX)
-				</td>
-			</tr>
-			<tr>
-				<th>
-					<?php echo _l( 'Regex Subject Match' ); ?>
-				</th>
-				<td>
-					<input type="text" name="subject_regex"
-					       value="<?php echo htmlspecialchars( $ticket_account['subject_regex'] ); ?>"/>
-					(advanced: read about regex <a href="http://en.wikipedia.org/wiki/Regular_expression" target="_blank">here</a>,
-					example: #support email#i)
-				</td>
-			</tr>
-			<tr>
-				<th>
-					<?php echo _l( 'Regex Body Match' ); ?>
-				</th>
-				<td>
-					<input type="text" name="body_regex"
-					       value="<?php echo htmlspecialchars( $ticket_account['body_regex'] ); ?>"/>
-					(advanced: read about regex <a href="http://en.wikipedia.org/wiki/Regular_expression" target="_blank">here</a>,
-					example: #support email#i)
-				</td>
-			</tr>
-			<tr>
-				<th>
-					<?php echo _l( 'Regex To Match' ); ?>
-				</th>
-				<td>
-					<input type="text" name="to_regex" value="<?php echo htmlspecialchars( $ticket_account['to_regex'] ); ?>"/>
-					(advanced: read about regex <a href="http://en.wikipedia.org/wiki/Regular_expression" target="_blank">here</a>,
-					example: #foo@bar\.com#i)
-				</td>
-			</tr>
-			<tr>
-				<th>
-					<?php echo _l( 'Start Date' ); ?>
-				</th>
-				<td>
-					<input type="text" name="start_date" value="<?php echo print_date( $ticket_account['start_date'] ); ?>"
-					       class="date_field"/> (only return emails after this date - SLOW! - better to use imap method with a
-					SINCE search string)
-				</td>
-			</tr>
-
-			</tbody>
-		</table>
 		<?php
-
+		$c = array();
+		foreach ( module_customer::get_customers() as $row ) {
+			$c[ $row['customer_id'] ] = $row['customer_name'];
+		}
 
 		$fieldset_data = array(
-			'heading'         => array(
+			'heading'  => array(
 				'type'  => 'h3',
 				'main'  => true,
 				'title' => 'Edit Ticket Account',
 			),
-			'elements_before' => ob_get_clean(),
+			'class'    => 'tableclass tableclass_form',
+			'elements' => array(
+				'name'     => array(
+					'title' => _l( 'Name/Label' ),
+					'field'  => array(
+						'type'  => 'text',
+						'name'  => 'name',
+						'value' => $ticket_account['name'],
+					),
+				),
+				'email'    => array(
+					'title' => _l( 'Email Address' ),
+					'field' => array(
+						'type'  => 'text',
+						'name'  => 'email',
+						'value' => $ticket_account['email'],
+					),
+				),
+				'imap'     => array(
+					'title' => _l( 'Connection Type' ),
+					'field' => array(
+						'type'    => 'select',
+						'name'    => 'imap',
+						'value'   => $ticket_account['imap'],
+						'options' => array( 0 => _l( 'POP3' ), 1 => _l( 'IMAP' ) ),
+						'blank'   => false,
+					),
+				),
+				'secure'   => array(
+					'title' => _l( 'Secure/SSL' ),
+					'field' => array(
+						'type'    => 'select',
+						'name'    => 'secure',
+						'value'   => $ticket_account['secure'],
+						'options' => array( 0 => _l( 'No' ), 1 => _l( 'Yes' ) ),
+						'blank'   => false,
+					),
+				),
+				'username' => array(
+					'title' => _l( 'Username' ),
+					'field' => array(
+						'type'  => 'text',
+						'name'  => 'username',
+						'value' => $ticket_account['username'],
+					),
+				),
+				'password' => array(
+					'title' => _l( 'Password' ),
+					'field' => array(
+						'type'  => 'password',
+						'name'  => 'password',
+						'value' => $ticket_account['password'],
+					),
+				),
+				'host'     => array(
+					'title' => _l( 'Hostname' ),
+					'field' => array(
+						'type'  => 'text',
+						'name'  => 'host',
+						'value' => $ticket_account['host'],
+					),
+				),
+				'port'     => array(
+					'title' => _l( 'Port' ),
+					'field' => array(
+						'type'  => 'text',
+						'name'  => 'port',
+						'value' => $ticket_account['port'],
+					),
+				),
+				'delete'   => array(
+					'title' => _l( 'Delete' ),
+					'field' => array(
+						'type'    => 'select',
+						'name'    => 'delete',
+						'value'   => $ticket_account['delete'],
+						'options' => array(
+							1 => _l( 'Yes, delete emails from account after importing' ),
+							0 => _l( 'No, leave copy of email in account after importing' ),
+						),
+						'blank'   => false,
+					),
+				),
+				'default_customer_id' => array(
+					'title' => _l( 'Default Customer' ),
+					'field' => array(
+						'type'    => 'select',
+						'name'    => 'default_customer_id',
+						'value'   => $ticket_account['default_customer_id'],
+						'options' => $c,
+						'blank'   => true,
+					),
+				),
+				'default_user_id' => array(
+					'title' => _l( 'Default Assigned Staff Members' ),
+					'field' => array(
+						'type'    => 'select',
+						'name'    => 'default_user_id',
+						'value'   => $ticket_account['default_user_id'],
+						'options' => module_ticket::get_ticket_staff_rel(),
+						'blank'   => true,
+					),
+				),
+				'default_type' => array(
+					'title'  => _l( 'Default Type' ),
+					'fields' => array(
+						array(
+							'type'             => 'select',
+							'name'             => 'default_type',
+							'value'            => $ticket_account['default_type'],
+							'options'          => module_ticket::get_types(),
+							'options_array_id' => 'name',
+							'blank'            => true,
+						),
+						' ',
+						function () {
+							_h( 'If a Ticket Type is selected, and it has a Default Staff member assigned in the Settings area, it will overwrite the default Staff Member from this page' );
+						},
+					),
+				),
+				'imap_header' => array(
+					'title' => _l( 'IMAP Settings:' ),
+					'fields' => array( '' ),
+				),
+				'search_string' => array(
+					'title' => _l( 'IMAP Search String' ),
+					'fields' => array(
+						array(
+							'type'   => 'text',
+							'name'   => 'search_string',
+							'value'  => $ticket_account['search_string'],
+							'style'  => 'width:80%',
+						),
+						'<br/>' . _l( '(eg: TO "you@site.com" SINCE 10-May-2011 - see' ) . ' <a href="http://php.net/imap_search" target="_blank">http://php.net/imap_search</a> ' . _l( 'for more details)' ),
+					),
+				),
+				'advanced_header' => array(
+					'title' => _l( 'Advanced Settings:' ),
+					'fields' => array( '' ),
+				),
+				'mailbox' => array(
+					'title' => _l( 'Mailbox' ),
+					'fields' => array(
+						array(
+							'type'  => 'text',
+							'name'  => 'mailbox',
+							'value' => $ticket_account['mailbox'],
+						),
+						' ' . _l( '(which mailbox to read / gmail label to read. Default is INBOX)' ),
+					),
+				),
+				'subject_regex' => array(
+					'title' => _l( 'Regex Subject Match' ),
+					'fields' => array(
+						array(
+							'type'  => 'text',
+							'name'  => 'subject_regex',
+							'value' => $ticket_account['subject_regex'],
+						),
+						' ' . _l( '(advanced: read about regex' ) . ' <a href="http://en.wikipedia.org/wiki/Regular_expression" target="_blank">here</a>, ' . _l( 'example: #support email#i)' ),
+					),
+				),
+				'body_regex' => array(
+					'title' => _l( 'Regex Body Match' ),
+					'fields' => array(
+						array(
+							'type'  => 'text',
+							'name'  => 'body_regex',
+							'value' => $ticket_account['body_regex'],
+						),
+						' ' . _l( '(advanced: read about regex' ) . ' <a href="http://en.wikipedia.org/wiki/Regular_expression" target="_blank">here</a>, ' . _l( 'example: #support email#i)' ),
+					),
+				),
+				'to_regex' => array(
+					'title' => _l( 'Regex To Match' ),
+					'fields' => array(
+						array(
+							'type'  => 'text',
+							'name'  => 'to_regex',
+							'value' => $ticket_account['to_regex'],
+						),
+						' ' . _l( '(advanced: read about regex' ) . ' <a href="http://en.wikipedia.org/wiki/Regular_expression" target="_blank">here</a>, ' . _l( 'example: #foo@bar\.com#i)' ),
+					),
+				),
+				'start_date' => array(
+					'title' => _l( 'Start Date' ),
+					'fields' => array(
+						array(
+							'type'   => 'date',
+							'name'   => 'start_date',
+							'value'  => print_date( $ticket_account['start_date'] ),
+						),
+						' ' . _l( '(only return emails after this date - SLOW! - better to use imap method with a SINCE search string)' ),
+					),
+				),
+			),
 		);
 
 		echo module_form::generate_fieldset( $fieldset_data );
