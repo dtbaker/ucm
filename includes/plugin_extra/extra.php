@@ -4,7 +4,7 @@ define( '_EXTRA_FIELD_DELIM', '$#%|' );
 define( '_EXTRA_DISPLAY_TYPE_COLUMN', 1 );
 
 function sort_extra_defaults( $a, $b ) {
-	return $a['order'] > $b['order'];
+	return $a['order'] <=> $b['order'];
 }
 
 class module_extra extends module_base

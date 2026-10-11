@@ -1373,10 +1373,11 @@ class module_finance extends module_base
 						// put $b before $a
 						return 1;
 					} else {
-						return $a['amount'] > $b['amount'];
+						return $a['amount'] <=> $b['amount'];
 					}
 				} else {
-					return $t1 < $t2;
+					// newest transaction first.
+					return $t2 <=> $t1;
 				}
 			}
 		}

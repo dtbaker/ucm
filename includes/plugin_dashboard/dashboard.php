@@ -6,7 +6,7 @@ function sort_ajax_alert( $a, $b ) {
 		return $a['time'] > $b['time'] ? 1 : -1;
 	}
 
-	return strtotime( input_date( $a['date'] ) ) > strtotime( input_date( $b['date'] ) );
+	return strtotime( input_date( $a['date'] ) ) <=> strtotime( input_date( $b['date'] ) );
 }
 
 class module_dashboard extends module_base

@@ -351,7 +351,8 @@ print_heading( $header );
 		//}
 		function sort_envato_ticket_count( $a, $b ) {
 			//return ($a['count']*$a['cost'])<=($b['count']*$b['cost']);
-			return $a['count'] <= $b['count'];
+			// busiest item first.
+			return $b['count'] <=> $a['count'];
 		}
 
 		uasort( $item_ticket_count, 'sort_envato_ticket_count' );

@@ -3329,7 +3329,7 @@ Thanks,
 		}
 		if ( ! function_exists( 'dtbaker_ticket_import_sort' ) ) {
 			function dtbaker_ticket_import_sort( $a, $b ) {
-				return $a->time > $b->time;
+				return $a->time <=> $b->time;
 			}
 		}
 		uasort( $sorted_emails, 'dtbaker_ticket_import_sort' );

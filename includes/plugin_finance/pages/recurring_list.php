@@ -118,7 +118,7 @@ function sort_recurring_finance( $a, $b ) {
 	$t1 = strtotime( $a['next_due_date'] );
 	$t2 = strtotime( $b['next_due_date'] );
 
-	return $t1 > $t2;
+	return $t1 <=> $t2;
 }
 
 uasort( $upcoming_finances, 'sort_recurring_finance' );
