@@ -2,12 +2,14 @@ ucm = ucm || {};
 ucm.help = {
     current_pages: '',
     current_modules: '',
-    url_extras: '',
-    url_help: 'https://ultimateclientmanager.com/api/help.php?',
     lang: {
         'loading': 'Loading',
         'help': 'Help'
     },
+    // The Help button used to open an iframe on a third party site, with this install's
+    // purchase codes and address in the query string. That site is gone, so the popup
+    // now just points at the documentation.
+    url_docs: 'https://github.com/dtbaker/ucm',
     init: function(){
         var t = this;
         $('body').append('<div id="help_popup" style="display:none;"> <div class="help_popup_wrapper">' + t.lang.loading + ' </div></div>');
@@ -18,7 +20,10 @@ ucm.help = {
                 content: "#help_popup",
                 title: ucm.help.lang.help,
                 load_callback: function($modal){
-                    $modal.find('.help_popup_wrapper').html('<iframe src="' + ucm.help.url_help + 'pages=' + ucm.help.current_pages + '&modules=' + ucm.help.current_modules + ucm.help.url_extras + '" id="ghelp_iframe" frameborder="0"  ></iframe>');
+                    $modal.find('.help_popup_wrapper').html(
+                        '<p>Documentation and support for Ultimate Client Manager: ' +
+                        '<a href="' + t.url_docs + '" target="_blank" rel="noopener">' + t.url_docs + '</a></p>'
+                    );
                 }
 
             });

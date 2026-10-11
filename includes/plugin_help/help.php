@@ -72,8 +72,11 @@ class module_help extends module_base
         ucm.help.current_modules = '<?php echo implode( '/', $modules );?>';
         ucm.help.current_pages = '<?php echo implode( '/', $pages );?>';
         ucm.help.lang.help = '<?php _e( 'Help' ); ?>';
-        ucm.help.url_extras = '&codes=<?php echo base64_encode( module_config::c( '_installation_code' ) );?>&host=<?php echo urlencode( htmlspecialchars( full_link( '/' ) ) );?>';
 		</script>
+		<?php
+		// url_extras used to be set here. It carried this install's purchase codes and
+		// its address to a third-party help site on every admin page load.
+		?>
 		<?php
 	}
 

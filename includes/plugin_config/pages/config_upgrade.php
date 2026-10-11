@@ -702,18 +702,9 @@ if ( isset( $_REQUEST['process_upgrade'] ) && isset( $_REQUEST['via_ajax'] ) ) {
 	<?php
 	hook_handle_callback( 'layout_column_half', 2 );
 
-	if ( ! isset( $setup_upgrade_hack ) && module_config::c( 'upgrade_page_show_extra_info', 1 ) ) {
-		$fieldset_data = array(
-			'heading'         => array(
-				'title' => 'Latest News',
-				'type'  => 'h3',
-			),
-			'elements_before' => '<iframe src="//ultimateclientmanager.com/api/info.php?codes=' . htmlspecialchars( module_config::c( '_installation_code' ) ) . '" frameborder="0" style="width:100%; height:600px; background: transparent" ALLOWTRANSPARENCY="true"></iframe>',
-		);
-		echo module_form::generate_fieldset( $fieldset_data );
-		unset( $fieldset_data );
-	}
-
+	// There used to be a "Latest News" panel here: an iframe pointing at a third-party
+	// site with this install's purchase codes in the query string. Every view of this
+	// page handed them over, and the site it talked to no longer exists.
 
 	hook_handle_callback( 'layout_column_half', 'end' );
 
