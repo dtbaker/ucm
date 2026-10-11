@@ -2,33 +2,34 @@
     "name": "ucm/ultimate-client-manager",
     "description": "Ultimate Client Manager - Freelance Project Invoice CRM",
     "type": "project",
+    "license": "proprietary",
     "require": {
         "php": "^8.4"
     },
     "require-dev": {
-        "phpunit/phpunit": "^11.0",
+        "pheromone/phpcs-security-audit": "^2.0",
+        "phpstan/extension-installer": "^1.4",
         "phpstan/phpstan": "^2.0",
-        "phpstan/extension-installer": "^1.4"
+        "phpunit/phpunit": "^11.0",
+        "rector/rector": "^2.3",
+        "squizlabs/php_codesniffer": "^3.13"
     },
     "autoload": {
         "files": []
     },
     "config": {
         "allow-plugins": {
+            "dealerdirect/phpcodesniffer-composer-installer": true,
             "phpstan/extension-installer": true
         }
     },
     "scripts": {
         "test": "phpunit",
         "test:e2e": "npm run test:e2e",
-        "phpstan": "phpstan analyse includes/ --memory-limit=2G",
-        "phpstan:baseline": "phpstan analyse includes/ --memory-limit=2G --generate-baseline=phpstan-baseline.neon",
+        "phpstan": "phpstan analyse --memory-limit=2G",
+        "phpstan:baseline": "phpstan analyse --memory-limit=2G --generate-baseline=phpstan-baseline.neon --allow-empty-baseline",
         "rector": "rector process --dry-run",
         "rector:fix": "rector process",
-        "fix:errors": "phpstan analyse includes/ --memory-limit=2G --error-format=json --no-progress -c scripts/phpstan-no-baseline.neon 2>/dev/null | python3 scripts/phpstan-errors-to-prompt.py",
-        "fix:summary": "phpstan analyse includes/ --memory-limit=2G --error-format=json --no-progress -c scripts/phpstan-no-baseline.neon 2>/dev/null | python3 scripts/phpstan-errors-to-prompt.py --summary",
-        "cs:check": "php-cs-fixer fix --dry-run --diff",
-        "cs:fix": "php-cs-fixer fix --diff",
         "phpcs": "phpcs -d memory_limit=2G",
         "phpcs:fix": "phpcbf -d memory_limit=2G",
         "phpcs:prompt": "./vendor/bin/phpcs --report=json -q -d memory_limit=2G 2>/dev/null | python3 scripts/phpcs-errors-to-prompt.py",
