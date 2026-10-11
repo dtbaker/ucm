@@ -60,11 +60,11 @@ function ucm_unserialize_options( $data ) {
 		return array();
 	}
 	$result = @unserialize( $decoded, array( 'allowed_classes' => false ) );
-	if ( $result === false ) {
-		return array();
-	}
 
-	return is_array( $result ) ? $result : (array) $result;
+	// Every caller expects an options array. Anything else - including the
+	// __PHP_Incomplete_Class stand-in an object payload decodes to - is thrown away
+	// rather than cast, so none of it reaches calling code.
+	return is_array( $result ) ? $result : array();
 }
 
 /**
