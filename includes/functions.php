@@ -23,7 +23,10 @@ function ucm_password_verify( $password, $hash ) {
 	}
 	// Legacy MD5 (32 hex chars)
 	if ( strlen( $hash ) === 32 && ctype_xdigit( $hash ) ) {
-		return md5( $password ) === $hash || $password === $hash;
+		// NOTE: do not re-add a `$password === $hash` branch here. It allowed the stored
+		// MD5 to be replayed as the password itself, turning any database read into an
+		// account takeover (pass-the-hash).
+		return hash_equals( $hash, md5( $password ) );
 	}
 
 	// Support for the default hard coded password (we prompt the user to change these)
@@ -32,6 +35,36 @@ function ucm_password_verify( $password, $hash ) {
 	}
 
 	return false;
+}
+
+/**
+ * Safely decode a base64+serialized options blob from untrusted input.
+ *
+ * These blobs are passed around in links and form fields. Calling unserialize() on them
+ * directly allows PHP object injection: an attacker supplies a serialized object of any
+ * class present at runtime and its destructor/wakeup runs. allowed_classes=false makes
+ * any object decode to __PHP_Incomplete_Class instead, which is inert.
+ *
+ * Always returns an array, so callers can treat the result uniformly.
+ *
+ * @param mixed $data Base64 encoded serialized data, typically straight from $_REQUEST.
+ *
+ * @return array
+ */
+function ucm_unserialize_options( $data ) {
+	if ( ! is_string( $data ) || $data === '' ) {
+		return array();
+	}
+	$decoded = base64_decode( $data, true );
+	if ( $decoded === false || $decoded === '' ) {
+		return array();
+	}
+	$result = @unserialize( $decoded, array( 'allowed_classes' => false ) );
+	if ( $result === false ) {
+		return array();
+	}
+
+	return is_array( $result ) ? $result : (array) $result;
 }
 
 /**

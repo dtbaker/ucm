@@ -160,7 +160,11 @@ class module_form extends module_base
 	}
 
 	public function process() {
-		self::check_secure_key();
+		// Fail closed. check_secure_key() only returns a bool - it does not halt - so the
+		// result must be acted on here or the CSRF check does nothing at all.
+		if ( ! self::check_secure_key() ) {
+			self::reject_invalid_form_auth();
+		}
 		switch ( $_REQUEST['_process'] ) {
 			case 'save_fieldset_options':
 				if ( module_config::can_i( 'edit', 'Form Settings' ) ) {
@@ -677,6 +681,9 @@ class module_form extends module_base
 			if ( ! isset( $setting['values'] ) ) {
 				$setting['values'] = array( $setting['value'] );
 			}
+			if ( ! is_array( $setting['values'] ) ) {
+				$setting['values'] = $setting['values'] !== '' ? array( $setting['values'] ) : array();
+			}
 			$loop_count = count( $setting['values'] );
 			if ( ! $loop_count ) {
 				$loop_count = 1;
@@ -1123,11 +1130,28 @@ class module_form extends module_base
 	}
 
 	public static function check_secure_key() {
-		if ( ! isset( $_REQUEST['form_auth_key'] ) || $_REQUEST['form_auth_key'] != self::get_secure_key() ) {
+		if ( ! isset( $_REQUEST['form_auth_key'] ) || ! is_string( $_REQUEST['form_auth_key'] ) ) {
 			return false;
 		}
 
-		return true;
+		// hash_equals() - constant time, and avoids PHP's loose-comparison pitfalls.
+		return hash_equals( self::get_secure_key(), $_REQUEST['form_auth_key'] );
+	}
+
+	/**
+	 * Halt the request after a failed CSRF check. Callers that can recover should test
+	 * check_secure_key() themselves; this is for dispatchers that must not continue.
+	 */
+	public static function reject_invalid_form_auth() {
+		if ( ob_get_level() ) {
+			@ob_end_clean();
+		}
+		if ( ! headers_sent() ) {
+			header( 'HTTP/1.1 403 Forbidden' );
+			header( 'Content-Type: text/plain; charset=utf-8' );
+		}
+		echo 'Invalid or expired form submission. Please reload the page and try again.';
+		exit;
 	}
 
 	public static function print_form_close_tag() {
