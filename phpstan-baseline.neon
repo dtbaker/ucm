@@ -517,12 +517,6 @@ parameters:
 			path: includes/plugin_config/pages/config_upgrade.php
 
 		-
-			message: '#^Variable \$module might not be defined\.$#'
-			identifier: variable.undefined
-			count: 1
-			path: includes/plugin_config/pages/select_box_ui.php
-
-		-
 			message: '#^Variable \$settings might not be defined\.$#'
 			identifier: variable.undefined
 			count: 1

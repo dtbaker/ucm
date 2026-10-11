@@ -295,7 +295,14 @@ class module_db extends module_base
 		}
 		$res = false;
 		if ( self::$dbcnx && ! $res = mysqli_query( self::$dbcnx, $sql ) ) {
-			set_error( _l( 'SQL Error: %s', self::last_error() . ' ' . $sql ) );
+			// The query and the database's own message go on screen only in debug mode.
+			// Outside it they told whoever hit the error the table and column names, which
+			// is a free map of the database for anyone who can make a query fail.
+			if ( defined( '_DEBUG_MODE' ) && _DEBUG_MODE ) {
+				set_error( _l( 'SQL Error: %s', self::last_error() . ' ' . $sql ) );
+			} else {
+				set_error( _l( 'Sorry, there was a database error. Please try again.' ) );
+			}
 			set_error( _l( 'Try clicking the "Run Manual Upgrades" button to resolve SQL Errors.' ) );
 
 			return false;
