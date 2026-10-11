@@ -118,7 +118,10 @@ function convert_html2pdf( $html, $pdf ) {
 			$dompdf->loadHtml( file_get_contents( $html ) );
 			$dompdf->setPaper( module_config::c( 'pdf_media_size', 'A4' ) );
 			$dompdf->render();
-			$dompdf->stream($pdf);
+			// Dompdf::stream() sends the PDF straight to the browser and writes nothing to
+			// disk. Every caller of this function expects a file afterwards - to attach to
+			// an email, or to serve with its own headers - so write the file out instead.
+			file_put_contents( $pdf, $dompdf->output() );
 
 			break;
 	}
