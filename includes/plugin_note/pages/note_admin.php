@@ -66,6 +66,7 @@ if ( isset( $_REQUEST['note_id'] ) ) {
 		'note_id'     => $note_id,
 	) );
 	?>" method="post">
+		<?php module_form::print_form_auth(); ?>
 		<input type="hidden" name="note_id" value="<?php echo (int) $note_id; ?>" id="note_id">
 		<input type="hidden" name="options" value="<?php echo base64_encode( serialize( $options ) ); ?>">
 		<input type="hidden" name="rel_data" id="form_rel_data" value="<?php echo $note['rel_data']; ?>">

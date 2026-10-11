@@ -30,6 +30,7 @@ if ( isset( $_REQUEST['faq_product_id'] ) && $_REQUEST['faq_product_id'] ) {
 
 
 	<form action="" method="post">
+		<?php module_form::print_form_auth(); ?>
 		<input type="hidden" name="_process" value="save_faq_product">
 		<input type="hidden" name="faq_product_id" value="<?php echo $faq_product_id; ?>"/>
 

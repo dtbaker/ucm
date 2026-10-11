@@ -278,6 +278,11 @@ Change request details:<br><br>
 
 
 	public function process() {
+		// Every form that reaches here is posted from a UCM page, so it carries the
+		// form auth key. Refuse anything that does not - see module_form::check_secure_key().
+		if ( ! module_form::check_secure_key() ) {
+			module_form::reject_invalid_form_auth();
+		}
 		/*if(isset($_REQUEST['butt_del']) && $_REQUEST['butt_del'] && $_REQUEST['change_request_id']){
 			$data = self::get_change_request($_REQUEST['change_request_id']);
             if(module_form::confirm_delete('change_request_id',"Really delete change request: ".$data['name'],self::link_open($_REQUEST['change_request_id']))){

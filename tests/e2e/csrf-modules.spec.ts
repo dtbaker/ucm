@@ -112,6 +112,24 @@ const MODULES: ModuleCase[] = [
     postUrl: '/?m[]=extra',
     badTokenBody: { _process: 'save_extra_default', extra_default_id: 'new', owner_table: 'file', extra_key: 'should_not_save' },
   },
+  {
+    name: 'FAQ',
+    url: '/?m[]=faq&p[]=faq_questions&faq_id=new',
+    process: 'save_faq',
+    fill: { question: 'CSRF test question?' },
+    saved: /faq saved successfully/i,
+    postUrl: '/?m[]=faq',
+    badTokenBody: { _process: 'save_faq', faq_id: 'new', question: 'Should Not Save' },
+  },
+  {
+    name: 'FAQ product',
+    url: '/?m[]=faq&p[]=faq_products&faq_product_id=new',
+    process: 'save_faq_product',
+    fill: { name: 'CSRF Test FAQ Product' },
+    saved: /faq product saved successfully/i,
+    postUrl: '/?m[]=faq',
+    badTokenBody: { _process: 'save_faq_product', faq_product_id: 'new', name: 'Should Not Save' },
+  },
 ];
 
 async function login(page: Page) {
@@ -177,4 +195,58 @@ test.describe('Form auth key, per module', () => {
       expect(await response.text()).toMatch(/invalid or expired form submission/i);
     });
   }
+});
+
+/**
+ * Notes and addresses open in a popup rather than on a page of their own, and the note
+ * popup posts itself with jQuery's serialize(), so the token has to be a field inside
+ * the form rather than something the JS adds. These drive the real popups.
+ */
+test.describe('Form auth key, popups', () => {
+  test.beforeEach(async ({ page }) => {
+    await login(page);
+  });
+
+  test('a note can still be added from a customer', async ({ page }) => {
+    await page.goto('/?m[]=customer&p[]=customer_admin_edit&customer_id=1');
+    await page.getByRole('link', { name: 'Add New Note' }).first().click();
+
+    const modal = page.locator('.ucm-modal-popup:visible').first();
+    const form = modal.locator('form:has(textarea[name="note"]), form:has([name="note"])').first();
+    await expect(form.locator('input[name="form_auth_key"]')).toHaveCount(1);
+
+    await form.locator('[name="note"]').first().fill('CSRF popup note');
+    await modal.getByRole('button', { name: 'Save note' }).click();
+
+    await expect(page.locator('body')).toContainText('CSRF popup note');
+    await expect(page.locator('body')).not.toContainText(/invalid or expired form submission/i);
+  });
+
+  test('saving a note is refused without a token', async ({ page }) => {
+    const response = await page.request.post('/?m[]=note', {
+      form: { _process: 'save_note', note_id: 'new', note: 'Should Not Save' },
+    });
+    expect(response.status()).toBe(403);
+  });
+
+  test('the address popup publishes a token', async ({ page }) => {
+    await page.goto('/?m[]=address&p[]=address_popup&address_id=1');
+    const form = page.locator('form:has(input[name="_process"][value="save_from_popup"])');
+    await expect(form).toHaveCount(1);
+    await expect(form.locator('input[name="form_auth_key"]')).toHaveCount(1);
+  });
+
+  test('saving an address is refused without a token', async ({ page }) => {
+    const response = await page.request.post('/?m[]=address', {
+      form: { _process: 'save_from_popup', _redirect: '/' },
+    });
+    expect(response.status()).toBe(403);
+  });
+
+  test('saving a change request is refused without a token', async ({ page }) => {
+    const response = await page.request.post('/?m[]=change_request', {
+      form: { _process: 'save_change_request', change_request_id: 'new', request: 'Should Not Save' },
+    });
+    expect(response.status()).toBe(403);
+  });
 });

@@ -10,6 +10,7 @@ if ( $address_id ) {
 	// do a form as well.
 	?>
 	<form action="<?php echo $module->link(); ?>" method="post">
+		<?php module_form::print_form_auth(); ?>
 		<input type="hidden" name="_process" value="save_from_popup">
 		<input type="hidden" name="_redirect" class="redirect" value="">
 		<?php

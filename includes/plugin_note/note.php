@@ -558,6 +558,11 @@ class module_note extends module_base
 	}
 
 	function process() {
+		// Every form that reaches here is posted from a UCM page, so it carries the
+		// form auth key. Refuse anything that does not - see module_form::check_secure_key().
+		if ( ! module_form::check_secure_key() ) {
+			module_form::reject_invalid_form_auth();
+		}
 		if ( 'save_note' == $_REQUEST['_process'] ) {
 			$note_id = $_REQUEST['note_id'];
 			$options = ucm_unserialize_options( $_REQUEST['options'] );
