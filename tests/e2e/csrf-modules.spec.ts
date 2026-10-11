@@ -141,7 +141,7 @@ const MODULES: ModuleCase[] = [
   },
   {
     name: 'customer contact',
-    url: '/?m[]=user&p[]=contact_admin&customer_id=1&user_id=new',
+    url: '/?m[]=user&p[]=contact_admin&customer_id={customer}&user_id=new',
     process: 'save_user',
     fill: { name: 'CSRF Test Contact', email: 'csrf-contact@example.com' },
     saved: /saved successfully/i,
@@ -222,7 +222,7 @@ const MODULES: ModuleCase[] = [
   },
   {
     name: 'job',
-    url: '/?m[]=job&p[]=job_admin&job_id=new&customer_id=1',
+    url: '/?m[]=job&p[]=job_admin&job_id=new&customer_id={customer}',
     process: 'save_job',
     fill: { name: 'CSRF Test Job' },
     saved: /job saved successfully/i,
@@ -231,7 +231,7 @@ const MODULES: ModuleCase[] = [
   },
   {
     name: 'quote',
-    url: '/?m[]=quote&p[]=quote_admin&quote_id=new&customer_id=1',
+    url: '/?m[]=quote&p[]=quote_admin&quote_id=new&customer_id={customer}',
     process: 'save_quote',
     fill: { name: 'CSRF Test Quote' },
     saved: /quote saved successfully/i,
@@ -265,6 +265,120 @@ async function formAuthKey(page: Page): Promise<string> {
   return key;
 }
 
+/**
+ * A fresh install has no customers, invoices or files, so the handful of tests that need
+ * an existing record find one or make one. An existing record is always preferred, so on
+ * a development database with real data in it nothing new is created.
+ */
+async function existingId(page: Page, listUrl: string, param: string): Promise<string | null> {
+  await page.goto(listUrl);
+  const match = (await page.content()).match(new RegExp(param + '=([1-9]\\d*)'));
+  return match ? match[1] : null;
+}
+
+/** Post a form with a real token and return the id the app redirects to. */
+async function createRecord(page: Page, url: string, body: Record<string, string>, idParam: string): Promise<string> {
+  const key = await formAuthKey(page);
+  const response = await page.request.post(url, {
+    form: { ...body, form_auth_key: key },
+    maxRedirects: 0,
+    failOnStatusCode: false,
+  });
+  const location = response.headers()['location'] || '';
+  const id = new URL(location, 'http://localhost').searchParams.get(idParam);
+  expect(id, `creating a record at ${url} should redirect to it`).toBeTruthy();
+  return String(id);
+}
+
+async function aCustomer(page: Page): Promise<string> {
+  // customer_admin is the filter page; customer_admin_list is where the rows are.
+  const existing = await existingId(page, '/?m[]=customer&p[]=customer_admin_list&customer_type_id=0', 'customer_id');
+  if (existing) {
+    return existing;
+  }
+  return createRecord(page, '/?m[]=customer', {
+    _process: 'save_customer',
+    customer_id: 'new',
+    customer_name: 'CSRF Seed Customer',
+    name: 'CSRF Seed Contact',
+    email: 'csrf-seed@example.com',
+  }, 'customer_id');
+}
+
+/**
+ * The address popup only opens for an address that already exists, and a new customer has
+ * none until something is typed into the address block on its form.
+ */
+async function anAddress(page: Page): Promise<string | null> {
+  const customerId = await aCustomer(page);
+  const existing = await addressIdOn(page, customerId);
+  if (existing) {
+    return existing;
+  }
+
+  await page.goto('/?m[]=customer&p[]=customer_admin_edit&customer_id=' + customerId);
+  const line1 = page.locator('input[name$="[line_1]"]').first();
+  if (!(await line1.count())) {
+    return null;
+  }
+  const field = await line1.getAttribute('name');
+  const name = await page.locator('[name="customer_name"]').first().inputValue();
+
+  const key = await formAuthKey(page);
+  await page.request.post('/?m[]=customer', {
+    form: {
+      _process: 'save_customer',
+      customer_id: customerId,
+      customer_name: name,
+      [String(field)]: '1 CSRF Street',
+      form_auth_key: key,
+    },
+    maxRedirects: 0,
+    failOnStatusCode: false,
+  });
+
+  return addressIdOn(page, customerId);
+}
+
+/** The customer form carries the address row's id in a hidden field. */
+async function addressIdOn(page: Page, customerId: string): Promise<string | null> {
+  await page.goto('/?m[]=customer&p[]=customer_admin_edit&customer_id=' + customerId);
+  const field = page.locator('input[name$="[address_id]"]').first();
+  if (!(await field.count())) {
+    return null;
+  }
+  const value = await field.inputValue();
+
+  return /^[1-9]\d*$/.test(value) ? value : null;
+}
+
+async function anInvoice(page: Page): Promise<string> {
+  const existing = await existingId(page, '/?m[]=invoice&p[]=invoice_admin', 'invoice_id');
+  if (existing) {
+    return existing;
+  }
+  const customerId = await aCustomer(page);
+  return createRecord(page, '/?m[]=invoice', {
+    _process: 'save_invoice',
+    invoice_id: 'new',
+    name: 'CSRF Seed Invoice',
+    customer_id: customerId,
+    _redirect: '',
+  }, 'invoice_id');
+}
+
+async function aFile(page: Page): Promise<string> {
+  const existing = await existingId(page, '/?m[]=file&p[]=file_admin', 'file_id');
+  if (existing) {
+    return existing;
+  }
+  return createRecord(page, '/?m[]=file', {
+    _process: 'save_file',
+    file_id: 'new',
+    file_name: 'CSRF Seed File',
+  }, 'file_id');
+}
+
 test.describe('Form auth key, per module', () => {
   test.beforeEach(async ({ page }) => {
     await login(page);
@@ -285,6 +399,10 @@ test.describe('Form auth key, per module', () => {
         const id = new URL(location, 'http://localhost').searchParams.get(mod.seed.idParam);
         expect(id, `seeding a ${mod.name} should redirect to the new record`).toBeTruthy();
         url = url.replace('{id}', String(id));
+      }
+
+      if (url.includes('{customer}')) {
+        url = url.replace('{customer}', await aCustomer(page));
       }
 
       await page.goto(url);
@@ -326,7 +444,8 @@ test.describe('Form auth key, popups', () => {
   });
 
   test('a note can still be added from a customer', async ({ page }) => {
-    await page.goto('/?m[]=customer&p[]=customer_admin_edit&customer_id=1');
+    const customerId = await aCustomer(page);
+    await page.goto('/?m[]=customer&p[]=customer_admin_edit&customer_id=' + customerId);
     await page.getByRole('link', { name: 'Add New Note' }).first().click();
 
     const modal = page.locator('.ucm-modal-popup:visible').first();
@@ -348,7 +467,10 @@ test.describe('Form auth key, popups', () => {
   });
 
   test('the address popup publishes a token', async ({ page }) => {
-    await page.goto('/?m[]=address&p[]=address_popup&address_id=1');
+    const addressId = await anAddress(page);
+    expect(addressId, 'the customer form should carry an address id').toBeTruthy();
+
+    await page.goto('/?m[]=address&p[]=address_popup&address_id=' + addressId);
     const form = page.locator('form:has(input[name="_process"][value="save_from_popup"])');
     await expect(form).toHaveCount(1);
     await expect(form.locator('input[name="form_auth_key"]').first()).toBeAttached();
@@ -382,7 +504,8 @@ test.describe('Form auth key, popups', () => {
   });
 
   test('the invoice email screen publishes a token', async ({ page }) => {
-    await page.goto('/?m[]=invoice&p[]=invoice_admin&invoice_id=1&email=true');
+    const invoiceId = await anInvoice(page);
+    await page.goto('/?m[]=invoice&p[]=invoice_admin&invoice_id=' + invoiceId + '&email=true');
     const form = page.locator('form:has(input[name="_process"][value="send_email"])');
     await expect(form.first().locator('input[name="form_auth_key"]').first()).toBeAttached();
   });
@@ -513,7 +636,8 @@ test.describe('Form auth key, popups', () => {
 
   test('downloading a file is deliberately left outside the token check', async ({ page }) => {
     // Download links are plain hrefs scattered through the app and shared by hand.
-    const response = await page.request.get('/?m[]=file&_process=download&file_id=1');
+    const fileId = await aFile(page);
+    const response = await page.request.get('/?m[]=file&_process=download&file_id=' + fileId);
     expect(response.status()).not.toBe(403);
   });
 
