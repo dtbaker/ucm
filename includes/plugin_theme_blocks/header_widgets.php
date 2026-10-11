@@ -47,7 +47,7 @@ class theme_widget_manager
 
 	public function handle_save() {
 		// ajax saving of order.
-		if ( isset( $_REQUEST['sort_order'] ) && is_array( $_REQUEST['sort_order'] ) && isset( $_REQUEST['auth'] ) && module_form::get_secure_key() == $_REQUEST['auth'] && module_security::is_logged_in() ) {
+		if ( isset( $_REQUEST['sort_order'] ) && is_array( $_REQUEST['sort_order'] ) && isset( $_REQUEST['auth'] ) && is_string( $_REQUEST['auth'] ) && hash_equals( module_form::get_secure_key(), $_REQUEST['auth'] ) && module_security::is_logged_in() ) {
 			module_config::save_config( 'ws_' . $this->page_unique_id . '-' . module_security::get_loggedin_id(), json_encode( $_REQUEST['sort_order'] ) );
 			exit;
 		}

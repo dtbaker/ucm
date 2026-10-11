@@ -99,8 +99,23 @@ test.describe('Logged in', () => {
 
   test('the dashboard alerts endpoint returns javascript', async ({ page }) => {
     await login(page);
-    const response = await page.request.get(DASHBOARD_ALERTS);
+    await page.goto('/?m[]=home');
+    // The endpoint checks the form auth key, so use the URL the dashboard itself builds.
+    const src = await page.evaluate(() => {
+      const m = document.documentElement.innerHTML.match(/scriptObject\.src = "([^"]+)"/);
+      return m ? m[1] : null;
+    });
+    expect(src, 'the dashboard should publish an alerts script url').toBeTruthy();
+    expect(src).toContain('form_auth_key=');
+
+    const response = await page.request.get(src!);
     expect(response.status()).toBe(200);
     expect(response.headers()['content-type']).toContain('javascript');
+  });
+
+  test('the dashboard alerts endpoint is refused without a token', async ({ page }) => {
+    await login(page);
+    const response = await page.request.get(DASHBOARD_ALERTS);
+    expect(response.status()).toBe(403);
   });
 });

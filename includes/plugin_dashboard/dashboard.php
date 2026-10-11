@@ -140,6 +140,12 @@ class module_dashboard extends module_base
 
 
 	public function process() {
+		// The dashboard alert tabs arrive as a <script src>, so the token travels in that
+		// URL - see the script tag further down this file. Without the check, any site
+		// could load this and read the alerts out of the JavaScript it returns.
+		if ( ! module_form::check_secure_key() ) {
+			module_form::reject_invalid_form_auth();
+		}
 		if ( "ajax_dashboard_tabs" == $_REQUEST['_process'] ) {
 			header( "Content-type: text/javascript" );
 			if ( module_security::is_logged_in() && module_security::can_user( module_security::get_loggedin_id(), 'Show Dashboard Alerts' ) ) {
@@ -348,7 +354,7 @@ class module_dashboard extends module_base
                   var scriptObject = document.createElement('script');
                   scriptObject.type = 'text/javascript';
                   scriptObject.async = true;
-                  scriptObject.src = "<?php echo _BASE_HREF;?>?m=dashboard&_process=ajax_dashboard_tabs&<?php echo isset( $_REQUEST['show_hidden'] ) ? 'show_hidden' : '';?>";
+                  scriptObject.src = "<?php echo _BASE_HREF;?>?m=dashboard&_process=ajax_dashboard_tabs&form_auth_key=<?php echo module_form::get_secure_key(); ?>&<?php echo isset( $_REQUEST['show_hidden'] ) ? 'show_hidden' : '';?>";
                   document.getElementsByTagName('head')[0].appendChild(scriptObject);
                   $('#dashboard_tabs').before('<p id="tabs_loading"><?php _e( 'Loading Alerts...' );?></p>');
               }, 200);
