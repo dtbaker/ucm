@@ -267,19 +267,19 @@ if ( isset( $_REQUEST['search_field'] ) ) {
 								case 'data_record_id':
 									if ( $data_field_value != $data['data_record_id'] ) {
 										unset( $datas[ $data_id ] );
-										continue;
+										continue 2;
 									}
 									break;
 								case 'created_date_time':
 									if ( input_date( $data_field_value, true ) != input_date( $data['date_created'], true ) ) {
 										unset( $datas[ $data_id ] );
-										continue;
+										continue 2;
 									}
 									break;
 								case 'created_date':
 									if ( input_date( $data_field_value ) != input_date( $data['date_created'] ) ) {
 										unset( $datas[ $data_id ] );
-										continue;
+										continue 2;
 									}
 									break;
 								case 'created_time':
@@ -288,13 +288,13 @@ if ( isset( $_REQUEST['search_field'] ) ) {
 								case 'updated_date_time':
 									if ( input_date( $data_field_value, true ) != input_date( $data['date_updated'], true ) ) {
 										unset( $datas[ $data_id ] );
-										continue;
+										continue 2;
 									}
 									break;
 								case 'updated_date':
 									if ( input_date( $data_field_value ) != input_date( $data['date_updated'] ) ) {
 										unset( $datas[ $data_id ] );
-										continue;
+										continue 2;
 									}
 									break;
 								case 'updated_time':
@@ -303,13 +303,13 @@ if ( isset( $_REQUEST['search_field'] ) ) {
 								case 'created_by':
 									if ( $data_field_value != $data['create_user_id'] ) {
 										unset( $datas[ $data_id ] );
-										continue;
+										continue 2;
 									}
 									break;
 								case 'updated_by':
 									if ( $data_field_value != $data['update_user_id'] ) {
 										unset( $datas[ $data_id ] );
-										continue;
+										continue 2;
 									}
 									break;
 								default:
@@ -320,23 +320,23 @@ if ( isset( $_REQUEST['search_field'] ) ) {
 
 											if ( ! in_array( $data_field_value, $foo ) ) {
 												unset( $datas[ $data_id ] );
-												continue;
+												continue 2;
 											}
 										} else {
 
 											if ( $settings && $settings['field_type'] && $settings['field_type'] == 'text' ) {
 												if ( strpos( strtolower( trim( $data_items[ $data_field_id ]['data_text'] ) ), strtolower( $data_field_value ) ) === false ) {
 													unset( $datas[ $data_id ] );
-													continue;
+													continue 2;
 												}
 											} elseif ( strtolower( trim( $data_items[ $data_field_id ]['data_text'] ) ) != strtolower( $data_field_value ) ) {
 												unset( $datas[ $data_id ] );
-												continue;
+												continue 2;
 											}
 										}
 									} else {
 										unset( $datas[ $data_id ] );
-										continue;
+										continue 2;
 									}
 							}
 						}

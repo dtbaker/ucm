@@ -97,6 +97,10 @@ jobs:
         run: curl -fsSL http://localhost:8092/ | grep -q 'Step #1: Database Connection Details'
       - name: Walk the setup wizard
         run: npx playwright test tests/e2e/install.spec.ts
+      - name: Check every plugin page for PHP warnings
+        env:
+          UCM_BASE_URL: http://localhost:8092
+        run: npx playwright test tests/e2e/smoke.spec.ts
       - name: Collect the app log
         if: always()
         run: docker compose --profile install-test logs app-install-test > app.log 2>&1 || true
