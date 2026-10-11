@@ -1,0 +1,11 @@
+# Uploaded files live here. They are only ever handed out by PHP, after it has checked
+# the link is one this system issued, so nothing should be fetched from this folder
+# directly - the file names are guessable enough to walk through.
+
+<IfModule mod_authz_core.c>
+	Require all denied
+</IfModule>
+<IfModule !mod_authz_core.c>
+	Order allow,deny
+	Deny from all
+</IfModule>

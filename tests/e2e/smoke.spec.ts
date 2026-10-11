@@ -80,19 +80,33 @@ const PAGES: Array<[string, string]> = [
  * perfectly ordinary thing to happen - a stale bookmark, a deleted invoice - and it must
  * not start printing notices about missing fields.
  */
-const MISSING_RECORD_PAGES: Array<[string, string, string]> = [
-  ['invoice', 'invoice_admin', 'invoice_id=999999'],
-  ['quote', 'quote_admin', 'quote_id=999999'],
-  ['contract', 'contract_admin', 'contract_id=999999'],
-  ['customer', 'customer_admin', 'customer_id=999999'],
-  ['job', 'job_admin', 'job_id=999999'],
-  ['user', 'user_admin', 'user_id=999999'],
-  ['product', 'product_admin', 'product_id=999999'],
-  ['subscription', 'subscription_admin', 'subscription_id=999999'],
-  ['timer', 'timer_admin', 'timer_id=999999'],
-  ['website', 'website_admin', 'website_id=999999'],
-  ['vendor', 'vendor_admin', 'vendor_id=999999'],
+const MISSING_RECORD_KEYS: Array<[string, string, string]> = [
+  ['invoice', 'invoice_admin', 'invoice_id'],
+  ['quote', 'quote_admin', 'quote_id'],
+  ['contract', 'contract_admin', 'contract_id'],
+  ['customer', 'customer_admin', 'customer_id'],
+  ['job', 'job_admin', 'job_id'],
+  ['user', 'user_admin', 'user_id'],
+  ['product', 'product_admin', 'product_id'],
+  ['subscription', 'subscription_admin', 'subscription_id'],
+  ['timer', 'timer_admin', 'timer_id'],
+  ['website', 'website_admin', 'website_id'],
+  ['vendor', 'vendor_admin', 'vendor_id'],
+  ['member', 'member_admin_list', 'member_id'],
+  ['finance', 'finance', 'finance_id'],
+  ['newsletter', 'newsletter_admin', 'newsletter_id'],
+  ['security', 'security_role', 'security_role_id'],
+  ['faq', 'faq_settings', 'faq_id'],
 ];
+
+/**
+ * A fresh id each run, because several lookups cache their result for a minute and the
+ * "not found" path would otherwise only be exercised the first time.
+ */
+function missingRecordPages(): Array<[string, string, string]> {
+  const id = 900000 + Math.floor(Math.random() * 99999);
+  return MISSING_RECORD_KEYS.map(([module, page, key]) => [module, page, `${key}=${id}`]);
+}
 
 /**
  * Bundled libraries we have not updated. Their own deprecations are not ours to fix here
@@ -198,7 +212,7 @@ test.describe('Plugin pages under E_ALL', () => {
   });
 
   test('opening a record that does not exist is handled quietly', async ({ page }) => {
-    const problems = await sweep(page, MISSING_RECORD_PAGES);
+    const problems = await sweep(page, missingRecordPages());
     expect(problems, `PHP diagnostics on ${problems.length} page(s):\n` + problems.join('\n')).toEqual([]);
   });
 });

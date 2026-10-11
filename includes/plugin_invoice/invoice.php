@@ -2561,7 +2561,11 @@ Job: <strong>{JOB_NAME}</strong> <br/>
 				}
 			}
 
-			if ( isset( $invoice['job_ids'] ) && strlen( trim( $invoice['job_ids'] ) ) > 0 ) {
+			if ( ! is_array( $invoice ) ) {
+				// No such invoice. Assigning into $invoice from here would turn the "not
+				// found" result into an array and make callers think they found one.
+				$invoice = array();
+			} elseif ( isset( $invoice['job_ids'] ) && strlen( trim( $invoice['job_ids'] ) ) > 0 ) {
 				$invoice['job_ids'] = explode( ',', $invoice['job_ids'] );
 			} else {
 				$invoice['job_ids'] = array();

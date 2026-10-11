@@ -30,6 +30,7 @@ node_modules/
 
 # File uploads
 includes/plugin_file/upload/*
+!includes/plugin_file/upload/.htaccess
 !includes/plugin_file/upload/index.php
 !includes/plugin_file/upload/plupload/index.php
 

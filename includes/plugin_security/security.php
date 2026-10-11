@@ -1174,7 +1174,12 @@ class module_security extends module_base
 	}
 
 	public static function get_security_role( $security_role_id ) {
-		$role                = get_single( 'security_role', 'security_role_id', $security_role_id );
+		$role = get_single( 'security_role', 'security_role_id', $security_role_id );
+		if ( ! is_array( $role ) || ! $role ) {
+			// Adding permissions to a "not found" result would make it look like a real
+			// role to every caller that only checks the return value.
+			return array();
+		}
 		$role['permissions'] = get_multiple( 'security_role_perm', array( 'security_role_id' => $security_role_id ), 'security_permission_id' );
 
 		return $role;

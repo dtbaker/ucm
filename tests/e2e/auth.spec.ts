@@ -60,6 +60,20 @@ test.describe('The working storage folder', () => {
     }
   });
 
+  test('does not serve uploaded files straight off disk', async ({ request }) => {
+    // Uploads are only ever handed out by PHP, after it checks the link came from here.
+    // Fetching the folder directly must not work - the names are walkable.
+    for (const path of [
+      '/includes/plugin_file/upload/index.php',
+      '/includes/plugin_file/upload/plupload/index.php',
+      '/includes/plugin_ticket/attachments/index.php',
+      '/includes/plugin_data/upload/index.php',
+    ]) {
+      const response = await request.get(path);
+      expect(response.status(), `${path} should not be reachable`).toBe(403);
+    }
+  });
+
   test('still serves the stylesheet and script cache', async ({ page }) => {
     await login(page);
     await page.goto('/?m[]=home');
