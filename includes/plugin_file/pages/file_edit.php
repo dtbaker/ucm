@@ -2,13 +2,13 @@
 
 $options = isset($_REQUEST['options']) ? ucm_unserialize_options($_REQUEST['options']) : array();
 
-$file_id = (int)$_REQUEST['file_id'];
+$file_id = isset($_REQUEST['file_id']) ? (int)$_REQUEST['file_id'] : 0;
 if ($file_id) {
 	$file = $module->get_file($file_id);
 } else {
 	$file = array(
-		"owner_id" => (int)$_REQUEST['owner_id'],
-		"owner_table" => $_REQUEST['owner_table'],
+		"owner_id" => isset($_REQUEST['owner_id']) ? (int)$_REQUEST['owner_id'] : 0,
+		"owner_table" => isset($_REQUEST['owner_table']) ? $_REQUEST['owner_table'] : '',
 	);
 }
 

@@ -717,12 +717,10 @@ Comment: {COMMENT}
 			$file_path = false;
 			$file_name = false;
 
-			$options = array();
-			if ( ! empty( $_REQUEST['options'] ) ) {
-				$decoded = base64_decode( $_REQUEST['options'] );
-				$unserialized = is_string( $decoded ) ? @unserialize( $decoded ) : false;
-				$options = is_array( $unserialized ) ? $unserialized : array();
-			}
+			// Checking the result is an array afterwards does not help: unserialize() has
+			// already built any objects in the payload by then, and their wakeup and
+			// destructor code has already run.
+			$options = ucm_unserialize_options( isset( $_REQUEST['options'] ) ? $_REQUEST['options'] : '' );
 
 			// have we uploaded anything
 			if ( isset( $_FILES['file_upload'] ) && is_uploaded_file( $_FILES['file_upload']['tmp_name'] ) ) {
