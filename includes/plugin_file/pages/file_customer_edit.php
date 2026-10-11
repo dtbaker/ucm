@@ -10,6 +10,7 @@ $file = module_file::get_file($file_id);
 
 
 <form action="" method="post" enctype="multipart/form-data">
+	<?php module_form::print_form_auth(); ?>
 	<input type="hidden" name="_process" value="save_file" />
     <input type="hidden" name="file_id" value="<?php echo $file_id; ?>" />
 

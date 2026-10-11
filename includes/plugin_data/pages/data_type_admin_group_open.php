@@ -22,6 +22,7 @@ if ( $data_field_group_id && $data_field_group_id != 'new' ) {
 ?>
 
 	<form action="" method="post">
+		<?php module_form::print_form_auth(); ?>
 		<input type="hidden" name="_process" value="save_data_field_group"/>
 		<input type="hidden" name="_redirect" value=""/>
 		<input type="hidden" name="data_type_id" value="<?php echo $data_type_id; ?>"/>
@@ -165,7 +166,7 @@ if ( $data_field_group_id && $data_field_group_id != 'new' ) {
                   cancel: '.ui-state-disabled',
                   stop: function (event, ui) {
                       var data_field_id = ui.element.parents('<?php echo $data_field_group['layout'] == 'table' ? 'tr' : 'li'; ?>').first().attr('rel');
-                      $.post("<?php echo full_link( "?m=data&_process=save_ajax&type=input&data_field_id=" );?>" + data_field_id, ui.size);
+                      $.post("<?php echo full_link( "?m=data&_process=save_ajax&form_auth_key=" . module_form::get_secure_key() . "&type=input&data_field_id=" );?>" + data_field_id, ui.size);
                   }
               });
               $(".data_group_fields input:text").resizable({
@@ -173,7 +174,7 @@ if ( $data_field_group_id && $data_field_group_id != 'new' ) {
                   cancel: '.ui-state-disabled',
                   stop: function (event, ui) {
                       var data_field_id = ui.element.parents('<?php echo $data_field_group['layout'] == 'table' ? 'tr' : 'li'; ?>').first().attr('rel');
-                      $.post("<?php echo full_link( "?m=data&_process=save_ajax&type=input&data_field_id=" );?>" + data_field_id, ui.size);
+                      $.post("<?php echo full_link( "?m=data&_process=save_ajax&form_auth_key=" . module_form::get_secure_key() . "&type=input&data_field_id=" );?>" + data_field_id, ui.size);
                   }
               });
 
@@ -195,7 +196,7 @@ if ( $data_field_group_id && $data_field_group_id != 'new' ) {
                   cancel: '.ui-state-disabled',
                   stop: function (event, ui) {
                       var data_field_id = ui.element.attr('rel');
-                      $.post("<?php echo full_link( "?m=data&_process=save_ajax&type=boundary&data_field_id=" );?>" + data_field_id, ui.size);
+                      $.post("<?php echo full_link( "?m=data&_process=save_ajax&form_auth_key=" . module_form::get_secure_key() . "&type=boundary&data_field_id=" );?>" + data_field_id, ui.size);
                   }
               });
 						<?php
@@ -208,7 +209,7 @@ if ( $data_field_group_id && $data_field_group_id != 'new' ) {
                   update: function (event, ui) {
                       var holder = $(ui.item[0]).parent();
                       var order = holder.sortable('serialize');
-                      $.post("<?php echo full_link( "?m=data&_process=save_ajax&type=position&data_field_group_id=" . (int) $data_field_group['data_field_group_id'] );?>", order);
+                      $.post("<?php echo full_link( "?m=data&_process=save_ajax&form_auth_key=" . module_form::get_secure_key() . "&type=position&data_field_group_id=" . (int) $data_field_group['data_field_group_id'] );?>", order);
                   }
               }).disableSelection();
               $("table.data_group_fields tbody").each(function () {
@@ -227,7 +228,7 @@ if ( $data_field_group_id && $data_field_group_id != 'new' ) {
                           },
                           update: function (event, ui) {
                               var order = $srt.sortable('serialize');
-                              $.post("<?php echo full_link( "?m=data&_process=save_ajax&type=position&data_field_group_id=" . (int) $data_field_group['data_field_group_id'] );?>", order);
+                              $.post("<?php echo full_link( "?m=data&_process=save_ajax&form_auth_key=" . module_form::get_secure_key() . "&type=position&data_field_group_id=" . (int) $data_field_group['data_field_group_id'] );?>", order);
                           }
                       }).disableSelection();
                   })();

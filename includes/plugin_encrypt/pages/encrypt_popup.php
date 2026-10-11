@@ -174,6 +174,7 @@ if ( $encrypt_id ) {
                   type: 'GET',
                   url: '<?php echo $plugins['encrypt']->link( 'note_admin', array(
 										'_process'         => 'encrypt_successful',
+										'form_auth_key'    => module_form::get_secure_key(),
 										'encrypt_field_id' => $encrypt_field_id,
 										'encrypt_id'       => $encrypt_id,
 									) );?>',
@@ -204,6 +205,7 @@ if ( $encrypt_id ) {
                   type: 'POST',
                   url: '<?php echo $plugins['encrypt']->link( 'note_admin', array(
 										'_process'         => 'save_encrypt',
+										'form_auth_key'    => module_form::get_secure_key(),
 										'encrypt_field_id' => $encrypt_field_id,
 										'encrypt_id'       => $encrypt_id,
 									) );?>',
@@ -237,6 +239,7 @@ if ( $encrypt_id ) {
                       type: 'POST',
                       url: '<?php echo $plugins['encrypt']->link( 'note_admin', array(
 												'_process'         => 'save_encrypt_key',
+												'form_auth_key'    => module_form::get_secure_key(),
 												'encrypt_field_id' => $encrypt_field_id,
 											) );?>',
                       data: {

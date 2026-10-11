@@ -42,6 +42,7 @@ print_heading( array(
 ?>
 
 <form action="" method="post">
+	<?php module_form::print_form_auth(); ?>
 	<input type="hidden" name="_process" value="save_data_field"/>
 	<input type="hidden" name="_redirect" value=""/>
 	<input type="hidden" name="data_field_id" value="<?php echo $data_field_id; ?>"/>

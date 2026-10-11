@@ -16,6 +16,7 @@ if ($file_id) {
 
 <iframe src="about:blank" name="file_popup_iframe<?php echo $file['owner_table'];?>_<?php echo $file['owner_id'];?>" id="file_popup_iframe" style="display:none;"></iframe>
 <form action="<?php echo $module->link();?>" method="post" target="file_popup_iframe<?php echo $file['owner_table'];?>_<?php echo $file['owner_id'];?>" enctype="multipart/form-data">
+	<?php module_form::print_form_auth(); ?>
 	<input type="hidden" name="_process" value="save_file_popup">
 	<input type="hidden" name="_redirect" class="redirect" value="">
 	<input type="hidden" name="layout" value="<?php echo (isset($_REQUEST['layout'])) ? $_REQUEST['layout'] : 'gallery';?>">
@@ -54,7 +55,7 @@ if ($file_id) {
 					<?php echo _l('Delete'); ?>
 				</th>
 				<td>
-					<a href="<?php echo $module->link('',array('_process' => 'delete_file_popup','file_id' => $file_id),'file',false);?>" target="file_popup_iframe<?php echo $file['owner_table'];?>_<?php echo $file['owner_id'];?>" onclick="return confirm('Really delete this file?');">Click here to delete the file</a>
+					<a href="<?php echo $module->link('',array('_process' => 'delete_file_popup','form_auth_key' => module_form::get_secure_key(),'file_id' => $file_id),'file',false);?>" target="file_popup_iframe<?php echo $file['owner_table'];?>_<?php echo $file['owner_id'];?>" onclick="return confirm('Really delete this file?');">Click here to delete the file</a>
 				</td>
 			</tr>
 		<?php } else { ?>

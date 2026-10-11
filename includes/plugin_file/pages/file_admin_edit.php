@@ -49,7 +49,7 @@ if (!module_config::c('file_upload_old',0) && $type == 'upload') {
 // Custom example logic
 var uploader=null;
 var selected_files=[];
-var plupload_url = '<?php echo module_file::link_open($file_id,false);?>&_process=plupload&plupload_key=<?php echo $plupload_key;?>';
+var plupload_url = '<?php echo module_file::link_open($file_id,false);?>&_process=plupload&form_auth_key=<?php echo module_form::get_secure_key(); ?>&plupload_key=<?php echo $plupload_key;?>';
 var uploaded_count = 0;
 $(function() {
 	uploader = new plupload.Uploader({
@@ -145,6 +145,7 @@ $(function() {
 <?php } ?>
 	
 <form action="" method="post" enctype="multipart/form-data" id="form_file_save">
+	<?php module_form::print_form_auth(); ?>
 	<input type="hidden" name="_process" value="save_file" class="no_permissions" />
     <input type="hidden" name="file_id" value="<?php echo $file_id; ?>" class="no_permissions" />
     <input type="hidden" name="bucket_parent_file_id" value="<?php echo $file['bucket_parent_file_id']; ?>" class="no_permissions" />

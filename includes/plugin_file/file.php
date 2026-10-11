@@ -567,6 +567,12 @@ Comment: {COMMENT}
 	}
 
 	function process() {
+		// Everything below except a download is a form submit from a UCM page and must
+		// carry the form auth key. Downloads are plain links, scattered through the app
+		// and shared by hand, and are read-only, so they are left out on purpose.
+		if ( 'download' != $_REQUEST['_process'] && ! module_form::check_secure_key() ) {
+			module_form::reject_invalid_form_auth();
+		}
 		if ( 'plupload' == $_REQUEST['_process'] ) {
 
 

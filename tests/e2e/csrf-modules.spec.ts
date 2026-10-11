@@ -238,6 +238,15 @@ const MODULES: ModuleCase[] = [
     postUrl: '/?m[]=quote',
     badTokenBody: { _process: 'save_quote', quote_id: 'new', name: 'Should Not Save', customer_id: '1', _redirect: '/' },
   },
+  {
+    name: 'data type',
+    url: '/?m[]=data&p[]=data_type_admin_open&data_type_id=new',
+    process: 'save_data_type',
+    fill: { data_type_name: 'CSRF Test Data Type' },
+    saved: /saved successfully/i,
+    postUrl: '/?m[]=data',
+    badTokenBody: { _process: 'save_data_type', data_type_id: 'new', data_type_name: 'Should Not Save' },
+  },
 ];
 
 async function login(page: Page) {
@@ -478,6 +487,44 @@ test.describe('Form auth key, popups', () => {
   test('saving map coordinates is refused without a token', async ({ page }) => {
     const response = await page.request.post('/?m=map&p=map_admin&_process=ajax_save_map_coords', {
       form: { address_id: '1', address_hash: 'x', lat: '1', lng: '2' },
+    });
+    expect(response.status()).toBe(403);
+  });
+
+  test('the file form still saves', async ({ page }) => {
+    // The file form has no plain text field - the description is a rich text editor -
+    // so this saves it as it stands, which is what the Save button does.
+    await page.goto('/?m[]=file&p[]=file_admin&file_id=new');
+    const form = page.locator('form:has(input[name="_process"][value="save_file"])');
+    await expect(form.locator('input[name="form_auth_key"]')).toHaveCount(1);
+
+    await form.locator('input[type="submit"][name="butt_save"]').first().click();
+    await expect(page.locator('body')).not.toContainText(/invalid or expired form submission/i);
+    await expect(page.locator('body')).toContainText(/saved successfully/i);
+  });
+
+  test('saving a file is refused without a token', async ({ page }) => {
+    const response = await page.request.post('/?m[]=file', {
+      form: { _process: 'save_file', file_id: 'new', description: 'Should Not Save' },
+    });
+    expect(response.status()).toBe(403);
+  });
+
+  test('downloading a file is deliberately left outside the token check', async ({ page }) => {
+    // Download links are plain hrefs scattered through the app and shared by hand.
+    const response = await page.request.get('/?m[]=file&_process=download&file_id=1');
+    expect(response.status()).not.toBe(403);
+  });
+
+  test('the encrypted field popup puts a token in its save urls', async ({ page }) => {
+    await page.goto('/?m[]=encrypt&p[]=encrypt_popup&encrypt_field_id=1&encrypt_id=0&callback_id=x');
+    const html = await page.content();
+    expect(html).toMatch(/_process=save_encrypt&form_auth_key=[a-f0-9]{32}/);
+  });
+
+  test('saving an encryption key is refused without a token', async ({ page }) => {
+    const response = await page.request.post('/?m=encrypt&_process=save_encrypt_key', {
+      form: { encrypt_key_id: '0', encrypt_key_name: 'Should Not Save' },
     });
     expect(response.status()).toBe(403);
   });

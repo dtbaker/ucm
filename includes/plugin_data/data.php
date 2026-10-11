@@ -360,6 +360,11 @@ class module_data extends module_base
 	}
 
 	function process() {
+		// Every form that reaches here is posted from a UCM page, so it carries the
+		// form auth key. Refuse anything that does not - see module_form::check_secure_key().
+		if ( ! module_form::check_secure_key() ) {
+			module_form::reject_invalid_form_auth();
+		}
 		$errors = array();
 		if ( $_REQUEST['_process'] == 'admin_leave' ) {
 			$_SESSION['admin_mode'] = false;

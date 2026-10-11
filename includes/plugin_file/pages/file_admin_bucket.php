@@ -19,6 +19,7 @@ $type = $ucm_file->get_type();
 ?>
 	
 <form action="" method="post">
+	<?php module_form::print_form_auth(); ?>
 	<input type="hidden" name="_process" value="save_file" class="no_permissions" />
     <input type="hidden" name="file_id" value="<?php echo $file_id; ?>" class="no_permissions" />
     <input type="hidden" name="bucket" value="1" class="no_permissions" />

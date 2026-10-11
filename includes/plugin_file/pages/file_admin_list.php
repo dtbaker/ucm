@@ -120,7 +120,7 @@ $columns['file_size'] = array(
             $search = array();
             $search['bucket_parent_file_id'] = $file['file_id'];
             echo _l('%s files',count(module_file::get_files($search)));
-        } elseif (file_exists($file['file_path'])) {
+        } elseif (!empty($file['file_path']) && file_exists($file['file_path'])) {
             echo module_file::format_bytes(filesize($file['file_path']));
         }
     },
