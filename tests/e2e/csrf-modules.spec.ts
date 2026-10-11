@@ -130,6 +130,33 @@ const MODULES: ModuleCase[] = [
     postUrl: '/?m[]=faq',
     badTokenBody: { _process: 'save_faq_product', faq_product_id: 'new', name: 'Should Not Save' },
   },
+  {
+    name: 'user',
+    url: '/?m[]=user&p[]=user_admin&user_id=new',
+    process: 'save_user',
+    fill: { name: 'CSRF Test User', email: 'csrf-user@example.com' },
+    saved: /user saved successfully/i,
+    postUrl: '/?m[]=user',
+    badTokenBody: { _process: 'save_user', user_id: '0', name: 'Should Not Save', email: 'nope@example.com', _redirect: '/' },
+  },
+  {
+    name: 'customer contact',
+    url: '/?m[]=user&p[]=contact_admin&customer_id=1&user_id=new',
+    process: 'save_user',
+    fill: { name: 'CSRF Test Contact', email: 'csrf-contact@example.com' },
+    saved: /saved successfully/i,
+    postUrl: '/?m[]=user',
+    badTokenBody: { _process: 'save_user', user_id: '0', name: 'Should Not Save', email: 'nope2@example.com', _redirect: '/' },
+  },
+  {
+    name: 'security role',
+    url: '/?m[]=security&p[]=security_role&security_role_id=new',
+    process: 'save_security_role',
+    fill: { name: 'CSRF Test Role' },
+    saved: /role saved successfully/i,
+    postUrl: '/?m[]=security',
+    badTokenBody: { _process: 'save_security_role', security_role_id: 'new', name: 'Should Not Save' },
+  },
 ];
 
 async function login(page: Page) {

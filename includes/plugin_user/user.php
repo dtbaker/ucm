@@ -359,6 +359,11 @@ class module_user extends module_base
 
 
 	public function process() {
+		// Every form that reaches here is posted from a UCM page, so it carries the
+		// form auth key. Refuse anything that does not - see module_form::check_secure_key().
+		if ( ! module_form::check_secure_key() ) {
+			module_form::reject_invalid_form_auth();
+		}
 		if ( _DEMO_MODE && isset( $_REQUEST['user_id'] ) && (int) $_REQUEST['user_id'] > 0 && (int) $_REQUEST['user_id'] <= 4 ) {
 			set_error( 'Sorry no changes to demo users. Please create a new user.' );
 			redirect_browser( $this->link_open( $_REQUEST['user_id'] ) );

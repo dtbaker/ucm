@@ -941,6 +941,11 @@ class module_security extends module_base
 	}
 
 	public function process() {
+		// Every form that reaches here is posted from a UCM page, so it carries the
+		// form auth key. Refuse anything that does not - see module_form::check_secure_key().
+		if ( ! module_form::check_secure_key() ) {
+			module_form::reject_invalid_form_auth();
+		}
 		/*if('save_data_access_popup' == $_REQUEST['_process']){
 			// saving data access for specieid user id.
 			// get user id from post.

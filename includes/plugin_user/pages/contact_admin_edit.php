@@ -108,6 +108,7 @@ if ( isset( $user[ $use_master_key ] ) && $user[ $use_master_key ] ) {
 
 
 <form action="" method="post" autocomplete="off">
+	<?php module_form::print_form_auth(); ?>
 	<input type="hidden" name="_process" value="save_user"/>
 	<!-- <input type="hidden" name="_redirect" value="<?php echo $module->link( "", array( "saved"   => true,
 	                                                                                       "user_id" => ( (int) $user_id ) ? $user_id : ''
