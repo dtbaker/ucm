@@ -613,34 +613,10 @@ parameters:
 			path: includes/plugin_contract/contract.php
 
 		-
-			message: '#^Variable \$contract_safe might not be defined\.$#'
-			identifier: variable.undefined
-			count: 1
-			path: includes/plugin_contract/pages/contract_admin_create.php
-
-		-
-			message: '#^Variable \$contract_safe might not be defined\.$#'
-			identifier: variable.undefined
-			count: 1
-			path: includes/plugin_contract/pages/contract_admin_edit.php
-
-		-
 			message: '#^Variable \$module might not be defined\.$#'
 			identifier: variable.undefined
 			count: 3
 			path: includes/plugin_contract/pages/contract_admin_edit.php
-
-		-
-			message: '#^Variable \$contract_safe might not be defined\.$#'
-			identifier: variable.undefined
-			count: 1
-			path: includes/plugin_contract/pages/contract_admin_email.php
-
-		-
-			message: '#^Variable \$contract_safe might not be defined\.$#'
-			identifier: variable.undefined
-			count: 1
-			path: includes/plugin_contract/pages/contract_admin_list.php
 
 		-
 			message: '#^Variable \$quote might not be defined\.$#'
@@ -2665,12 +2641,6 @@ parameters:
 			path: includes/plugin_invoice/pages/invoice_admin_credit.php
 
 		-
-			message: '#^Variable \$invoice_safe might not be defined\.$#'
-			identifier: variable.undefined
-			count: 1
-			path: includes/plugin_invoice/pages/invoice_admin_credit.php
-
-		-
 			message: '#^Variable \$module might not be defined\.$#'
 			identifier: variable.undefined
 			count: 1
@@ -2683,34 +2653,10 @@ parameters:
 			path: includes/plugin_invoice/pages/invoice_admin_edit.php
 
 		-
-			message: '#^Variable \$invoice_safe might not be defined\.$#'
-			identifier: variable.undefined
-			count: 1
-			path: includes/plugin_invoice/pages/invoice_admin_edit.php
-
-		-
 			message: '#^Variable \$module might not be defined\.$#'
 			identifier: variable.undefined
 			count: 2
 			path: includes/plugin_invoice/pages/invoice_admin_edit.php
-
-		-
-			message: '#^Variable \$invoice_safe might not be defined\.$#'
-			identifier: variable.undefined
-			count: 1
-			path: includes/plugin_invoice/pages/invoice_admin_email.php
-
-		-
-			message: '#^Variable \$invoice_safe might not be defined\.$#'
-			identifier: variable.undefined
-			count: 1
-			path: includes/plugin_invoice/pages/invoice_admin_list.php
-
-		-
-			message: '#^Variable \$invoice_safe might not be defined\.$#'
-			identifier: variable.undefined
-			count: 1
-			path: includes/plugin_invoice/pages/invoice_admin_print.php
 
 		-
 			message: '#^Variable \$module might not be defined\.$#'
@@ -2995,12 +2941,6 @@ parameters:
 			path: includes/plugin_job/pages/job_admin_create.php
 
 		-
-			message: '#^Variable \$job_safe might not be defined\.$#'
-			identifier: variable.undefined
-			count: 1
-			path: includes/plugin_job/pages/job_admin_create.php
-
-		-
 			message: '#^Anonymous function has an unused use \$job\.$#'
 			identifier: closure.unusedUse
 			count: 1
@@ -3013,34 +2953,10 @@ parameters:
 			path: includes/plugin_job/pages/job_admin_edit.php
 
 		-
-			message: '#^Variable \$job_safe might not be defined\.$#'
-			identifier: variable.undefined
-			count: 1
-			path: includes/plugin_job/pages/job_admin_edit.php
-
-		-
 			message: '#^Variable \$module might not be defined\.$#'
 			identifier: variable.undefined
 			count: 3
 			path: includes/plugin_job/pages/job_admin_edit.php
-
-		-
-			message: '#^Variable \$job_safe might not be defined\.$#'
-			identifier: variable.undefined
-			count: 1
-			path: includes/plugin_job/pages/job_admin_email.php
-
-		-
-			message: '#^Variable \$job_safe might not be defined\.$#'
-			identifier: variable.undefined
-			count: 1
-			path: includes/plugin_job/pages/job_admin_email_staff.php
-
-		-
-			message: '#^Variable \$job_safe might not be defined\.$#'
-			identifier: variable.undefined
-			count: 1
-			path: includes/plugin_job/pages/job_admin_list.php
 
 		-
 			message: '#^Access to an undefined property UCMJob\:\:\$job_id\.$#'
@@ -3319,12 +3235,6 @@ parameters:
 			path: includes/plugin_newsletter/pages/newsletter_edit.php
 
 		-
-			message: '#^Call to an undefined static method module_member\:\:link_list\(\)\.$#'
-			identifier: staticMethod.notFound
-			count: 1
-			path: includes/plugin_newsletter/pages/newsletter_member.php
-
-		-
 			message: '#^Variable \$member_data might not be defined\.$#'
 			identifier: variable.undefined
 			count: 1
@@ -3433,12 +3343,6 @@ parameters:
 			path: includes/plugin_note/pages/note_edit.php
 
 		-
-			message: '#^Variable \$note_edit_safe might not be defined\.$#'
-			identifier: variable.undefined
-			count: 1
-			path: includes/plugin_note/pages/note_edit.php
-
-		-
 			message: '#^Variable \$note_id might not be defined\.$#'
 			identifier: variable.undefined
 			count: 1
@@ -3472,12 +3376,6 @@ parameters:
 			message: '#^Variable \$note_items might not be defined\.$#'
 			identifier: variable.undefined
 			count: 4
-			path: includes/plugin_note/pages/note_list.php
-
-		-
-			message: '#^Variable \$note_list_safe might not be defined\.$#'
-			identifier: variable.undefined
-			count: 1
 			path: includes/plugin_note/pages/note_list.php
 
 		-
@@ -4093,12 +3991,6 @@ parameters:
 			path: includes/plugin_quote/pages/ajax_task_preview.php
 
 		-
-			message: '#^Variable \$quote_safe might not be defined\.$#'
-			identifier: variable.undefined
-			count: 1
-			path: includes/plugin_quote/pages/quote_admin_create.php
-
-		-
 			message: '#^Anonymous function has an unused use \$quote\.$#'
 			identifier: closure.unusedUse
 			count: 1
@@ -4115,30 +4007,6 @@ parameters:
 			identifier: variable.undefined
 			count: 3
 			path: includes/plugin_quote/pages/quote_admin_edit.php
-
-		-
-			message: '#^Variable \$quote_safe might not be defined\.$#'
-			identifier: variable.undefined
-			count: 1
-			path: includes/plugin_quote/pages/quote_admin_edit.php
-
-		-
-			message: '#^Variable \$quote_safe might not be defined\.$#'
-			identifier: variable.undefined
-			count: 1
-			path: includes/plugin_quote/pages/quote_admin_email.php
-
-		-
-			message: '#^Variable \$quote_safe might not be defined\.$#'
-			identifier: variable.undefined
-			count: 1
-			path: includes/plugin_quote/pages/quote_admin_email_staff.php
-
-		-
-			message: '#^Variable \$quote_safe might not be defined\.$#'
-			identifier: variable.undefined
-			count: 1
-			path: includes/plugin_quote/pages/quote_admin_list.php
 
 		-
 			message: '#^Access to an undefined property UCMQuote\:\:\$customer_id\.$#'
@@ -5017,12 +4885,6 @@ parameters:
 			path: includes/plugin_ticket/pages/ticket_admin_edit.php
 
 		-
-			message: '#^Variable \$ticket_safe might not be defined\.$#'
-			identifier: variable.undefined
-			count: 1
-			path: includes/plugin_ticket/pages/ticket_admin_edit.php
-
-		-
 			message: '#^Variable \$admins_rel might not be defined\.$#'
 			identifier: variable.undefined
 			count: 1
@@ -5059,12 +4921,6 @@ parameters:
 			path: includes/plugin_ticket/pages/ticket_admin_edit_messages.php
 
 		-
-			message: '#^Variable \$ticket_safe might not be defined\.$#'
-			identifier: variable.undefined
-			count: 1
-			path: includes/plugin_ticket/pages/ticket_admin_edit_messages.php
-
-		-
 			message: '#^Variable \$tickets_in_reverse might not be defined\.$#'
 			identifier: variable.undefined
 			count: 1
@@ -5087,12 +4943,6 @@ parameters:
 			identifier: variable.undefined
 			count: 2
 			path: includes/plugin_ticket/pages/ticket_admin_list.php
-
-		-
-			message: '#^Variable \$ticket_safe might not be defined\.$#'
-			identifier: variable.undefined
-			count: 1
-			path: includes/plugin_ticket/pages/ticket_admin_notify.php
 
 		-
 			message: '#^Variable \$module might not be defined\.$#'
@@ -5497,12 +5347,6 @@ parameters:
 			path: includes/plugin_user/pages/contact_admin_edit.php
 
 		-
-			message: '#^Variable \$user_safe might not be defined\.$#'
-			identifier: variable.undefined
-			count: 1
-			path: includes/plugin_user/pages/contact_admin_edit.php
-
-		-
 			message: '#^Variable \$user might not be defined\.$#'
 			identifier: variable.undefined
 			count: 7
@@ -5548,12 +5392,6 @@ parameters:
 			message: '#^Variable \$module might not be defined\.$#'
 			identifier: variable.undefined
 			count: 4
-			path: includes/plugin_user/pages/user_admin_edit.php
-
-		-
-			message: '#^Variable \$user_safe might not be defined\.$#'
-			identifier: variable.undefined
-			count: 1
 			path: includes/plugin_user/pages/user_admin_edit.php
 
 		-
