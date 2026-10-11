@@ -168,7 +168,7 @@ class module_session extends module_base
 			// are we creating or reading?
 			$sql = "SELECT session_id FROM `" . _DB_PREFIX . "session` WHERE `session_id` = '" . db_escape( self::$session_id ) . "'";
 			$res = query( $sql );
-			if ( ( $res instanceof mysqli_result && mysqli_num_rows( $res ) ) || ( is_resource( $res ) && mysql_num_rows( $res ) ) ) {
+			if ( $res instanceof mysqli_result && mysqli_num_rows( $res ) ) {
 				// we have a session! woo!
 				// update existing
 				$data = base64_encode( $data );

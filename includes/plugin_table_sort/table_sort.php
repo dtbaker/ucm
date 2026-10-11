@@ -206,7 +206,7 @@ class module_table_sort extends module_base
 										// descenting
 										$g = array_reverse( $g );
 									}
-									$rows[ $row_id ][ 'group_sort_' . $options['owner_table'] ] = implode( $g, ', ' );
+									$rows[ $row_id ][ 'group_sort_' . $options['owner_table'] ] = implode( ', ', $g );
 
 								}
 								self::$sortables[ 'group_sort_' . $options['owner_table'] ] = $options['current'];

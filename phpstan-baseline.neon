@@ -4207,12 +4207,6 @@ parameters:
 			path: includes/plugin_session/session.php
 
 		-
-			message: '#^Function mysql_num_rows not found\.$#'
-			identifier: function.notFound
-			count: 1
-			path: includes/plugin_session/session.php
-
-		-
 			message: '#^Comparison operation "\!\=" between \(SimpleXMLElement\|null\) and 123 results in an error\.$#'
 			identifier: notEqual.invalid
 			count: 1

@@ -430,7 +430,7 @@ class module_paymethod_multisafepay extends module_base
 									$url    = 'https://www.' . ( self::is_sandbox() ? 'sandbox.' : '' ) . 'multisafepay.com/cgi-bin/webscr';
 									$result = self::fsockPost( $url, $_POST );
 									//send_error('multisafepay sock post: '.$url."\n\n".var_export($result,true));
-									if ( eregi( "VERIFIED", $result ) ) {
+									if ( preg_match( '/VERIFIED/i', (string) $result ) ) {
 										// finally have everything.
 										// mark the payment as completed.
 										update_insert( "invoice_payment_id", $payment_id, "invoice_payment", array(
