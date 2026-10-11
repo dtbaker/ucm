@@ -15,13 +15,16 @@ permissions:
 jobs:
   lint:
     # composer.json asks for ^8.4 and index.php refuses to start on anything older, so
-    # 8.4 is what has to pass. 8.5 is checked too, because the next PHP is always the
-    # one that breaks a codebase this old, and it is better to hear about it early than
-    # from a customer. It does not block the build yet - see the note on the matrix.
+    # 8.4 is what has to pass. 8.5 is checked too, because the next PHP is always the one
+    # that breaks a codebase this old, and because saying "PHP 8.4 or newer" is only
+    # honest if something proves it. Both pass today, so both block.
+    #
+    # If a future 8.5 release starts failing for reasons that are not ours, add
+    #   continue-on-error: ${{ matrix.php == '8.5' }}
+    # to the job rather than dropping it from the matrix.
     name: php -l (${{ matrix.php }})
     runs-on: ubuntu-latest
     timeout-minutes: 10
-    continue-on-error: ${{ matrix.php == '8.5' }}
     strategy:
       fail-fast: false
       matrix:
@@ -66,7 +69,6 @@ jobs:
     name: PHPStan (${{ matrix.php }})
     runs-on: ubuntu-latest
     timeout-minutes: 20
-    continue-on-error: ${{ matrix.php == '8.5' }}
     strategy:
       fail-fast: false
       matrix:
@@ -85,7 +87,6 @@ jobs:
     name: PHPUnit (${{ matrix.php }})
     runs-on: ubuntu-latest
     timeout-minutes: 10
-    continue-on-error: ${{ matrix.php == '8.5' }}
     strategy:
       fail-fast: false
       matrix:
