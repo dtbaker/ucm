@@ -24,30 +24,29 @@ if [ "${1:-}" = "--stop" ]; then
 	exit 0
 fi
 
-echo "Waiting for MySQL..."
-# Run a real query, not mysqladmin ping - ping answers while MySQL is still setting up
-# its users, and the very next statement then fails with "access denied".
-mysql_ready=0
-for _ in $(seq 1 120); do
-	if docker compose exec -T db mysql -u root -proot -e 'SELECT 1' >/dev/null 2>&1; then
-		mysql_ready=1
-		break
-	fi
-	sleep 1
-done
-if [ "$mysql_ready" != "1" ]; then
-	echo "Timed out waiting for MySQL" >&2
-	docker compose logs --tail=40 db >&2
-	exit 1
-fi
-
 echo "Resetting the $DB_NAME database..."
-docker compose exec -T db mysql -u root -proot <<SQL
+# Keep retrying rather than waiting for MySQL first. On a brand new volume the official
+# image runs a temporary server to set up users and then restarts, so a single "is it up
+# yet" check can succeed against the temporary server and the next statement then fails.
+reset_ok=0
+for _ in $(seq 1 120); do
+	if docker compose exec -T db mysql -u root -proot >/dev/null 2>&1 <<SQL
 DROP DATABASE IF EXISTS \`$DB_NAME\`;
 CREATE DATABASE \`$DB_NAME\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 GRANT ALL ON \`$DB_NAME\`.* TO 'ucm'@'%';
 FLUSH PRIVILEGES;
 SQL
+	then
+		reset_ok=1
+		break
+	fi
+	sleep 2
+done
+if [ "$reset_ok" != "1" ]; then
+	echo "Could not reset $DB_NAME - MySQL never became usable" >&2
+	docker compose logs --tail=40 db >&2
+	exit 1
+fi
 
 echo "Starting a fresh $SERVICE container..."
 docker compose --profile install-test up -d --force-recreate "$SERVICE"
