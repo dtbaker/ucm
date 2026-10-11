@@ -1027,11 +1027,11 @@ hook_handle_callback( 'layout_column_half', 1, '35' );
 				array(
 					'type'  => 'text',
 					'name'  => 'total_percent_complete_override',
-					'value' => $job['total_percent_complete_manual'] ? $job['total_percent_complete'] * 100 : '',
+					'value' => ! empty( $job['total_percent_complete_manual'] ) ? $job['total_percent_complete'] * 100 : '',
 					'style' => 'width:30px;',
 				),
 				'%',
-				$job['total_percent_complete_manual'] ? _l( '(calculated: %s%%)', $job['total_percent_complete_calculated'] * 100 ) : '',
+				! empty( $job['total_percent_complete_manual'] ) ? _l( '(calculated: %s%%)', $job['total_percent_complete_calculated'] * 100 ) : '',
 				array(
 					'type'  => 'html',
 					'value' => '',

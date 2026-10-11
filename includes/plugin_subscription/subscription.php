@@ -581,10 +581,15 @@ class module_subscription extends module_base
 			//            $sql .=  " AND (sm.`deleted` = 0 OR sm.`deleted` IS NULL)";
 			//            $sql .=  " AND (sc.`deleted` = 0 OR sc.`deleted` IS NULL)";
 			$sql                      .= " GROUP BY s.subscription_id";
-			$subscription             = qa1( $sql );
-			$subscription['settings'] = isset( $subscription['settings'] ) ? @json_decode( $subscription['settings'], true ) : array();
-			if ( ! is_array( $subscription['settings'] ) ) {
-				$subscription['settings'] = array();
+			$subscription = qa1( $sql );
+			// Only unpack settings when a row came back. Writing to $subscription when it
+			// is false turned it into a one-key array, so the "not found" defaults below
+			// were skipped and the edit page was missing every other field.
+			if ( $subscription ) {
+				$subscription['settings'] = isset( $subscription['settings'] ) ? @json_decode( $subscription['settings'], true ) : array();
+				if ( ! is_array( $subscription['settings'] ) ) {
+					$subscription['settings'] = array();
+				}
 			}
 		}
 		if ( ! $subscription ) {

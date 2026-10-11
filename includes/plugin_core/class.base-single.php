@@ -107,7 +107,9 @@ class UCMBaseSingle implements ArrayAccess
 					if ( $this->db->execute() ) {
 						// Save returned row
 						$temp_details = $this->db->single();
-						if ( $this->check_permissions( $id, $temp_details ) ) {
+						// No row means the record is gone. Leave id as 0 so callers see
+						// "not found" instead of reading fields off nothing.
+						if ( is_array( $temp_details ) && $this->check_permissions( $id, $temp_details ) ) {
 							$this->db_details = $temp_details;
 							$this->id         = array();
 							foreach ( $this->db_id as $db_idid => $db_id ) {
@@ -131,7 +133,7 @@ class UCMBaseSingle implements ArrayAccess
 				if ( $this->db->execute() ) {
 					// Save returned row
 					$temp_details = $this->db->single();
-					if ( $this->check_permissions( $id, $temp_details ) ) {
+					if ( is_array( $temp_details ) && $this->check_permissions( $id, $temp_details ) ) {
 						$this->db_details = $temp_details;
 						$this->id         = $this->db_details[ $this->db_id ];
 					}

@@ -75,21 +75,73 @@ const PAGES: Array<[string, string]> = [
   ['website', 'website_admin'],
 ];
 
+/**
+ * Record pages, with an id that does not exist. Loading a record that is gone is a
+ * perfectly ordinary thing to happen - a stale bookmark, a deleted invoice - and it must
+ * not start printing notices about missing fields.
+ */
+const MISSING_RECORD_PAGES: Array<[string, string, string]> = [
+  ['invoice', 'invoice_admin', 'invoice_id=999999'],
+  ['quote', 'quote_admin', 'quote_id=999999'],
+  ['contract', 'contract_admin', 'contract_id=999999'],
+  ['customer', 'customer_admin', 'customer_id=999999'],
+  ['job', 'job_admin', 'job_id=999999'],
+  ['user', 'user_admin', 'user_id=999999'],
+  ['product', 'product_admin', 'product_id=999999'],
+  ['subscription', 'subscription_admin', 'subscription_id=999999'],
+  ['timer', 'timer_admin', 'timer_id=999999'],
+  ['website', 'website_admin', 'website_id=999999'],
+  ['vendor', 'vendor_admin', 'vendor_id=999999'],
+];
+
+/**
+ * Bundled libraries we have not updated. Their own deprecations are not ours to fix here
+ * and would otherwise hide real findings. Anything in our own code still fails.
+ */
+const VENDORED = [
+  '/includes/plugin_security/htmlpurifier/',
+  '/includes/plugin_pdf/dompdf/',
+  '/includes/plugin_encrypt/phpseclib/',
+  '/includes/plugin_email/class.',
+  '/includes/plugin_paymethod_',
+  '/includes/plugin_calendar/wdCalendar/',
+  '/includes/plugin_captcha/inc/',
+  '/includes/plugin_ticket/cron/mime_parser.php',
+  '/includes/plugin_file/upload/plupload/',
+];
+
 const LEVELS = 'Warning|Notice|Deprecated|Fatal error|Parse error|Recoverable fatal error';
 // PHP prints these as "<b>Warning</b>:  message in <b>/path</b> on line <b>12</b>" with
 // html_errors on, and as plain text without it. Both always carry " on line ".
 const DIAGNOSTIC = new RegExp(`<b>(?:${LEVELS})</b>:|(?:^|\\n)(?:${LEVELS}):\\s.*\\son line\\s`, 'm');
 
-function url(module: string, page: string) {
-  return `/?m[]=${module}&p[]=${page}`;
+function url(module: string, page: string, query = '') {
+  return `/?m[]=${module}&p[]=${page}` + (query ? `&${query}` : '');
 }
 
+/**
+ * Diagnostics in our own code, one readable line each.
+ *
+ * Both shapes PHP prints are matched, and both end in "... in <file> on line <n>". That
+ * tail is required, so the app's own copy - pages that legitimately say "Warning: full
+ * backups will not work" - is not mistaken for one. Bundled libraries are skipped.
+ */
 function describeDiagnostics(body: string): string[] {
   const found: string[] = [];
-  const re = new RegExp(`(?:<b>)?(${LEVELS})(?:</b>)?:\\s*(.{0,200}?)(?:<br|\\n)`, 'g');
-  let match;
-  while ((match = re.exec(body)) !== null) {
-    found.push(`${match[1]}: ${match[2].replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim()}`);
+  const patterns = [
+    new RegExp(`<b>(${LEVELS})</b>:\\s*(.{0,250}?) in <b>(.{0,250}?)</b> on line <b>(\\d+)</b>`, 'g'),
+    new RegExp(`(?:^|\\n)(${LEVELS}):\\s*(.{0,250}?) in (\\S.{0,250}?) on line (\\d+)`, 'g'),
+  ];
+  for (const re of patterns) {
+    let match;
+    while ((match = re.exec(body)) !== null) {
+      const file = match[3].replace(/<[^>]*>/g, '').trim();
+      if (VENDORED.some(path => file.includes(path))) {
+        continue;
+      }
+      const message = match[2].replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim();
+      found.push(`${match[1]}: ${message} in ${file} on line ${match[4]}`);
+    }
   }
   return [...new Set(found)];
 }
@@ -121,24 +173,32 @@ test.describe('Plugin pages under E_ALL', () => {
     ).toBe(true);
   });
 
-  test('no page prints a PHP warning, notice, deprecation or error', async ({ page }) => {
+  async function sweep(page: Page, pages: Array<[string, string] | [string, string, string]>) {
     const problems: string[] = [];
 
-    for (const [module, pageName] of PAGES) {
-      const response = await page.request.get(url(module, pageName));
-      const body = await response.text();
+    for (const [module, pageName, query] of pages) {
+      const target = url(module, pageName, query);
+      const response = await page.request.get(target);
 
       if (response.status() >= 500) {
-        problems.push(`${module}/${pageName}: HTTP ${response.status()}`);
+        problems.push(`${target}: HTTP ${response.status()}`);
         continue;
       }
-      if (DIAGNOSTIC.test(body)) {
-        for (const line of describeDiagnostics(body)) {
-          problems.push(`${module}/${pageName}: ${line}`);
-        }
+      for (const line of describeDiagnostics(await response.text())) {
+        problems.push(`${target}: ${line}`);
       }
     }
 
+    return problems;
+  }
+
+  test('no page prints a PHP warning, notice, deprecation or error', async ({ page }) => {
+    const problems = await sweep(page, PAGES);
+    expect(problems, `PHP diagnostics on ${problems.length} page(s):\n` + problems.join('\n')).toEqual([]);
+  });
+
+  test('opening a record that does not exist is handled quietly', async ({ page }) => {
+    const problems = await sweep(page, MISSING_RECORD_PAGES);
     expect(problems, `PHP diagnostics on ${problems.length} page(s):\n` + problems.join('\n')).toEqual([]);
   });
 });
