@@ -76,6 +76,11 @@ class module_map extends module_base
 	}
 
 	public function process() {
+		// Every form that reaches here is posted from a UCM page, so it carries the
+		// form auth key. Refuse anything that does not - see module_form::check_secure_key().
+		if ( ! module_form::check_secure_key() ) {
+			module_form::reject_invalid_form_auth();
+		}
 		if ( isset( $_REQUEST['_process'] ) && $_REQUEST['_process'] == 'ajax_save_map_coords' ) {
 
 			$address_id = (int) $_REQUEST['address_id'];

@@ -442,6 +442,46 @@ test.describe('Form auth key, popups', () => {
     expect(response.status()).not.toBe(403);
   });
 
+  /**
+   * The calendar and the map save over background requests whose URL the page builds,
+   * so the token travels in the URL. These drive the exact URLs the page hands to its
+   * scripts rather than a hand-written one.
+   */
+  test('the calendar data feed still works', async ({ page }) => {
+    await page.goto('/?m[]=calendar&p[]=calendar_admin');
+    const feedUrl = await page.evaluate(() => {
+      const m = document.documentElement.innerHTML.match(/DATA_FEED_URL = "([^"]+)"/);
+      return m ? m[1] : null;
+    });
+    expect(feedUrl, 'the calendar page should publish a data feed url').toBeTruthy();
+    expect(feedUrl).toContain('form_auth_key=');
+
+    const ok = await page.request.post(feedUrl + '_process=ajax_calendar&method=list', {
+      form: { showdate: '2026-10-12', viewtype: 'week' },
+    });
+    expect(ok.status()).not.toBe(403);
+  });
+
+  test('the calendar data feed is refused without a token', async ({ page }) => {
+    const response = await page.request.post('/?m=calendar&_process=ajax_calendar&method=list', {
+      form: { showdate: '2026-10-12', viewtype: 'week' },
+    });
+    expect(response.status()).toBe(403);
+  });
+
+  test('the map page sends a token when it saves coordinates', async ({ page }) => {
+    await page.goto('/?m[]=map&p[]=map_admin');
+    const html = await page.content();
+    expect(html).toContain('form_auth_key: ucm.form_auth_key');
+  });
+
+  test('saving map coordinates is refused without a token', async ({ page }) => {
+    const response = await page.request.post('/?m=map&p=map_admin&_process=ajax_save_map_coords', {
+      form: { address_id: '1', address_hash: 'x', lat: '1', lng: '2' },
+    });
+    expect(response.status()).toBe(403);
+  });
+
   test('saving a change request is refused without a token', async ({ page }) => {
     const response = await page.request.post('/?m[]=change_request', {
       form: { _process: 'save_change_request', change_request_id: 'new', request: 'Should Not Save' },

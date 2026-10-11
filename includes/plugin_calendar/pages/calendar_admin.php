@@ -134,7 +134,7 @@ $base_path = _BASE_HREF . 'includes/plugin_calendar/wdCalendar/';
                 '<?php echo addcslashes( _l( 'Save Event' ), "'" );?>': function () {
                     $.ajax({
                         type: 'POST',
-                        url: '<?php echo preg_replace( '#[^a-zA-Z0-9&\?=/\]\%\[_\.]#', '', $_SERVER['REQUEST_URI'] ) . ( strpos( $_SERVER['REQUEST_URI'], '?' ) ? '&' : '?' );?>_process=save_calendar_entry&calendar_id=' + calendar_id + '',
+                        url: '<?php echo preg_replace( '#[^a-zA-Z0-9&\?=/\]\%\[_\.]#', '', $_SERVER['REQUEST_URI'] ) . ( strpos( $_SERVER['REQUEST_URI'], '?' ) ? '&' : '?' );?>_process=save_calendar_entry&form_auth_key=<?php echo module_form::get_secure_key(); ?>&calendar_id=' + calendar_id + '',
                         data: $('#calendar_event_form').serialize(),
                         dataType: 'html',
                         success: function (d) {
@@ -186,7 +186,7 @@ $base_path = _BASE_HREF . 'includes/plugin_calendar/wdCalendar/';
 
         var view = "<?php echo module_config::c( 'calendar_default_view', 'week' );?>";
 
-        var DATA_FEED_URL = "<?php echo _BASE_HREF . '?m=calendar' . ( $customer_id ? '&customer_id=' . $customer_id : '' ) . '&';
+        var DATA_FEED_URL = "<?php echo _BASE_HREF . '?m=calendar' . ( $customer_id ? '&customer_id=' . $customer_id : '' ) . '&form_auth_key=' . module_form::get_secure_key() . '&';
 					//preg_replace('#[^a-zA-Z0-9&\?=/\]\[_\.]#','',$_SERVER['REQUEST_URI']) . (strpos($_SERVER['REQUEST_URI'],'?') ? '&' : '?'); ?>";
         var op = {
             view: view,

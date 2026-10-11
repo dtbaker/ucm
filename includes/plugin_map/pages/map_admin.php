@@ -145,6 +145,7 @@ echo strpos( $link, '?' ) ? '&' : '?';?>customer_id=' + customer_address[i].cust
                                     type: "POST",
                                     url: '<?php echo full_link( '?m=map&p=map_admin&_process=ajax_save_map_coords' );?>',
                                     data: {
+                                        form_auth_key: ucm.form_auth_key,
                                         address_id: cust.address_id,
                                         address_hash: cust.address_hash,
                                         lat: results[0].geometry.location.lat(),
