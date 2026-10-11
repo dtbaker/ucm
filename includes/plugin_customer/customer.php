@@ -1061,6 +1061,11 @@ Invoice: <strong>{INVOICE_LINK}</strong>
 
 
 	public function process() {
+		// Every form that reaches here is posted from a UCM page, so it carries the
+		// form auth key. Refuse anything that does not - see module_form::check_secure_key().
+		if ( ! module_form::check_secure_key() ) {
+			module_form::reject_invalid_form_auth();
+		}
 		if ( isset( $_REQUEST['butt_del'] ) && $_REQUEST['butt_del'] && ! empty( $_REQUEST['customer_id'] ) && module_customer::can_i( 'delete', 'Customers' ) ) {
 			if ( module_form::check_secure_key() ) {
 				$data = self::get_customer( $_REQUEST['customer_id'] );

@@ -184,6 +184,24 @@ const MODULES: ModuleCase[] = [
     postUrl: '/?m[]=newsletter',
     badTokenBody: { _process: 'save_newsletter', newsletter_id: 'new', subject: 'Should Not Save', _redirect: '/' },
   },
+  {
+    name: 'customer',
+    url: '/?m[]=customer&p[]=customer_admin_edit&customer_id=new',
+    process: 'save_customer',
+    fill: { customer_name: 'CSRF Test Customer', name: 'CSRF Contact', email: 'csrf-customer@example.com' },
+    saved: /customer saved successfully/i,
+    postUrl: '/?m[]=customer',
+    badTokenBody: { _process: 'save_customer', customer_id: 'new', customer_name: 'Should Not Save' },
+  },
+  {
+    name: 'customer type',
+    url: '/?m[]=customer&p[]=customer_settings_types&customer_type_id=new',
+    process: 'save_customer_type',
+    fill: { type_name: 'CSRF Test Customer Type' },
+    saved: /saved successfully/i,
+    postUrl: '/?m[]=customer',
+    badTokenBody: { _process: 'save_customer_type', customer_type_id: 'new', type_name: 'Should Not Save' },
+  },
 ];
 
 async function login(page: Page) {
