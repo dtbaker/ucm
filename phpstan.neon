@@ -2,6 +2,11 @@ parameters:
     level: 2
     paths:
         - includes/
+        - ajax.php
+        - cron.php
+        - ext.php
+        - index.php
+        - init.php
     excludePaths:
         - includes/plugin_pdf/dompdf/*
         - includes/plugin_encrypt/phpseclib/*

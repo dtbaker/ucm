@@ -1,6 +1,5 @@
 <?php
 
-
 require_once( "includes/config.php" );
 
 if ( _DEBUG_MODE && ! isset( $debug_info ) ) {
@@ -85,12 +84,12 @@ if ( ! isset( $_SERVER['REQUEST_URI'] ) ) {
 	//ISAPI_Rewrite 3.x
 	if ( isset( $_SERVER['HTTP_X_REWRITE_URL'] ) ) {
 		$_SERVER['REQUEST_URI'] = $_SERVER['HTTP_X_REWRITE_URL'];
-	} //ISAPI_Rewrite 2.x w/ HTTPD.INI configuration
-	else if ( isset( $_SERVER['HTTP_REQUEST_URI'] ) ) {
+	} elseif ( isset( $_SERVER['HTTP_REQUEST_URI'] ) ) {
+		//ISAPI_Rewrite 2.x w/ HTTPD.INI configuration
 		$_SERVER['REQUEST_URI'] = $_SERVER['HTTP_REQUEST_URI'];
 		//Good to go!
-	} //ISAPI_Rewrite isn't installed or not configured
-	else {
+	} else {
+		//ISAPI_Rewrite isn't installed or not configured
 		//Someone didn't follow the instructions!
 		if ( isset( $_SERVER['SCRIPT_NAME'] ) ) {
 			$_SERVER['HTTP_REQUEST_URI'] = $_SERVER['SCRIPT_NAME'];
@@ -262,7 +261,7 @@ if ( ! session_id() && ( ! isset( $disable_sessions ) || ! $disable_sessions ) )
 			) );
 		}
 		new module_session();
-	} else if ( is_dir( _UCM_FILE_STORAGE_DIR . "temp/" ) && is_writable( _UCM_FILE_STORAGE_DIR . "temp/" ) ) {
+	} elseif ( is_dir( _UCM_FILE_STORAGE_DIR . "temp/" ) && is_writable( _UCM_FILE_STORAGE_DIR . "temp/" ) ) {
 		// file based sessions in the local /temp/ folder. bad! oh well.
 		if ( _DEBUG_MODE ) {
 			module_debug::log( array(
@@ -311,7 +310,7 @@ if ( _REWRITE_LINKS ) {
 				}
 				$_REQUEST['m'][ $module_number ] = $m[0];
 				$_REQUEST['p'][ $module_number ] = $m[1];
-				$module_number ++;
+				$module_number++;
 			}
 		}
 	}
@@ -337,7 +336,7 @@ if ( $plugins_to_init ) {
 				//$uninstalled_plugins[$plugin_name] = &$plugins[$plugin_name];
 				//unset($plugins[$plugin_name]);
 				//}
-			} else if ( ! _UCM_INSTALLED && in_array( $plugin_name, array( 'theme' ) ) ) {
+			} elseif ( ! _UCM_INSTALLED && in_array( $plugin_name, array( 'theme' ) ) ) {
 				// we want to load some plugins before we've installed.
 				$plugins[ $plugin_name ]->init();
 			}

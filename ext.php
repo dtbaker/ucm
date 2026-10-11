@@ -1,4 +1,5 @@
 <?php
+
 define( "_REWRITE_LINKS", false );
 
 // cache wordpress calls to speed things up a bit.

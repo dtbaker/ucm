@@ -1,6 +1,5 @@
 <?php
 
-
 /**
  * Ultimate Client Manager
  * Version 2
@@ -90,12 +89,12 @@ try {
 		if ( ! _UCM_INSTALLED || $load_module == 'setup' ) {
 			$load_page   = 'setup';
 			$load_module = 'setup';
-		} else if ( ! getcred() ) {
+		} elseif ( ! getcred() ) {
 			if ( is_callable( 'module_security::check_ssl' ) ) {
 				module_security::check_ssl();
 			}
 			$load_page = 'login';
-		} else if ( ! $load_page ) {
+		} elseif ( ! $load_page ) {
 			$load_page = 'home';
 		}
 		if ( $load_page ) { //} && is_file("pages/".$load_page.".php")){
@@ -132,7 +131,7 @@ try {
 			if ( $module && $load_page && is_file( $page_test ) ) {
 				// pull out the module in a local var ready for these pages to use.
 				$page = "includes/plugin_" . $load_module . "/pages/" . $load_page . ".php";
-			} else if ( $load_page ) { // && is_file("pages/".$load_page.".php")){
+			} elseif ( $load_page ) { // && is_file("pages/".$load_page.".php")){
 				$page = "pages/" . $load_page . ".php";
 			}
 
@@ -198,7 +197,7 @@ try {
 					// maybe instead of "include parents" we just pass whatever level we are currently on to the script
 					// and it will work out the rest.
 					// could maybe move the design_menu call from design_header.php up here to fix the issue. all in 1 place then :)
-					$current_menu_level ++;
+					$current_menu_level++;
 					?>
 					<div class="content">
 						<?php
@@ -210,7 +209,7 @@ try {
 								'data'  => "Displaying content from the 'inner_content' array.",
 							) );
 							echo array_shift( $inner_content );
-						} else if ( $current_selected_link ) {
+						} elseif ( $current_selected_link ) {
 							if ( isset( $current_selected_link['default_page'] ) && is_file( "includes/plugin_" . $current_selected_link['m'] . "/pages/" . basename( $current_selected_link['default_page'] ) . ".php" ) ) {
 								$module_page = "includes/plugin_" . $current_selected_link['m'] . "/pages/" . basename( $current_selected_link['default_page'] ) . ".php";
 								module_debug::log( array(
@@ -233,7 +232,7 @@ try {
 						echo '</div>';
 					}
 					echo ob_get_clean(); // END MENU OB
-				} else if ( ! isset( $do_menu_wrap ) ) {
+				} elseif ( ! isset( $do_menu_wrap ) ) {
 					// no sub links!
 					$do_menu_wrap = false;
 					$content      = ob_get_contents();

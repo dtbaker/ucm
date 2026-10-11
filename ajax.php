@@ -77,4 +77,3 @@ if ( module_security::is_logged_in() ) {
 	}
 	exit;
 }
-

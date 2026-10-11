@@ -36,9 +36,19 @@
     </rule>
 
     <file>includes</file>
+    <!-- The front controllers used to sit outside every scan, which is how an eval() in
+         ext.php went unnoticed for years. Scan them too. -->
+    <file>ajax.php</file>
+    <file>cron.php</file>
+    <file>ext.php</file>
+    <file>index.php</file>
+    <file>init.php</file>
 
     <arg name="extensions" value="php"/>
     <arg name="tab-width" value="4"/>
+
+    <!-- Local developer config, gitignored - not ours to lint -->
+    <exclude-pattern>*/includes/config.local.php</exclude-pattern>
 
     <!-- Exclude third-party/vendor code (same as .php-cs-fixer.php) -->
     <exclude-pattern>*/plugin_pdf/dompdf/*</exclude-pattern>
