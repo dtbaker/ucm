@@ -157,6 +157,33 @@ const MODULES: ModuleCase[] = [
     postUrl: '/?m[]=security',
     badTokenBody: { _process: 'save_security_role', security_role_id: 'new', name: 'Should Not Save' },
   },
+  {
+    name: 'vendor',
+    url: '/?m[]=vendor&p[]=vendor_admin_edit&vendor_id=new',
+    process: 'save_vendor',
+    fill: { vendor_name: 'CSRF Test Vendor', name: 'CSRF Contact' },
+    saved: /vendor saved successfully/i,
+    postUrl: '/?m[]=vendor',
+    badTokenBody: { _process: 'save_vendor', vendor_id: 'new', vendor_name: 'Should Not Save' },
+  },
+  {
+    name: 'contract',
+    url: '/?m[]=contract&p[]=contract_admin&contract_id=new',
+    process: 'save_contract',
+    fill: { name: 'CSRF Test Contract' },
+    saved: /contract saved successfully/i,
+    postUrl: '/?m[]=contract',
+    badTokenBody: { _process: 'save_contract', contract_id: 'new', name: 'Should Not Save', _redirect: '/' },
+  },
+  {
+    name: 'newsletter',
+    url: '/?m[]=newsletter&p[]=newsletter_edit&newsletter_id=new',
+    process: 'save_newsletter',
+    fill: { subject: 'CSRF Test Newsletter' },
+    saved: /newsletter saved successfully/i,
+    postUrl: '/?m[]=newsletter',
+    badTokenBody: { _process: 'save_newsletter', newsletter_id: 'new', subject: 'Should Not Save', _redirect: '/' },
+  },
 ];
 
 async function login(page: Page) {
@@ -266,6 +293,39 @@ test.describe('Form auth key, popups', () => {
   test('saving an address is refused without a token', async ({ page }) => {
     const response = await page.request.post('/?m[]=address', {
       form: { _process: 'save_from_popup', _redirect: '/' },
+    });
+    expect(response.status()).toBe(403);
+  });
+
+  test('the quick add transaction form still saves', async ({ page }) => {
+    await page.goto('/?m[]=finance&p[]=finance');
+
+    const form = page.locator('form#quick_add_form').first();
+    await expect(form.locator('input[name="form_auth_key"]')).toHaveCount(1);
+
+    await form.locator('[name="name"]').first().fill('CSRF Test Transaction');
+    await form.locator('[name="credit"]').first().fill('12.34');
+    await form.locator('input[type="submit"][name="addnew"]').first().click();
+
+    await expect(page.locator('body')).toContainText(/transaction saved successfully/i);
+  });
+
+  test('saving a transaction is refused without a token', async ({ page }) => {
+    const response = await page.request.post('/?m[]=finance', {
+      form: { _process: 'save_finance', finance_id: 'new', name: 'Should Not Save', amount: '1' },
+    });
+    expect(response.status()).toBe(403);
+  });
+
+  test('the invoice email screen publishes a token', async ({ page }) => {
+    await page.goto('/?m[]=invoice&p[]=invoice_admin&invoice_id=1&email=true');
+    const form = page.locator('form:has(input[name="_process"][value="send_email"])');
+    await expect(form.first().locator('input[name="form_auth_key"]')).toHaveCount(1);
+  });
+
+  test('sending an email is refused without a token', async ({ page }) => {
+    const response = await page.request.post('/?m[]=email', {
+      form: { _process: 'send_email', to_email: 'nobody@example.com', subject: 'Should Not Send' },
     });
     expect(response.status()).toBe(403);
   });

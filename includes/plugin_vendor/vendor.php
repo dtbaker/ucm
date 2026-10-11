@@ -499,6 +499,11 @@ class module_vendor extends module_base
 
 
 	public function process() {
+		// Every form that reaches here is posted from a UCM page, so it carries the
+		// form auth key. Refuse anything that does not - see module_form::check_secure_key().
+		if ( ! module_form::check_secure_key() ) {
+			module_form::reject_invalid_form_auth();
+		}
 		if ( isset( $_REQUEST['butt_del'] ) && $_REQUEST['butt_del'] && $_REQUEST['vendor_id'] && module_vendor::can_i( 'delete', 'Vendors' ) ) {
 			$data = self::get_vendor( $_REQUEST['vendor_id'] );
 			if ( $data['vendor_id'] && $data['vendor_id'] = $_REQUEST['vendor_id'] ) {

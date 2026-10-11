@@ -222,6 +222,11 @@ class module_email extends module_base
 
 
 	public function process() {
+		// Every form that reaches here is posted from a UCM page, so it carries the
+		// form auth key. Refuse anything that does not - see module_form::check_secure_key().
+		if ( ! module_form::check_secure_key() ) {
+			module_form::reject_invalid_form_auth();
+		}
 		if ( 'send_email' == $_REQUEST['_process'] ) {
 			$this->_handle_send_email();
 		}

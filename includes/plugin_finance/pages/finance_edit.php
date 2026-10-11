@@ -131,6 +131,7 @@ if ( $finance_id > 0 && ( count( $linked_invoice_payments ) || count( $linked_fi
 	?>
 
 
+	<?php module_form::print_form_auth(); ?>
 	<input type="hidden" name="_process" value="save_finance"/>
 	<input type="hidden" name="finance_id" value="<?php echo $finance_id; ?>"/>
 	<?php if ( isset( $_REQUEST['invoice_payment_id'] ) ) { ?>

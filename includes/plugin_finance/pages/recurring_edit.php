@@ -39,6 +39,7 @@ if ( ! $finance_recurring_id ) {
 	?>
 
 
+	<?php module_form::print_form_auth(); ?>
 	<input type="hidden" name="_process" value="save_recurring"/>
 	<input type="hidden" name="finance_recurring_id" value="<?php echo $finance_recurring_id; ?>"/>
 

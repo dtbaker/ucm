@@ -233,6 +233,11 @@ class module_finance extends module_base
 
 
 	public function process() {
+		// Every form that reaches here is posted from a UCM page, so it carries the
+		// form auth key. Refuse anything that does not - see module_form::check_secure_key().
+		if ( ! module_form::check_secure_key() ) {
+			module_form::reject_invalid_form_auth();
+		}
 		switch ( $_REQUEST['_process'] ) {
 			case 'quick_save_finance':
 				if ( isset( $_REQUEST['link_go'] ) && $_REQUEST['link_go'] == 'go' ) {

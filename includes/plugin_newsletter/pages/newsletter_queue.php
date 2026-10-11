@@ -89,6 +89,7 @@ if ( isset( $_REQUEST['f'] ) && is_array( $_REQUEST['f'] ) ) {
 			<form action="" method="post">
 				<input type="hidden" name="newsletter_id" value="<?php echo (int) $newsletter_id; ?>">
 				<input type="hidden" name="send_id" value="<?php echo (int) $send_id; ?>">
+				<?php module_form::print_form_auth(); ?>
 				<input type="hidden" name="_process" value="send_send">
 
 

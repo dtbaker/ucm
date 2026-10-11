@@ -69,6 +69,7 @@ if ( count( $sends_warning ) ) {
 ?>
 
 <form action="" method="post" id="newsletter_form">
+	<?php module_form::print_form_auth(); ?>
 	<input type="hidden" name="_process" value="save_newsletter">
 
 	<?php

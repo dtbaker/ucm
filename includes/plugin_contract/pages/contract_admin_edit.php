@@ -46,6 +46,7 @@ if ( class_exists( 'module_security', false ) ) {
 </script>
 
 <form action="" method="post" id="contract_form">
+	<?php module_form::print_form_auth(); ?>
 	<input type="hidden" name="_process" value="save_contract"/>
 	<input type="hidden" name="_redirect" value="" id="form_redirect"/>
 	<input type="hidden" name="contract_id" value="<?php echo $contract_id; ?>"/>
