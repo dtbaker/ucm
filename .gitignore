@@ -35,3 +35,7 @@ package-lock.json
 includes/plugin_file/upload/*
 !includes/plugin_file/upload/index.php
 !includes/plugin_file/upload/plupload/index.php
+
+# Working security/modernisation notes - contains unpatched vuln details.
+# Remove this once Phase 1 security fixes have shipped.
+docs/proposals/
