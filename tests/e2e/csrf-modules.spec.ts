@@ -384,6 +384,37 @@ test.describe('Form auth key, popups', () => {
     expect(response.status()).toBe(403);
   });
 
+  /**
+   * Settings are the one place where getting this wrong is dangerous rather than just
+   * annoying: check_secure_key() reads a config value to build the token, and
+   * module_config::c() returns false when it is called re-entrantly, which would make
+   * get_secure_key() mint and store a brand new secret and log everybody out. Saving
+   * settings with the real form is the check that nothing like that happens.
+   */
+  test('the settings page still saves, and does not change the signing secret', async ({ page }) => {
+    const keyBefore = await page.evaluate(() => (window as any).ucm?.form_auth_key);
+
+    await page.goto('/?m[]=config&p[]=config_settings');
+    const form = page.locator('form:has(input[name="_process"][value="save_config"])');
+    await expect(form.locator('input[name="form_auth_key"]')).toHaveCount(1);
+
+    // Submit unchanged - exactly what clicking Save does.
+    await form.locator('input[type="submit"][name="save"]').first().click();
+    await expect(page.locator('body')).toContainText(/configuration values saved successfully/i);
+
+    // If the secret had been regenerated the token would differ and we would be logged out.
+    await page.goto('/?m[]=customer&p[]=customer_admin');
+    const keyAfter = await page.evaluate(() => (window as any).ucm?.form_auth_key);
+    expect(keyAfter).toBe(keyBefore);
+  });
+
+  test('saving settings is refused without a token', async ({ page }) => {
+    const response = await page.request.post('/?m[]=config&p[]=config_settings', {
+      form: { _process: 'save_config', 'config[admin_system_name]': 'Should Not Save' },
+    });
+    expect(response.status()).toBe(403);
+  });
+
   test('saving a change request is refused without a token', async ({ page }) => {
     const response = await page.request.post('/?m[]=change_request', {
       form: { _process: 'save_change_request', change_request_id: 'new', request: 'Should Not Save' },
