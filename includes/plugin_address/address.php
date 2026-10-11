@@ -60,7 +60,13 @@ class module_address extends module_base
 				$address_id        = $address['address_id'] ?? 'new';
 				$address_post_data = isset( $_POST['address'][ $address_hash ] ) ? $_POST['address'][ $address_hash ] : array();
 				if ( $address_post_data ) {
-					$address_post_data['owner_id'] = $owner_id; // incase on new save.
+					// Who the address belongs to, and what kind it is, come from this
+					// hook's own arguments rather than from the hidden fields on the form.
+					// get_address() looks owner, table and type up together, so a submit
+					// that left those fields out wrote a row nothing could find again.
+					$address_post_data['owner_id']     = $owner_id; // incase on new save.
+					$address_post_data['owner_table']  = $owner_table;
+					$address_post_data['address_type'] = $address_type;
 					// we have post data to save, write it to the table!!
 					$this->save_address( $address_id, $address_post_data );
 				}
