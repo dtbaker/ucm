@@ -220,6 +220,24 @@ const MODULES: ModuleCase[] = [
     postUrl: '/?m[]=ticket',
     badTokenBody: { _process: 'save_ticket_data_key', ticket_data_key_id: 'new', key: 'should_not_save' },
   },
+  {
+    name: 'job',
+    url: '/?m[]=job&p[]=job_admin&job_id=new&customer_id=1',
+    process: 'save_job',
+    fill: { name: 'CSRF Test Job' },
+    saved: /job saved successfully/i,
+    postUrl: '/?m[]=job',
+    badTokenBody: { _process: 'save_job', job_id: 'new', name: 'Should Not Save', customer_id: '1', _redirect: '/' },
+  },
+  {
+    name: 'quote',
+    url: '/?m[]=quote&p[]=quote_admin&quote_id=new&customer_id=1',
+    process: 'save_quote',
+    fill: { name: 'CSRF Test Quote' },
+    saved: /quote saved successfully/i,
+    postUrl: '/?m[]=quote',
+    badTokenBody: { _process: 'save_quote', quote_id: 'new', name: 'Should Not Save', customer_id: '1', _redirect: '/' },
+  },
 ];
 
 async function login(page: Page) {

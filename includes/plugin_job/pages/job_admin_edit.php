@@ -440,6 +440,7 @@ hook_handle_callback( 'layout_column_half', 1, '35' );
 ?>
 
 <form action="" method="post" id="job_form">
+	<?php module_form::print_form_auth(); ?>
 	<input type="hidden" name="_process" value="save_job"/>
 	<input type="hidden" name="job_id" value="<?php echo $job_id; ?>"/>
 	<input type="hidden" name="customer_id" value="<?php echo $job['customer_id']; ?>"/>
@@ -1105,6 +1106,7 @@ hook_handle_callback( 'layout_column_half', 2, '65' );
 
 <form action="" method="post"
       id="job_task_form" <?php if ( module_config::c( 'job_ajax_tasks', 1 ) ) { ?> target="job_task_ajax_submit"<?php } ?>>
+	<?php module_form::print_form_auth(); ?>
 	<input type="hidden" name="_process" value="save_job<?php if ( module_config::c( 'job_ajax_tasks', 1 ) ) {
 		echo '_tasks_ajax';
 	} ?>"/>

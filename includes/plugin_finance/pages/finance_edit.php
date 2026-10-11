@@ -508,6 +508,7 @@ if ( $finance_id > 0 && ( count( $linked_invoice_payments ) || count( $linked_fi
                           url: '<?php echo module_job::link_open( false );?>',
                           data: {
                               '_process': 'ajax_job_list',
+                              'form_auth_key': ucm.form_auth_key,
                               'customer_id': new_customer_id
                           },
                           dataType: 'json',

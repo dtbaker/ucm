@@ -123,6 +123,7 @@ $job_tasks = module_job::get_tasks( $job_id );
 </script>
 
 <form action="" method="post" id="job_form" class="job_form_new">
+	<?php module_form::print_form_auth(); ?>
 	<input type="hidden" name="_process" value="save_job"/>
 	<input type="hidden" name="job_id" value="<?php echo $job_id; ?>"/>
 	<input type="hidden" name="customer_id" value="<?php echo (int) $job['customer_id']; ?>"/>

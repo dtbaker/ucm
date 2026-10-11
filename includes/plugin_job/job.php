@@ -1190,13 +1190,22 @@ Thank you,<br><br>
 	}
 
 	public static function link_ajax_task( $job_id, $full = false ) {
-		return self::link_generate( $job_id, array( 'full' => $full, 'arguments' => array( '_process' => 'ajax_task' ) ) );
+		return self::link_generate( $job_id, array(
+			'full'      => $full,
+			'arguments' => array(
+				'_process'      => 'ajax_task',
+				'form_auth_key' => module_form::get_secure_key(),
+			)
+		) );
 	}
 
 	public static function link_create_job_invoice( $job_id, $full = false ) {
 		return self::link_generate( $job_id, array(
 			'full'      => $full,
-			'arguments' => array( '_process' => 'ajax_create_invoice' )
+			'arguments' => array(
+				'_process'      => 'ajax_create_invoice',
+				'form_auth_key' => module_form::get_secure_key(),
+			)
 		) );
 	}
 
@@ -1470,6 +1479,11 @@ Job Name: <strong>{JOB_NAME}</strong> <br/>
 
 
 	public function process() {
+		// Every form that reaches here is posted from a UCM page, so it carries the
+		// form auth key. Refuse anything that does not - see module_form::check_secure_key().
+		if ( ! module_form::check_secure_key() ) {
+			module_form::reject_invalid_form_auth();
+		}
 		$errors = array();
 
 		if ( 'save_job_task' === $_REQUEST['_process'] ) {

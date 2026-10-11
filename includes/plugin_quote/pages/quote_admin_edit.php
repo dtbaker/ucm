@@ -410,6 +410,7 @@ if ( class_exists( 'module_import_export', false ) ) {
 <iframe id="ajax_task_save" name="ajax_task_save" src="about:blank" style="width:0;height:0;visibility: hidden;"
         frameborder="0"></iframe>
 <form action="" method="post" id="quote_form">
+	<?php module_form::print_form_auth(); ?>
 	<input type="hidden" name="_process" value="save_quote"/>
 	<input type="hidden" name="_redirect" value="" id="form_redirect"/>
 	<input type="hidden" name="quote_id" value="<?php echo $quote_id; ?>"/>
