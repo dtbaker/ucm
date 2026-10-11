@@ -5,6 +5,12 @@ $start_search_time = microtime( true );
 $noredirect = true;
 require_once( 'init.php' );
 
+if ( ! module_security::is_logged_in() ) {
+	// This file is only ever called from JavaScript. It used to return an empty 200 to a
+	// logged-out caller, which looks exactly like "no results".
+	ucm_send_auth_required();
+}
+
 if ( module_security::is_logged_in() ) {
 
 

@@ -78,6 +78,54 @@ function ucm_password_needs_rehash( $hash ) {
 	return strlen( $hash ) === 32 && ctype_xdigit( $hash );
 }
 
+/**
+ * Is this request the browser fetching something in the background, rather than a person
+ * loading a page?
+ *
+ * Used to decide whether a logged-out request should get the login screen or a plain
+ * "not logged in" answer. Handing a login page to a script or XHR request is worse than
+ * useless: the caller tries to parse it, fails in some confusing way, and the real
+ * problem - the session expired - never surfaces.
+ *
+ * @return bool
+ */
+function ucm_is_background_request() {
+	if ( isset( $_REQUEST['display_mode'] ) && $_REQUEST['display_mode'] === 'ajax' ) {
+		return true;
+	}
+	if ( ! empty( $_SERVER['HTTP_X_REQUESTED_WITH'] ) && strtolower( $_SERVER['HTTP_X_REQUESTED_WITH'] ) === 'xmlhttprequest' ) {
+		return true;
+	}
+	// Browsers say what they want the response for. "document" and "iframe" are real
+	// page loads and should still get the login screen.
+	if ( ! empty( $_SERVER['HTTP_SEC_FETCH_DEST'] ) ) {
+		return in_array( $_SERVER['HTTP_SEC_FETCH_DEST'], array( 'empty', 'script', 'json' ), true );
+	}
+
+	return false;
+}
+
+/**
+ * Answer a background request that needs a login, and stop.
+ *
+ * Sends 401 and a short JSON body instead of the login page, so the caller can tell the
+ * difference between "no data" and "you are logged out".
+ */
+function ucm_send_auth_required() {
+	while ( ob_get_level() ) {
+		@ob_end_clean();
+	}
+	if ( ! headers_sent() ) {
+		header( 'HTTP/1.1 401 Unauthorized' );
+		header( 'Content-Type: application/json; charset=utf-8' );
+	}
+	echo json_encode( array(
+		'error'   => 'not_logged_in',
+		'message' => 'Your session has expired. Please log in again.',
+	) );
+	exit;
+}
+
 function get_yes_no() {
 	$data = array(
 		1 => "Yes",

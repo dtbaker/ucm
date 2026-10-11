@@ -90,6 +90,11 @@ try {
 			$load_page   = 'setup';
 			$load_module = 'setup';
 		} elseif ( ! getcred() ) {
+			if ( ucm_is_background_request() ) {
+				// Scripts and XHR used to get the whole login page back with a 200, which
+				// is how the dashboard ended up stuck on "Loading Alerts...".
+				ucm_send_auth_required();
+			}
 			if ( is_callable( 'module_security::check_ssl' ) ) {
 				module_security::check_ssl();
 			}
