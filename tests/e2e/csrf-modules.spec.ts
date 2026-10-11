@@ -544,6 +544,21 @@ test.describe('Form auth key, popups', () => {
     expect(response.status()).toBe(403);
   });
 
+  test('the bulk actions box still submits', async ({ page }) => {
+    // Nothing is selected, so nothing is deleted - this is about the submit getting
+    // through rather than about what the action does.
+    await aFile(page);
+    await page.goto('/?m[]=file&p[]=file_admin');
+    await page.getByRole('link', { name: '(bulk actions)' }).first().click();
+
+    const form = page.locator('form:has(input[name="bulk_action_go"])').first();
+    await expect(form.locator('input[name="form_auth_key"]').first()).toBeAttached();
+
+    await page.locator('#bulk_action_button').first().click();
+    await page.waitForLoadState();
+    await expect(page.locator('body')).not.toContainText(/invalid or expired form submission/i);
+  });
+
   test('the list pages publish a token next to the bulk and export controls', async ({ page }) => {
     await page.goto('/?m[]=invoice&p[]=invoice_admin');
     await expect(page.locator('input[name="bulk_action_go"]').first()).toBeAttached();
