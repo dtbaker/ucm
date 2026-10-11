@@ -10,6 +10,9 @@ services:
     environment:
       - APACHE_DOCUMENT_ROOT=/var/www/html
       - UCM_DEBUG=1
+      # Local dev only. A real install gets a random secret written to
+      # config.local.php by the installer.
+      - UCM_SECRET=local-dev-not-a-real-secret
     depends_on:
       - db
     restart: unless-stopped
@@ -32,6 +35,7 @@ services:
       - UCM_DEBUG=1
       - UCM_CONFIG_LOCAL=/tmp/ucm-install-test.config.local.php
       - UCM_DB_NAME=ucm_install_test
+      - UCM_SECRET=install-test-not-a-real-secret
     depends_on:
       - db
 

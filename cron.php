@@ -7,7 +7,9 @@ chdir( dirname( __FILE__ ) ); //
 require_once( 'includes/config.php' );
 
 if ( ! defined( '_UCM_SECRET' ) ) {
-	define( '_UCM_SECRET', _UCM_FOLDER );
+	// Unreachable in practice - includes/config.php is loaded above and always defines
+	// this. Kept in step with it so there is no second, weaker definition to find.
+	define( '_UCM_SECRET', ucm_env( 'UCM_SECRET', _UCM_FOLDER ) );
 }
 
 // if we are runing this from a web browser then we have to have a correct hash.

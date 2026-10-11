@@ -84,6 +84,13 @@ built-in defaults without editing any file:
 | `UCM_DB_PASS`       | `ucm` in Docker              |
 | `UCM_DB_PREFIX`     | `ucm_`                       |
 | `UCM_CONFIG_LOCAL`  | `includes/config.local.php`  |
+| `UCM_SECRET`        | the install path (set this)  |
 | `UCM_DEBUG`         | off                          |
 
 `includes/config.local.php` still wins over all of them when it exists.
+
+`UCM_SECRET` seeds every signed link the app issues - download links, calendar feeds, the
+cron URL. The installer writes a random one into `config.local.php`, so a normal install
+never needs this variable. Set it only when running from the environment with no local
+config, as the containers above do; otherwise it falls back to the install path, which is
+guessable.

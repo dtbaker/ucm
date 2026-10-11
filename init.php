@@ -77,7 +77,9 @@ define( '_SCRIPT_VERSION', '3.555' );
 // 3.42 - invoice product adjustments
 
 if ( ! defined( '_UCM_SECRET' ) ) {
-	define( '_UCM_SECRET', _UCM_FOLDER );
+	// Unreachable in practice - includes/config.php is loaded above and always defines
+	// this. Kept in step with it so there is no second, weaker definition to find.
+	define( '_UCM_SECRET', ucm_env( 'UCM_SECRET', _UCM_FOLDER ) );
 }
 
 if ( ! isset( $_SERVER['REQUEST_URI'] ) ) {
