@@ -201,7 +201,7 @@ background-color:#f9f9f9;
 <table style="width: 100%;" border="0" cellspacing="0" cellpadding="1" align="center">
 <tbody>
 <tr>
-<td colspan="2" align="left" valign="top"><img title="Logo" src="http://ultimateclientmanager.com/images/logo_ucm.png" alt="Logo" width="202" height="60" /></td>
+<td colspan="2" align="left" valign="top"><!-- Put your own logo here --></td>
 <td colspan="2" align="left" valign="top"><span class="style11">QUOTE</span></td>
 </tr>
 <tr>
