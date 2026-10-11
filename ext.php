@@ -72,10 +72,19 @@ if ( $dont_init_plugins && $m && ! isset( $plugins[ $m ] ) ) {
 	}
 	foreach ( $external_plugins_to_load as $external_plugin_to_load ) {
 		$external_plugin_to_load = basename( $external_plugin_to_load );
-		$plugin_dir              = 'includes/plugin_' . $external_plugin_to_load;
+		// The plugin name reaches here from the request, so only ever let a plain
+		// identifier through - it is about to become a class name.
+		if ( ! preg_match( '/^[a-z0-9_]+$/i', $external_plugin_to_load ) ) {
+			continue;
+		}
+		$plugin_dir = 'includes/plugin_' . $external_plugin_to_load;
 		if ( is_dir( $plugin_dir ) && is_file( $plugin_dir . "/" . $external_plugin_to_load . ".php" ) ) {
 			require_once( $plugin_dir . "/" . $external_plugin_to_load . ".php" );
-			eval( '$plugins[$external_plugin_to_load] = new module_' . $external_plugin_to_load . '();' );
+			$plugin_class = 'module_' . $external_plugin_to_load;
+			if ( ! class_exists( $plugin_class ) ) {
+				continue;
+			}
+			$plugins[ $external_plugin_to_load ] = new $plugin_class();
 			$plugins[ $external_plugin_to_load ]->init();
 		}
 	}
