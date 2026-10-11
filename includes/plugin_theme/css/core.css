@@ -197,3 +197,14 @@ td{
 .archive_button:hover{
     background:#e08702;
 }
+
+/* On phones, a wide table on an edit page used to push the whole page sideways, so the
+   last columns were unreachable. Let the table scroll on its own instead. The scroll is
+   on the table rather than the box around it, so nothing else gets clipped. */
+@media (max-width: 767px) {
+    .content_box_wheader > table.tableclass_rows {
+        display: block;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+}
