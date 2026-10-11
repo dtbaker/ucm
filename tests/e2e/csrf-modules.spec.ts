@@ -293,7 +293,8 @@ test.describe('Form auth key, per module', () => {
       await expect(form).toHaveCount(1);
 
       // The guard is useless, and the form is broken, if the token is not on the page.
-      await expect(form.locator('input[name="form_auth_key"]')).toHaveCount(1);
+      // More than one is fine - the bulk action and export controls publish their own.
+      await expect(form.locator('input[name="form_auth_key"]').first()).toBeAttached();
 
       for (const [field, value] of Object.entries(mod.fill)) {
         await form.locator(`[name="${field}"]`).first().fill(value);
@@ -330,7 +331,7 @@ test.describe('Form auth key, popups', () => {
 
     const modal = page.locator('.ucm-modal-popup:visible').first();
     const form = modal.locator('form:has(textarea[name="note"]), form:has([name="note"])').first();
-    await expect(form.locator('input[name="form_auth_key"]')).toHaveCount(1);
+    await expect(form.locator('input[name="form_auth_key"]').first()).toBeAttached();
 
     await form.locator('[name="note"]').first().fill('CSRF popup note');
     await modal.getByRole('button', { name: 'Save note' }).click();
@@ -350,7 +351,7 @@ test.describe('Form auth key, popups', () => {
     await page.goto('/?m[]=address&p[]=address_popup&address_id=1');
     const form = page.locator('form:has(input[name="_process"][value="save_from_popup"])');
     await expect(form).toHaveCount(1);
-    await expect(form.locator('input[name="form_auth_key"]')).toHaveCount(1);
+    await expect(form.locator('input[name="form_auth_key"]').first()).toBeAttached();
   });
 
   test('saving an address is refused without a token', async ({ page }) => {
@@ -364,7 +365,7 @@ test.describe('Form auth key, popups', () => {
     await page.goto('/?m[]=finance&p[]=finance');
 
     const form = page.locator('form#quick_add_form').first();
-    await expect(form.locator('input[name="form_auth_key"]')).toHaveCount(1);
+    await expect(form.locator('input[name="form_auth_key"]').first()).toBeAttached();
 
     await form.locator('[name="name"]').first().fill('CSRF Test Transaction');
     await form.locator('[name="credit"]').first().fill('12.34');
@@ -383,7 +384,7 @@ test.describe('Form auth key, popups', () => {
   test('the invoice email screen publishes a token', async ({ page }) => {
     await page.goto('/?m[]=invoice&p[]=invoice_admin&invoice_id=1&email=true');
     const form = page.locator('form:has(input[name="_process"][value="send_email"])');
-    await expect(form.first().locator('input[name="form_auth_key"]')).toHaveCount(1);
+    await expect(form.first().locator('input[name="form_auth_key"]').first()).toBeAttached();
   });
 
   test('sending an email is refused without a token', async ({ page }) => {
@@ -405,7 +406,7 @@ test.describe('Form auth key, popups', () => {
 
     await page.goto('/?m[]=config&p[]=config_settings');
     const form = page.locator('form:has(input[name="_process"][value="save_config"])');
-    await expect(form.locator('input[name="form_auth_key"]')).toHaveCount(1);
+    await expect(form.locator('input[name="form_auth_key"]').first()).toBeAttached();
 
     // Submit unchanged - exactly what clicking Save does.
     await form.locator('input[type="submit"][name="save"]').first().click();
@@ -427,7 +428,7 @@ test.describe('Form auth key, popups', () => {
   test('the invoice form still saves', async ({ page }) => {
     await page.goto('/?m[]=invoice&p[]=invoice_admin&invoice_id=new&customer_id=1');
     const form = page.locator('form:has(input[name="_process"][value="save_invoice"])');
-    await expect(form.locator('input[name="form_auth_key"]')).toHaveCount(1);
+    await expect(form.locator('input[name="form_auth_key"]').first()).toBeAttached();
 
     await form.locator('[name="name"]').first().fill('CSRF Test Invoice');
     await form.locator('input[type="submit"][name="butt_save"]').first().click();
@@ -496,7 +497,7 @@ test.describe('Form auth key, popups', () => {
     // so this saves it as it stands, which is what the Save button does.
     await page.goto('/?m[]=file&p[]=file_admin&file_id=new');
     const form = page.locator('form:has(input[name="_process"][value="save_file"])');
-    await expect(form.locator('input[name="form_auth_key"]')).toHaveCount(1);
+    await expect(form.locator('input[name="form_auth_key"]').first()).toBeAttached();
 
     await form.locator('input[type="submit"][name="butt_save"]').first().click();
     await expect(page.locator('body')).not.toContainText(/invalid or expired form submission/i);
@@ -527,6 +528,37 @@ test.describe('Form auth key, popups', () => {
       form: { encrypt_key_id: '0', encrypt_key_name: 'Should Not Save' },
     });
     expect(response.status()).toBe(403);
+  });
+
+  /**
+   * Bulk actions and CSV export run from the list pages through the pagination hook,
+   * not through a module's process(), and they delete or dump whole result sets.
+   */
+  test('a bulk action is refused without a token', async ({ page }) => {
+    const response = await page.request.get('/?m[]=ticket&p[]=ticket_admin&bulk_action_go=yes');
+    expect(response.status()).toBe(403);
+  });
+
+  test('adding results to a group is refused without a token', async ({ page }) => {
+    const response = await page.request.get('/?m[]=ticket&p[]=ticket_admin&add_group_go=yes');
+    expect(response.status()).toBe(403);
+  });
+
+  test('a CSV export is refused without a token', async ({ page }) => {
+    const response = await page.request.get('/?m[]=invoice&p[]=invoice_admin&import_export_go=yes');
+    expect(response.status()).toBe(403);
+  });
+
+  test('the list pages publish a token next to the bulk and export controls', async ({ page }) => {
+    await page.goto('/?m[]=invoice&p[]=invoice_admin');
+    await expect(page.locator('input[name="bulk_action_go"]').first()).toBeAttached();
+    await expect(page.locator('input#import_export_auth[name="form_auth_key"]').first()).toBeAttached();
+
+    // And the export still works when it is submitted with the token.
+    const key = await page.evaluate(() => (window as any).ucm?.form_auth_key);
+    const csv = await page.request.get('/?m[]=invoice&p[]=invoice_admin&import_export_go=yes&form_auth_key=' + key);
+    expect(csv.status()).toBe(200);
+    expect(csv.headers()['content-type']).toContain('csv');
   });
 
   test('saving a change request is refused without a token', async ({ page }) => {

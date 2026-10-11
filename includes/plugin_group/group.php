@@ -677,6 +677,15 @@ class module_group extends module_base
 
 	public static function run_pagination_hook( &$rows ) {
 
+		// Bulk actions delete whole sets of records and "add to group" writes to every
+		// row on screen. Both are submitted from the list page, which publishes the
+		// form auth key next to the hidden go fields below.
+		$bulk_requested = ( isset( $_REQUEST['bulk_action_go'] ) && 'yes' == $_REQUEST['bulk_action_go'] )
+			|| ( isset( $_REQUEST['add_group_go'] ) && 'yes' == $_REQUEST['add_group_go'] );
+		if ( $bulk_requested && ! module_form::check_secure_key() ) {
+			module_form::reject_invalid_form_auth();
+		}
+
 		if ( isset( $_REQUEST['bulk_action_go'] ) && $_REQUEST['bulk_action_go'] == 'yes' ) {
 			// we are posting back tot his script with a go!
 			if ( $rows instanceof mysqli_result ) {
@@ -778,6 +787,7 @@ class module_group extends module_base
                         <?php
 	            }
 	            ?>
+                    <?php module_form::print_form_auth(); ?>
                     <input type="hidden" name="add_group_go" id="add_group_go" value="">
 		            <input type="button" name="add_group_button" id="add_group_button"
 		                   value="<?php _e( 'Add to group' ); ?>">
@@ -844,6 +854,7 @@ class module_group extends module_base
 		            <?php
 	            }
 	            ?>
+	            <?php module_form::print_form_auth(); ?>
 	            <input type="hidden" name="bulk_action_go" id="bulk_action_go" value="">
                     <input type="button" name="bulk_action_button" id="bulk_action_button"
                            value="<?php _e( 'Perform Bulk Actions' ); ?>">
