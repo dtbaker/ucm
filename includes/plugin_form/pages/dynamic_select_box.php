@@ -14,7 +14,7 @@
 		$options['entry_count'] = (int) $options['entry_count'];
 	}
 	unset( $options['hash'] );
-	if ( $table && $column && $hash && md5( serialize( $options ) . _UCM_SECRET ) == $hash ) {
+	if ( $table && $column && $hash && is_string( $hash ) && hash_equals( md5( serialize( $options ) . _UCM_SECRET ), $hash ) ) {
 		// we can edit this table.
 
 		if ( $data_value ) {
@@ -64,7 +64,7 @@
 							if ( $entry_data['index'] && $entry_data['index_id'] ) {
 								foreach ( $_POST['rel'] as $other_table ) {
 									if ( module_db::db_table_exists( $other_table ) ) {
-										$sql = "SELECT COUNT(*) AS `c` FROM `" . _DB_PREFIX . "$other_table` WHERE `" . db_escape( $entry_data['index'] ) . "` = '" . db_escape( $entry_data['index_id'] ) . "'";
+										$sql = "SELECT COUNT(*) AS `c` FROM `" . _DB_PREFIX . "$other_table` WHERE `" . db_identifier( $entry_data['index'] ) . "` = '" . db_escape( $entry_data['index_id'] ) . "'";
 										$qa  = qa1( $sql );
 										if ( ! empty( $qa['c'] ) ) {
 											$data_items[ $entry_value ]['entry_count'] += $qa['c'];

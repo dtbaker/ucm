@@ -198,6 +198,67 @@ function ucm_send_auth_required() {
 	exit;
 }
 
+/**
+ * Make a value safe to put inside backticks as a table or column name.
+ *
+ * db_escape() is the wrong tool for this and always has been:
+ * mysqli_real_escape_string() does not escape a backtick, so a name that contains one
+ * breaks straight out of the quoting. Anything outside letters, digits and underscore is
+ * dropped. A name that is left with nothing produces empty backticks, which the database
+ * refuses - a loud failure rather than a quiet injection.
+ *
+ * @param string $identifier table or column name
+ *
+ * @return string
+ */
+function db_identifier( $identifier ) {
+	if ( is_array( $identifier ) || is_object( $identifier ) ) {
+		return '';
+	}
+
+	return preg_replace( '/[^A-Za-z0-9_]/', '', (string) $identifier );
+}
+
+/**
+ * Build an ORDER BY fragment from a column name and an optional direction.
+ *
+ * Escaping cannot make an ORDER BY fragment safe - the whole point of the clause is that
+ * it is SQL, not a value - so this validates instead. The result is always either a
+ * single backticked column with an optional ASC/DESC, or an empty string.
+ *
+ * @param string $order           e.g. "name", "email_id DESC"
+ * @param array  $allowed_columns column names to accept, or empty to accept any
+ *                                well-formed name
+ *
+ * @return string "`name` DESC", or "" when the input is not something we recognise
+ */
+function db_order_by( $order, $allowed_columns = array() ) {
+	if ( is_array( $order ) || is_object( $order ) ) {
+		return '';
+	}
+	$parts = preg_split( '/\s+/', trim( (string) $order ), - 1, PREG_SPLIT_NO_EMPTY );
+	if ( ! $parts || count( $parts ) > 2 ) {
+		return '';
+	}
+	$column = $parts[0];
+	// Some of these columns are reserved words, so callers already quote them.
+	if ( strlen( $column ) > 2 && '`' === $column[0] && '`' === substr( $column, - 1 ) ) {
+		$column = substr( $column, 1, - 1 );
+	}
+	if ( ! strlen( $column ) || db_identifier( $column ) !== $column ) {
+		return '';
+	}
+	if ( $allowed_columns && ! in_array( $column, $allowed_columns, true ) ) {
+		return '';
+	}
+	$direction = isset( $parts[1] ) ? strtoupper( $parts[1] ) : '';
+	if ( $direction && 'ASC' !== $direction && 'DESC' !== $direction ) {
+		return '';
+	}
+
+	return '`' . $column . '`' . ( $direction ? ' ' . $direction : '' );
+}
+
 function get_yes_no() {
 	$data = array(
 		1 => "Yes",

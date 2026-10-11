@@ -1096,7 +1096,7 @@ class module_user extends module_base
 					}
 					$sql = "REPLACE INTO `" . _DB_PREFIX . "user_perm` SET user_id = '" . (int) $user_id . "', security_permission_id = '" . (int) $security_permission_id . "' ";
 					foreach ( $actions as $permission => $tf ) {
-						$sql .= ", `" . db_escape( $permission ) . "` = 1";
+						$sql .= ", `" . db_identifier( $permission ) . "` = 1";
 					}
 					query( $sql );
 				}

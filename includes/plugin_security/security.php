@@ -1061,7 +1061,7 @@ class module_security extends module_base
 							if ( count( $actions ) ) {
 								$sql = "REPLACE INTO `" . _DB_PREFIX . "security_role_perm` SET security_role_id = '" . (int) $security_role_id . "', security_permission_id = '" . (int) $security_permission_id . "' ";
 								foreach ( $actions as $permission => $tf ) {
-									$sql .= ", `" . db_escape( $permission ) . "` = 1";
+									$sql .= ", `" . db_identifier( $permission ) . "` = 1";
 								}
 								query( $sql );
 							}
@@ -1082,7 +1082,7 @@ class module_security extends module_base
 							}
 							$sql = "REPLACE INTO `" . _DB_PREFIX . "security_role_perm` SET security_role_id = '" . (int) $security_role_id . "', security_permission_id = '" . (int) $security_permission_id . "' ";
 							foreach ( $actions as $permission => $tf ) {
-								$sql .= ", `" . db_escape( $permission ) . "` = 1";
+								$sql .= ", `" . db_identifier( $permission ) . "` = 1";
 							}
 							query( $sql );
 						}
@@ -1102,7 +1102,7 @@ class module_security extends module_base
 							}
 							if ( (int) $selected_security_permission_id > 0 ) {
 								$sql = "REPLACE INTO `" . _DB_PREFIX . "security_role_perm` SET security_role_id = '" . (int) $security_role_id . "', security_permission_id = '" . (int) $selected_security_permission_id . "' ";
-								$sql .= ", `" . db_escape( $permission ) . "` = 1";
+								$sql .= ", `" . db_identifier( $permission ) . "` = 1";
 								query( $sql );
 							}
 						}

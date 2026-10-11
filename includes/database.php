@@ -150,7 +150,7 @@ function delete_from_db( $table, $key, $val ) {
 
 	$sql = "DELETE FROM `" . _DB_PREFIX . "$table` WHERE ";
 	foreach ( $key as $kid => $k ) {
-		$sql .= "`" . db_escape( $k ) . "` = '" . db_escape( $val[ $kid ] ) . "' AND ";
+		$sql .= "`" . db_identifier( $k ) . "` = '" . db_escape( $val[ $kid ] ) . "' AND ";
 	}
 	$sql = rtrim( $sql, " AND " );
 	if ( isset( $fields['system_id'] ) && defined( '_SYSTEM_ID' ) ) {
@@ -186,7 +186,7 @@ function get_single( $table, $key, $val ) {
 
 	$sql = "SELECT * FROM `" . _DB_PREFIX . "$table` WHERE ";
 	foreach ( $key as $kid => $k ) {
-		$sql .= "`" . db_escape( $k ) . "` = '" . db_escape( $val[ $kid ] ) . "' AND ";
+		$sql .= "`" . db_identifier( $k ) . "` = '" . db_escape( $val[ $kid ] ) . "' AND ";
 	}
 	$sql = rtrim( $sql, " AND " );
 	//if(isset($fields['system_id']) && defined('_SYSTEM_ID')){
@@ -356,7 +356,7 @@ function get_col_vals( $table, $key, $val = false, $order = false ) {
 		echo 'Fail on get_col_Vals';
 		exit;
 	}
-	$key    = db_escape( $key );
+	$key    = db_identifier( $key );
 	$sql    = "SELECT `$key` as k $dbval";
 	$sql    .= " FROM `" . _DB_PREFIX . "$table`";
 	$fields = get_fields( $table, array(), array(), true );
@@ -365,7 +365,10 @@ function get_col_vals( $table, $key, $val = false, $order = false ) {
 	}
 	$sql .= " GROUP BY k";
 	if ( $order ) {
-		$sql .= " ORDER BY " . db_escape( $order ) . "";
+		$order_by = db_order_by( $order, array_keys( $fields ) );
+		if ( $order_by ) {
+			$sql .= " ORDER BY " . $order_by;
+		}
 	}
 	$res    = qa( $sql );
 	$return = array();
@@ -383,10 +386,10 @@ function get_col_vals( $table, $key, $val = false, $order = false ) {
 
 function get_multiple( $table, $search = false, $id = false, $search_type = "exact", $order = false ) {
 
-
-	$sql = "SELECT *";
+	$table = db_identifier( $table );
+	$sql   = "SELECT *";
 	if ( $id ) {
-		$sql .= ",`$id` AS id";
+		$sql .= ",`" . db_identifier( $id ) . "` AS id";
 	}
 	$sql    .= " FROM `" . _DB_PREFIX . "$table`";
 	$fields = get_fields( $table, array(), array(), true );
@@ -447,10 +450,12 @@ function get_multiple( $table, $search = false, $id = false, $search_type = "exa
 		}
 	}
 	if ( $order ) {
-		if ( strpos( $order, ' ' ) === false && strpos( $order, '`' ) === false ) {
-			$order = '`' . $order . '`';
+		// "id" is the alias this function adds above, so it is allowed alongside the
+		// table's own columns.
+		$order_by = db_order_by( $order, array_merge( array_keys( $fields ), array( 'id' ) ) );
+		if ( $order_by ) {
+			$sql .= " ORDER BY " . $order_by;
 		}
-		$sql .= " ORDER BY " . db_escape( $order ) . "";
 	}
 	$result = qa( $sql );
 
