@@ -34,14 +34,22 @@ if ( ! defined( '_DB_SERVER' ) ) {
 
 define( '_UCM_VERSION', 2 );
 define( '_UCM_FOLDER', dirname( dirname( __FILE__ ) ) . '/' );
+// The installer writes a random secret into config.local.php, so a normal install never
+// reaches either branch below. They are here for containers and CI, which point at a
+// database through the environment and may have no local config file at all.
+//
+// The fallback is _UCM_FOLDER, the install path - guessable on shared hosting, and every
+// capability hash in the app is built from this value, so prefer the environment.
+//
+// Two steps rather than one define() with a function call in it, so static analysis can
+// still see that the constant is always defined.
+$ucm_secret_env = ucm_env( 'UCM_SECRET', '' );
+if ( ! defined( '_UCM_SECRET' ) && $ucm_secret_env !== '' ) {
+	define( '_UCM_SECRET', $ucm_secret_env );
+}
+unset( $ucm_secret_env );
 if ( ! defined( '_UCM_SECRET' ) ) {
-	// The installer writes a random secret into config.local.php, so a normal install
-	// never reaches this. It is here for containers and CI, which point at a database
-	// through the environment and may have no local config file at all.
-	//
-	// The old fallback was _UCM_FOLDER, the install path - guessable on shared hosting,
-	// and every capability hash in the app is built from this value.
-	define( '_UCM_SECRET', ucm_env( 'UCM_SECRET', _UCM_FOLDER ) );
+	define( '_UCM_SECRET', _UCM_FOLDER );
 }
 
 define( "_EXTERNAL_TUNNEL", 'ext.php' );
