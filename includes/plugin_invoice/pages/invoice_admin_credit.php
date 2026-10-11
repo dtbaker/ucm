@@ -87,6 +87,7 @@ $x = 1;
 
 
 <form action="" method="post" id="invoice_form">
+	<?php module_form::print_form_auth(); ?>
 	<input type="hidden" name="_process" value="save_invoice" class="no_permissions"/>
 	<input type="hidden" name="invoice_id" value="<?php echo $invoice_id; ?>"/>
 	<?php if ( $invoice['customer_id'] && ! isset( $_REQUEST['change_customer'] ) ) { ?>
@@ -1291,7 +1292,7 @@ $x = 1;
 				<tr>
 					<td colspan="<?php echo $colspan; ?>" align="center">
 						<a
-							href="<?php echo module_invoice::link_open( $invoice_id ); ?>&_process=assign_credit_to_customer"><?php _e( 'This customer has overpaid this invoice. Click here to assign this as credit to their account for a future invoice.' ); ?></a>
+							href="<?php echo module_invoice::link_open( $invoice_id ); ?>&_process=assign_credit_to_customer&form_auth_key=<?php echo module_form::get_secure_key(); ?>"><?php _e( 'This customer has overpaid this invoice. Click here to assign this as credit to their account for a future invoice.' ); ?></a>
 					</td>
 					<td>
 						<?php _e( 'Credit:' ); ?>

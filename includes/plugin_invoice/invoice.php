@@ -1596,6 +1596,12 @@ Job: <strong>{JOB_NAME}</strong> <br/>
 
 	public function process() {
 		$errors = array();
+		// Everything below except the payment hand-off is a form submit from a UCM page
+		// and must carry the form auth key. Payments are deliberately left out: they round
+		// trip through gateway pages and printable templates that have no token to send.
+		if ( 'make_payment' != $_REQUEST['_process'] && ! module_form::check_secure_key() ) {
+			module_form::reject_invalid_form_auth();
+		}
 		if ( $_REQUEST['_process'] == 'make_payment' ) {
 			$this->handle_payment();
 		} elseif ( isset( $_REQUEST['butt_del'] ) && $_REQUEST['butt_del'] && $_REQUEST['invoice_id'] && module_invoice::can_i( 'delete', 'Invoices' ) ) {

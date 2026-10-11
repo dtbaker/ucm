@@ -415,6 +415,33 @@ test.describe('Form auth key, popups', () => {
     expect(response.status()).toBe(403);
   });
 
+  test('the invoice form still saves', async ({ page }) => {
+    await page.goto('/?m[]=invoice&p[]=invoice_admin&invoice_id=new&customer_id=1');
+    const form = page.locator('form:has(input[name="_process"][value="save_invoice"])');
+    await expect(form.locator('input[name="form_auth_key"]')).toHaveCount(1);
+
+    await form.locator('[name="name"]').first().fill('CSRF Test Invoice');
+    await form.locator('input[type="submit"][name="butt_save"]').first().click();
+
+    await expect(page.locator('body')).toContainText(/invoice saved successfully/i);
+  });
+
+  test('saving an invoice is refused without a token', async ({ page }) => {
+    const response = await page.request.post('/?m[]=invoice', {
+      form: { _process: 'save_invoice', invoice_id: 'new', name: 'Should Not Save', customer_id: '1', _redirect: '/' },
+    });
+    expect(response.status()).toBe(403);
+  });
+
+  test('starting a payment is deliberately left outside the token check', async ({ page }) => {
+    // Payments round trip through gateway pages that cannot carry the token. If this
+    // ever starts returning 403, paying an invoice has been broken.
+    const response = await page.request.post('/?m[]=invoice&invoice_id=1', {
+      form: { _process: 'make_payment' },
+    });
+    expect(response.status()).not.toBe(403);
+  });
+
   test('saving a change request is refused without a token', async ({ page }) => {
     const response = await page.request.post('/?m[]=change_request', {
       form: { _process: 'save_change_request', change_request_id: 'new', request: 'Should Not Save' },
