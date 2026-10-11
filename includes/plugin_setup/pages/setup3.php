@@ -33,15 +33,13 @@ if (
 	?>
 
 	<p>
-		This will automatically upgrade you to the latest version of Ultimate Client Manager. <br>
-		To proceed you will need to enter your <strong>license purchase code</strong> below.<br/>
-		This is available in the "license" file in your downloads page on CodeCanyon.net (<a
-			href="http://dtbaker.net/admin/includes/plugin_envato/images/envato-license-code.gif" target="_blank">click here
-			for help</a>). <br>
+		Your system is installed and ready to use. This optional step checks for a newer
+		version of Ultimate Client Manager. <br>
+		If you bought this on CodeCanyon.net you can enter your <strong>license purchase
+			code</strong> below - it is in the "license" file on your downloads page. <br>
 		The license code will look something like this: 30d91230-a8df-4545-1237-467abcd5b920
 	</p>
 
-	<h3>Please enter your license purchase code:</h3>
 	<div style="padding:10px;">
 		<form action="" method="post">
 
@@ -55,5 +53,13 @@ if (
 
 		</form>
 	</div>
+
+	<?php
+	// There used to be no way past this step without a purchase code, which left a fresh
+	// install stuck here. Checking for updates is optional, so let people carry on.
+	?>
+	<p align="center">
+		<a href="?m=setup&amp;step=4" class="submit_button btn btn-default"><?php _e( 'Skip this step' ); ?> &raquo;</a>
+	</p>
 
 <?php } ?>
