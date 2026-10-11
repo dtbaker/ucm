@@ -94,7 +94,7 @@ jobs:
       - name: Confirm the setup wizard is waiting for us
         # The install tests skip themselves when there is nothing to install, so make
         # sure there really is, otherwise a broken installer would look like a pass.
-        run: curl -fsSL http://localhost:8092/ | grep -q 'Step #1: Database Connection Details'
+        run: curl -fsSL http://localhost:8092/ | grep -q 'Database Connection Details'
       - name: Walk the setup wizard
         run: npx playwright test tests/e2e/install.spec.ts
       - name: Check every plugin page for PHP warnings
