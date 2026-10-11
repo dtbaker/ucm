@@ -14,7 +14,10 @@ test.describe('Invoice', () => {
   });
 
   test('invoice create page loads', async ({ page }) => {
-    await page.goto('/?m[]=invoice&p[]=invoice_admin_edit&invoice_id=new');
-    await expect(page.locator('body')).toContainText(/invoice|new|create/i);
+    // Go through invoice_admin - the edit page refuses to be opened on its own.
+    await page.goto('/?m[]=invoice&p[]=invoice_admin&invoice_id=new');
+    await expect(page).toHaveTitle(/invoice/i);
+    await expect(page.locator('body')).not.toHaveText('failed');
+    await expect(page.locator('input[name="_process"][value="save_invoice"]')).toHaveCount(1);
   });
 });

@@ -25,12 +25,21 @@ if [ "${1:-}" = "--stop" ]; then
 fi
 
 echo "Waiting for MySQL..."
-for _ in $(seq 1 60); do
-	if docker compose exec -T db mysqladmin ping -h localhost -u root -proot --silent >/dev/null 2>&1; then
+# Run a real query, not mysqladmin ping - ping answers while MySQL is still setting up
+# its users, and the very next statement then fails with "access denied".
+mysql_ready=0
+for _ in $(seq 1 120); do
+	if docker compose exec -T db mysql -u root -proot -e 'SELECT 1' >/dev/null 2>&1; then
+		mysql_ready=1
 		break
 	fi
 	sleep 1
 done
+if [ "$mysql_ready" != "1" ]; then
+	echo "Timed out waiting for MySQL" >&2
+	docker compose logs --tail=40 db >&2
+	exit 1
+fi
 
 echo "Resetting the $DB_NAME database..."
 docker compose exec -T db mysql -u root -proot <<SQL
