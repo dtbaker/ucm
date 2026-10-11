@@ -1,18 +1,35 @@
 <?php
 
 //Ultimate Client Manager - config file
+
+/**
+ * Read a setting from the environment, falling back to the given default.
+ *
+ * Nothing in a normal install sets these, so this changes nothing for an existing site.
+ * They exist so containers and CI can point a copy of the code at a different database or
+ * a different local config file without editing any tracked file.
+ */
+function ucm_env( $name, $default ) {
+	$value = getenv( $name );
+
+	return ( $value === false || $value === '' ) ? $default : $value;
+}
+
 // Local overrides first (config.local can define DB etc.)
-if ( is_file( __DIR__ . '/config.local.php' ) ) {
-	require_once __DIR__ . '/config.local.php';
+if ( ! defined( '_UCM_CONFIG_LOCAL' ) ) {
+	define( '_UCM_CONFIG_LOCAL', ucm_env( 'UCM_CONFIG_LOCAL', __DIR__ . '/config.local.php' ) );
+}
+if ( is_file( _UCM_CONFIG_LOCAL ) ) {
+	require_once _UCM_CONFIG_LOCAL;
 }
 // Defaults for anything not set (Docker: use 'db' when in container, no config.local needed)
 $in_docker = file_exists( '/.dockerenv' ) || getenv( 'DOCKER' );
 if ( ! defined( '_DB_SERVER' ) ) {
-	define( '_DB_SERVER', $in_docker ? 'db' : 'localhost' );
-	define( '_DB_NAME', $in_docker ? 'ucm' : 'ucm' );
-	define( '_DB_USER', $in_docker ? 'ucm' : 'username' );
-	define( '_DB_PASS', $in_docker ? 'ucm' : 'password' );
-	define( '_DB_PREFIX', 'ucm_' );
+	define( '_DB_SERVER', ucm_env( 'UCM_DB_SERVER', $in_docker ? 'db' : 'localhost' ) );
+	define( '_DB_NAME', ucm_env( 'UCM_DB_NAME', 'ucm' ) );
+	define( '_DB_USER', ucm_env( 'UCM_DB_USER', $in_docker ? 'ucm' : 'username' ) );
+	define( '_DB_PASS', ucm_env( 'UCM_DB_PASS', $in_docker ? 'ucm' : 'password' ) );
+	define( '_DB_PREFIX', ucm_env( 'UCM_DB_PREFIX', 'ucm_' ) );
 }
 
 define( '_UCM_VERSION', 2 );

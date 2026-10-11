@@ -34,7 +34,7 @@ if ( isset( $_REQUEST['save'] ) ) {
 		// file, so setup advanced to step 2 looking healthy while the credentials were
 		// never saved. Writing a separate file avoids depending on config.php's formatting,
 		// and keeps the user's database password out of a tracked, shippable file.
-		$config_local = _UCM_FOLDER . 'includes/config.local.php';
+		$config_local = defined( '_UCM_CONFIG_LOCAL' ) ? _UCM_CONFIG_LOCAL : _UCM_FOLDER . 'includes/config.local.php';
 		$existing     = is_file( $config_local ) ? file_get_contents( $config_local ) : '';
 
 		$generated = "<?php\n"
@@ -60,7 +60,7 @@ if ( isset( $_REQUEST['save'] ) ) {
 		$generated .= "define( '_UCM_SECRET', " . var_export( $ucm_secret, true ) . " );\n";
 
 		if ( file_put_contents( $config_local, $generated ) === false ) {
-			set_error( 'Could not write to includes/config.local.php. Please make the includes/ folder writable and try again.' );
+			set_error( 'Could not write to ' . h( $config_local ) . '. Please make the includes/ folder writable and try again.' );
 			print_header_message();
 		} else {
 			redirect_browser( '?m=setup&step=2' );
