@@ -39,6 +39,7 @@ if ( ! $group ) {
 	?>
 
 
+	<?php module_form::print_form_auth(); ?>
 	<input type="hidden" name="_process" value="save_group"/>
 	<input type="hidden" name="group_id" value="<?php echo $group_id; ?>"/>
 

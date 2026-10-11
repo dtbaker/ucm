@@ -11,6 +11,7 @@ if ( isset( $_REQUEST['extra_default_id'] ) && $_REQUEST['extra_default_id'] ) {
 
 	?>
 	<form action="" method="post">
+	<?php module_form::print_form_auth(); ?>
 	<input type="hidden" name="_process" value="save_extra_default">
 	<input type="hidden" name="extra_default_id" value="<?php echo (int) $_REQUEST['extra_default_id']; ?>"/>
 	<?php

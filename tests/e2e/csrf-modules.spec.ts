@@ -16,7 +16,7 @@ import { test, expect, Page } from '@playwright/test';
 type ModuleCase = {
   /** name used in the test titles */
   name: string;
-  /** page that renders the form */
+  /** page that renders the form. {id} is replaced with whatever seed() returned. */
   url: string;
   /** the _process value this form submits */
   process: string;
@@ -28,6 +28,12 @@ type ModuleCase = {
   postUrl: string;
   /** body for the no-token post, minus the token */
   badTokenBody: Record<string, string>;
+  /**
+   * Some records cannot be created from their own edit page, so there is nothing to
+   * open on a fresh install. When set, this body is posted with a real token first and
+   * the id it redirects to is substituted into url.
+   */
+  seed?: { body: Record<string, string>; idParam: string };
 };
 
 const MODULES: ModuleCase[] = [
@@ -67,6 +73,45 @@ const MODULES: ModuleCase[] = [
     postUrl: '/?m[]=subscription',
     badTokenBody: { _process: 'save_subscription', subscription_id: 'new', name: 'Should Not Save', amount: '1' },
   },
+  {
+    name: 'template',
+    url: '/?m[]=template&p[]=template_edit&template_id=new',
+    process: 'save_template',
+    fill: { template_key: 'csrf_test_template', description: 'CSRF test template' },
+    saved: /template saved successfully/i,
+    postUrl: '/?m[]=template',
+    badTokenBody: { _process: 'save_template', template_id: 'new', template_key: 'should_not_save' },
+  },
+  {
+    name: 'group',
+    // Groups are created alongside the record they belong to, never from this page,
+    // so a fresh install has none to open.
+    seed: { body: { _process: 'save_group', group_id: 'new', name: 'CSRF Seed Group', owner_table: 'customer' }, idParam: 'group_id' },
+    url: '/?m[]=group&p[]=group_settings&group_id={id}',
+    process: 'save_group',
+    fill: { name: 'CSRF Test Group' },
+    saved: /group saved successfully/i,
+    postUrl: '/?m[]=group',
+    badTokenBody: { _process: 'save_group', group_id: 'new', name: 'Should Not Save', owner_table: 'customer' },
+  },
+  {
+    name: 'product category',
+    url: '/?m[]=product&p[]=product_admin_category_edit',
+    process: 'save_product_category',
+    fill: { product_category_name: 'CSRF Test Category' },
+    saved: /product category saved successfully/i,
+    postUrl: '/?m[]=product',
+    badTokenBody: { _process: 'save_product_category', product_category_id: 'new', product_category_name: 'Should Not Save' },
+  },
+  {
+    name: 'extra field',
+    url: '/?m[]=extra&p[]=extra_settings&extra_default_id=new',
+    process: 'save_extra_default',
+    fill: { extra_key: 'csrf_test_field' },
+    saved: /extra field saved successfully/i,
+    postUrl: '/?m[]=extra',
+    badTokenBody: { _process: 'save_extra_default', extra_default_id: 'new', owner_table: 'file', extra_key: 'should_not_save' },
+  },
 ];
 
 async function login(page: Page) {
@@ -77,6 +122,14 @@ async function login(page: Page) {
   await page.waitForURL(url => !url.href.includes('login') || url.href.includes('home'));
 }
 
+/** Every page publishes the live token as ucm.form_auth_key. */
+async function formAuthKey(page: Page): Promise<string> {
+  await page.goto('/?m[]=customer&p[]=customer_admin');
+  const key = await page.evaluate(() => (window as any).ucm?.form_auth_key);
+  expect(key).toBeTruthy();
+  return key;
+}
+
 test.describe('Form auth key, per module', () => {
   test.beforeEach(async ({ page }) => {
     await login(page);
@@ -84,7 +137,22 @@ test.describe('Form auth key, per module', () => {
 
   for (const mod of MODULES) {
     test(`the ${mod.name} form still saves`, async ({ page }) => {
-      await page.goto(mod.url);
+      let url = mod.url;
+
+      if (mod.seed) {
+        const key = await formAuthKey(page);
+        const seeded = await page.request.post(mod.postUrl, {
+          form: { ...mod.seed.body, form_auth_key: key },
+          maxRedirects: 0,
+          failOnStatusCode: false,
+        });
+        const location = seeded.headers()['location'] || '';
+        const id = new URL(location, 'http://localhost').searchParams.get(mod.seed.idParam);
+        expect(id, `seeding a ${mod.name} should redirect to the new record`).toBeTruthy();
+        url = url.replace('{id}', String(id));
+      }
+
+      await page.goto(url);
 
       const form = page.locator(`form:has(input[name="_process"][value="${mod.process}"])`);
       await expect(form).toHaveCount(1);

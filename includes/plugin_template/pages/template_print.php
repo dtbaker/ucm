@@ -6,6 +6,7 @@ $content = $_REQUEST['content'];
 <iframe name="print_frame" id="print_frame" src="about:blank" style="display:none;"></iframe>
 <form action="" method="post">
 
+	<?php module_form::print_form_auth(); ?>
 	<input type="hidden" name="_process" value="print_template"/>
 	<?php
 	$content_field = isset( $template['wysiwyg'] ) && $template['wysiwyg']

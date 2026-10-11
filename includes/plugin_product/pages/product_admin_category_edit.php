@@ -29,6 +29,7 @@ if ( class_exists( 'module_security', false ) ) {
 
 ?>
 <form action="" method="post" id="product_category_form">
+	<?php module_form::print_form_auth(); ?>
 	<input type="hidden" name="_process" value="save_product_category"/>
 	<input type="hidden" name="product_category_id" value="<?php echo (int) $product_category_id; ?>"/>
 
