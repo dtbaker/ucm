@@ -7,6 +7,7 @@ includes/config.local.php
 # Temp/cache
 temp/*
 !temp/.gitkeep
+!temp/.htaccess
 
 # IDE
 .idea/

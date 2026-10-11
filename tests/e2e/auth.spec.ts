@@ -46,6 +46,35 @@ test.describe('Logged out requests', () => {
   });
 });
 
+test.describe('The working storage folder', () => {
+  test('does not hand out generated documents or session files', async ({ page, request }) => {
+    // Generate an invoice PDF, which lands in temp/ under an easy to guess name.
+    await login(page);
+    const pdf = await page.request.get('/?m[]=invoice&p[]=invoice_admin&print=true&go=true&invoice_id=1');
+    expect(pdf.status()).toBe(200);
+
+    // Now ask for it straight off disk, with no session at all.
+    for (const path of ['/temp/Invoice_1.pdf', '/temp/Invoice_1.html']) {
+      const response = await request.get(path);
+      expect(response.status(), `${path} should not be downloadable`).toBe(403);
+    }
+  });
+
+  test('still serves the stylesheet and script cache', async ({ page }) => {
+    await login(page);
+    await page.goto('/?m[]=home');
+    const cached = await page.evaluate(() =>
+      Array.from(document.querySelectorAll('link[rel="stylesheet"], script[src]'))
+        .map(el => (el as HTMLLinkElement).href || (el as HTMLScriptElement).src)
+        .filter(src => src.includes('/temp/')));
+    expect(cached.length, 'expected the combined css/js cache to be in use').toBeGreaterThan(0);
+    for (const url of cached) {
+      const response = await page.request.get(url);
+      expect(response.status(), `${url} must still load`).toBe(200);
+    }
+  });
+});
+
 test.describe('Logged in', () => {
   test('the dashboard finishes loading its alerts', async ({ page }) => {
     await login(page);
