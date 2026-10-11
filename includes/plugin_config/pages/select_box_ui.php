@@ -1,7 +1,7 @@
 <?php
 
 list( $db_table, $db_key, $db_val, $config ) = explode( "|", $_REQUEST['hash'] );
-$config = unserialize( base64_decode( $config ) );
+$config = ucm_unserialize_options( $config );
 
 if ( isset( $config['db_search'] ) ) {
 	$search = $config['db_search'];

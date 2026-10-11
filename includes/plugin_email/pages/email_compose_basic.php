@@ -1,6 +1,6 @@
 <?php
 if ( ! isset( $options ) && isset( $_REQUEST['options'] ) ) {
-	$options = unserialize( base64_decode( $_REQUEST['options'] ) );
+	$options = ucm_unserialize_options( $_REQUEST['options'] );
 }
 if ( ! isset( $options ) ) {
 	$options = array();

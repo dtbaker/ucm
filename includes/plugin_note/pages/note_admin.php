@@ -5,7 +5,7 @@ if ( isset( $_REQUEST['note_id'] ) ) {
 
 	// re-check permissions sent in from ajax.
 	// there could be a way to trick this, if someone can find it my congratulations to them!
-	$options = unserialize( base64_decode( $_REQUEST['options'] ) );
+	$options = ucm_unserialize_options( $_REQUEST['options'] );
 	if ( ! $options ) {
 		return;
 	}

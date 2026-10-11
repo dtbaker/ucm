@@ -337,7 +337,7 @@ class module_email extends module_base
 	}
 
 	private function _handle_send_email() {
-		$options = @unserialize( base64_decode( $_REQUEST['options'] ) );
+		$options = ucm_unserialize_options( $_REQUEST['options'] );
 		if ( ! $options ) {
 			$options = array();
 		}

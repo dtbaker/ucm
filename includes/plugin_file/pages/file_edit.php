@@ -1,6 +1,6 @@
 <?php
 
-$options = isset($_REQUEST['options']) ? unserialize(base64_decode($_REQUEST['options'])) : array();
+$options = isset($_REQUEST['options']) ? ucm_unserialize_options($_REQUEST['options']) : array();
 
 $file_id = (int)$_REQUEST['file_id'];
 if ($file_id) {

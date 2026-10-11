@@ -560,7 +560,7 @@ class module_note extends module_base
 	function process() {
 		if ( 'save_note' == $_REQUEST['_process'] ) {
 			$note_id = $_REQUEST['note_id'];
-			$options = unserialize( base64_decode( $_REQUEST['options'] ) );
+			$options = ucm_unserialize_options( $_REQUEST['options'] );
 
 			if ( ! $options ) {
 				return;

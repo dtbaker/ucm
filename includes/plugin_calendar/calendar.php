@@ -242,7 +242,7 @@ class module_calendar extends module_base
 		switch ( $hook ) {
 			case 'ical':
 				$calendar_type = ( isset( $_REQUEST['i'] ) ) ? $_REQUEST['i'] : false;
-				$options       = ( isset( $_REQUEST['o'] ) ) ? (array) unserialize( base64_decode( $_REQUEST['o'] ) ) : array();
+				$options       = ( isset( $_REQUEST['o'] ) ) ? ucm_unserialize_options( $_REQUEST['o'] ) : array();
 				$hash          = ( isset( $_REQUEST['hash'] ) ) ? trim( $_REQUEST['hash'] ) : false;
 				if ( $calendar_type && $hash ) {
 					$correct_hash = $this->link_calendar( $calendar_type, $options, true );

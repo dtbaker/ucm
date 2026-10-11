@@ -1,6 +1,6 @@
 <?php
 $hash      = $_REQUEST['hash'];
-$form_data = unserialize( base64_decode( $_SESSION['_delete_data'][ $hash ] ) );
+$form_data = ucm_unserialize_options( $_SESSION['_delete_data'][ $hash ] );
 if ( ! $form_data ) {
 	echo 'Error, please go back and try again';
 	exit;
