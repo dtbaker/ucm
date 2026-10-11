@@ -14,6 +14,27 @@ services:
       - db
     restart: unless-stopped
 
+  # A second copy of the app used only to test the installer against an empty database.
+  # Started by scripts/install-test.sh, not by `docker compose up`.
+  # It keeps its own config.local.php inside the container so installing here does not
+  # touch the one the normal dev app uses.
+  app-install-test:
+    build: .
+    container_name: ucm-app-install-test
+    profiles:
+      - install-test
+    ports:
+      - "8092:80"
+    volumes:
+      - .:/var/www/html
+    environment:
+      - APACHE_DOCUMENT_ROOT=/var/www/html
+      - UCM_DEBUG=1
+      - UCM_CONFIG_LOCAL=/tmp/ucm-install-test.config.local.php
+      - UCM_DB_NAME=ucm_install_test
+    depends_on:
+      - db
+
   db:
     image: mysql:8.0
     container_name: ucm-db

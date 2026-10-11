@@ -1,4 +1,16 @@
-# e2e tests
+# Testing
+
+## PHP unit tests
+
+```
+composer install
+composer test
+```
+
+These cover the standalone helpers in `includes/functions.php`. UCM has no autoloader and
+most of it needs a database, so anything larger is covered by the browser tests below.
+
+## Browser (end to end) tests
 
 1. Start the Docker environment
 
@@ -11,8 +23,8 @@ This spins up the PHP app on http://localhost:8090, MySQL, MailHog, and phpMyAdm
 2. Install Node dependencies (first time only)
 
 ```
+npm install
 npx playwright install
-npm installnpx playwright install
 ```
 
 The npx playwright install step downloads the Chromium browser binary that Playwright needs.
@@ -40,3 +52,38 @@ npx playwright test tests/e2e/login.spec.ts
 ```
 npx playwright show-report
 ```
+
+## Testing the installer
+
+`tests/e2e/install.spec.ts` walks the setup wizard from start to finish against an empty
+database. It needs a throwaway copy of the app, which is not started by
+`docker compose up`:
+
+```
+./scripts/install-test.sh
+npx playwright test tests/e2e/install.spec.ts
+./scripts/install-test.sh --stop
+```
+
+The script resets the `ucm_install_test` database and starts a fresh container on
+http://localhost:8092 that keeps its own `config.local.php` inside the container, so
+installing there leaves your development app on :8090 alone. If that container is not
+running, the installer tests skip instead of failing.
+
+## Pointing the app somewhere else
+
+`includes/config.local.php` is the normal place for database settings and the installer
+writes it for you. For containers and CI these environment variables override the
+built-in defaults without editing any file:
+
+| Variable            | Default                      |
+| ------------------- | ---------------------------- |
+| `UCM_DB_SERVER`     | `db` in Docker, else `localhost` |
+| `UCM_DB_NAME`       | `ucm`                        |
+| `UCM_DB_USER`       | `ucm` in Docker              |
+| `UCM_DB_PASS`       | `ucm` in Docker              |
+| `UCM_DB_PREFIX`     | `ucm_`                       |
+| `UCM_CONFIG_LOCAL`  | `includes/config.local.php`  |
+| `UCM_DEBUG`         | off                          |
+
+`includes/config.local.php` still wins over all of them when it exists.
