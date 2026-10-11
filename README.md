@@ -13,33 +13,34 @@ Please purchase a license from https://codecanyon.net/item/freelance-project-inv
 
 ### Quick Start
 
-1. **Clone and configure**
+1. **Clone and start**
 
    ```bash
    git clone <repo-url> ucm && cd ucm
-   cp includes/config.local.php.example includes/config.local.php
-   ```
-
-2. **Start services**
-
-   ```bash
    docker-compose up -d
    ```
 
-3. **Access the app**
-   - Open http://localhost:8090
-   - Run the web installer if this is a fresh install
-   - Use the installer to create the database tables
+   No config file to copy - the app picks up the Docker database settings on its own.
 
-4. **Mail (optional)**
+2. **Access the app**
+   - Open http://localhost:8090
+   - Run the web installer if this is a fresh install. It creates the database tables
+     and writes `includes/config.local.php` for you.
+
+3. **Mail (optional)**
    - MailHog runs on port 8025 for web UI: http://localhost:8025
    - Port 1025 for SMTP (configure in UCM email settings)
 
 ### Environment
 
 - **App**: http://localhost:8090
-- **MySQL**: localhost:3306 (user: ucm, password: ucm, database: ucm)
+- **MySQL**: localhost:8096 (user: ucm, password: ucm, database: ucm)
 - **MailHog**: http://localhost:8025
+- **phpMyAdmin**: http://localhost:8091
+
+To point the app at a different database without editing any file, set `UCM_DB_SERVER`,
+`UCM_DB_NAME`, `UCM_DB_USER`, `UCM_DB_PASS`, `UCM_DB_PREFIX` or `UCM_CONFIG_LOCAL` - see
+[TESTING.md](TESTING.md).
 
 ### Debugging 500 Errors
 
@@ -51,9 +52,7 @@ curl -s http://localhost:8090/
 
 The 500 response body usually contains the PHP error message and stack trace.
 
-**2. Debug endpoint** – hit http://localhost:8090/debug.php to check PHP, config, and DB connectivity without loading the full app.
-
-**3. Docker logs**:
+**2. Docker logs**:
 
 ```bash
 docker-compose logs -f app
@@ -67,7 +66,7 @@ docker-compose logs -f app
 # Install composer dependencies (on host)
 composer install
 
-# PHPUnit (if tests exist)
+# PHPUnit
 composer test
 
 # PHPStan static analysis
