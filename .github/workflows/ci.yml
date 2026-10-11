@@ -51,7 +51,10 @@ jobs:
           exit $fail
 
   phpcs:
-    name: Coding standard
+    # Also runs PHPCompatibility, which is what mechanically proves the "PHP 8.4 or
+    # newer" claim - it finds functions and syntax that stopped working in a version
+    # we say we support.
+    name: Coding standard + PHP compatibility
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
