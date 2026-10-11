@@ -10,7 +10,8 @@ if ( $member_id ) {
 	$member_data = module_newsletter::get_newsletter_member( $newsletter_member_id );
 } else {
 	set_error( 'Sorry no member id specified' );
-	redirect_browser( module_member::link_list( 0 ) );
+	// module_member has no link_list() - link_open( false ) is the member list.
+	redirect_browser( module_member::link_open( false ) );
 }
 
 // quick hack to save settings.
