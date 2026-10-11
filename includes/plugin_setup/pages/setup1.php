@@ -25,14 +25,44 @@ if ( isset( $_REQUEST['save'] ) ) {
 		print_header_message();
 	} else {
 		// db worked! woop woop
-		// save these settings to the db.
-		$config_file = file_get_contents( _UCM_FOLDER . 'includes/config.php' );
-		$config_file = preg_replace( "#define\('_DB_SERVER','[^']*'\)#", "define('_DB_SERVER','$db_host')", $config_file );
-		$config_file = preg_replace( "#define\('_DB_NAME','[^']*'\)#", "define('_DB_NAME','$db_name')", $config_file );
-		$config_file = preg_replace( "#define\('_DB_USER','[^']*'\)#", "define('_DB_USER','$db_user')", $config_file );
-		$config_file = preg_replace( "#define\('_DB_PASS','[^']*'\)#", "define('_DB_PASS','$db_pass')", $config_file );
-		$config_file = preg_replace( "#define\('_DB_PREFIX','[^']*'\)#", "define('_DB_PREFIX','$db_prefix')", $config_file );
-		if ( file_put_contents( _UCM_FOLDER . 'includes/config.php', $config_file ) ) {
+		// Write credentials to includes/config.local.php, which config.php loads before
+		// its own defaults.
+		//
+		// This used to preg_replace the define() lines inside includes/config.php itself.
+		// That broke silently when config.php was reformatted: the pattern stopped
+		// matching, file_put_contents still returned a truthy byte count for the unchanged
+		// file, so setup advanced to step 2 looking healthy while the credentials were
+		// never saved. Writing a separate file avoids depending on config.php's formatting,
+		// and keeps the user's database password out of a tracked, shippable file.
+		$config_local = _UCM_FOLDER . 'includes/config.local.php';
+		$existing     = is_file( $config_local ) ? file_get_contents( $config_local ) : '';
+
+		$generated = "<?php\n"
+		             . "/**\n"
+		             . " * Local configuration for UCM. Written by the installer.\n"
+		             . " * This file is loaded before the defaults in includes/config.php.\n"
+		             . " * Keep it out of version control - it holds your database password.\n"
+		             . " */\n\n"
+		             . "define( '_DB_SERVER', " . var_export( $db_host, true ) . " );\n"
+		             . "define( '_DB_NAME', " . var_export( $db_name, true ) . " );\n"
+		             . "define( '_DB_USER', " . var_export( $db_user, true ) . " );\n"
+		             . "define( '_DB_PASS', " . var_export( $db_pass, true ) . " );\n"
+		             . "define( '_DB_PREFIX', " . var_export( $db_prefix, true ) . " );\n";
+
+		// A per-install secret, so capability tokens are not derived from the install path.
+		// Preserve any existing value - regenerating it would invalidate every token and
+		// link already issued by this install.
+		if ( preg_match( "#define\(\s*'_UCM_SECRET'\s*,\s*'([^']+)'\s*\)#", $existing, $secret_match ) ) {
+			$ucm_secret = $secret_match[1];
+		} else {
+			$ucm_secret = bin2hex( random_bytes( 32 ) );
+		}
+		$generated .= "define( '_UCM_SECRET', " . var_export( $ucm_secret, true ) . " );\n";
+
+		if ( file_put_contents( $config_local, $generated ) === false ) {
+			set_error( 'Could not write to includes/config.local.php. Please make the includes/ folder writable and try again.' );
+			print_header_message();
+		} else {
 			redirect_browser( '?m=setup&step=2' );
 		}
 	}
