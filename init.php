@@ -127,6 +127,7 @@ if ( _DEBUG_MODE ) {
 }
 // include all our plugin files:
 require_once( "includes/plugin.php" );
+require_once( "includes/class.libraries.php" );
 global $plugins;
 
 $plugins_to_init = isset( $plugins_to_init ) && is_array( $plugins_to_init ) ? $plugins_to_init : array();
@@ -345,6 +346,8 @@ if ( $plugins_to_init ) {
 		}
 	}
 }
+
+ucm_libraries::collect();
 
 hook_handle_callback( 'plugins_loaded' );
 

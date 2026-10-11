@@ -4,7 +4,8 @@
     "type": "project",
     "license": "proprietary",
     "require": {
-        "php": "^8.4"
+        "php": "^8.4",
+        "ezyang/htmlpurifier": "^4.19"
     },
     "require-dev": {
         "pheromone/phpcs-security-audit": "^2.0",

@@ -23,6 +23,22 @@ class module_pdf extends module_base
 		$this->version         = 2.135;
 	}
 
+	/**
+	 * @return array
+	 */
+	public function third_party_libraries() {
+		return array(
+			'dompdf' => array(
+				'name'       => 'dompdf',
+				'package'    => 'dompdf/dompdf',
+				'constraint' => '^3.1',
+				'class'      => 'Dompdf\\Dompdf',
+				'bundled'    => 'includes/plugin_pdf/dompdf/autoload.inc.php',
+				'feature'    => 'PDF generation for invoices, quotes and contracts',
+			),
+		);
+	}
+
 	function init() {
 		// 2.1 - added arialuni ttf file
 		// 2.11 - more options for pdf generation
@@ -111,7 +127,11 @@ function convert_html2pdf( $html, $pdf ) {
 		default:
 			ini_set( 'error_reporting', E_ERROR );
 			ini_set( "display_errors", true );
-			require_once( 'dompdf/autoload.inc.php' );
+			if ( ! ucm_libraries::load( 'dompdf' ) ) {
+				set_error( 'PDF generation is not available: the dompdf library is missing.' );
+
+				return false;
+			}
 			set_time_limit( 120 );
 
 			$dompdf = new \Dompdf\Dompdf();

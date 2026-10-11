@@ -17,6 +17,37 @@ class module_base
 	public function pre_menu() {
 	}
 
+	/**
+	 * Third party libraries this plugin needs at runtime.
+	 *
+	 * Return an array keyed by library id. Each entry is handed to ucm_libraries, which
+	 * handles loading, detection and the "not installed" message. A plugin that needs
+	 * nothing returns an empty array, which is the default.
+	 *
+	 * @return array
+	 */
+	public function third_party_libraries() {
+		return array();
+	}
+
+	/**
+	 * True when every library this plugin declares can be loaded.
+	 *
+	 * Use this in pre_menu() to hide a feature, or at the top of a page to show a message
+	 * instead of fataling.
+	 *
+	 * @return bool
+	 */
+	public function have_third_party_libraries() {
+		foreach ( array_keys( $this->third_party_libraries() ) as $library_id ) {
+			if ( ! ucm_libraries::have( $library_id ) ) {
+				return false;
+			}
+		}
+
+		return true;
+	}
+
 	public static function can_i( $actions, $name = false, $category = false, $module = false ) {
 		$class_name = $module ?: get_called_class();
 

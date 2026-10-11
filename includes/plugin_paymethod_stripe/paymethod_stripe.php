@@ -23,6 +23,26 @@ class module_paymethod_stripe extends module_base
 		$this->version         = 2.245;
 	}
 
+	/**
+	 * Declared so the library shows up in the registry as a bundled copy. It is NOT on
+	 * Composer yet: the version here is stripe-php 1.x, whose class names
+	 * (Stripe_Charge and friends) no longer exist in any current release, so swapping it
+	 * is a rewrite of the payment flow rather than a change of where the files live.
+	 *
+	 * @return array
+	 */
+	public function third_party_libraries() {
+		return array(
+			'stripe' => array(
+				'name'    => 'Stripe PHP',
+				'package' => 'stripe/stripe-php',
+				'class'   => 'Stripe',
+				'bundled' => 'includes/plugin_paymethod_stripe/stripe-php/lib/Stripe.php',
+				'feature' => 'Stripe credit card payments',
+			),
+		);
+	}
+
 	function init() {
 		// 2.245 - 2017-02-27 - config fix
 		// 2.244 - 2017-01-12 - stripe debugging information

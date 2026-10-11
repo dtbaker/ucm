@@ -39,6 +39,22 @@ class module_security extends module_base
 		$this->version         = 2.527;
 	}
 
+	/**
+	 * @return array
+	 */
+	public function third_party_libraries() {
+		return array(
+			'htmlpurifier' => array(
+				'name'       => 'HTML Purifier',
+				'package'    => 'ezyang/htmlpurifier',
+				'constraint' => '^4.19',
+				'class'      => 'HTMLPurifier',
+				'bundled'    => 'includes/plugin_security/htmlpurifier/HTMLPurifier.standalone.php',
+				'feature'    => 'Cleaning up HTML that people paste into the system',
+			),
+		);
+	}
+
 	public function init() {
 		$this->links          = array();
 		$this->security_types = array();
@@ -1509,7 +1525,11 @@ PRIMARY KEY (`user_id`)
 	}
 
 	public static function purify_html( $dirty_html ) {
-		require_once dirname( __FILE__ ) . '/htmlpurifier/HTMLPurifier.standalone.php';
+		if ( ! ucm_libraries::load( 'htmlpurifier' ) ) {
+			// Without the library there is no safe way to keep any of this, so keep none
+			// of it. Better a plain-text version than markup nobody has checked.
+			return htmlspecialchars( (string) $dirty_html, ENT_QUOTES, 'UTF-8' );
+		}
 		$config = HTMLPurifier_Config::createDefault();
 		$config->set( 'HTML.SafeIframe', true );
 		$config->set( 'URI.SafeIframeRegexp', '%^http%' );

@@ -4183,18 +4183,6 @@ parameters:
 			path: includes/plugin_security/security.php
 
 		-
-			message: '#^Call to method purify\(\) on an unknown class HTMLPurifier\.$#'
-			identifier: class.notFound
-			count: 1
-			path: includes/plugin_security/security.php
-
-		-
-			message: '#^Call to static method createDefault\(\) on an unknown class HTMLPurifier_Config\.$#'
-			identifier: class.notFound
-			count: 1
-			path: includes/plugin_security/security.php
-
-		-
 			message: '#^Constant _DB_PREFIX not found\.$#'
 			identifier: constant.notFound
 			count: 35
@@ -4203,12 +4191,6 @@ parameters:
 		-
 			message: '#^Function qa invoked with 2 parameters, 1 required\.$#'
 			identifier: arguments.count
-			count: 1
-			path: includes/plugin_security/security.php
-
-		-
-			message: '#^Instantiated class HTMLPurifier not found\.$#'
-			identifier: class.notFound
 			count: 1
 			path: includes/plugin_security/security.php
 
