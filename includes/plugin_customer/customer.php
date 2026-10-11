@@ -1995,12 +1995,6 @@ Invoice: <strong>{INVOICE_LINK}</strong>
 				exit;
 				break;
 			case 'public_signup':
-				// sign out if testing.
-				if ( module_security::is_logged_in() ) {
-					set_message( 'Logged out due to signup' );
-					module_security::logout();
-				}
-
 				$result = array(
 					'messages' => array(),
 				);
@@ -2014,10 +2008,18 @@ Invoice: <strong>{INVOICE_LINK}</strong>
 					exit;
 				}
 
+				// Checked before the sign out below, so that a link to this address cannot
+				// be used to sign somebody out of a system that does not offer signup.
 				if ( ! module_config::c( 'customer_signup_allowed', 0 ) ) {
 					$result['error']      = 1;
 					$result['messages'][] = 'Customer signup disabled';
 					customer_signup_complete( $result );
+				}
+
+				// sign out if testing.
+				if ( module_security::is_logged_in() ) {
+					set_message( 'Logged out due to signup' );
+					module_security::logout();
 				}
 
 				//recaptcha on signup form.
