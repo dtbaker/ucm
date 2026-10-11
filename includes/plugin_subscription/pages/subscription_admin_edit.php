@@ -42,6 +42,7 @@ if ( class_exists( 'module_security', false ) ) {
 		<input type="hidden" name="subscription_id" value="<?php echo $subscription_id; ?>"/>
 
 		<?php
+		module_form::print_form_auth();
 		module_form::set_required( array(
 				'fields' => array(
 					'name'   => 'Name',

@@ -128,6 +128,11 @@ class module_company extends module_base
 
 
 	public function process() {
+		// Every form that reaches here is posted from a UCM page, so it carries the
+		// form auth key. Refuse anything that does not - see module_form::check_secure_key().
+		if ( ! module_form::check_secure_key() ) {
+			module_form::reject_invalid_form_auth();
+		}
 		if ( isset( $_REQUEST['butt_del'] ) && $_REQUEST['butt_del'] && $_REQUEST['company_id'] && self::can_i( 'delete', 'Company' ) ) {
 			$data = self::get_company( $_REQUEST['company_id'] );
 			if ( $data && $data['company_id'] == $_REQUEST['company_id'] && module_form::confirm_delete( 'company_id', "Really delete company: " . $data['name'], self::link_open( $_REQUEST['company_id'] ) ) ) {

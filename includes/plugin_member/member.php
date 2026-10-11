@@ -314,6 +314,11 @@ class module_member extends module_base
 
 
 	public function process() {
+		// Every form that reaches here is posted from a UCM page, so it carries the
+		// form auth key. Refuse anything that does not - see module_form::check_secure_key().
+		if ( ! module_form::check_secure_key() ) {
+			module_form::reject_invalid_form_auth();
+		}
 		if ( isset( $_REQUEST['butt_del'] ) && $_REQUEST['butt_del'] && $_REQUEST['member_id'] ) {
 			$data = self::get_member( $_REQUEST['member_id'] );
 			if ( module_form::confirm_delete( 'member_id', "Really delete member: " . $data['first_name'] . ' ' . $data['last_name'], self::link_open( $_REQUEST['member_id'] ) ) ) {

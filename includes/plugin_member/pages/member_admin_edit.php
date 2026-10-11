@@ -36,6 +36,7 @@ $module->page_title = _l( 'Member: %s', htmlspecialchars( $member['first_name'] 
 	<input type="hidden" name="member_id" value="<?php echo $member_id; ?>"/>
 
 	<?php
+	module_form::print_form_auth();
 	module_form::set_required( array(
 			'fields' => array(
 				'first_name' => 'Name',

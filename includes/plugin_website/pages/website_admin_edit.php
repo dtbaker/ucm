@@ -41,6 +41,7 @@ if ( $website_id > 0 && $website ) {
 
 
 	<?php
+	module_form::print_form_auth();
 
 	$fields = array(
 		'fields' => array(
