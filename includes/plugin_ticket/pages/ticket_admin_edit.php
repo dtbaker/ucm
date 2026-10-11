@@ -181,6 +181,7 @@ $action_buttons = module_form::generate_form_actions( $form_actions );
       });
 	</script>
 	<form action="" method="post" id="ticket_form" enctype="multipart/form-data">
+		<?php module_form::print_form_auth(); ?>
 		<input type="hidden" name="_process" value="save_ticket"/>
 		<input type="hidden" name="ticket_id" value="<?php echo $ticket['ticket_id']; ?>"/>
 

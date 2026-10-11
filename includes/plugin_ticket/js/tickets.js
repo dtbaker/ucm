@@ -24,7 +24,7 @@ ucm.ticket = {
             $.ajax({
                 url: ucm.ticket.ticket_url,
                 type: 'POST',
-                data: '_process=save_saved_response&saved_response_id=' + $('#canned_response_id').val() + '&value=' + escape($('#new_ticket_message').val()),
+                data: '_process=save_saved_response&form_auth_key=' + ucm.form_auth_key + '&saved_response_id=' + $('#canned_response_id').val() + '&value=' + escape($('#new_ticket_message').val()),
                 dataType: 'json',
                 success: function (r) {
                     alert('Saved successfully');
@@ -34,7 +34,7 @@ ucm.ticket = {
         $('#insert_saved').click(function () {
             $.ajax({
                 url: ucm.ticket.ticket_url,
-                data: '_process=insert_saved_response&saved_response_id=' + $('#canned_response_id').val(),
+                data: '_process=insert_saved_response&form_auth_key=' + ucm.form_auth_key + '&saved_response_id=' + $('#canned_response_id').val(),
                 dataType: 'json',
                 success: function (r) {
                     ucm.ticket.add_to_message(r.value);

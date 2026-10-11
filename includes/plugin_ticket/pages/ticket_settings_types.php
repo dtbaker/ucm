@@ -26,6 +26,7 @@ if ( isset( $_REQUEST['ticket_type_id'] ) && $_REQUEST['ticket_type_id'] ) {
 
 
 	<form action="" method="post">
+		<?php module_form::print_form_auth(); ?>
 		<input type="hidden" name="_process" value="save_ticket_type">
 		<input type="hidden" name="ticket_type_id" value="<?php echo $ticket_type_id; ?>"/>
 

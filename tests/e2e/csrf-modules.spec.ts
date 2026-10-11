@@ -202,6 +202,24 @@ const MODULES: ModuleCase[] = [
     postUrl: '/?m[]=customer',
     badTokenBody: { _process: 'save_customer_type', customer_type_id: 'new', type_name: 'Should Not Save' },
   },
+  {
+    name: 'ticket type',
+    url: '/?m[]=ticket&p[]=ticket_settings_types&ticket_type_id=new',
+    process: 'save_ticket_type',
+    fill: { name: 'CSRF Test Ticket Type' },
+    saved: /ticket type saved successfully/i,
+    postUrl: '/?m[]=ticket',
+    badTokenBody: { _process: 'save_ticket_type', ticket_type_id: 'new', name: 'Should Not Save' },
+  },
+  {
+    name: 'ticket field',
+    url: '/?m[]=ticket&p[]=ticket_settings_fields&ticket_data_key_id=new',
+    process: 'save_ticket_data_key',
+    fill: { key: 'csrf_test_key' },
+    saved: /ticket field saved successfully/i,
+    postUrl: '/?m[]=ticket',
+    badTokenBody: { _process: 'save_ticket_data_key', ticket_data_key_id: 'new', key: 'should_not_save' },
+  },
 ];
 
 async function login(page: Page) {
