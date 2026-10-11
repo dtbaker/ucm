@@ -87,6 +87,11 @@ jobs:
           node-version: '20'
       - run: npm ci
       - run: npx playwright install --with-deps chromium
+      - name: Make the files writable by the web server
+        # The installer checks the same things a real host would: that it can write to
+        # the base folder, includes/ and temp/. A git checkout is owned by the runner,
+        # not by the web server user inside the container.
+        run: chmod -R a+rwX . && chmod a+w cron.php ext.php design_menu.php includes/config.php
       - name: Start the database
         run: docker compose up -d db
       - name: Start a copy of the app against an empty database
