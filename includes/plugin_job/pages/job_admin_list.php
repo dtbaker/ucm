@@ -1,6 +1,6 @@
 <?php
 
-if ( ! $job_safe ) {
+if ( empty( $job_safe ) ) {
 	die( 'denied' );
 }
 

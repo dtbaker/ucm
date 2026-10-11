@@ -1,6 +1,6 @@
 <?php
 
-if ( ! $quote_safe ) {
+if ( empty( $quote_safe ) ) {
 	die( 'failed' );
 }
 if ( ! module_quote::can_i( 'edit', 'Quotes' ) ) {

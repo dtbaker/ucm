@@ -1,6 +1,6 @@
 <?php
 
-if ( ! $contract_safe ) {
+if ( empty( $contract_safe ) ) {
 	die( 'failed' );
 }
 if ( ! module_contract::can_i( 'edit', 'Contracts' ) ) {

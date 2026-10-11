@@ -1,6 +1,6 @@
 <?php
 
-if ( ! $user_safe ) {
+if ( empty( $user_safe ) ) {
 	die( 'fail' );
 }
 

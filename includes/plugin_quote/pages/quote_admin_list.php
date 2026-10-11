@@ -1,6 +1,6 @@
 <?php
 
-if ( ! $quote_safe ) {
+if ( empty( $quote_safe ) ) {
 	die( 'denied' );
 }
 

@@ -1,6 +1,6 @@
 <?php
 
-if ( ! $contract_safe ) {
+if ( empty( $contract_safe ) ) {
 	die( 'denied' );
 }
 

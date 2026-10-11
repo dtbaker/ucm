@@ -1,6 +1,6 @@
 <?php
 
-if ( ! $invoice_safe ) {
+if ( empty( $invoice_safe ) ) {
 	die( 'failed' );
 }
 $invoice_id = (int) $_REQUEST['invoice_id'];

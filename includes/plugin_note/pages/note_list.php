@@ -1,5 +1,5 @@
 <?php
-if ( ! $note_list_safe ) {
+if ( empty( $note_list_safe ) ) {
 	die( 'fail' );
 }
 //print_r($note_items);exit;

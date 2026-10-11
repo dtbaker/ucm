@@ -1,6 +1,6 @@
 <?php
 
-if ( ! $note_edit_safe ) {
+if ( empty( $note_edit_safe ) ) {
 	die( 'failed' );
 }
 

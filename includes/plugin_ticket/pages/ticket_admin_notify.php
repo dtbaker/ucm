@@ -1,6 +1,6 @@
 <?php
 
-if ( ! $ticket_safe ) {
+if ( empty( $ticket_safe ) ) {
 	die( 'failed' );
 }
 $ticket_id = (int) $_REQUEST['ticket_id'];

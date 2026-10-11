@@ -109,7 +109,7 @@ $columns['file_description'] = array(
 $columns['file_status'] = array(
     'title' => 'Status',
     'callback' => function ($file) {
-		echo nl2br(htmlspecialchars($file['status']));
+		echo nl2br(htmlspecialchars((string) $file['status']));
     },
 );
 $columns['file_size'] = array(

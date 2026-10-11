@@ -5,7 +5,7 @@ if ( ! defined( '_UCM_VERSION' ) ) {
 	die( 'Nothing to see here' );
 }
 
-if ( ! $invoice_safe ) {
+if ( empty( $invoice_safe ) ) {
 	die( 'failed' );
 }
 
