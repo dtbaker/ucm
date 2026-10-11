@@ -712,7 +712,27 @@ Comment: {COMMENT}
 			}
 			exit;
 		} elseif ( 'save_file_popup' == $_REQUEST['_process'] ) {
-			$file_id = $_REQUEST['file_id'];
+
+			// This branch had no permission check at all, so any logged in account -
+			// including a customer portal contact with no Files access - could rename or
+			// repoint another customer's file record. Matches the plupload branch above.
+			if ( ! self::can_i( 'edit', 'Files' ) && ! self::can_i( 'create', 'Files' ) ) {
+				echo 'Permission denied.';
+				exit;
+			}
+
+			// Cast: this reaches update_insert() as a row id.
+			$file_id = ( isset( $_REQUEST['file_id'] ) && $_REQUEST['file_id'] !== 'new' ) ? (int) $_REQUEST['file_id'] : 'new';
+
+			// Editing an existing record needs edit, not just create, and the record has to
+			// be one this user can actually reach.
+			if ( $file_id && $file_id !== 'new' ) {
+				$existing_file = new ucm_file( $file_id );
+				if ( ! self::can_i( 'edit', 'Files' ) || ! $existing_file->can_i_access() ) {
+					echo 'Permission denied.';
+					exit;
+				}
+			}
 
 			$file_path = false;
 			$file_name = false;
@@ -725,9 +745,14 @@ Comment: {COMMENT}
 			// have we uploaded anything
 			if ( isset( $_FILES['file_upload'] ) && is_uploaded_file( $_FILES['file_upload']['tmp_name'] ) ) {
 				// copy to file area.
-				$file_name = basename( $_FILES['file_upload']['name'] );
+				$file_name    = basename( $_FILES['file_upload']['name'] );
+				$upload_error = ucm_upload_error( $file_name, $_FILES['file_upload']['tmp_name'] );
+				if ( $upload_error ) {
+					set_error( $upload_error );
+					$file_name = false;
+				}
 				if ( $file_name ) {
-					$file_path = _FILE_UPLOAD_PATH . md5( time() . $file_name );
+					$file_path = _FILE_UPLOAD_PATH . ucm_upload_filename( $file_name );
 					if ( move_uploaded_file( $_FILES['file_upload']['tmp_name'], $file_path ) ) {
 						// it worked. umm.. do something.
 					} else {
@@ -821,7 +846,7 @@ Comment: {COMMENT}
 							if ( $plupload_key && $plupload_file_name_key && $file_name && is_file( _FILE_UPLOAD_PATH . 'plupload' . DIRECTORY_SEPARATOR . $plupload_key . '-' . $plupload_file_name_key ) ) {
 
 
-								$file_path = _FILE_UPLOAD_PATH . time() . '-' . md5( time() . $file_name );
+								$file_path = _FILE_UPLOAD_PATH . ucm_upload_filename( $file_name );
 								if ( rename( _FILE_UPLOAD_PATH . 'plupload' . DIRECTORY_SEPARATOR . $plupload_key . '-' . $plupload_file_name_key, $file_path ) ) {
 									// it worked. umm.. do something.
 									$file_changed    = true;
@@ -845,7 +870,7 @@ Comment: {COMMENT}
 						// copy to file area.
 						$file_name = basename( $_FILES['file_upload']['name'] );
 						if ( $file_name ) {
-							$file_path = _FILE_UPLOAD_PATH . time() . '-' . md5( time() . $file_name );
+							$file_path = _FILE_UPLOAD_PATH . ucm_upload_filename( $file_name );
 							if ( move_uploaded_file( $_FILES['file_upload']['tmp_name'], $file_path ) ) {
 								// it worked. umm.. do something.
 								$file_changed    = true;
@@ -1039,11 +1064,19 @@ Comment: {COMMENT}
 		} elseif ( 'delete_file_popup' == $_REQUEST['_process'] ) {
 			$file_id = (int) $_REQUEST['file_id'];
 
+			if ( ! self::can_i( 'delete', 'Files' ) ) {
+				echo 'Permission denied.';
+				exit;
+			}
+
 			if ( ! $file_id || $file_id == 'new' ) {
 				// cant delete a new file.. do nothing.
 			} else {
 				$file_data = $this->get_file( $file_id );
-				if ( true ) { //module_security::can_access_data('file',$file_data,$file_id)){
+				$ucm_file  = new ucm_file( $file_id );
+				// Was `if ( true )` with the real check commented out, so any logged in
+				// account could delete any file.
+				if ( $ucm_file->can_i_access() ) {
 					// delete the physical file.
 					if ( is_file( $file_data['file_path'] ) ) {
 						unlink( $file_data['file_path'] );
