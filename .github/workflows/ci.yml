@@ -16,9 +16,10 @@ jobs:
   lint:
     name: php -l
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v4
-      - uses: shivammathur/setup-php@v2
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # v2
         with:
           php-version: '8.4'
           coverage: none
@@ -40,53 +41,72 @@ jobs:
   phpcs:
     name: Coding standard
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v4
-      - uses: shivammathur/setup-php@v2
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # v2
         with:
           php-version: '8.4'
           coverage: none
           tools: cs2pr
-      - uses: ramsey/composer-install@v3
+      - uses: ramsey/composer-install@a8d0d959dab41457692a5e2041bd9b757a119e3f # v3
       - name: phpcs
         run: ./vendor/bin/phpcs -q --report=checkstyle -d memory_limit=2G | cs2pr
 
   phpstan:
     name: PHPStan
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
-      - uses: actions/checkout@v4
-      - uses: shivammathur/setup-php@v2
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # v2
         with:
           php-version: '8.4'
           coverage: none
-      - uses: ramsey/composer-install@v3
+      - uses: ramsey/composer-install@a8d0d959dab41457692a5e2041bd9b757a119e3f # v3
       - name: PHPStan
         run: ./vendor/bin/phpstan analyse --memory-limit=2G --no-progress --error-format=github
 
   phpunit:
     name: PHPUnit
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v4
-      - uses: shivammathur/setup-php@v2
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # v2
         with:
           php-version: '8.4'
           extensions: mysqli, mbstring
           coverage: none
-      - uses: ramsey/composer-install@v3
+      - uses: ramsey/composer-install@a8d0d959dab41457692a5e2041bd9b757a119e3f # v3
       - run: ./vendor/bin/phpunit
 
   install:
     name: Install from scratch
     runs-on: ubuntu-latest
+    timeout-minutes: 25
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: '20'
+          cache: 'npm'
       - run: npm ci
-      - run: npx playwright install --with-deps chromium
+      - name: Work out which browser build we need
+        id: playwright
+        run: echo "version=$(node -p "require('@playwright/test/package.json').version")" >> "$GITHUB_OUTPUT"
+      - name: Reuse the browser download from a previous run
+        id: playwright-cache
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ steps.playwright.outputs.version }}
+      - name: Install the browser
+        run: npx playwright install --with-deps chromium
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
+      - name: Install the browser's system packages
+        run: npx playwright install-deps chromium
+        if: steps.playwright-cache.outputs.cache-hit == 'true'
       - name: Make the files writable by the web server
         # The installer checks the same things a real host would: that it can write to
         # the base folder, includes/ and temp/. A git checkout is owned by the runner,
@@ -120,7 +140,7 @@ jobs:
       - name: Collect the app log
         if: always()
         run: docker compose --profile install-test logs app-install-test > app.log 2>&1 || true
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         if: always()
         with:
           name: install-report
