@@ -375,10 +375,10 @@ class module_faq extends module_base
 		switch ( $hook ) {
 			case 'public':
 				$faq_id = ( isset( $_REQUEST['i'] ) ) ? (int) $_REQUEST['i'] : false;
-				$hash   = ( isset( $_REQUEST['hash'] ) ) ? trim( $_REQUEST['hash'] ) : false;
+				$hash   = ucm_request_string( 'hash' );
 				if ( $faq_id && $hash ) {
 					$correct_hash = $this->link_open_public( $faq_id, true );
-					if ( $correct_hash == $hash ) {
+					if ( hash_equals( $correct_hash, $hash ) ) {
 						$faq = array();
 						if ( $faq_id > 0 ) {
 							$faq = $this->get_faq( $faq_id );

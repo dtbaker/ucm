@@ -184,12 +184,12 @@ class module_backup extends module_base
 				$result['error'] = 'Backup failure';
 				header( "Content-type: text/javascript" );
 				$backup_id         = ( isset( $_REQUEST['i'] ) ) ? (int) $_REQUEST['i'] : false;
-				$hash              = ( isset( $_REQUEST['hash'] ) ) ? trim( $_REQUEST['hash'] ) : false;
+				$hash              = ucm_request_string( 'hash' );
 				$backup_file_check = ( isset( $_POST['backup_file'] ) ) ? trim( $_POST['backup_file'] ) : false;
 				$backup_type       = ( isset( $_POST['backup_type'] ) ) ? trim( $_POST['backup_type'] ) : false;
 				if ( $backup_id > 0 && $hash && $backup_file_check && $backup_type ) {
 					$correct_hash = $this->link_external_backup( $backup_id, true );
-					if ( $correct_hash == $hash ) {
+					if ( hash_equals( $correct_hash, $hash ) ) {
 						// all good to print a receipt for this payment.
 						$backup_data = $this->get_backup( $backup_id );
 						if ( $backup_data && $backup_data['backup_id'] == $backup_id && $backup_data['backup_file'] && $backup_data['backup_file'] == $backup_file_check ) {

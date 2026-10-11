@@ -1789,9 +1789,9 @@ class module_data extends module_base
 				$data_field_group_id = isset( $_REQUEST['dfgi'] ) ? (int) $_REQUEST['dfgi'] : false;
 				$data_field_id       = isset( $_REQUEST['dfi'] ) ? (int) $_REQUEST['dfi'] : false;
 				$value_key           = isset( $_REQUEST['dfv'] ) ? (int) $_REQUEST['dfv'] : false;
-				$hash                = isset( $_REQUEST['hash'] ) ? $_REQUEST['hash'] : false;
+				$hash                = ucm_request_string( 'hash' );
 				$real_hash           = self::link_public_file_download( $data_record_id, $data_type_id, $data_field_group_id, $data_field_id, $value_key, true );
-				if ( $real_hash == $hash ) {
+				if ( hash_equals( $real_hash, $hash ) ) {
 					$data = self::get_data_items( $data_record_id );
 					if ( $data && isset( $data[ $data_field_id ] ) ) {
 						$file_data = @unserialize( $data[ $data_field_id ]['data_text'] );

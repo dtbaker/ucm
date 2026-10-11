@@ -102,7 +102,7 @@ class module_signature extends module_base
 
 		switch ( $hook ) {
 			case 'signature_job_task':
-				$args = json_decode( base64_decode( $_REQUEST['i'] ), true );
+				$args = json_decode( (string) base64_decode( ucm_request_string( 'i' ) ), true );
 				include( 'pages/signature_job_task.php' );
 				break;
 		}

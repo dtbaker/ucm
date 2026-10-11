@@ -248,10 +248,10 @@ class module_calendar extends module_base
 			case 'ical':
 				$calendar_type = ( isset( $_REQUEST['i'] ) ) ? $_REQUEST['i'] : false;
 				$options       = ( isset( $_REQUEST['o'] ) ) ? ucm_unserialize_options( $_REQUEST['o'] ) : array();
-				$hash          = ( isset( $_REQUEST['hash'] ) ) ? trim( $_REQUEST['hash'] ) : false;
+				$hash          = ucm_request_string( 'hash' );
 				if ( $calendar_type && $hash ) {
 					$correct_hash = $this->link_calendar( $calendar_type, $options, true );
-					if ( $correct_hash == $hash ) {
+					if ( hash_equals( $correct_hash, $hash ) ) {
 
 						if ( ob_get_level() ) {
 							ob_end_clean();

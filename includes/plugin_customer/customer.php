@@ -1958,10 +1958,10 @@ Invoice: <strong>{INVOICE_LINK}</strong>
 
 			case 'public':
 				$customer_id = ( isset( $_REQUEST['i'] ) ) ? (int) $_REQUEST['i'] : false;
-				$hash        = ( isset( $_REQUEST['hash'] ) ) ? trim( $_REQUEST['hash'] ) : false;
+				$hash        = ucm_request_string( 'hash' );
 				if ( $customer_id && $hash ) {
 					$correct_hash = $this->link_public( $customer_id, true );
-					if ( $correct_hash == $hash ) {
+					if ( hash_equals( $correct_hash, $hash ) ) {
 						// all good to print a receipt for this payment.
 						$customer_data = $this->get_customer( $customer_id );
 

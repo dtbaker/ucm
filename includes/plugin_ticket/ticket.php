@@ -832,10 +832,10 @@ Thanks,
 			case 'attachment':
 				$ticket_id                    = ( isset( $_REQUEST['t'] ) ) ? (int) $_REQUEST['t'] : false;
 				$ticket_message_attachment_id = ( isset( $_REQUEST['tma'] ) ) ? (int) $_REQUEST['tma'] : false;
-				$hash                         = ( isset( $_REQUEST['hash'] ) ) ? trim( $_REQUEST['hash'] ) : false;
+				$hash                         = ucm_request_string( 'hash' );
 				if ( $ticket_id && $ticket_message_attachment_id && $hash ) {
 					$correct_hash = $this->link_open_attachment( $ticket_id, $ticket_message_attachment_id, true );
-					if ( $correct_hash == $hash ) {
+					if ( hash_equals( $correct_hash, $hash ) ) {
 						$attach = get_single( 'ticket_message_attachment', 'ticket_message_attachment_id', $ticket_message_attachment_id );
 						if ( file_exists( _UCM_FILE_STORAGE_DIR . 'includes/plugin_ticket/attachments/' . $attach['ticket_message_attachment_id'] ) ) {
 							header( "Content-type: application/octet-stream" );
@@ -1087,10 +1087,10 @@ Thanks,
 			case 'public_status':
 				$ticket_id     = ( isset( $_REQUEST['i'] ) ) ? (int) $_REQUEST['i'] : false;
 				$new_status_id = ( isset( $_REQUEST['s'] ) ) ? (int) $_REQUEST['s'] : false;
-				$hash          = ( isset( $_REQUEST['hash'] ) ) ? trim( $_REQUEST['hash'] ) : false;
+				$hash          = ucm_request_string( 'hash' );
 				if ( $ticket_id && $new_status_id && $hash ) {
 					$correct_hash = $this->link_public_status( $ticket_id, $new_status_id, true );
-					if ( $correct_hash == $hash ) {
+					if ( hash_equals( $correct_hash, $hash ) ) {
 						// change the status.
 						update_insert( 'ticket_id', $ticket_id, 'ticket', array( 'status_id' => $new_status_id ) );
 						module_template::init_template( 'ticket_status_change', '<h2>Ticket</h2>
@@ -1114,10 +1114,10 @@ Thanks,
 				break;
 			case 'public':
 				$ticket_id = ( isset( $_REQUEST['i'] ) ) ? (int) $_REQUEST['i'] : false;
-				$hash      = ( isset( $_REQUEST['hash'] ) ) ? trim( $_REQUEST['hash'] ) : false;
+				$hash      = ucm_request_string( 'hash' );
 				if ( $ticket_id && $hash ) {
 					$correct_hash = $this->link_public( $ticket_id, true );
-					if ( $correct_hash == $hash ) {
+					if ( hash_equals( $correct_hash, $hash ) ) {
 						// all good to print a receipt for this payment.
 						$ticket = $this->get_ticket( $ticket_id );
 

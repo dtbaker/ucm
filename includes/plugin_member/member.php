@@ -484,7 +484,7 @@ class module_member extends module_base
 				$member = isset( $_REQUEST['member'] ) && is_array( $_REQUEST['member'] ) ? $_REQUEST['member'] : false;
 
 				$provided_member_id = ( isset( $_REQUEST['i'] ) ) ? (int) $_REQUEST['i'] : false;
-				$hash               = ( isset( $_REQUEST['hash'] ) ) ? trim( $_REQUEST['hash'] ) : false;
+				$hash               = ucm_request_string( 'hash' );
 				$member_id          = false;
 
 				if ( $member ) {
@@ -497,7 +497,7 @@ class module_member extends module_base
 							// are we adding a new member to the system or updating an old one
 							if ( $provided_member_id && $hash ) {
 								$real_hash = $this->link_public_details( $provided_member_id, true );
-								if ( $real_hash == $hash ) {
+								if ( hash_equals( $real_hash, $hash ) ) {
 									$existing_member = get_single( 'member', 'email', $email );
 									if ( $existing_member && $existing_member['member_id'] != $provided_member_id ) {
 										// this user is trying to update their email address to a user who exists in the system already
@@ -641,7 +641,7 @@ class module_member extends module_base
 					}
 					if ( $provided_member_id && $hash ) {
 						$real_hash = $this->link_public_details( $provided_member_id, true );
-						if ( $real_hash == $hash ) {
+						if ( hash_equals( $real_hash, $hash ) ) {
 							// we can load these details into the forum successfully.
 							$member = array_merge( $member, $this->get_member( $provided_member_id ) );
 							// get their fields:

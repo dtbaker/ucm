@@ -109,6 +109,10 @@ jobs:
         env:
           UCM_BASE_URL: http://localhost:8092
         run: npx playwright test tests/e2e/csrf.spec.ts tests/e2e/csrf-modules.spec.ts tests/e2e/auth.spec.ts tests/e2e/address.spec.ts
+      - name: Check the public pages for PHP warnings
+        env:
+          UCM_BASE_URL: http://localhost:8092
+        run: npx playwright test tests/e2e/public.spec.ts
       - name: Check every plugin page for PHP warnings
         env:
           UCM_BASE_URL: http://localhost:8092

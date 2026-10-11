@@ -107,10 +107,10 @@ Thank you,<br><br>
 			case 'public':
 				$job_id  = ( isset( $_REQUEST['i'] ) ) ? (int) $_REQUEST['i'] : false;
 				$task_id = ( isset( $_REQUEST['t'] ) ) ? (int) $_REQUEST['t'] : false;
-				$hash    = ( isset( $_REQUEST['hash'] ) ) ? trim( $_REQUEST['hash'] ) : false;
+				$hash    = ucm_request_string( 'hash' );
 				if ( $job_id && $task_id && $hash ) {
 					$correct_hash = self::link_public( $job_id, $task_id, true );
-					if ( $correct_hash == $hash ) {
+					if ( hash_equals( $correct_hash, $hash ) ) {
 						module_job_discussion::print_discussion( $job_id, $task_id );
 					}
 				}

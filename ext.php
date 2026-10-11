@@ -62,7 +62,7 @@ if ( $load_modules ) {
 	$m = false;
 }
 //$m = (isset($_REQUEST['m'])) ? trim(basename($_REQUEST['m'])) : false;
-$h = ( isset( $_REQUEST['h'] ) ) ? trim( basename( $_REQUEST['h'] ) ) : false;
+$h = basename( ucm_request_string( 'h' ) );
 
 if ( $dont_init_plugins && $m && ! isset( $plugins[ $m ] ) ) {
 	$external_plugins_to_load   = array();

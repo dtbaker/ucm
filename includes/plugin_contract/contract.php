@@ -650,10 +650,10 @@ Thank you,<br><br>
 				ob_start();
 
 				$contract_id = ( isset( $_REQUEST['i'] ) ) ? (int) $_REQUEST['i'] : false;
-				$hash        = ( isset( $_REQUEST['hash'] ) ) ? trim( $_REQUEST['hash'] ) : false;
+				$hash        = ucm_request_string( 'hash' );
 				if ( $contract_id && $hash ) {
 					$correct_hash = $this->link_public_print( $contract_id, true );
-					if ( $correct_hash == $hash ) {
+					if ( hash_equals( $correct_hash, $hash ) ) {
 						// check contract still exists.
 						$contract_data = $this->get_contract( $contract_id );
 						if ( ! $contract_data || $contract_data['contract_id'] != $contract_id ) {
@@ -696,10 +696,10 @@ Thank you,<br><br>
 				break;
 			case 'public':
 				$contract_id = ( isset( $_REQUEST['i'] ) ) ? (int) $_REQUEST['i'] : false;
-				$hash        = ( isset( $_REQUEST['hash'] ) ) ? trim( $_REQUEST['hash'] ) : false;
+				$hash        = ucm_request_string( 'hash' );
 				if ( $contract_id && $hash ) {
 					$correct_hash = $this->link_public( $contract_id, true );
-					if ( $correct_hash == $hash ) {
+					if ( hash_equals( $correct_hash, $hash ) ) {
 						// all good to print a receipt for this payment.
 						$contract_data = $this->get_contract( $contract_id );
 

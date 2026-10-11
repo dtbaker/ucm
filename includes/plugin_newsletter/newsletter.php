@@ -2085,11 +2085,11 @@ class module_newsletter extends module_base
 	public function external_hook( $hook ) {
 		switch ( $hook ) {
 			case 'l': // opening a tracked link.
-				$send_id              = isset( $_REQUEST['a'] ) ? (int) $_REQUEST['s'] : 0;
+				$send_id              = isset( $_REQUEST['a'], $_REQUEST['s'] ) ? (int) $_REQUEST['s'] : 0;
 				$link_id              = isset( $_REQUEST['l'] ) ? (int) $_REQUEST['l'] : 0;
 				$newsletter_member_id = isset( $_REQUEST['a'] ) ? (int) $_REQUEST['a'] : 0;
 				$correct_hash         = $this->link_to_link( $send_id, $link_id, $newsletter_member_id, true );
-				$provided_hash        = isset( $_REQUEST['hash'] ) ? $_REQUEST['hash'] : false;
+				$provided_hash        = ucm_request_string( 'hash' );
 				if ( $correct_hash == $provided_hash ) {
 					// we have a correct link from this member.
 					// track that they opened thsi newsletter.
@@ -2122,11 +2122,11 @@ class module_newsletter extends module_base
 				exit;
 				break;
 			case 'i': // viewing a tracked image.
-				$send_id              = isset( $_REQUEST['a'] ) ? (int) $_REQUEST['s'] : 0;
+				$send_id              = isset( $_REQUEST['a'], $_REQUEST['s'] ) ? (int) $_REQUEST['s'] : 0;
 				$image_id             = isset( $_REQUEST['i'] ) ? (int) $_REQUEST['i'] : 0;
 				$newsletter_member_id = isset( $_REQUEST['a'] ) ? (int) $_REQUEST['a'] : 0;
 				$correct_hash         = $this->link_to_image( $send_id, $image_id, $newsletter_member_id, true );
-				$provided_hash        = isset( $_REQUEST['hash'] ) ? $_REQUEST['hash'] : false;
+				$provided_hash        = ucm_request_string( 'hash' );
 				if ( $correct_hash == $provided_hash ) {
 					// we have a correct link from this member.
 					// track that they opened thsi newsletter.
@@ -2137,7 +2137,8 @@ class module_newsletter extends module_base
 				if ( $image_id > 0 ) {
 					$image = get_single( 'newsletter_image', 'image_id', $image_id );
 					//print_r($image);exit;
-					$url = $image['image_url'];
+					// A tracking link can outlive the image row it points at.
+					$url = isset( $image['image_url'] ) ? (string) $image['image_url'] : '';
 					if ( strlen( $url ) < 3 ) {
 						// bad link?
 						echo 'Incorrect image link, sorry';
@@ -2177,7 +2178,7 @@ class module_newsletter extends module_base
 				$newsletter_id        = isset( $_REQUEST['n'] ) ? (int) $_REQUEST['n'] : 0;
 				$send_id              = isset( $_REQUEST['s'] ) ? (int) $_REQUEST['s'] : 0;
 				$voh                  = isset( $_REQUEST['voh'] ) ? $_REQUEST['voh'] : false; // ifi no member id, eg: public viewing link.
-				$hash                 = isset( $_REQUEST['hash'] ) ? $_REQUEST['hash'] : false; // set if member id, eg: view link from a send.
+				$hash                 = ucm_request_string( 'hash' ); // set if member id, eg: view link from a send.
 				$newsletter_member_id = isset( $_REQUEST['nm'] ) ? (int) $_REQUEST['nm'] : 0;
 				if ( $newsletter_id > 0 ) {
 					if ( ! $voh && ! $hash ) {
@@ -2190,7 +2191,7 @@ class module_newsletter extends module_base
 						} else {
 							$correct_hash = self::view_online_url( $newsletter_id, $newsletter_member_id, $send_id, true );
 						}
-						if ( $correct_hash == $hash ) {
+						if ( hash_equals( $correct_hash, $hash ) ) {
 							echo module_newsletter::render( $newsletter_id, $send_id, $newsletter_member_id, 'view_online' );
 							exit;
 						}
@@ -2215,7 +2216,7 @@ class module_newsletter extends module_base
 				if ( $newsletter_id > 0 ) {
 					$newsletter_member_id = isset( $_REQUEST['nm'] ) ? (int) $_REQUEST['nm'] : 0;
 					$send_id              = isset( $_REQUEST['s'] ) ? (int) $_REQUEST['s'] : 0;
-					$hash                 = isset( $_REQUEST['hash'] ) ? $_REQUEST['hash'] : 0;
+					$hash                 = ucm_request_string( 'hash' );
 
 					if ( $newsletter_id && $newsletter_member_id && $send_id && $hash ) {
 						if ( isset( $_REQUEST[ _MEMBER_HASH_URL_REDIRECT_BITS ] ) ) {
@@ -2223,7 +2224,7 @@ class module_newsletter extends module_base
 						} else {
 							$correct_hash = self::view_online_url( $newsletter_id, $newsletter_member_id, $send_id, true );
 						}
-						if ( $correct_hash == $hash ) {
+						if ( hash_equals( $correct_hash, $hash ) ) {
 							echo module_newsletter::render( $newsletter_id, $send_id, $newsletter_member_id, 'view_online' );
 							exit;
 						}

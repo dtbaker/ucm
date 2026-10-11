@@ -1,4 +1,5 @@
 import { test, expect, Page } from '@playwright/test';
+import { DIAGNOSTIC, describeDiagnostics } from './diagnostics';
 
 /**
  * Loads every page the plugins put in the menu and fails if PHP printed a warning,
@@ -108,56 +109,8 @@ function missingRecordPages(): Array<[string, string, string]> {
   return MISSING_RECORD_KEYS.map(([module, page, key]) => [module, page, `${key}=${id}`]);
 }
 
-/**
- * Bundled libraries we have not updated. Their own deprecations are not ours to fix here
- * and would otherwise hide real findings. Anything in our own code still fails.
- */
-const VENDORED = [
-  '/includes/plugin_security/htmlpurifier/',
-  '/includes/plugin_pdf/dompdf/',
-  '/includes/plugin_encrypt/phpseclib/',
-  '/includes/plugin_email/class.',
-  '/includes/plugin_paymethod_',
-  '/includes/plugin_calendar/wdCalendar/',
-  '/includes/plugin_captcha/inc/',
-  '/includes/plugin_ticket/cron/mime_parser.php',
-  '/includes/plugin_file/upload/plupload/',
-];
-
-const LEVELS = 'Warning|Notice|Deprecated|Fatal error|Parse error|Recoverable fatal error';
-// PHP prints these as "<b>Warning</b>:  message in <b>/path</b> on line <b>12</b>" with
-// html_errors on, and as plain text without it. Both always carry " on line ".
-const DIAGNOSTIC = new RegExp(`<b>(?:${LEVELS})</b>:|(?:^|\\n)(?:${LEVELS}):\\s.*\\son line\\s`, 'm');
-
 function url(module: string, page: string, query = '') {
   return `/?m[]=${module}&p[]=${page}` + (query ? `&${query}` : '');
-}
-
-/**
- * Diagnostics in our own code, one readable line each.
- *
- * Both shapes PHP prints are matched, and both end in "... in <file> on line <n>". That
- * tail is required, so the app's own copy - pages that legitimately say "Warning: full
- * backups will not work" - is not mistaken for one. Bundled libraries are skipped.
- */
-function describeDiagnostics(body: string): string[] {
-  const found: string[] = [];
-  const patterns = [
-    new RegExp(`<b>(${LEVELS})</b>:\\s*(.{0,250}?) in <b>(.{0,250}?)</b> on line <b>(\\d+)</b>`, 'g'),
-    new RegExp(`(?:^|\\n)(${LEVELS}):\\s*(.{0,250}?) in (\\S.{0,250}?) on line (\\d+)`, 'g'),
-  ];
-  for (const re of patterns) {
-    let match;
-    while ((match = re.exec(body)) !== null) {
-      const file = match[3].replace(/<[^>]*>/g, '').trim();
-      if (VENDORED.some(path => file.includes(path))) {
-        continue;
-      }
-      const message = match[2].replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim();
-      found.push(`${match[1]}: ${message} in ${file} on line ${match[4]}`);
-    }
-  }
-  return [...new Set(found)];
 }
 
 async function login(page: Page) {

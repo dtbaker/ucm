@@ -462,7 +462,7 @@ Change request details:<br><br>
 				// load up the full script to be injected into our clients website.
 				$website_id = isset( $_REQUEST['i'] ) ? (int) $_REQUEST['i'] : false;
 				$change_request_id = $change_id = isset( $_REQUEST['change_id'] ) ? (int) $_REQUEST['change_id'] : false;
-				$hash = isset( $_REQUEST['hash'] ) ? $_REQUEST['hash'] : false;
+				$hash = ucm_request_string( 'hash' );
 				$type = isset( $_REQUEST['type'] ) ? $_REQUEST['type'] : false;
 
 				if ( $type == 'popupjs' ) {
@@ -473,7 +473,7 @@ Change request details:<br><br>
 					header( "Content-type: text/javascript" );
 				}
 
-				if ( $website_id && $hash && module_change_request::link_popup( $website_id, true ) == $hash ) {
+				if ( $website_id && $hash && hash_equals( module_change_request::link_popup( $website_id, true ), $hash ) ) {
 
 
 					$change_history = module_change_request::get_remaining_changes( $website_id );
@@ -719,13 +719,13 @@ Change request details:<br><br>
 			case 'script':
 				// load up the full script to be injected into our clients website.
 				$website_id = isset( $_REQUEST['i'] ) ? (int) $_REQUEST['i'] : false;
-				$hash = isset( $_REQUEST['hash'] ) ? $_REQUEST['hash'] : false;
+				$hash = ucm_request_string( 'hash' );
 				@ob_end_clean();
 				header( "Expires: Mon, 26 Jul 1997 05:00:00 GMT" );
 				header( "Cache-Control: no-cache" );
 				header( "Pragma: no-cache" );
 				header( "Content-type: text/javascript" );
-				if ( $website_id && $hash && module_change_request::link_script( $website_id, true ) == $hash ) {
+				if ( $website_id && $hash && hash_equals( module_change_request::link_script( $website_id, true ), $hash ) ) {
 					include( "js/client.js" );
 					$client_url = isset( $_REQUEST['url'] ) ? $_REQUEST['url'] : false;
 					if ( $client_url ) {
@@ -802,8 +802,8 @@ Change request details:<br><br>
 				break;
 			case 'public':
 				$website_id = isset( $_REQUEST['i'] ) ? (int) $_REQUEST['i'] : false;
-				$hash       = isset( $_REQUEST['hash'] ) ? $_REQUEST['hash'] : false;
-				if ( $website_id && $hash && module_change_request::link_public( $website_id, true ) == $hash ) {
+				$hash       = ucm_request_string( 'hash' );
+				if ( $website_id && $hash && hash_equals( module_change_request::link_public( $website_id, true ), $hash ) ) {
 					// correct!
 
 					// redirect to website with our "change_request" url parameter, that is picked up by the included text.

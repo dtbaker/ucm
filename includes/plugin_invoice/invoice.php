@@ -1058,10 +1058,10 @@ Thank you,<br><br>
 				ob_start();
 
 				$invoice_id = ( isset( $_REQUEST['i'] ) ) ? (int) $_REQUEST['i'] : false;
-				$hash       = ( isset( $_REQUEST['hash'] ) ) ? trim( $_REQUEST['hash'] ) : false;
+				$hash       = ucm_request_string( 'hash' );
 				if ( $invoice_id && $hash ) {
 					$correct_hash = $this->link_public_print( $invoice_id, true );
-					if ( $correct_hash == $hash ) {
+					if ( hash_equals( $correct_hash, $hash ) ) {
 						// check invoice still exists.
 						$invoice_data = $this->get_invoice( $invoice_id );
 						if ( ! $invoice_data || $invoice_data['invoice_id'] != $invoice_id ) {
@@ -1104,10 +1104,10 @@ Thank you,<br><br>
 				break;
 			case 'public_pay':
 				$invoice_id = ( isset( $_REQUEST['i'] ) ) ? (int) $_REQUEST['i'] : false;
-				$hash       = ( isset( $_REQUEST['hash'] ) ) ? trim( $_REQUEST['hash'] ) : false;
+				$hash       = ucm_request_string( 'hash' );
 				if ( $invoice_id && $hash ) {
 					$correct_hash = $this->link_public_pay( $invoice_id, true );
-					if ( $correct_hash == $hash ) {
+					if ( hash_equals( $correct_hash, $hash ) ) {
 						// check invoice still exists.
 						$invoice_data = $this->get_invoice( $invoice_id );
 						if ( ! $invoice_data || $invoice_data['invoice_id'] != $invoice_id ) {
@@ -1122,10 +1122,10 @@ Thank you,<br><br>
 				break;
 			case 'payment_complete':
 				$invoice_id = ( isset( $_REQUEST['i'] ) ) ? (int) $_REQUEST['i'] : false;
-				$hash       = ( isset( $_REQUEST['hash'] ) ) ? trim( $_REQUEST['hash'] ) : false;
+				$hash       = ucm_request_string( 'hash' );
 				if ( $invoice_id && $hash ) {
 					$correct_hash = $this->link_public_payment_complete( $invoice_id, true );
-					if ( $correct_hash == $hash ) {
+					if ( hash_equals( $correct_hash, $hash ) ) {
 						// check invoice still exists.
 						$invoice_data = $this->get_invoice( $invoice_id );
 						if ( ! $invoice_data || $invoice_data['invoice_id'] != $invoice_id ) {
@@ -1156,10 +1156,10 @@ Thank you,<br><br>
 				break;
 			case 'public':
 				$invoice_id = ( isset( $_REQUEST['i'] ) ) ? (int) $_REQUEST['i'] : false;
-				$hash       = ( isset( $_REQUEST['hash'] ) ) ? trim( $_REQUEST['hash'] ) : false;
+				$hash       = ucm_request_string( 'hash' );
 				if ( $invoice_id && $hash ) {
 					$correct_hash = $this->link_public( $invoice_id, true );
-					if ( $correct_hash == $hash ) {
+					if ( hash_equals( $correct_hash, $hash ) ) {
 
 
 						// check invoice still exists.
@@ -1283,10 +1283,10 @@ Job: <strong>{JOB_NAME}</strong> <br/>
 				break;
 			case 'receipt':
 				$invoice_payment_id = ( isset( $_REQUEST['i'] ) ) ? (int) $_REQUEST['i'] : false;
-				$hash               = ( isset( $_REQUEST['hash'] ) ) ? trim( $_REQUEST['hash'] ) : false;
+				$hash               = ucm_request_string( 'hash' );
 				if ( $invoice_payment_id && $hash ) {
 					$correct_hash = $this->link_receipt( $invoice_payment_id, true );
-					if ( $correct_hash == $hash ) {
+					if ( hash_equals( $correct_hash, $hash ) ) {
 						// all good to print a receipt for this payment.
 						$invoice_payment_data = $this->get_invoice_payment( $invoice_payment_id );
 						if ( $invoice_payment_data ) {

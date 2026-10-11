@@ -769,10 +769,10 @@ Thank you,<br><br>
 				ob_start();
 
 				$quote_id = ( isset( $_REQUEST['i'] ) ) ? (int) $_REQUEST['i'] : false;
-				$hash     = ( isset( $_REQUEST['hash'] ) ) ? trim( $_REQUEST['hash'] ) : false;
+				$hash     = ucm_request_string( 'hash' );
 				if ( $quote_id && $hash ) {
 					$correct_hash = $this->link_public_print( $quote_id, true );
-					if ( $correct_hash == $hash ) {
+					if ( hash_equals( $correct_hash, $hash ) ) {
 						// check quote still exists.
 						$quote_data = $this->get_quote( $quote_id );
 						if ( ! $quote_data || $quote_data['quote_id'] != $quote_id ) {
@@ -815,10 +815,10 @@ Thank you,<br><br>
 				break;
 			case 'public':
 				$quote_id = ( isset( $_REQUEST['i'] ) ) ? (int) $_REQUEST['i'] : false;
-				$hash     = ( isset( $_REQUEST['hash'] ) ) ? trim( $_REQUEST['hash'] ) : false;
+				$hash     = ucm_request_string( 'hash' );
 				if ( $quote_id && $hash ) {
 					$correct_hash = $this->link_public( $quote_id, true );
-					if ( $correct_hash == $hash ) {
+					if ( hash_equals( $correct_hash, $hash ) ) {
 						// all good to print a receipt for this payment.
 						$quote_data = $this->get_quote( $quote_id );
 

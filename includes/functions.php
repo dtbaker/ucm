@@ -199,6 +199,29 @@ function ucm_send_auth_required() {
 }
 
 /**
+ * Read a request value that is meant to be a plain string, such as a link hash.
+ *
+ * Anything in $_REQUEST is an array whenever the query string says so - "?hash[]=x" - and
+ * PHP 8 throws a TypeError the moment one of those reaches trim() or any other string
+ * function. Every public link in the app is checked by comparing a hash from the query
+ * string, so that crash is reachable by anyone, on a page that needs no login.
+ *
+ * Returns '' for anything that is not a string, which then fails whatever check it was on
+ * its way to.
+ *
+ * @param string $key name in $_REQUEST
+ *
+ * @return string
+ */
+function ucm_request_string( $key ) {
+	if ( ! isset( $_REQUEST[ $key ] ) || ! is_string( $_REQUEST[ $key ] ) ) {
+		return '';
+	}
+
+	return trim( $_REQUEST[ $key ] );
+}
+
+/**
  * Make a value safe to put inside backticks as a table or column name.
  *
  * db_escape() is the wrong tool for this and always has been:

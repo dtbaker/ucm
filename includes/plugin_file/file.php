@@ -1715,10 +1715,10 @@ Comment: {COMMENT}
 		switch ( $hook ) {
 			case 'view':
 				$file_id = ( isset( $_REQUEST['i'] ) ) ? (int) $_REQUEST['i'] : false;
-				$hash = ( isset( $_REQUEST['hash'] ) ) ? trim( $_REQUEST['hash'] ) : false;
+				$hash = ucm_request_string( 'hash' );
 				if ( $file_id && $hash ) {
 					$correct_hash = $this->link_public( $file_id, true );
-					if ( $correct_hash == $hash ) {
+					if ( hash_equals( $correct_hash, $hash ) ) {
 						// all good to print a receipt for this payment.
 						$file_data = $this->get_file( $file_id, false );
 
@@ -1856,10 +1856,10 @@ Comment: {COMMENT}
 			case 'download_bucket':
 				@ob_end_clean();
 				$file_id = ( isset( $_REQUEST['i'] ) ) ? (int) $_REQUEST['i'] : false;
-				$hash    = ( isset( $_REQUEST['hash'] ) ) ? trim( $_REQUEST['hash'] ) : false;
+				$hash    = ucm_request_string( 'hash' );
 				if ( $file_id && $hash ) {
 					$correct_hash = $this->link_public_download_bucket( $file_id, true );
-					if ( $correct_hash == $hash ) {
+					if ( hash_equals( $correct_hash, $hash ) ) {
 						// all good to print a receipt for this payment.
 						$file_data = $this->get_file( $file_id, false );
 
@@ -1910,10 +1910,10 @@ Comment: {COMMENT}
 			case 'download':
 				@ob_end_clean();
 				$file_id = ( isset( $_REQUEST['i'] ) ) ? (int) $_REQUEST['i'] : false;
-				$hash    = ( isset( $_REQUEST['hash'] ) ) ? trim( $_REQUEST['hash'] ) : false;
+				$hash    = ucm_request_string( 'hash' );
 				if ( $file_id && $hash ) {
 					$correct_hash = $this->link_public_view( $file_id, true );
-					if ( $correct_hash == $hash ) {
+					if ( hash_equals( $correct_hash, $hash ) ) {
 						// all good to print a receipt for this payment.
 						$file_data = $this->get_file( $file_id, false );
 						if ( isset( $file_data['file_url'] ) && strlen( $file_data['file_url'] ) ) {
