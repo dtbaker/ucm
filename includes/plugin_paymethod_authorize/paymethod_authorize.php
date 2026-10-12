@@ -217,72 +217,26 @@ class module_paymethod_authorize extends module_base
 						$transaction->setSandbox( module_config::c( 'payment_method_authorize_sandbox', 0 ) );
 						$transaction->VERIFY_PEER = module_config::c( 'payment_method_authorize_ssl_verify', 1 );
 						$transaction->amount      = $invoice_payment_data['amount']; // USD ONLY
+						// Only the billing details the payment form actually asks for. This used to be
+						// the entire AIM field list, which let the browser set "amount" and
+						// "test_request" - and because __set() and setField() write the same
+						// _x_post_fields slot, a posted amount overwrote the invoice amount set just
+						// above. Anyone holding a payment link could pay a cent, or send
+						// test_request=TRUE for an approval that moves no money, and the invoice was
+						// then marked paid in full.
 						foreach (
 							array(
 								"address",
-								"allow_partial_auth",
-								"amount",
-								"auth_code",
-								"authentication_indicator",
-								"bank_aba_code",
-								"bank_acct_name",
-								"bank_acct_num",
-								"bank_acct_type",
-								"bank_check_number",
-								"bank_name",
-								"card_code",
-								"card_num",
-								"cardholder_authentication_value",
 								"city",
 								"company",
 								"country",
-								"cust_id",
-								"customer_ip",
-								"delim_char",
-								"delim_data",
-								"description",
-								"duplicate_window",
-								"duty",
-								"echeck_type",
-								"email",
-								"email_customer",
-								"encap_char",
-								"exp_date",
-								"fax",
 								"first_name",
-								"footer_email_receipt",
-								"freight",
-								"header_email_receipt",
-								"invoice_num",
 								"last_name",
-								"line_item",
-								"login",
-								"method",
-								"phone",
-								"po_num",
-								"recurring_billing",
-								"relay_response",
-								"ship_to_address",
-								"ship_to_city",
-								"ship_to_company",
-								"ship_to_country",
-								"ship_to_first_name",
-								"ship_to_last_name",
-								"ship_to_state",
-								"ship_to_zip",
-								"split_tender_id",
 								"state",
-								"tax",
-								"tax_exempt",
-								"test_request",
-								"tran_key",
-								"trans_id",
-								"type",
-								"version",
-								"zip"
+								"zip",
 							) as $possible_value
 						) {
-							if ( isset( $_POST[ $possible_value ] ) ) {
+							if ( isset( $_POST[ $possible_value ] ) && is_string( $_POST[ $possible_value ] ) ) {
 								$transaction->setField( $possible_value, $_POST[ $possible_value ] );
 							}
 						}
@@ -294,6 +248,18 @@ class module_paymethod_authorize extends module_base
 						//$transaction->card_code = $_POST['cvv'];
 
 						$response = $transaction->authorizeAndCapture();
+
+						// Check what was actually charged before calling it paid. An approval on
+						// its own says nothing about the amount, and this used to record the
+						// payment without ever looking.
+						$expected_amount = (float) $invoice_payment_data['amount'];
+						$charged_amount  = isset( $response->amount ) ? (float) $response->amount : false;
+						if ( $response->approved && $charged_amount !== false && abs( $charged_amount - $expected_amount ) > 0.001 ) {
+							module_paymethod_stripe::add_payment_data( $invoice_payment_id, 'log',
+								'Authorize.Net approved ' . $charged_amount . ' but the payment was for ' . $expected_amount . '. Not recorded as paid.' );
+							echo 'The amount charged did not match this invoice. Please contact us.';
+							exit;
+						}
 
 						if ( $response->approved ) {
 							//                          echo "<h1>Success! The test credit card has been charged!</h1>";
