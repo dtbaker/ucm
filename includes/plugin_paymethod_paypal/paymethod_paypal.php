@@ -466,6 +466,9 @@ class module_paymethod_paypal extends module_base
 		} else {
 			fputs( $fp, "POST $web[path] HTTP/1.1\r\n" );
 			fputs( $fp, "Host: $web[host]\r\n" );
+			// PayPal requires a User-Agent on the IPN postback and rejects requests
+			// without one.
+			fputs( $fp, "User-Agent: UCM/" . _UCM_VERSION . "\r\n" );
 			fputs( $fp, "Content-type: application/x-www-form-urlencoded\r\n" );
 			fputs( $fp, "Content-length: " . strlen( $postdata ) . "\r\n" );
 			fputs( $fp, "Connection: close\r\n\r\n" );
@@ -640,7 +643,14 @@ class module_paymethod_paypal extends module_base
 							// running in paypal sandbox or not?
 							//$sandbox = (self::is_sandbox())?"sandbox.":'';
 							// quick check we're not getting a fake payment request.
-							$url    = 'https://www.' . ( self::is_sandbox() ? 'sandbox.' : '' ) . 'paypal.com/cgi-bin/webscr';
+							// ipnpb.paypal.com, not www. www is the consumer web front end:
+							// rate limited and bot filtered, and PayPal has been telling
+							// integrators to move off it for years. When the postback does
+							// not come back VERIFIED this handler emails the admin and
+							// records nothing - the customer has paid and UCM never finds
+							// out - so a postback host that fails intermittently is the
+							// worst kind of wrong here.
+							$url    = 'https://ipnpb.' . ( self::is_sandbox() ? 'sandbox.' : '' ) . 'paypal.com/cgi-bin/webscr';
 							$result = self::fsockPost( $url, $_POST );
 							//send_error('paypal sock post: '.$url."\n\n".var_export($result,true));
 							if ( stripos( $result, "VERIFIED" ) !== false ) {
