@@ -1,0 +1,91 @@
+Components with no licence text
+===============================
+
+This file exists so that the gap is recorded honestly rather than papered
+over. Eight components bundled inside "Main Files" carry no licence file, no
+licence header, and in some cases no copyright notice of any kind in the copy
+that ships. For each one below we record what is known, what is not known, and
+why it is in that state.
+
+A component listed here is NOT a component we believe to be unlicensed in the
+world. In most cases the upstream project has a perfectly ordinary licence and
+the copy bundled here is simply missing the file. The distinction matters, and
+the two groups are separated below.
+
+
+GROUP A - the licence is known upstream, the text is missing from this copy
+---------------------------------------------------------------------------
+
+For these, the fix is mechanical: fetch the licence file from the upstream
+project at the version bundled, drop it into this folder, and move the entry
+out of this file.
+
+  Authorize.Net PHP SDK 1.1.8
+    includes/plugin_paymethod_authorize/anet_php_1.1.8/
+    Upstream shipped a LICENSE.txt with this SDK. It is not in the bundled
+    copy - the directory contains only the PHP sources and a CA bundle. The
+    SDK is deprecated by Authorize.Net itself.
+
+  Coinbase PHP merchant library
+    includes/plugin_paymethod_coinbase/lib/
+    No header on any file. Upstream coinbase/coinbase-php was MIT. The
+    bundled copy is of unclear vintage and one of its own require paths is
+    already broken, so the version cannot be pinned by inspection.
+
+  MultiSafepay Connect PHP API (2012)
+    includes/plugin_paymethod_multisafepay/MultiSafepay.combined.php
+    A single concatenated file with no licence header. MultiSafepay published
+    this as an integration kit; the terms that applied to that distribution
+    are not recorded in the file.
+
+  MIME parser and RFC 822 address parser
+    includes/plugin_ticket/cron/mime_parser.php
+    includes/plugin_ticket/cron/rfc822_addresses.php
+    By Manuel Lemos, distributed through phpclasses.org. The files carry a
+    CVS revision header and an author name but no licence statement.
+
+  elFinder 1.1 RC3, inside the White Label theme
+    includes/plugin_theme/themes/whitelabel1/js/elfinder.js
+    The upstream project is BSD-3-Clause. The bundled copy has had its
+    header comment stripped, so the notice does not travel with it.
+
+  Morris.js, inside the AdminLTE and Blocks themes
+    includes/plugin_theme_adminlte/js/AdminLTE/morris.min.js
+    includes/plugin_theme_blocks/js/morris.min.js
+    Upstream is BSD-2-Clause. The minified copies carry no header. This one
+    is listed in third-party-libraries.tsv under BSD-2-Clause rather than
+    UNRESOLVED, because the upstream licence is unambiguous and the text is
+    included; it is noted here only so the missing header is on record.
+
+
+GROUP B - no licence is known at all
+------------------------------------
+
+These cannot be fixed by fetching a file. They need a decision from the
+copyright holder, a replacement component, or removal.
+
+  wdCalendar
+    includes/plugin_calendar/wdCalendar/
+    136 files. No licence file, no licence header, and no copyright notice
+    anywhere in the tree except inside the copies of jQuery it bundles. The
+    upstream project was hosted on Google Code, which has been shut down, and
+    no licence can be recovered from the bundled copy. One file is
+    packer-obfuscated. Several bundled sub-libraries (jQuery Validation,
+    jQuery Form, a jQuery alert dialog) have had their headers stripped.
+    This code is live: it renders the calendar screen.
+
+  The "White Label" admin theme by revaxarts.com
+    includes/plugin_theme/themes/whitelabel1/
+    859 files, around 5 MB. A commercial admin template. No licence file. It
+    redistributes DataTables, elFinder, Flot, FullCalendar and a WYSIWYG
+    editor, several with headers removed. Whether it may be redistributed
+    inside this product at all depends on the terms under which the template
+    was originally obtained, which is not something the code can answer.
+
+  The "nsw" webfont family
+    includes/plugin_theme_blocks/css/fonts/nsw{bold,light,medium}.*
+    Twelve font files in four formats. No licence, no foundry name, no
+    attribution, and no upstream address anywhere in the tree. Webfonts are
+    routinely licensed per-domain or per-pageview, so redistributing an
+    unidentified one inside a product sold to many buyers is the riskiest
+    item on this list despite being the smallest.
