@@ -7,7 +7,7 @@ if ( _DEBUG_MODE && ! isset( $debug_info ) ) {
 }
 
 define( '_APPLICATION_ID', 47626 ); // not used any more.
-define( '_SCRIPT_VERSION', '3.555' );
+define( '_SCRIPT_VERSION', '3.556' );
 // 3.555 - 2022-12-27 - uasort boolean fix
 // 3.552 - 2021-04-07 - php 8 magic quotes fix
 // 3.551 - 2017-01-12 - fieldset settings

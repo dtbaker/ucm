@@ -605,12 +605,13 @@ class module_config extends module_base
 			if ( strlen( $css_file_info[2] ) < 3 ) { // url is set to 'true', use the module/file name combo
 				?>
 				<link rel="stylesheet"
-				      href="<?php echo _BASE_HREF; ?>includes/plugin_<?php echo $css_file_info[0]; ?>/css/<?php echo $css_file_info[1];
-				      echo ( $version && strpos( '?', $css_file_info[1] ) === false ) ? '?ver=' . $version : ''; ?>"
+				      href="<?php echo htmlspecialchars( self::asset_version_url( _BASE_HREF . 'includes/plugin_' . $css_file_info[0] . '/css/' . $css_file_info[1], $version ) ); ?>"
 				      type="text/css"> <?php
 
 			} else { ?>
-				<link rel="stylesheet" href="<?php echo htmlspecialchars( $css_file_info[2] ); ?>" type="text/css"> <?php
+				<link rel="stylesheet"
+				      href="<?php echo htmlspecialchars( self::asset_version_url( $css_file_info[2], $version ) ); ?>"
+				      type="text/css"> <?php
 			}
 		}
 		if ( function_exists( 'hook_handle_callback' ) ) {
@@ -676,6 +677,39 @@ class module_config extends module_base
 		self::$js_files[ $module . $file_name ] = array( $module, $file_name, $url, $position );
 	}
 
+	/**
+	 * Add ?ver= to an asset URL so a browser picks up a new copy after an upgrade.
+	 *
+	 * Without this a script or stylesheet is cached by the browser indefinitely, and a
+	 * fix shipped in an update never reaches anyone who has already loaded the page. Only
+	 * our own files get the marker - an absolute URL to somebody else's CDN is left alone.
+	 *
+	 * @param string $url     Asset URL, relative or absolute.
+	 * @param string $version Usually _SCRIPT_VERSION. Falsy leaves the URL untouched.
+	 *
+	 * @return string
+	 */
+	public static function asset_version_url( $url, $version ) {
+		if ( ! $version || ! $url ) {
+			return $url;
+		}
+		// Already carries a query string - leave it, the caller is versioning it itself.
+		if ( strpos( $url, '?' ) !== false ) {
+			return $url;
+		}
+		// Someone else's host. We cannot know what their cache busting looks like, and
+		// adding a query string to a CDN URL can miss their cache entirely.
+		// Note _BASE_HREF is not usable for this test - it is often just "/".
+		if ( preg_match( '#^(https?:)?//([^/]+)#i', $url, $matches ) ) {
+			$our_host = isset( $_SERVER['HTTP_HOST'] ) ? $_SERVER['HTTP_HOST'] : '';
+			if ( ! $our_host || strcasecmp( $matches[2], $our_host ) !== 0 ) {
+				return $url;
+			}
+		}
+
+		return $url . '?ver=' . urlencode( $version );
+	}
+
 	public static function print_js( $version = false ) {
 		// sort the js files by position
 		uasort( self::$js_files, 'config_sort_css' ); // use the css function for sorting, does the same thing.
@@ -690,11 +724,11 @@ class module_config extends module_base
 				// see if we have an override.
 				$js_file = module_theme::include_ucm( $js_file );
 				?>
-				<script type="text/javascript" language="javascript" src="<?php echo _BASE_HREF . $js_file;
-				echo ( $version && strpos( '?', $js_file[1] ) === false ) ? '?ver=' . $version : ''; ?>"></script> <?php
+				<script type="text/javascript" language="javascript"
+				        src="<?php echo htmlspecialchars( self::asset_version_url( _BASE_HREF . $js_file, $version ) ); ?>"></script> <?php
 			} else { ?>
 				<script type="text/javascript" language="javascript"
-				        src="<?php echo htmlspecialchars( $js_file_info[2] ); ?>"></script> <?php
+				        src="<?php echo htmlspecialchars( self::asset_version_url( $js_file_info[2], $version ) ); ?>"></script> <?php
 			}
 		}
 		if ( function_exists( 'hook_handle_callback' ) ) {
