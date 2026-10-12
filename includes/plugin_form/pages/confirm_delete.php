@@ -13,7 +13,7 @@ $module->page_title = _l( 'Delete Confirmation' );
 ob_start();
 ?>
 
-	<form action="<?php echo $form_data[2]; ?>" method="post">
+	<form action="<?php echo htmlspecialchars( $form_data[2] ); ?>" method="post">
 		<input type="hidden" name="_confirm_delete" value="<?php echo htmlspecialchars( $hash ); ?>">
 		<?php foreach ( $form_data[1] as $key => $val ) {
 			if ( is_array( $val ) ) {
@@ -56,7 +56,10 @@ ob_start();
 					'name'    => 'cancel',
 					'value'   => _l( 'Cancel' ),
 					'class'   => 'submit_button',
-					'onclick' => "window.location.href='" . $form_data[3] . "'; return false;",
+					// generate_form_element() prints onclick straight into the attribute, so
+					// this has to come out safe for both the javascript string and the
+					// attribute around it.
+					'onclick' => "window.location.href='" . htmlspecialchars( addcslashes( $form_data[3], "'\\" ), ENT_QUOTES ) . "'; return false;",
 				),
 			),
 		);

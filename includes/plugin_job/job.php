@@ -1739,7 +1739,7 @@ Job Name: <strong>{JOB_NAME}</strong> <br/>
 						set_error( 'New task creation failed.' );
 						?>
 						<script type="text/javascript">
-                top.location.href = '<?php echo $this->link_open( $_REQUEST['job_id'] );?>&added=true';
+                top.location.href = '<?php echo $this->link_open( $job_id );?>&added=true';
 						</script>
 						<?php
 					}
@@ -1749,7 +1749,7 @@ Job Name: <strong>{JOB_NAME}</strong> <br/>
 					set_message( 'Task removed successfully' );
 					?>
 					<script type="text/javascript">
-              top.location.href = '<?php echo $this->link_open( $_REQUEST['job_id'] );?>';
+              top.location.href = '<?php echo $this->link_open( $job_id );?>';
 							<?php if ($job_data['status'] != $new_status) { ?>parent.jQuery('#status').val('<?php echo $new_status;?>').change();<?php } ?>
 					</script>
 					<?php
@@ -1759,7 +1759,7 @@ Job Name: <strong>{JOB_NAME}</strong> <br/>
 					// something happened, refresh the parent browser frame
 					?>
 					<script type="text/javascript">
-              top.location.href = '<?php echo $this->link_open( $_REQUEST['job_id'] );?>';
+              top.location.href = '<?php echo $this->link_open( $job_id );?>';
 					</script>
 					<?php
 					break;

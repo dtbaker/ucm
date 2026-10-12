@@ -158,7 +158,7 @@ if ( isset( $_REQUEST['print'] ) ) {
 						) ); ?>" class="ui-tabs-anchor"><?= _l( 'Revisions' ); ?></a>
 					</li>
 					<li class="ui-state-default ui-corner-top">
-						<a href="<?php echo $_SERVER['REQUEST_URI'] . '&print=true'; ?>"
+						<a href="<?php echo htmlspecialchars( $_SERVER['REQUEST_URI'] ) . '&amp;print=true'; ?>"
 						   onclick="window.open(this.href,'pop','width=900,height=700,scrollbars=1'); return false;"
 						   class="ui-tabs-anchor"><?= _l( 'Print' ); ?></a>
 					</li>
