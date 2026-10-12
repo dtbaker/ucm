@@ -26,6 +26,15 @@
 /README.md              export-ignore
 /TESTING.md             export-ignore
 
+# Documentation/ and Licensing/ are written for the buyer, but they belong beside
+# "Main Files" in the archive rather than inside it. scripts/build-release.sh copies
+# them to the top level itself, so git archive must leave them out or they would ship
+# twice.
+/Documentation          export-ignore
+/Documentation/**       export-ignore
+/Licensing              export-ignore
+/Licensing/**           export-ignore
+
 /.github                export-ignore
 /.github/**             export-ignore
 /docker                 export-ignore

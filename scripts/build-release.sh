@@ -35,74 +35,79 @@ echo "Assembling Main Files from the current commit..."
 git archive --worktree-attributes HEAD | tar -x -C "$MAIN"
 
 echo "Assembling Documentation..."
-cat > "$DOCS/index.html" <<'HTML'
-<!doctype html>
-<html lang="en">
-<head>
-	<meta charset="utf-8">
-	<title>Ultimate Client Manager &mdash; Documentation</title>
-	<style>
-		body { font: 16px/1.6 -apple-system, "Segoe UI", Arial, sans-serif; margin: 3rem auto; max-width: 42rem; padding: 0 1rem; }
-		code { background: #f4f4f4; padding: 0.1rem 0.3rem; }
-		.todo { border-left: 4px solid #c00; background: #fff6f6; padding: 0.75rem 1rem; }
-	</style>
-</head>
-<body>
-<h1>Ultimate Client Manager</h1>
-
-<p class="todo">
-	<strong>This documentation is not written yet.</strong>
-	CodeCanyon requires an HTML or PDF help file that explains every feature of the item.
-	This file exists so the packaging build has the right shape; it is not yet fit to
-	ship. See <code>docs/proposals/codecanyon-standards.md</code>, requirements D1 to D5.
-</p>
-
-<h2>Installing</h2>
-<ol>
-	<li>Upload the contents of <code>Main Files</code> to your web host.</li>
-	<li>Create an empty MySQL database and a user with access to it.</li>
-	<li>Open the address you uploaded to in a browser and follow the setup steps.</li>
-</ol>
-
-<h2>Upgrading</h2>
-<p>See <code>UPGRADE.md</code> inside <code>Main Files</code>.</p>
-
-<h2>Support</h2>
-<p>Through the item's comments page on CodeCanyon.</p>
-</body>
-</html>
-HTML
+# Written by hand and kept in the repository, the same as Licensing, so that a change to
+# what buyers read shows up in a diff and goes through review like any other change.
+cp -R Documentation/. "$DOCS/"
 
 echo "Assembling Licensing..."
-# Collect the licence files that genuinely exist in the tree, so this folder cannot drift
-# away from what is actually bundled.
-found=0
-while IFS= read -r licence; do
-	target="$LICENSING/$(dirname "${licence#"$MAIN"/}" | tr '/' '_')-$(basename "$licence")"
-	cp "$licence" "$target"
-	found=$((found + 1))
-done < <(find "$MAIN" \
-	\( -iname 'LICENSE' -o -iname 'LICENSE.txt' -o -iname 'LICENCE' -o -iname 'license.txt' \
-	   -o -iname 'COPYING' -o -iname 'COPYING.*' \) -type f)
+# The Licensing folder is written by hand and lives in the repository, so that the
+# licence of every bundled component is reviewable in a diff rather than guessed at by a
+# find(1) that can only see the components which happened to ship a licence file.
+cp -R Licensing/. "$LICENSING/"
 
-cat > "$LICENSING/README.txt" <<EOF
-Licensing
-=========
-
-This folder holds the licence of every third party component shipped inside
-"Main Files". $found licence file(s) were found in the product and copied here by
-scripts/build-release.sh.
-
-INCOMPLETE. The product bundles roughly twenty-five third party libraries and only a
-handful of them carry a licence file. Two are unresolved and must be settled before the
-item is submitted:
-
-  * includes/plugin_calendar/wdCalendar/  - no licence file and no licence header
-  * includes/plugin_file/js/plupload*     - header says GPL, which needs the GPL text here
-
-See docs/proposals/codecanyon-standards.md, section 2.2, for the full list and the
-reasoning. That file is not shipped; it is in the source repository.
-EOF
+# third-party-libraries.tsv is the single source of truth. The web page is generated
+# from it at build time so the two can never disagree.
+echo "Rendering the licence manifest..."
+awk -F'\t' '
+	function esc(s) {
+		gsub( /&/, "\\&amp;", s ); gsub( /</, "\\&lt;", s ); gsub( />/, "\\&gt;", s )
+		return s
+	}
+	BEGIN {
+		print "<!doctype html>"
+		print "<html lang=\"en\">"
+		print "<head>"
+		print "<meta charset=\"utf-8\">"
+		print "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">"
+		print "<title>Ultimate Client Manager &mdash; Third party libraries</title>"
+		print "<style>"
+		print "body{font:15px/1.6 -apple-system,BlinkMacSystemFont,\"Segoe UI\",Roboto,Arial,sans-serif;color:#222;background:#fff;margin:0;padding:2rem 1rem 4rem}"
+		print "main{max-width:62rem;margin:0 auto}"
+		print "h1{font-size:1.6rem;margin:0 0 .25rem}"
+		print "p.lead{color:#555;margin:0 0 1.5rem}"
+		print ".wrap{overflow-x:auto;border:1px solid #e3e3e3;border-radius:6px}"
+		print "table{border-collapse:collapse;width:100%;font-size:.88rem}"
+		print "th,td{text-align:left;vertical-align:top;padding:.55rem .7rem;border-bottom:1px solid #eee}"
+		print "th{background:#fafafa;font-weight:600;white-space:nowrap;position:sticky;top:0}"
+		print "tr:last-child td{border-bottom:0}"
+		print "code{font:12px/1.5 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;background:#f5f5f5;padding:.1rem .3rem;border-radius:3px;word-break:break-all}"
+		print "a{color:#15609b}"
+		print ".bad{color:#a11;font-weight:600}"
+		print ".note{margin-top:1.5rem;padding:.9rem 1rem;border-left:4px solid #d08a00;background:#fffaf0}"
+		print "</style>"
+		print "</head>"
+		print "<body><main>"
+		print "<h1>Third party libraries</h1>"
+	}
+	NR == 1 { next }
+	NF < 8 { next }
+	{
+		rows++
+		if ( $4 == "UNRESOLVED" ) { unresolved++ }
+		body = body "<tr><td>" esc($2) "</td><td>" esc($3) "</td><td>"
+		if ( $4 == "UNRESOLVED" ) { body = body "<span class=\"bad\">" esc($4) "</span>" }
+		else { body = body esc($4) }
+		body = body "</td><td><a href=\"" esc($5) "\">" esc($5) "</a></td>"
+		body = body "<td>" esc($6) "</td>"
+		if ( $7 == "unknown" ) { body = body "<td>unknown</td>" }
+		else { body = body "<td><a href=\"" esc($7) "\">" esc($7) "</a></td>" }
+		body = body "<td><code>" esc($8) "</code></td></tr>\n"
+	}
+	END {
+		print "<p class=\"lead\">" rows " components are bundled inside <code>Main Files</code>. " \
+			unresolved " of them ship without a licence file or licence header; " \
+			"<a href=\"licenses/UNRESOLVED.txt\">licenses/UNRESOLVED.txt</a> says what is known about each.</p>"
+		print "<div class=\"wrap\"><table>"
+		print "<thead><tr><th>Component</th><th>Version</th><th>Licence</th><th>Licence text</th>" \
+			"<th>Copyright</th><th>Upstream</th><th>Path inside Main Files</th></tr></thead>"
+		printf "<tbody>\n%s</tbody>", body
+		print "</table></div>"
+		print "<p class=\"note\">Every component keeps its original copyright header inside the shipped" \
+			" source file. <a href=\"README.txt\">README.txt</a> explains how the Envato licence and" \
+			" these licences fit together.</p>"
+		print "</main></body></html>"
+	}
+' "$LICENSING/third-party-libraries.tsv" > "$LICENSING/third-party-libraries.html"
 
 echo "Zipping..."
 ( cd "$BUILD_DIR" && zip -qr "$ZIP_NAME" "Main Files" Documentation Licensing )
@@ -165,6 +170,59 @@ done
 # Documentation has to be readable without a developer toolchain.
 if ! grep -qiE '^Documentation/.+\.(html?|pdf)$' <<<"$listing"; then
 	echo "FAIL: Documentation must contain an HTML or PDF file"
+	fail=1
+fi
+
+# Licensing has to be real. A manifest that lists a licence file which is not in the
+# archive is worse than no manifest, because it reads as a promise that was kept.
+for path in 'Licensing/README.txt' 'Licensing/third-party-libraries.tsv' \
+	'Licensing/third-party-libraries.html'
+do
+	if ! grep -qxF "$path" <<<"$listing"; then
+		echo "FAIL: the archive needs $path"
+		fail=1
+	fi
+done
+
+if [ -f "$LICENSING/third-party-libraries.tsv" ]; then
+	entries=$(( $(wc -l < "$LICENSING/third-party-libraries.tsv") - 1 ))
+	if [ "$entries" -lt 20 ]; then
+		echo "FAIL: the licence manifest lists only $entries components; the product bundles far more"
+		fail=1
+	fi
+
+	# Every licence text the manifest points at must exist...
+	while IFS=$'\t' read -r _ name _ _ licence_file _ _ bundled_path; do
+		if [ -n "$licence_file" ] && [ ! -f "$LICENSING/$licence_file" ]; then
+			echo "FAIL: $name points at $licence_file and that file is not in Licensing/"
+			fail=1
+		fi
+		# ...and every component it describes must still be in the product. A library that
+		# has been deleted since the manifest was written is a stale claim, not a missing
+		# licence, so say so loudly without failing a build that is otherwise correct.
+		if [ -n "$bundled_path" ] && [ ! -e "$MAIN/$bundled_path" ]; then
+			echo "STALE: the manifest lists $name at $bundled_path, which is no longer in the product."
+			echo "       Remove its row from Licensing/third-party-libraries.tsv."
+		fi
+	done < <(tail -n +2 "$LICENSING/third-party-libraries.tsv")
+fi
+
+# Documentation and Licensing must not still be the scaffolding. These phrases were in
+# the placeholders this script used to generate; if any of them survives into a release,
+# the folder was never filled in.
+placeholders=$(grep -rilE 'not written yet|INCOMPLETE\.|lorem ipsum|TODO|FIXME|XXX' \
+	"$DOCS" "$LICENSING" 2>/dev/null | grep -v '/licenses/' || true)
+if [ -n "$placeholders" ]; then
+	echo "FAIL: placeholder text is still in the archive:"
+	sed "s#^$BUILD_DIR/#       #" <<<"$placeholders"
+	fail=1
+fi
+
+# A documentation folder with one thin page passes the "is there an HTML file" check
+# below while telling a buyer nothing. CodeCanyon asks for every feature to be explained.
+doc_pages=$(grep -cE '^Documentation/.+\.html?$' <<<"$listing" || true)
+if [ "$doc_pages" -lt 5 ]; then
+	echo "FAIL: Documentation has $doc_pages HTML pages; that is not buyer documentation"
 	fail=1
 fi
 
