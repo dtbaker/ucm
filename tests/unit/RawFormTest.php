@@ -114,10 +114,15 @@ class RawFormTest extends TestCase
 		$forms = self::forms();
 		$this->assertGreaterThan( 100, count( $forms ), 'the scan found almost nothing - the file walk is probably wrong' );
 
+		// Liveness floors, not budgets. They only have to be high enough that a scanner
+		// which stopped recognising write fields or tokens would trip them, and low
+		// enough that migrating forms to the helper - which is the point - does not. The
+		// fixtures below are what actually prove the two detections work; these just say
+		// the real tree still exercises them.
 		$writes = array_filter( $forms, static fn( $f ) => (bool) $f['writes'] );
 		$tokens = array_filter( $forms, static fn( $f ) => $f['token'] );
-		$this->assertGreaterThan( 40, count( $writes ), 'no raw form appears to post a write field' );
-		$this->assertGreaterThan( 40, count( $tokens ), 'no raw form appears to publish a token' );
+		$this->assertGreaterThan( 10, count( $writes ), 'no raw form appears to post a write field' );
+		$this->assertGreaterThan( 10, count( $tokens ), 'no raw form appears to publish a token' );
 
 		// And it has to be able to see a form that is wrong, not just ones that are right.
 		$bad = self::scan( 'fixture.php', '<form action="" method="post">'
