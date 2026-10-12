@@ -32,16 +32,12 @@ if ( $website_id > 0 && $website ) {
 }
 
 
-?>
-
-
-<form action="" method="post">
-	<input type="hidden" name="_process" value="save_website"/>
-	<input type="hidden" name="website_id" value="<?php echo $website_id; ?>"/>
-
-
-	<?php
-	module_form::print_form_auth();
+module_form::print_form_open_tag( array(
+	'process' => 'save_website',
+	'hidden'  => array(
+		'website_id' => $website_id,
+	),
+) );
 
 	$fields = array(
 		'fields' => array(
@@ -700,7 +696,4 @@ if ( $website_id > 0 && $website ) {
 	);
 	echo module_form::generate_form_actions( $form_actions );
 
-	?>
-
-
-</form>
+	module_form::print_form_close_tag();
