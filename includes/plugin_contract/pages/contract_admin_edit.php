@@ -45,13 +45,17 @@ if ( class_exists( 'module_security', false ) ) {
     });
 </script>
 
-<form action="" method="post" id="contract_form">
-	<?php module_form::print_form_auth(); ?>
-	<input type="hidden" name="_process" value="save_contract"/>
+<?php
+module_form::print_form_open_tag( array(
+	'id'      => 'contract_form',
+	'process' => 'save_contract',
+	'hidden'  => array(
+		'contract_id' => $contract_id,
+		'customer_id' => $contract['customer_id'],
+	),
+) );
+?>
 	<input type="hidden" name="_redirect" value="" id="form_redirect"/>
-	<input type="hidden" name="contract_id" value="<?php echo $contract_id; ?>"/>
-	<input type="hidden" name="customer_id" value="<?php echo $contract['customer_id']; ?>"/>
-
 
 	<?php
 	hook_handle_callback( 'layout_column_half', 1, '35' );
@@ -487,5 +491,6 @@ if ( class_exists( 'module_security', false ) ) {
 	hook_handle_callback( 'custom_data_hook_location', _CUSTOM_DATA_HOOK_LOCATION_CONTRACT_FOOTER, 'contract', $contract_id, $contract );
 
 
-	hook_handle_callback( 'layout_column_half', 'end' ); ?>
-</form>
+	hook_handle_callback( 'layout_column_half', 'end' );
+
+	module_form::print_form_close_tag();

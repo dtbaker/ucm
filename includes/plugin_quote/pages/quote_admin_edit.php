@@ -409,13 +409,17 @@ if ( class_exists( 'module_import_export', false ) ) {
 
 <iframe id="ajax_task_save" name="ajax_task_save" src="about:blank" style="width:0;height:0;visibility: hidden;"
         frameborder="0"></iframe>
-<form action="" method="post" id="quote_form">
-	<?php module_form::print_form_auth(); ?>
-	<input type="hidden" name="_process" value="save_quote"/>
+<?php
+module_form::print_form_open_tag( array(
+	'id'      => 'quote_form',
+	'process' => 'save_quote',
+	'hidden'  => array(
+		'quote_id'    => $quote_id,
+		'customer_id' => $quote['customer_id'],
+	),
+) );
+?>
 	<input type="hidden" name="_redirect" value="" id="form_redirect"/>
-	<input type="hidden" name="quote_id" value="<?php echo $quote_id; ?>"/>
-	<input type="hidden" name="customer_id" value="<?php echo $quote['customer_id']; ?>"/>
-
 
 	<?php
 	hook_handle_callback( 'layout_column_half', 1, '35' );
@@ -1178,5 +1182,6 @@ if ( class_exists( 'module_import_export', false ) ) {
 	hook_handle_callback( 'custom_data_hook_location', _CUSTOM_DATA_HOOK_LOCATION_QUOTE_FOOTER, 'quote', $quote_id, $quote );
 
 
-	hook_handle_callback( 'layout_column_half', 'end' ); ?>
-</form>
+	hook_handle_callback( 'layout_column_half', 'end' );
+
+	module_form::print_form_close_tag();
