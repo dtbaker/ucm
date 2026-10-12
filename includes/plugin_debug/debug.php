@@ -34,6 +34,19 @@ class module_debug extends module_base
 		// 2.121 - 2014-10-07 - memory_get_usage fix
 	}
 
+	/**
+	 * Record one line for the debug table.
+	 *
+	 * `title`, `data` and `file` are escaped when the table is drawn. Most of what gets
+	 * logged is a var_export() of whatever was passed to a hook, which is full of markup
+	 * - unescaped it lands in the page as real elements, so a page in debug mode grows
+	 * duplicate forms, inputs and buttons that nothing on the page actually put there.
+	 *
+	 * A caller that means to write markup - the SQL logger highlights repeats, and folds
+	 * long queries behind a link - says so with 'html' => true.
+	 *
+	 * @param array $data
+	 */
 	public static function log( $data ) {
 		if ( $data && _DEBUG_MODE ) {
 			$data['time'] = substr( ( ( isset( $data['time'] ) ? $data['time'] : microtime( true ) ) - self::$start_time ), 0, 5 );
@@ -134,13 +147,13 @@ class module_debug extends module_base
 					<?php echo $id++; ?>
 				</td>
 				<td>
-					<?php echo isset( $debug['title'] ) ? $debug['title'] : 'NA'; ?>
+					<?php echo self::cell( $debug, 'title' ); ?>
 				</td>
 				<td>
-					<?php echo isset( $debug['data'] ) ? $debug['data'] : 'NA'; ?>
+					<?php echo self::cell( $debug, 'data' ); ?>
 				</td>
 				<td>
-					<?php echo isset( $debug['file'] ) ? $debug['file'] : 'NA'; ?>
+					<?php echo self::cell( $debug, 'file' ); ?>
 				</td>
 				<td>
 					<?php if ( module_config::c( 'debug_show_data', 0 ) ) { ?>
@@ -155,6 +168,23 @@ class module_debug extends module_base
 			<?php
 		}
 		echo preg_replace( '#\s+#', ' ', ob_get_clean() );
+	}
+
+	/**
+	 * One cell of the debug table, escaped unless the logger asked for markup.
+	 *
+	 * @param array  $debug
+	 * @param string $key
+	 *
+	 * @return string
+	 */
+	private static function cell( $debug, $key ) {
+		if ( ! isset( $debug[ $key ] ) ) {
+			return 'NA';
+		}
+		$value = (string) $debug[ $key ];
+
+		return empty( $debug['html'] ) ? htmlspecialchars( $value ) : $value;
 	}
 
 	public static function print_heading() {

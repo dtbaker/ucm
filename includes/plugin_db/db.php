@@ -290,6 +290,9 @@ class module_db extends module_base
 					'file'      => 'includes/database.php',
 					'data'      => '(' . ( $past_queries[ $sql ] > 0 ? '<span style="color:#FF0000; font-weight:bold;">' . $past_queries[ $sql ] . '</span>' : $past_queries[ $sql ] ) . ') ' . $debug_message . $sql_debug,
 					'important' => $past_queries[ $sql ] > 0,
+					// the cell above is markup on purpose: a red repeat count, and long
+					// queries folded behind a link. The SQL itself is escaped already.
+					'html'      => true,
 				) );
 			}
 		}
