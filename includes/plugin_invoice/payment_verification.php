@@ -156,6 +156,47 @@ class ucm_payment_verification
 	}
 
 	/**
+	 * Is this payment row the one the notification is talking about?
+	 *
+	 * A gateway's notification endpoint is public. Nothing stops a Stripe webhook
+	 * carrying a PayPal payment's id, or an invoice id that belongs to somebody else's
+	 * payment. The reference the provider echoes back is only trustworthy once it has
+	 * been checked against the row it claims to be for.
+	 *
+	 * @param array $payment_row the invoice_payment row, as stored
+	 * @param array $claims      'invoice_id' and/or 'method_key' the notification asserts
+	 *
+	 * @return array
+	 */
+	public static function check_belongs_to( $payment_row, $claims ) {
+		$payment_row = is_array( $payment_row ) ? $payment_row : array();
+		$claims      = is_array( $claims ) ? $claims : array();
+
+		if ( empty( $payment_row['invoice_payment_id'] ) ) {
+			return self::fail( 'unknown_payment', 'No payment record matches this notification.' );
+		}
+
+		if ( ! empty( $claims['invoice_id'] ) && (int) $claims['invoice_id'] !== (int) $payment_row['invoice_id'] ) {
+			return self::fail( 'wrong_invoice', 'This payment belongs to a different invoice than the notification claims.' );
+		}
+
+		// An empty stored key means the row predates method_key, so there is nothing to
+		// compare against and the gateway's own reference has to carry it.
+		$stored_key = isset( $payment_row['method_key'] ) ? trim( (string) $payment_row['method_key'] ) : '';
+		if ( ! empty( $claims['method_key'] ) && $stored_key !== '' && $stored_key !== $claims['method_key'] ) {
+			return self::fail( 'wrong_method', 'This payment was started with a different payment method.' );
+		}
+
+		return array(
+			'ok'      => true,
+			'code'    => 'ok',
+			'message' => '',
+			'amount'  => 0,
+			'flags'   => array(),
+		);
+	}
+
+	/**
 	 * @param string $code
 	 * @param string $message
 	 *

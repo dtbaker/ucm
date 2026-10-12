@@ -177,6 +177,47 @@ class PaymentVerificationTest extends TestCase
 		$this->assertSame( 'already_paid', $result['code'] );
 	}
 
+	public function test_a_payment_row_matching_the_notification_is_accepted() {
+		$row = array( 'invoice_payment_id' => 7, 'invoice_id' => 42, 'method_key' => 'stripe' );
+
+		$this->assertTrue( ucm_payment_verification::check_belongs_to( $row, array( 'invoice_id' => 42, 'method_key' => 'stripe' ) )['ok'] );
+	}
+
+	public function test_a_notification_for_a_payment_that_does_not_exist_is_refused() {
+		$result = ucm_payment_verification::check_belongs_to( array(), array( 'invoice_id' => 42 ) );
+
+		$this->assertFalse( $result['ok'] );
+		$this->assertSame( 'unknown_payment', $result['code'] );
+	}
+
+	public function test_a_payment_belonging_to_another_invoice_is_refused() {
+		$row = array( 'invoice_payment_id' => 7, 'invoice_id' => 42, 'method_key' => 'stripe' );
+
+		$result = ucm_payment_verification::check_belongs_to( $row, array( 'invoice_id' => 43 ) );
+
+		$this->assertFalse( $result['ok'] );
+		$this->assertSame( 'wrong_invoice', $result['code'] );
+	}
+
+	/**
+	 * Every gateway's notification endpoint is public, so one gateway must not be able to
+	 * record a payment that was started with another.
+	 */
+	public function test_one_gateway_cannot_record_another_gateways_payment() {
+		$row = array( 'invoice_payment_id' => 7, 'invoice_id' => 42, 'method_key' => 'paypal' );
+
+		$result = ucm_payment_verification::check_belongs_to( $row, array( 'method_key' => 'stripe' ) );
+
+		$this->assertFalse( $result['ok'] );
+		$this->assertSame( 'wrong_method', $result['code'] );
+	}
+
+	public function test_a_row_from_before_method_key_existed_is_not_rejected_on_method() {
+		$row = array( 'invoice_payment_id' => 7, 'invoice_id' => 42, 'method_key' => '' );
+
+		$this->assertTrue( ucm_payment_verification::check_belongs_to( $row, array( 'method_key' => 'stripe' ) )['ok'] );
+	}
+
 	public function test_missing_arrays_do_not_fatal() {
 		$result = ucm_payment_verification::check( array(), array() );
 

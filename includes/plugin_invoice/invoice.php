@@ -3498,6 +3498,116 @@ Job: <strong>{JOB_NAME}</strong> <br/>
 	}
 
 	/**
+	 * Append a line to a payment's own log, stored in invoice_payment.data.
+	 *
+	 * Four payment plugins carried an identical private copy of this, and one of them
+	 * called another plugin's copy. One implementation, on the module that owns the
+	 * table.
+	 *
+	 * @param int    $invoice_payment_id
+	 * @param string $key
+	 * @param string $val
+	 *
+	 * @return void
+	 */
+	public static function add_payment_data( $invoice_payment_id, $key, $val ) {
+		$payment = get_single( 'invoice_payment', 'invoice_payment_id', (int) $invoice_payment_id );
+		if ( ! $payment ) {
+			return;
+		}
+		// allowed_classes=false: this blob is written by gateway code and read back here,
+		// and nothing in it should ever decode to an object.
+		$payment_data = @unserialize( (string) $payment['data'], array( 'allowed_classes' => false ) );
+		if ( ! is_array( $payment_data ) ) {
+			$payment_data = array();
+		}
+		if ( ! isset( $payment_data[ $key ] ) || ! is_array( $payment_data[ $key ] ) ) {
+			$payment_data[ $key ] = array();
+		}
+		$payment_data[ $key ][] = $val;
+		update_insert( 'invoice_payment_id', (int) $invoice_payment_id, 'invoice_payment', array( 'data' => serialize( $payment_data ) ) );
+	}
+
+	/**
+	 * Check a gateway notification and, if it holds up, record the payment.
+	 *
+	 * The gateway has one job before calling this: establish that the notification
+	 * really came from its provider, by signature or by an authenticated re-fetch. Only
+	 * the gateway can do that. Everything after - is it for this payment, has it already
+	 * been processed, is the amount and currency right, what gets written - is the same
+	 * job for every gateway and happens here.
+	 *
+	 * $payload is the provider's answer, normalised by the gateway. See
+	 * ucm_payment_verification::check() for its shape.
+	 *
+	 * $options:
+	 *   method_key  string  the calling gateway's key, so one gateway cannot record
+	 *                       against another's payment
+	 *   invoice_id  int     the invoice the notification claims this is for
+	 *   sandbox     bool    true when the gateway is configured for test mode
+	 *
+	 * Every outcome is appended to the payment's log, including the refusals, because
+	 * "the customer says they paid and UCM disagrees" is unanswerable without one.
+	 *
+	 * @param int   $invoice_payment_id
+	 * @param array $payload
+	 * @param array $options
+	 *
+	 * @return array the ucm_payment_verification result; 'ok' says whether it was recorded
+	 */
+	public static function verify_and_record( $invoice_payment_id, $payload, $options = array() ) {
+		$invoice_payment_id = (int) $invoice_payment_id;
+		$options            = is_array( $options ) ? $options : array();
+		$payload            = is_array( $payload ) ? $payload : array();
+		$transaction_id     = isset( $payload['transaction_id'] ) ? trim( (string) $payload['transaction_id'] ) : '';
+
+		$payment = $invoice_payment_id ? get_single( 'invoice_payment', 'invoice_payment_id', $invoice_payment_id ) : false;
+		if ( ! is_array( $payment ) ) {
+			$payment = array();
+		}
+
+		$result = ucm_payment_verification::check_belongs_to( $payment, $options );
+		if ( $result['ok'] ) {
+			$result = ucm_payment_verification::check_not_replayed( $payment, $transaction_id );
+		}
+		if ( $result['ok'] ) {
+			$currency = module_config::get_currency( $payment['currency_id'] );
+			$result   = ucm_payment_verification::check( array(
+				'amount'   => $payment['amount'],
+				'currency' => isset( $currency['code'] ) ? $currency['code'] : '',
+				'sandbox'  => ! empty( $options['sandbox'] ),
+			), $payload );
+		}
+
+		if ( ! $invoice_payment_id || ! $payment ) {
+			return $result;
+		}
+
+		if ( ! $result['ok'] ) {
+			// 'duplicate' is the provider doing what it documents - PayPal retries an IPN
+			// up to 25 times - so it is noted once and not treated as a problem.
+			self::add_payment_data( $invoice_payment_id, 'log', 'Payment notification not recorded (' . $result['code'] . '): ' . $result['message'] );
+
+			return $result;
+		}
+
+		update_insert( 'invoice_payment_id', $invoice_payment_id, 'invoice_payment', array(
+			'date_paid' => date( 'Y-m-d' ),
+			'amount'    => $result['amount'],
+			'other_id'  => $transaction_id,
+		) );
+		self::add_payment_data( $invoice_payment_id, 'log', 'Payment recorded from ' . ( isset( $options['method_key'] ) ? $options['method_key'] : 'gateway' ) . ' transaction ' . $transaction_id . '. ' . $result['message'] );
+		if ( $result['flags'] ) {
+			self::add_payment_data( $invoice_payment_id, 'log', 'Worth a look: ' . implode( ', ', $result['flags'] ) . '.' );
+		}
+
+		module_cache::clear( 'invoice' );
+		self::save_invoice( $payment['invoice_id'], array() );
+
+		return $result;
+	}
+
+	/**
 	 * Fill in method_key for payments recorded before the column existed.
 	 *
 	 * There is nothing to match on but the label, which is exactly the weakness the key
