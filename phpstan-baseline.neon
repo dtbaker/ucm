@@ -1777,12 +1777,6 @@ parameters:
 			path: includes/plugin_email/pages/email_admin_edit.php
 
 		-
-			message: '#^Anonymous function has an unused use \$headers\.$#'
-			identifier: closure.unusedUse
-			count: 4
-			path: includes/plugin_email/pages/email_compose_basic.php
-
-		-
 			message: '#^Anonymous function has an unused use \$options\.$#'
 			identifier: closure.unusedUse
 			count: 4
@@ -1822,12 +1816,6 @@ parameters:
 			message: '#^Variable \$from_name might not be defined\.$#'
 			identifier: variable.undefined
 			count: 1
-			path: includes/plugin_email/pages/email_compose_basic.php
-
-		-
-			message: '#^Variable \$headers might not be defined\.$#'
-			identifier: variable.undefined
-			count: 4
 			path: includes/plugin_email/pages/email_compose_basic.php
 
 		-

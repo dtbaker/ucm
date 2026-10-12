@@ -60,7 +60,7 @@ extract( $options );
 
 	$fieldset_data['elements'][] = array(
 		'title' => _l( 'From:' ),
-		'field' => function () use ( $options, $headers, $from_name, $from_email ) {
+		'field' => function () use ( $options, $from_name, $from_email ) {
 
 			//		    $from_name = !empty($headers['FromName']) ? $headers['FromName'] : $options['from_name'];
 			//		    $from_email = !empty($headers['FromEmail']) ? $headers['FromEmail'] : $options['from_email'];
@@ -79,7 +79,7 @@ extract( $options );
 
 	$fieldset_data['elements'][] = array(
 		'title' => _l( 'To:' ),
-		'field' => function () use ( $to, $options, $headers, $to_select ) {
+		'field' => function () use ( $to, $options, $to_select ) {
 			// drop down with various options, or a blank inbox box with an email address.
 			if ( count( $to ) > 1 ) {
 				?>
@@ -115,7 +115,7 @@ extract( $options );
 	if ( count( $to ) > 1 ) {
 		$fieldset_data['elements'][] = array(
 			'title' => _l( 'CC:' ),
-			'field' => function () use ( $to, $options, $headers ) {
+			'field' => function () use ( $to, $options ) {
 				// drop down with various options, or a blank inbox box with an email address.
 				?>
 				<div id="email_cc_holder">
@@ -156,7 +156,7 @@ extract( $options );
 
 	$fieldset_data['elements'][] = array(
 		'title' => _l( 'Attachment:' ),
-		'field' => function () use ( $attachments, $options, $headers ) {
+		'field' => function () use ( $attachments, $options ) {
 			// drop down with various options, or a blank inbox box with an email address.
 			// uploado an attachment here, or generate one from a pdf on send.
 			// (eg: sending an invoice pdf)
