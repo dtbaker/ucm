@@ -69,25 +69,7 @@ switch ( $display_mode ) {
 
 		<div id="header">
 
-			<div>
-				<div style="position:absolute; z-index:1004; margin-left:367px;width:293px; display:none;"
-				     id="message_popdown">
-					<?php if ( print_header_message() ) {
-						?>
-						<script type="text/javascript">
-                $('#message_popdown').fadeIn('slow');
-								<?php if(module_config::c( 'header_messages_fade_out', 1 )){ ?>
-                $(function () {
-                    setTimeout(function () {
-                        $('#message_popdown').fadeOut();
-                    }, 4000);
-                });
-								<?php } ?>
-						</script>
-						<?php
-					} ?>
-				</div>
-			</div>
+			<?php print_header_message_popdown(); ?>
 
 
 			<div id="header_logo">

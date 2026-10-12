@@ -775,6 +775,58 @@ function print_header_message() {
 }
 
 
+/**
+ * The header message box: markup that starts hidden, which JavaScript fades in and then
+ * (when header_messages_fade_out is on) fades back out again a few seconds later.
+ *
+ * The auto-dismiss clock starts once the message has actually been painted and the tab is
+ * visible, rather than at DOM ready. Config > Settings lays out a few thousand rows before
+ * it paints anything, and a background tab paints nothing at all, so a timer started at
+ * DOM ready can run out before the message has been on screen for a single frame - the
+ * save works and the confirmation is simply never seen.
+ *
+ * Both the default header and the metis theme header draw this, so it lives here rather
+ * than being copied into each of them.
+ */
+function print_header_message_popdown() {
+	?>
+	<div>
+		<div style="position:absolute; z-index:1004; margin-left:367px;width:293px; display:none;"
+		     id="message_popdown">
+			<?php if ( print_header_message() ) { ?>
+				<script type="text/javascript">
+                    $('#message_popdown').fadeIn('slow');
+					<?php if ( module_config::c( 'header_messages_fade_out', 1 ) ) { ?>
+                    $(function () {
+                        var hide = function () {
+                            setTimeout(function () {
+                                $('#message_popdown').fadeOut();
+                            }, 4000);
+                        };
+                        var startWhenSeen = function () {
+                            if (document.hidden) {
+                                // Nothing is being painted - wait until the tab comes back.
+                                $(document).one('visibilitychange', startWhenSeen);
+                            } else if (window.requestAnimationFrame) {
+                                // Two frames: the first is scheduled, the second runs after it painted.
+                                window.requestAnimationFrame(function () {
+                                    window.requestAnimationFrame(hide);
+                                });
+                            } else {
+                                hide();
+                            }
+                        };
+                        startWhenSeen();
+                    });
+					<?php } ?>
+				</script>
+			<?php } ?>
+		</div>
+	</div>
+	<?php
+}
+
+
 function send_error( $message ) {
 	//echo $message;exit;
 	mail( _ERROR_EMAIL, "Admin System Notification (" . date( "Y-m-d H:i:s" ) . ")", $message . "\n\n" . var_export( $_REQUEST, true ) . "\n\n" . var_export( $_SERVER, true ) );
