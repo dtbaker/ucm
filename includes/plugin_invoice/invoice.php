@@ -3498,6 +3498,103 @@ Job: <strong>{JOB_NAME}</strong> <br/>
 	}
 
 	/**
+	 * Is this payment method retired?
+	 *
+	 * A deprecated method keeps working everywhere it is already in use - it starts
+	 * payments, it answers its notification endpoint, and its history renders. What it
+	 * loses is visibility: a fresh install never sees it.
+	 *
+	 * A payment plugin from outside this release has not declared anything, so it is not
+	 * deprecated.
+	 *
+	 * @param object $payment_method
+	 *
+	 * @return bool
+	 */
+	public static function payment_method_is_deprecated( $payment_method ) {
+		if ( is_object( $payment_method ) && method_exists( $payment_method, 'is_deprecated' ) ) {
+			return (bool) $payment_method->is_deprecated();
+		}
+
+		return false;
+	}
+
+	/**
+	 * Does this install have payments recorded against a payment method?
+	 *
+	 * This is what stops a deprecation hiding somebody's financial history behind a menu
+	 * item that no longer exists. An install that has been taking Pay.nl payments for
+	 * eight years keeps its Pay.nl settings page; a fresh install never sees one.
+	 *
+	 * One query per request, and only for an admin - the callers are all behind a
+	 * Settings permission check.
+	 *
+	 * @param string $key    the method's stable key
+	 * @param array  $labels labels this method may have been stored under, for rows
+	 *                       written before method_key existed
+	 *
+	 * @return bool
+	 */
+	public static function payment_method_has_history( $key, $labels = array() ) {
+		static $seen = null;
+		if ( $seen === null ) {
+			$seen   = array( 'keys' => array(), 'labels' => array() );
+			$fields = get_fields( 'invoice_payment' );
+			$sql    = isset( $fields['method_key'] )
+				? "SELECT `method_key`, `method` FROM `" . _DB_PREFIX . "invoice_payment` GROUP BY `method_key`, `method`"
+				: "SELECT `method` FROM `" . _DB_PREFIX . "invoice_payment` GROUP BY `method`";
+			foreach ( qa( $sql ) as $row ) {
+				if ( ! empty( $row['method_key'] ) ) {
+					$seen['keys'][ $row['method_key'] ] = true;
+				}
+				if ( isset( $row['method'] ) && $row['method'] !== '' ) {
+					$seen['labels'][ $row['method'] ] = true;
+				}
+			}
+		}
+
+		if ( $key !== '' && isset( $seen['keys'][ $key ] ) ) {
+			return true;
+		}
+		foreach ( (array) $labels as $label ) {
+			if ( isset( $seen['labels'][ $label ] ) ) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	/**
+	 * The warning shown on a retired payment method's settings page.
+	 *
+	 * Three things it deliberately says: history is safe, which is the admin's first
+	 * fear; what to use instead; and that nothing will remove this method behind their
+	 * back.
+	 *
+	 * @param string $name   the method's display label
+	 * @param string $reason one sentence on why it is retired
+	 * @param string $extra  optional additional paragraph, already escaped
+	 *
+	 * @return void
+	 */
+	public static function print_deprecated_payment_method_notice( $name, $reason, $extra = '' ) {
+		?>
+		<div class="alert alert-warning" role="alert">
+			<p>
+				<strong><?php echo htmlspecialchars( $name ); ?> <?php _e( 'is no longer supported.' ); ?></strong>
+				<?php echo htmlspecialchars( $reason ); ?>
+			</p>
+			<?php if ( $extra ) { ?>
+				<p><?php echo $extra; ?></p>
+			<?php } ?>
+			<p><?php _e( 'Your existing payments and payment history are not affected and will keep working. To keep taking online payments, enable Stripe, PayPal or Square under Settings, Payment Methods.' ); ?></p>
+			<p><?php _e( 'This payment method will be removed in a future version. It will not be removed by an automatic update.' ); ?></p>
+		</div>
+		<?php
+	}
+
+	/**
 	 * Append a line to a payment's own log, stored in invoice_payment.data.
 	 *
 	 * Four payment plugins carried an identical private copy of this, and one of them

@@ -155,6 +155,13 @@ class module_paymethod_stripe extends module_base
 		return 'stripe';
 	}
 
+	/**
+	 * @return bool
+	 */
+	public function is_deprecated() {
+		return false;
+	}
+
 	public static function get_payment_method_name() {
 		return module_config::s( 'payment_method_stripe_label', 'Stripe' );
 	}

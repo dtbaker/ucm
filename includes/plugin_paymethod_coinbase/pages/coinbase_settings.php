@@ -5,6 +5,12 @@ if ( ! module_config::can_i( 'edit', 'Settings' ) ) {
 	redirect_browser( _BASE_HREF );
 }
 
+module_invoice::print_deprecated_payment_method_notice(
+	module_paymethod_coinbase::get_payment_method_name(),
+	_l( 'The Coinbase API this uses was retired in 2018, and Coinbase Commerce - the product that replaced it - shut down on 31 March 2026. There is nothing left to connect to.' ),
+	''
+);
+
 print_heading( 'Coinbase Settings' ); ?>
 
 

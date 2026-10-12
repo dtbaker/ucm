@@ -112,6 +112,13 @@ Amount: <strong>{AMOUNT}</strong>', 'Details displayed on the invoice payments a
 		return 'other';
 	}
 
+	/**
+	 * @return bool
+	 */
+	public function is_deprecated() {
+		return false;
+	}
+
 	public static function get_payment_method_name() {
 		return module_config::s( 'payment_method_other_label', 'Other' );
 	}

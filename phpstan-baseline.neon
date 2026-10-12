@@ -2571,7 +2571,7 @@ parameters:
 		-
 			message: '#^Constant _DB_PREFIX not found\.$#'
 			identifier: constant.notFound
-			count: 109
+			count: 111
 			path: includes/plugin_invoice/invoice.php
 
 		-

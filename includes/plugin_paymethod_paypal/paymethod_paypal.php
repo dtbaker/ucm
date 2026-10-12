@@ -131,6 +131,13 @@ class module_paymethod_paypal extends module_base
 		return 'paypal';
 	}
 
+	/**
+	 * @return bool
+	 */
+	public function is_deprecated() {
+		return false;
+	}
+
 	public static function get_payment_method_name() {
 		return module_config::s( 'payment_method_paypal_label', 'PayPal' );
 	}

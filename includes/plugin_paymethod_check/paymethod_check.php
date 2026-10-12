@@ -111,6 +111,13 @@ Amount: <strong>{AMOUNT}</strong>', 'Check details for invoice payments.' );
 		return 'check';
 	}
 
+	/**
+	 * @return bool
+	 */
+	public function is_deprecated() {
+		return false;
+	}
+
 	public static function get_payment_method_name() {
 		return module_config::s( 'payment_method_check_label', 'Check' );
 	}

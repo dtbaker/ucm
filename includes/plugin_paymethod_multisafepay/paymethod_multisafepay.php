@@ -29,7 +29,7 @@ class module_paymethod_multisafepay extends module_base
 
 	public function pre_menu() {
 
-		if ( module_config::can_i( 'view', 'Settings' ) ) {
+		if ( module_config::can_i( 'view', 'Settings' ) && self::show_settings_page() ) {
 			$this->links[] = array(
 				"name"                => "MultiSafepay",
 				"p"                   => "multisafepay_settings",
@@ -38,6 +38,24 @@ class module_paymethod_multisafepay extends module_base
 				'menu_include_parent' => 1,
 			);
 		}
+	}
+
+	/**
+	 * Whether this install should see the settings page at all.
+	 *
+	 * Retired, so it is hidden from a fresh install - but an install that is using it,
+	 * that was using it before an upgrade turned it off, or that has payment history
+	 * against it keeps the page, because that is where the explanation lives and where
+	 * the credentials can still be read.
+	 *
+	 * @return bool
+	 */
+	public static function show_settings_page() {
+		if ( self::is_enabled() || module_config::c( 'payment_method_multisafepay_was_enabled', false ) ) {
+			return true;
+		}
+
+		return module_invoice::payment_method_has_history( self::get_payment_method_key(), array( 'MultiSafepay', 'Multisafepay (IPN)', self::get_payment_method_name() ) );
 	}
 
 	public static function is_sandbox() {
@@ -93,6 +111,17 @@ class module_paymethod_multisafepay extends module_base
 	 */
 	public static function get_payment_method_key() {
 		return 'multisafepay';
+	}
+
+	/**
+	 * Retired. The method still works everywhere it is already in use - it starts
+	 * payments, answers its notification endpoint, and its history renders unchanged -
+	 * but a fresh install never sees it.
+	 *
+	 * @return bool
+	 */
+	public function is_deprecated() {
+		return true;
 	}
 
 	public static function get_payment_method_name() {
