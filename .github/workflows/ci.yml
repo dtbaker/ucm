@@ -158,6 +158,27 @@ jobs:
           sarif_file: semgrep.sarif
         continue-on-error: true
 
+  package:
+    # The item archive is not the repository. CodeCanyon wants three folders at the top -
+    # Main Files, Documentation, Licensing - and it wants nothing in there that only
+    # exists to build or test the product. Building it on every change means the shape is
+    # checked continuously rather than discovered the week of a submission.
+    name: Build and check the item archive
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    needs: [lint, phpcs, phpstan]
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          fetch-depth: 0
+      - name: Build it and check its shape
+        run: ./scripts/build-release.sh --verify
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: codecanyon-zip
+          path: build/ucm-codecanyon.zip
+          retention-days: 7
+
   install:
     name: Install from scratch
     runs-on: ubuntu-latest

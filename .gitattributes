@@ -1,0 +1,38 @@
+# Files that exist to build and test the product, not to run it.
+#
+# `git archive` leaves these out, which is what scripts/build-release.sh uses to put
+# together the item archive. Without this list a release would ship the test suite, the
+# Docker setup and the linter configuration to every buyer.
+#
+# Directories are listed twice: the bare path drops the directory entry itself, and the
+# /** form drops what is inside it. A trailing slash does not mean "directory" here the
+# way it does in .gitignore, and a leading slash anchors the pattern to the repository
+# root so that a "tests" folder inside a bundled library is not caught by accident.
+/.gitattributes         export-ignore
+/.gitignore             export-ignore
+/.dockerignore          export-ignore
+/Dockerfile             export-ignore
+/docker-compose.yml     export-ignore
+/playwright.config.ts   export-ignore
+/package.json           export-ignore
+/package-lock.json      export-ignore
+/composer.json          export-ignore
+/composer.lock          export-ignore
+/phpcs.xml.dist         export-ignore
+/phpstan.neon           export-ignore
+/phpstan-baseline.neon  export-ignore
+/phpunit.xml            export-ignore
+/rector.php             export-ignore
+/README.md              export-ignore
+/TESTING.md             export-ignore
+
+/.github                export-ignore
+/.github/**             export-ignore
+/docker                 export-ignore
+/docker/**              export-ignore
+/docs                   export-ignore
+/docs/**                export-ignore
+/scripts                export-ignore
+/scripts/**             export-ignore
+/tests                  export-ignore
+/tests/**               export-ignore

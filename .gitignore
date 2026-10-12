@@ -1,6 +1,9 @@
 # Dependencies
 /vendor/
 
+# Release archive built by scripts/build-release.sh
+/build/
+
 # Local configuration (contains DB credentials)
 includes/config.local.php
 
