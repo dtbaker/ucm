@@ -5,6 +5,26 @@ if ( ! module_config::can_i( 'edit', 'Settings' ) ) {
 	redirect_browser( _BASE_HREF );
 }
 
+$paypal_orders_v2 = module_paymethod_paypal::use_orders_v2();
+$paypal_webhook_url = module_paymethod_paypal::webhook_url();
+$paypal_webhook_id = trim( (string) module_config::c( 'payment_method_paypal_webhook_id', '' ) );
+
+if ( ! $paypal_orders_v2 ) { ?>
+	<div class="alert alert-warning" role="alert">
+		<p>
+			<strong><?php _e( 'PayPal payments are still going through Website Payments Standard.' ); ?></strong>
+			<?php _e( 'PayPal has deprecated it and says it should not be used for new integrations. It still works, and nothing here has changed, but moving off it needs three values that cannot be worked out from your email address. The steps are at the bottom of this page and take about five minutes.' ); ?>
+		</p>
+	</div>
+<?php } elseif ( $paypal_webhook_id === '' ) { ?>
+	<div class="alert alert-warning" role="alert">
+		<p>
+			<strong><?php _e( 'PayPal webhooks are not set up yet.' ); ?></strong>
+			<?php _e( 'Payments are still recorded when the payer lands back on your site, so nothing is broken - but if someone closes their browser at the wrong moment, nothing tells your site the money arrived. The steps are at the bottom of this page.' ); ?>
+		</p>
+	</div>
+<?php }
+
 print_heading( 'PayPal Settings' ); ?>
 
 
@@ -35,6 +55,27 @@ print_heading( 'PayPal Settings' ); ?>
 			'default'     => _ERROR_EMAIL,
 			'type'        => 'text',
 			'description' => 'Your PayPal registered email address',
+		),
+		array(
+			'key'         => 'payment_method_paypal_client_id',
+			'default'     => '',
+			'type'        => 'text',
+			'description' => 'Your PayPal REST Client ID',
+			'help'        => 'From an app created at developer.paypal.com. Entering a client ID and secret moves this site onto PayPal\'s current Orders API. Leave both blank to carry on exactly as before.',
+		),
+		array(
+			'key'         => 'payment_method_paypal_secret',
+			'default'     => '',
+			'type'        => 'text',
+			'description' => 'Your PayPal REST Secret',
+			'help'        => 'From the same app as the client ID. Treat it like a password.',
+		),
+		array(
+			'key'         => 'payment_method_paypal_webhook_id',
+			'default'     => '',
+			'type'        => 'text',
+			'description' => 'Your PayPal Webhook ID',
+			'help'        => 'PayPal shows this after you add the webhook address listed at the bottom of this page. It is what lets your site check that a notification really came from PayPal.',
 		),
 		array(
 			'key'         => 'payment_method_paypal_sandbox',
@@ -107,8 +148,41 @@ print_heading( 'PayPal Settings' ); ?>
 
 <?php print_heading( 'PayPal setup instructions:' ); ?>
 
-	<p>Please signup for a PayPal business account here: http://www.paypal.com - please enter your paypal email address
-		above.</p>
+	<p>Sign up for a PayPal business account at <a href="https://www.paypal.com" target="_blank" rel="noopener">paypal.com</a>
+		and enter your PayPal email address above. That is all Website Payments Standard needs, and it is how this
+		site has always worked.</p>
+
+<?php print_heading( 'Moving to the current PayPal integration:' ); ?>
+
+	<p>PayPal has deprecated Website Payments Standard. Moving off it needs a REST app, which takes about five
+		minutes and changes nothing about your PayPal account or your money.</p>
+
+	<ol>
+		<li>Sign in at <a href="https://developer.paypal.com/dashboard/" target="_blank" rel="noopener">developer.paypal.com/dashboard</a>
+			with your PayPal business account.
+		</li>
+		<li>Open <strong>Apps &amp; Credentials</strong>. Switch to <strong>Sandbox</strong> to test or
+			<strong>Live</strong> to take real money - the two have separate credentials and you will want both,
+			in turn.
+		</li>
+		<li>Select <strong>Create App</strong>, give it any name, and choose <strong>Merchant</strong>.</li>
+		<li>Copy the <strong>Client ID</strong> and the <strong>Secret</strong> into the two fields above.</li>
+		<li>On the same app page, scroll to <strong>Webhooks</strong> and select <strong>Add Webhook</strong>. Paste
+			this address into it:
+			<br><code><?php echo htmlspecialchars( $paypal_webhook_url ); ?></code>
+		</li>
+		<li>Subscribe that webhook to <strong>Payment capture completed</strong>
+			(<code>PAYMENT.CAPTURE.COMPLETED</code>). Save, then copy the <strong>Webhook ID</strong> PayPal shows
+			into the third field above.
+		</li>
+		<li>Tick <strong>Use PayPal Sandbox Mode</strong> above while you are testing with sandbox credentials, and
+			untick it when you paste the live ones in.
+		</li>
+	</ol>
+
+	<p>While the client ID and secret are blank, nothing changes: payments carry on through Website Payments
+		Standard exactly as before. Entering them switches this site to PayPal's current Orders API, where the
+		payment is confirmed by your own server rather than by a message PayPal posts back.</p>
 
 <?php if ( module_config::c( 'payment_method_paypal_subscriptions', 0 ) ) { ?>
 

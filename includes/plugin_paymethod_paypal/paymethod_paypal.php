@@ -1,5 +1,7 @@
 <?php
 
+require_once( dirname( __FILE__ ) . '/orders.php' );
+
 //306412171 ucm_1306412206_per@gmail.com
 
 
@@ -57,6 +59,210 @@ class module_paymethod_paypal extends module_base
 
 	public static function is_sandbox() {
 		return module_config::c( 'payment_method_paypal_sandbox', 0 );
+	}
+
+	/**
+	 * The REST credentials, if this install has them.
+	 *
+	 * Website Payments Standard needed only a PayPal email address. Orders v2 needs a
+	 * client ID and secret from a REST app, which no existing install has and which
+	 * cannot be derived from an email address. That is the whole migration problem for
+	 * this gateway: see use_orders_v2().
+	 *
+	 * @return array
+	 */
+	public static function rest_credentials() {
+		return array(
+			'client_id' => trim( (string) module_config::c( 'payment_method_paypal_client_id', '' ) ),
+			'secret'    => trim( (string) module_config::c( 'payment_method_paypal_secret', '' ) ),
+			'sandbox'   => (bool) self::is_sandbox(),
+		);
+	}
+
+	/**
+	 * Should this install take payments through Orders v2?
+	 *
+	 * Only once an admin has entered REST credentials. Every one of the 5,000 installs
+	 * upgrades without them, and switching on a flow they cannot use would break PayPal
+	 * for all of them at once - PayPal is the one payment method that is on by default.
+	 * So both paths ship, and this is the switch between them.
+	 *
+	 * @return bool
+	 */
+	public static function use_orders_v2() {
+		$credentials = self::rest_credentials();
+
+		return $credentials['client_id'] !== '' && $credentials['secret'] !== '';
+	}
+
+	/**
+	 * Where PayPal's webhook should be pointed. Shown on the settings page, because it
+	 * depends on how _EXTERNAL_TUNNEL is configured on this particular install.
+	 *
+	 * @return string
+	 */
+	public static function webhook_url() {
+		return full_link( _EXTERNAL_TUNNEL . '?m=paymethod_paypal&h=webhook' );
+	}
+
+	/**
+	 * The endpoint the payment page calls to capture an approved order.
+	 *
+	 * @param int  $invoice_payment_id
+	 * @param bool $h
+	 *
+	 * @return string
+	 */
+	public static function link_capture( $invoice_payment_id, $h = false ) {
+		if ( $h ) {
+			return md5( 'paypal order capture ' . _UCM_SECRET . ' ' . (int) $invoice_payment_id );
+		}
+
+		return full_link( _EXTERNAL_TUNNEL . '?m=paymethod_paypal&h=capture&i=' . (int) $invoice_payment_id . '&hash=' . self::link_capture( $invoice_payment_id, true ) );
+	}
+
+	/**
+	 * Create an order and show the payer the PayPal buttons.
+	 *
+	 * The buttons are the only part of this that happens in the browser. The order is
+	 * created server side, captured server side, and verified server side, so nothing
+	 * the page sends back is taken at face value.
+	 *
+	 * Never returns on the success path.
+	 *
+	 * @param int    $invoice_id
+	 * @param float  $payment_amount
+	 * @param int    $invoice_payment_id
+	 * @param int    $currency_id
+	 * @param string $description
+	 *
+	 * @return bool
+	 */
+	public static function start_orders_v2_payment( $invoice_id, $payment_amount, $invoice_payment_id, $currency_id, $description ) {
+		$currency      = module_config::get_currency( $currency_id );
+		$currency_code = isset( $currency['code'] ) ? strtoupper( $currency['code'] ) : 'USD';
+		$credentials   = self::rest_credentials();
+
+		$order = ucm_paypal_orders::create_order( $credentials, array(
+			'amount'             => $payment_amount,
+			'currency'           => $currency_code,
+			'description'        => $description,
+			'invoice_payment_id' => $invoice_payment_id,
+			'invoice_id'         => $invoice_id,
+		) );
+
+		if ( ! $order['ok'] ) {
+			module_invoice::add_payment_data( $invoice_payment_id, 'log', 'PayPal would not create an order: ' . $order['error'] );
+			send_error( 'PayPal order could not be created for invoice payment ' . (int) $invoice_payment_id . ': ' . $order['error'] );
+			echo htmlspecialchars( _l( 'Sorry, we could not start this payment. Please try again, or contact us.' ) );
+			exit;
+		}
+
+		module_invoice::add_payment_data( $invoice_payment_id, 'log', 'PayPal order ' . $order['id'] . ' created for ' . ucm_paypal_orders::format_amount( $payment_amount, $currency_code ) . ' ' . $currency_code . '.' );
+		// Recorded separately from the log so the capture endpoint can find it without
+		// having to believe the browser about which order it is capturing.
+		module_invoice::add_payment_data( $invoice_payment_id, 'paypal_order_id', $order['id'] );
+
+		$paypal_order_id   = $order['id'];
+		$paypal_client_id  = $credentials['client_id'];
+		$paypal_capture_url = self::link_capture( $invoice_payment_id );
+		$paypal_cancel_url = module_invoice::link_public( $invoice_id );
+
+		$template = new module_template();
+		ob_start();
+		include( module_theme::include_ucm( 'includes/plugin_paymethod_paypal/pages/paypal_buttons.php' ) );
+		$template->content = ob_get_clean();
+		echo $template->render( 'pretty_html' );
+		exit;
+	}
+
+	/**
+	 * The PayPal order id this payment was started with, as we recorded it at the time.
+	 *
+	 * @param int $invoice_payment_id
+	 *
+	 * @return string
+	 */
+	public static function stored_order_id( $invoice_payment_id ) {
+		$payment = get_single( 'invoice_payment', 'invoice_payment_id', (int) $invoice_payment_id );
+		if ( ! $payment ) {
+			return '';
+		}
+		$data = @unserialize( (string) $payment['data'], array( 'allowed_classes' => false ) );
+		if ( ! is_array( $data ) || empty( $data['paypal_order_id'] ) || ! is_array( $data['paypal_order_id'] ) ) {
+			return '';
+		}
+
+		return (string) end( $data['paypal_order_id'] );
+	}
+
+	/**
+	 * Capture an approved order and record the payment.
+	 *
+	 * Safe to call more than once: PayPal answers a second capture of the same order
+	 * with ORDER_ALREADY_CAPTURED, and the order is then read back and recorded through
+	 * the same path, which de-duplicates on the capture id.
+	 *
+	 * @param string $order_id
+	 * @param int    $expect_invoice_payment_id
+	 *
+	 * @return array the verification result
+	 */
+	public static function capture_and_record( $order_id, $expect_invoice_payment_id = 0 ) {
+		$order_id = trim( (string) $order_id );
+		if ( $order_id === '' || ! preg_match( '#^[A-Za-z0-9_-]{5,64}$#', $order_id ) ) {
+			return array( 'ok' => false, 'code' => 'bad_order_id', 'message' => 'Not a PayPal order id.', 'amount' => 0, 'flags' => array() );
+		}
+
+		$credentials = self::rest_credentials();
+		$capture     = ucm_paypal_orders::capture_order( $credentials, $order_id );
+		$body        = $capture['body'];
+
+		if ( ! $capture['ok'] ) {
+			// Already captured is not a failure - it is the second delivery of something
+			// that worked. Read the order back and carry on.
+			$order = ucm_paypal_orders::get_order( $credentials, $order_id );
+			if ( ! $order['ok'] ) {
+				return array( 'ok' => false, 'code' => 'capture_failed', 'message' => $capture['error'], 'amount' => 0, 'flags' => array() );
+			}
+			$body = $order['body'];
+		}
+
+		return self::record_captured_order( $body, $expect_invoice_payment_id );
+	}
+
+	/**
+	 * Turn a captured order into a payment record.
+	 *
+	 * @param array $order the decoded order, from PayPal and nowhere else
+	 * @param int   $expect_invoice_payment_id
+	 *
+	 * @return array
+	 */
+	public static function record_captured_order( $order, $expect_invoice_payment_id = 0 ) {
+		$capture = ucm_paypal_orders::completed_capture( $order );
+		if ( ! $capture ) {
+			return array( 'ok' => false, 'code' => 'not_captured', 'message' => 'PayPal has no completed capture on this order.', 'amount' => 0, 'flags' => array() );
+		}
+
+		$invoice_payment_id = (int) ( $capture['_custom_id'] !== '' ? $capture['_custom_id'] : $capture['_reference_id'] );
+		if ( $expect_invoice_payment_id && $invoice_payment_id !== (int) $expect_invoice_payment_id ) {
+			return array( 'ok' => false, 'code' => 'wrong_payment', 'message' => 'This PayPal order belongs to a different payment.', 'amount' => 0, 'flags' => array() );
+		}
+
+		$currency = isset( $capture['amount']['currency_code'] ) ? (string) $capture['amount']['currency_code'] : '';
+		$value    = isset( $capture['amount']['value'] ) ? (float) $capture['amount']['value'] : 0;
+
+		return module_invoice::verify_and_record( $invoice_payment_id, array(
+			'amount'         => $value,
+			'currency'       => $currency,
+			'transaction_id' => isset( $capture['id'] ) ? (string) $capture['id'] : '',
+			'paid'           => true,
+			'test'           => (bool) self::is_sandbox(),
+		), array(
+			'method_key' => self::get_payment_method_key(),
+			'sandbox'    => (bool) self::is_sandbox(),
+		) );
 	}
 
 	public function handle_hook( $hook ) {
@@ -398,6 +604,15 @@ class module_paymethod_paypal extends module_base
 			}
 
 			$description = _l( 'Payment for Invoice %s', $invoice_data['name'] );
+
+			if ( self::use_orders_v2() ) {
+				return self::start_orders_v2_payment( $invoice_id, $payment_amount, $invoice_payment_id, $invoice_payment_data['currency_id'], $description );
+			}
+
+			// Website Payments Standard. PayPal's own docs now say this "is deprecated and
+			// should not be used for new integrations", and its archive page is where they
+			// moved the documentation. It still works, and it is all an install has until
+			// an admin creates a REST app, so it stays until they do.
 			self::paypal_redirect( $description, $payment_amount, $user_id, $invoice_payment_id, $invoice_id, $invoice_payment_data['currency_id'] );
 
 			return true;
@@ -409,10 +624,126 @@ class module_paymethod_paypal extends module_base
 	public function external_hook( $hook ) {
 		switch ( $hook ) {
 			case 'ipn':
-				// handle IPN response from paypal.
+				// Website Payments Standard notifications. Kept indefinitely, not for one
+				// release: it is forty lines of working code, and an install that never
+				// creates a REST app has nothing else.
 				$this->handle_paypal_ipn();
 				break;
+			case 'capture':
+				$this->handle_order_capture();
+				break;
+			case 'webhook':
+				$this->handle_order_webhook();
+				break;
 		}
+	}
+
+	/**
+	 * Called by the payment page once the payer approves the order.
+	 *
+	 * Answers JSON. The order id is not taken from the request - it is read from the
+	 * payment's own log, written when the order was created - so there is nothing here
+	 * for a payer to substitute.
+	 *
+	 * @return void
+	 */
+	private function handle_order_capture() {
+		header( 'Content-Type: application/json' );
+
+		$invoice_payment_id = isset( $_REQUEST['i'] ) ? (int) $_REQUEST['i'] : 0;
+		$hash               = isset( $_REQUEST['hash'] ) ? (string) $_REQUEST['hash'] : '';
+
+		if ( ! $invoice_payment_id || ! hash_equals( self::link_capture( $invoice_payment_id, true ), $hash ) ) {
+			echo json_encode( array( 'ok' => false, 'message' => _l( 'Sorry, this payment link is not valid.' ) ) );
+			exit;
+		}
+
+		$payment = get_single( 'invoice_payment', 'invoice_payment_id', $invoice_payment_id );
+		if ( ! $payment ) {
+			echo json_encode( array( 'ok' => false, 'message' => _l( 'Sorry, this payment link is not valid.' ) ) );
+			exit;
+		}
+
+		$result = self::capture_and_record( self::stored_order_id( $invoice_payment_id ), $invoice_payment_id );
+
+		echo json_encode( array(
+			'ok'       => (bool) $result['ok'] || $result['code'] === 'duplicate',
+			'redirect' => module_invoice::link_public_payment_complete( $payment['invoice_id'] ),
+			'message'  => $result['ok'] ? '' : _l( 'We could not confirm this payment. Please contact us before trying again.' ),
+		) );
+		exit;
+	}
+
+	/**
+	 * PAYMENT.CAPTURE.COMPLETED, verified by PayPal itself.
+	 *
+	 * Not CHECKOUT.ORDER.APPROVED - that fires before the money moves.
+	 *
+	 * @return void
+	 */
+	private function handle_order_webhook() {
+		$raw_body   = (string) @file_get_contents( 'php://input' );
+		$webhook_id = trim( (string) module_config::c( 'payment_method_paypal_webhook_id', '' ) );
+
+		$headers = array();
+		foreach ( $_SERVER as $key => $value ) {
+			if ( strpos( $key, 'HTTP_' ) === 0 ) {
+				$headers[ str_replace( '_', '-', strtolower( substr( $key, 5 ) ) ) ] = $value;
+			}
+		}
+
+		if ( ! self::use_orders_v2() || ! ucm_paypal_orders::verify_webhook( self::rest_credentials(), $webhook_id, $headers, $raw_body ) ) {
+			// PayPal retries a non-2xx, which is what should happen if this was genuine
+			// and something here is misconfigured.
+			header( 'HTTP/1.1 400 Bad Request' );
+			echo 'Could not verify this notification.';
+			exit;
+		}
+
+		$event = json_decode( $raw_body, true );
+		$type  = is_array( $event ) && isset( $event['event_type'] ) ? (string) $event['event_type'] : '';
+
+		if ( $type !== 'PAYMENT.CAPTURE.COMPLETED' ) {
+			echo 'OK';
+			exit;
+		}
+
+		// The event body is verified, but it is still only a notification. Read the order
+		// back from PayPal and record from that, the same way the capture path does.
+		$capture_id = isset( $event['resource']['id'] ) ? (string) $event['resource']['id'] : '';
+		$order_id   = '';
+		if ( isset( $event['resource']['supplementary_data']['related_ids']['order_id'] ) ) {
+			$order_id = (string) $event['resource']['supplementary_data']['related_ids']['order_id'];
+		}
+
+		if ( $order_id !== '' ) {
+			$order = ucm_paypal_orders::get_order( self::rest_credentials(), $order_id );
+			if ( $order['ok'] ) {
+				$result = self::record_captured_order( $order['body'] );
+				echo $result['ok'] ? 'Payment recorded.' : 'Nothing to do.';
+				exit;
+			}
+		}
+
+		// No order id in the event - record straight from the verified resource.
+		$invoice_payment_id = isset( $event['resource']['custom_id'] ) ? (int) $event['resource']['custom_id'] : 0;
+		if ( $invoice_payment_id && $capture_id !== '' ) {
+			$result = module_invoice::verify_and_record( $invoice_payment_id, array(
+				'amount'         => isset( $event['resource']['amount']['value'] ) ? (float) $event['resource']['amount']['value'] : 0,
+				'currency'       => isset( $event['resource']['amount']['currency_code'] ) ? (string) $event['resource']['amount']['currency_code'] : '',
+				'transaction_id' => $capture_id,
+				'paid'           => true,
+				'test'           => (bool) self::is_sandbox(),
+			), array(
+				'method_key' => self::get_payment_method_key(),
+				'sandbox'    => (bool) self::is_sandbox(),
+			) );
+			echo $result['ok'] ? 'Payment recorded.' : 'Nothing to do.';
+			exit;
+		}
+
+		echo 'OK';
+		exit;
 	}
 
 	public static function paypal_redirect( $description, $amount, $user_id, $payment_id, $invoice_id, $currency_id ) {
