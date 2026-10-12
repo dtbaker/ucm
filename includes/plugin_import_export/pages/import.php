@@ -48,6 +48,11 @@ $add_to_group = array();
 
 if ( isset( $_REQUEST['run_import'] ) && $_REQUEST['run_import'] == 'true' ) {
 
+	// Running an import writes rows straight into the database as whoever is logged in,
+	// so it needs the form token the same as any other write.
+	if ( ! module_form::check_secure_key() ) {
+		module_form::reject_invalid_form_auth();
+	}
 
 	if ( isset( $_REQUEST['add_to_group'] ) ) {
 		$add_to_group = json_decode( base64_decode( $_REQUEST['add_to_group'] ), true );
@@ -109,6 +114,12 @@ if ( isset( $_REQUEST['run_import'] ) && $_REQUEST['run_import'] == 'true' ) {
 
 } elseif ( isset( $_REQUEST['upload_import'] ) && $_REQUEST['upload_import'] == 'true' ) {
 
+	// The preview step only reads the file, but it is reached from a form on this page
+	// like the import step is, so it carries the token too.
+	if ( ! module_form::check_secure_key() ) {
+		module_form::reject_invalid_form_auth();
+	}
+
 	$csv_file = $_FILES['csv']['tmp_name'];
 	if ( ! $csv_file ) {
 		echo 'Upload failed. Please try again.';
@@ -167,12 +178,21 @@ if ( isset( $_REQUEST['run_import'] ) && $_REQUEST['run_import'] == 'true' ) {
 		</div>
 	<?php } ?>
 
-	<form action="" method="post" enctype="multipart/form-data">
-		<input type="hidden" name="run_import" value="true">
-		<?php if ( ! isset( $_GET['import_options'] ) ) { ?> <input type="hidden" name="import_options"
-		                                                            value="<?php echo htmlspecialchars( $_REQUEST['import_options'] ); ?>"> <?php } ?>
-		<input type="hidden" name="add_to_group"
-		       value="<?php echo base64_encode( json_encode( isset( $_REQUEST['add_to_group'] ) ? $_REQUEST['add_to_group'] : array() ) ); ?>">
+	<?php
+	$run_import_hidden = array(
+		'run_import'   => 'true',
+		'add_to_group' => base64_encode( json_encode( isset( $_REQUEST['add_to_group'] ) ? $_REQUEST['add_to_group'] : array() ) ),
+	);
+	// The options already travelled in the query string on the way here, so the form only
+	// has to carry them when they did not.
+	if ( ! isset( $_GET['import_options'] ) ) {
+		$run_import_hidden['import_options'] = $_REQUEST['import_options'];
+	}
+	module_form::print_form_open_tag( array(
+		'enctype' => 'multipart/form-data',
+		'hidden'  => $run_import_hidden,
+	) );
+	?>
 		<?php if ( isset( $import_options['options'] ) && is_array( $import_options['options'] ) ) {
 			foreach ( $import_options['options'] as $option_id => $option_values ) {
 				?>
@@ -353,10 +373,16 @@ if ( isset( $_REQUEST['run_import'] ) && $_REQUEST['run_import'] == 'true' ) {
           $('#sample_download')[0].submit();
       }
 	</script>
-	<form action="" method="post" id="sample_download">
-		<input type="hidden" name="download" value="true">
-		<input type="hidden" name="import_options" value="<?php echo htmlspecialchars( $_REQUEST['import_options'] ); ?>">
-	</form>
+	<?php
+	module_form::print_form_open_tag( array(
+		'id'     => 'sample_download',
+		'hidden' => array(
+			'download'       => 'true',
+			'import_options' => $_REQUEST['import_options'],
+		),
+	) );
+	module_form::print_form_close_tag();
+	?>
 
 	<p><?php _e( 'Please make sure your data is in the below format. The <strong>first line</strong> of your CSV file should be the column headers as below. You can <a href="%s">click here</a> to download a sample CSV template ready for import. Please use UTF8 file format. %s', 'javascript:do_sample();', _hr( 'Please try to save your import CSV file in UTF8 format for best results (search google for a howto). Once your import CSV file is ready to upload please use the form below. (Please ensure this is a CSV file, not an excel file.)<br> We recommend <a href="http://www.libreoffice.org/download/" target="_blank">LibreOffice</a> for best CSV file generation.' ) ); ?></p>
 
@@ -421,10 +447,16 @@ if ( isset( $_REQUEST['run_import'] ) && $_REQUEST['run_import'] == 'true' ) {
 	</div>
 
 
-	<form action="" method="post" enctype="multipart/form-data">
-		<?php if ( ! isset( $_GET['import_options'] ) ) { ?> <input type="hidden" name="import_options"
-		                                                            value="<?php echo htmlspecialchars( $_REQUEST['import_options'] ); ?>"> <?php } ?>
-		<input type="hidden" name="upload_import" value="true">
+	<?php
+	$upload_import_hidden = array( 'upload_import' => 'true' );
+	if ( ! isset( $_GET['import_options'] ) ) {
+		$upload_import_hidden['import_options'] = $_REQUEST['import_options'];
+	}
+	module_form::print_form_open_tag( array(
+		'enctype' => 'multipart/form-data',
+		'hidden'  => $upload_import_hidden,
+	) );
+	?>
 		<h3><?php _e( 'Import' ); ?></h3>
 		<table class="tableclass tableclass_form tableclass_full">
 			<tbody>

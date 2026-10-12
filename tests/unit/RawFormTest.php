@@ -22,8 +22,9 @@ use PHPUnit\Framework\TestCase;
 class RawFormTest extends TestCase
 {
 	/**
-	 * Request fields that reach a write handler. _process is the module dispatcher;
-	 * the other three are read straight out of $_REQUEST by the pagination hooks.
+	 * Request fields that reach a write handler. _process is the module dispatcher; the
+	 * next three are read straight out of $_REQUEST by the pagination hooks, and the last
+	 * two by the import page, which writes rows without going through _process at all.
 	 *
 	 * _process_login and _process_reset are deliberately NOT here - login forms are
 	 * pre-session and have no token to publish. See the note in $allowed.
@@ -33,6 +34,8 @@ class RawFormTest extends TestCase
 		'bulk_action_go',
 		'add_group_go',
 		'import_export_go',
+		'run_import',
+		'upload_import',
 	);
 
 	/**
@@ -55,7 +58,7 @@ class RawFormTest extends TestCase
 	 * Lower this as forms move to module_form::print_form_open_tag(). Never raise it:
 	 * a new form has a helper to go through.
 	 */
-	private const RAW_FORM_BUDGET = 151;
+	private const RAW_FORM_BUDGET = 147;
 
 	public function test_a_raw_form_that_posts_a_write_field_publishes_the_token() {
 		$offenders = array();

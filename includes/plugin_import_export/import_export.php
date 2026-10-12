@@ -251,18 +251,22 @@ class module_import_export extends module_base
 		}
 
 		if ( module_config::c( 'import_method', 1 ) ) {
+			module_form::print_form_open_tag( array(
+				'action' => link_generate( array(
+					array(
+						'page'   => 'import',
+						'module' => 'import_export'
+					)
+				) ),
+				'style'  => 'display:none;',
+				'id'     => 'import_form',
+				'hidden' => array(
+					'import_options' => module_config::c( 'import_export_base64', 1 ) ? base64_encode( json_encode( $options ) ) : json_encode( $options ),
+				),
+			) );
 			?>
-			<form action="<?php echo link_generate( array(
-				array(
-					'page'   => 'import',
-					'module' => 'import_export'
-				)
-			) ); ?>" method="post" style="display:none;" id="import_form"><input type="submit" name="buttongo"
-			                                                                     value="go"><input type="hidden"
-			                                                                                       name="import_options"
-			                                                                                       value='<?php
-			                                                                                       echo module_config::c( 'import_export_base64', 1 ) ? base64_encode( json_encode( $options ) ) : addcslashes( json_encode( $options ), "'" ); ?>'>
-			</form> <?php
+			<input type="submit" name="buttongo" value="go"><?php
+			module_form::print_form_close_tag();
 			$url = 'javascript:document.forms.import_form.submit();';
 		} else {
 			//oldway:
