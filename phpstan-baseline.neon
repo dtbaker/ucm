@@ -4233,6 +4233,12 @@ parameters:
 		-
 			message: '#^Constant _UCM_INSTALLED not found\.$#'
 			identifier: constant.notFound
+			count: 1
+			path: includes/plugin_setup/pages/setup2.php
+
+		-
+			message: '#^Constant _UCM_INSTALLED not found\.$#'
+			identifier: constant.notFound
 			count: 2
 			path: includes/plugin_setup/pages/setup3.php
 

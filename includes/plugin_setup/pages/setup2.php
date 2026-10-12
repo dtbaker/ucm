@@ -1,5 +1,15 @@
 <?php
 
+// Steps 1, 3, 4 and 5 all refuse to run on an installed site unless someone is logged in.
+// This one did not, and index.php lets the setup module through without a login, so
+// anyone could ask an installed site for ?m=setup&step=2 and have it run every plugin's
+// install and upgrade SQL again.
+if ( _UCM_INSTALLED && ! module_security::is_logged_in() ) {
+	ob_end_clean();
+	echo 'Sorry the system is already installed. You need to be logged in to run the setup again.';
+	exit;
+}
+
 print_heading( 'Step #2: Database Installation' );
 
 // check for existing database tables.
