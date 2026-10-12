@@ -43,6 +43,7 @@ class module_db extends module_base
 		if ( is_array( $table ) || ! trim( $table ) ) {
 			return array();
 		}
+		$table = db_identifier( $table );
 		if ( isset( self::$fieldscache[ $table ] ) ) {
 			return self::$fieldscache[ $table ];
 		}
@@ -122,6 +123,9 @@ class module_db extends module_base
 		if ( $data === false ) {
 			$data = $_REQUEST;
 		}
+		// Both of these end up inside backticks in the statements below.
+		$table  = db_identifier( $table );
+		$pkey   = db_identifier( $pkey );
 		$fields = self::get_fields( $table, array( "date_created", "date_updated" ) ); //
 		if ( isset( $fields['system_id'] ) && defined( '_SYSTEM_ID' ) ) {
 			$data['system_id'] = _SYSTEM_ID;
@@ -220,7 +224,7 @@ class module_db extends module_base
 			} else {
 				$val = $data[ $field['name'] ];
 			}
-			$sql .= " `" . $field['name'] . "` = '" . db_escape( $val ) . "', ";
+			$sql .= " `" . db_identifier( $field['name'] ) . "` = '" . db_escape( $val ) . "', ";
 		}
 		$sql = rtrim( $sql, ', ' );
 		$sql .= $where;

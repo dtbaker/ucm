@@ -278,7 +278,7 @@ class module_base
 			if ( isset( self::$_dbt_exists[ $name ] ) && self::$_dbt_exists[ $name ] ) {
 				return true;
 			}
-			$sql = "SHOW TABLES LIKE '" . _DB_PREFIX . $name . "'";
+			$sql = "SHOW TABLES LIKE '" . _DB_PREFIX . db_escape( $name ) . "'";
 			$res = qa1( $sql );
 			if ( $res != false && count( $res ) ) {
 				self::$_dbt_exists[ $name ] = true;

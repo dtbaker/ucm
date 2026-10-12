@@ -63,6 +63,7 @@
 						foreach ( $data_items as $entry_value => $entry_data ) {
 							if ( $entry_data['index'] && $entry_data['index_id'] ) {
 								foreach ( $_POST['rel'] as $other_table ) {
+									$other_table = db_identifier( $other_table );
 									if ( module_db::db_table_exists( $other_table ) ) {
 										$sql = "SELECT COUNT(*) AS `c` FROM `" . _DB_PREFIX . "$other_table` WHERE `" . db_identifier( $entry_data['index'] ) . "` = '" . db_escape( $entry_data['index_id'] ) . "'";
 										$qa  = qa1( $sql );

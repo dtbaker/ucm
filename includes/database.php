@@ -60,6 +60,7 @@ function get_fields( $table, $ignore = array(), $hidden = array(), $from_cache =
 	if ( is_array( $table ) || ! trim( $table ) ) {
 		return array();
 	}
+	$table = db_identifier( $table );
 	static $fieldscache = array();
 	if ( isset( $fieldscache[ $table ] ) ) {
 		return $fieldscache[ $table ];
@@ -140,7 +141,9 @@ function delete_from_db( $table, $key, $val ) {
 	if ( class_exists( 'module_db', false ) && is_callable( 'module_db::delete_from_db' ) ) {
 		return module_db::delete_from_db( $table, $key, $val );
 	}
-	$table = db_escape( $table );
+	// A table name is an identifier, not a value - the value escaper would happily pass
+	// a backtick through.
+	$table = db_identifier( $table );
 	if ( ! is_array( $key ) ) {
 		$key = array( $key );
 	}
@@ -168,7 +171,9 @@ function get_single( $table, $key, $val ) {
 	if ( class_exists( 'module_db', false ) && is_callable( 'module_db::get_single' ) ) {
 		return module_db::get_single( $table, $key, $val );
 	}
-	$table = db_escape( $table );
+	// A table name is an identifier, not a value - the value escaper would happily pass
+	// a backtick through.
+	$table = db_identifier( $table );
 	if ( ! is_array( $key ) ) {
 		$key = array( $key );
 	}
@@ -232,6 +237,9 @@ function update_insert( $pkey, $pid, $table, $data = false, $do_replace = false 
 	if ( $data === false ) {
 		$data = $_REQUEST;
 	}
+	// Both of these end up inside backticks in the statements below.
+	$table  = db_identifier( $table );
+	$pkey   = db_identifier( $pkey );
 	$fields = get_fields( $table, array( "date_created", "date_updated" ), array(), true ); //
 	if ( isset( $fields['system_id'] ) && defined( '_SYSTEM_ID' ) ) {
 		$data['system_id'] = _SYSTEM_ID;
@@ -325,7 +333,7 @@ function update_insert( $pkey, $pid, $table, $data = false, $do_replace = false 
 		} else {
 			$val = $data[ $field['name'] ];
 		}
-		$sql .= " `" . $field['name'] . "` = '" . db_escape( $val ) . "', ";
+		$sql .= " `" . db_identifier( $field['name'] ) . "` = '" . db_escape( $val ) . "', ";
 	}
 	$sql = rtrim( $sql, ', ' );
 	$sql .= $where;
@@ -350,13 +358,14 @@ function get_col_vals( $table, $key, $val = false, $order = false ) {
 	if ( preg_match_all( '/\{([^\}]+)\}/', $val, $matches ) ) {
 		$dbval = '';
 		foreach ( $matches[1] as $v ) {
-			$dbval .= ', `' . db_escape( $v ) . '`';
+			$dbval .= ', `' . db_identifier( $v ) . '`';
 		}
 	} else {
 		echo 'Fail on get_col_Vals';
 		exit;
 	}
 	$key    = db_identifier( $key );
+	$table  = db_identifier( $table );
 	$sql    = "SELECT `$key` as k $dbval";
 	$sql    .= " FROM `" . _DB_PREFIX . "$table`";
 	$fields = get_fields( $table, array(), array(), true );
@@ -435,12 +444,13 @@ function get_multiple( $table, $search = false, $id = false, $search_type = "exa
 				if ( ! isset( $fields[ $k ] ) ) {
 					continue;
 				}
+				$column = db_identifier( $k );
 				if ( $spesh ) {
-					$sql .= " `$k` $operator '" . db_escape( $val ) . "'";
+					$sql .= " `$column` $operator '" . db_escape( $val ) . "'";
 				} elseif ( $this_search_type == "fuzzy" ) {
-					$sql .= " `$k` LIKE '%" . db_escape( $val ) . "%'";
+					$sql .= " `$column` LIKE '%" . db_escape( $val ) . "%'";
 				} elseif ( $this_search_type == "exact" ) {
-					$sql .= " `$k` = '" . db_escape( $val ) . "'";
+					$sql .= " `$column` = '" . db_escape( $val ) . "'";
 				}
 				$sql .= " OR ";
 			}
