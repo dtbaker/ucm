@@ -180,12 +180,15 @@ $action_buttons = module_form::generate_form_actions( $form_actions );
           ucm.ticket.init();
       });
 	</script>
-	<form action="" method="post" id="ticket_form" enctype="multipart/form-data">
-		<?php module_form::print_form_auth(); ?>
-		<input type="hidden" name="_process" value="save_ticket"/>
-		<input type="hidden" name="ticket_id" value="<?php echo $ticket['ticket_id']; ?>"/>
-
-		<?php
+<?php
+	module_form::print_form_open_tag( array(
+		'id'      => 'ticket_form',
+		'enctype' => 'multipart/form-data',
+		'process' => 'save_ticket',
+		'hidden'  => array(
+			'ticket_id' => $ticket['ticket_id'],
+		),
+	) );
 
 		echo $action_buttons;
 
@@ -727,11 +730,8 @@ $action_buttons = module_form::generate_form_actions( $form_actions );
 
 		hook_handle_callback( 'layout_column_half', 'end' );
 		echo $action_buttons;
-		?>
 
-	</form>
-
-<?php
+		module_form::print_form_close_tag();
 
 if ( ( $last_response_from == 'customer' || $last_response_from == 'autoreply' ) && $ticket['status_id'] != _TICKET_STATUS_RESOLVED_ID ) { // don't do this for resolved tickets
 	// only set the default field if the last respose was from the customer.
