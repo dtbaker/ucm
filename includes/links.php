@@ -122,10 +122,17 @@ function link_generate( $link_options ) {
 	$link  = full_link( $link );
 	$argcc = 0;
 	foreach ( $args as $key => $val ) {
-		if ( $val === false ) {
+		if ( $val === false || is_array( $val ) || is_object( $val ) ) {
 			continue;
 		}
-		$link .= ( ( strpos( $link, '?' ) !== false ) ? '&' : '?' ) . "$key=$val";
+		// Argument values are data, not URL syntax. Unencoded, a quote or an angle
+		// bracket in an id travelled through the link and out the other side into
+		// whatever href, src or onclick the link was printed into. Square brackets stay
+		// literal so array-style names still read as arrays.
+		$safe  = static function ( $part ) {
+			return str_replace( array( '%5B', '%5D' ), array( '[', ']' ), urlencode( (string) $part ) );
+		};
+		$link  .= ( ( strpos( $link, '?' ) !== false ) ? '&' : '?' ) . $safe( $key ) . '=' . $safe( $val );
 	}
 	if ( $full_link ) {
 		$link = '<a href="' . $link . '"';
