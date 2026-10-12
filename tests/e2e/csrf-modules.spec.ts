@@ -577,16 +577,50 @@ test.describe('Form auth key, popups', () => {
     await expect(page.locator('body')).not.toContainText(/invalid or expired form submission/i);
   });
 
-  test('the list pages publish a token next to the bulk and export controls', async ({ page }) => {
+  test('the bulk and export controls carry a token without putting it in the markup', async ({ page }) => {
     await page.goto('/?m[]=invoice&p[]=invoice_admin');
     await expect(page.locator('input[name="bulk_action_go"]').first()).toBeAttached();
-    await expect(page.locator('input#import_export_auth[name="form_auth_key"]').first()).toBeAttached();
+
+    // The token rides on the button, not in a hidden field. A hidden field would travel
+    // in the query string on these list forms, which are GET when rewrite links are on,
+    // and from there into history, access logs and Referer headers.
+    await expect(page.locator('#import_export_button[data-form-auth-key]').first()).toBeAttached();
+
+    // A token inside a POST form is fine - it travels in the body. The thing that must
+    // never happen is a token inside a GET form, where it ends up in the URL.
+    const leaky = await page.evaluate(() =>
+      [...document.querySelectorAll('input[name="form_auth_key"]')]
+        .map((i) => i.closest('form'))
+        .filter((f): f is HTMLFormElement => !!f)
+        .filter((f) => (f.getAttribute('method') || 'get').toLowerCase() !== 'post')
+        .map((f) => f.getAttribute('action') || '(no action)'),
+    );
+    expect(leaky, 'a token in a GET form ends up in the query string').toEqual([]);
+
+    // The helper that moves it into the form at click time has to be loaded, or the
+    // buttons silently stop working.
+    expect(await page.evaluate(() => typeof (window as any).ucm?.submit_guarded)).toBe('function');
 
     // And the export still works when it is submitted with the token.
     const key = await page.evaluate(() => (window as any).ucm?.form_auth_key);
     const csv = await page.request.get('/?m[]=invoice&p[]=invoice_admin&import_export_go=yes&form_auth_key=' + key);
     expect(csv.status()).toBe(200);
     expect(csv.headers()['content-type']).toContain('csv');
+  });
+
+  test('every script the page asks for carries a version marker', async ({ page }) => {
+    // Without ?ver= a browser keeps a cached copy of javascript.js for ever, so a fix
+    // shipped in an update never reaches anyone who has already loaded the page.
+    await page.goto('/?m[]=invoice&p[]=invoice_admin');
+    const unversioned = await page.evaluate(() => {
+      const urls = [...document.querySelectorAll('script[src], link[rel="stylesheet"][href]')]
+        .map((el) => el.getAttribute('src') || el.getAttribute('href') || '')
+        .filter(Boolean);
+      // Only our own files. We cannot version someone else's CDN.
+      const ours = urls.filter((u) => !/^(https?:)?\/\//i.test(u) || u.includes(location.host));
+      return ours.filter((u) => !u.includes('?'));
+    });
+    expect(unversioned, 'these assets would be cached for ever').toEqual([]);
   });
 
   test('saving a change request is refused without a token', async ({ page }) => {

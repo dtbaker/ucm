@@ -1214,6 +1214,23 @@ class module_form extends module_base
 		<?php
 	}
 
+	/**
+	 * Print the attributes a button needs to submit its form as a guarded POST.
+	 *
+	 * For forms that are GET. `_DEFAULT_FORM_METHOD` is GET whenever rewrite links are on
+	 * (`init.php:321`), and the list pages use it so a search stays bookmarkable. A hidden
+	 * form_auth_key inside a GET form travels in the query string, and from there into
+	 * browser history, the access log, and the Referer header of any outbound link on the
+	 * results page - and the token is per session and does not expire.
+	 *
+	 * So the token does not go in the markup as a field. It rides on the button, and
+	 * ucm.submit_guarded() (js/javascript.js) switches the form to POST and adds the field
+	 * at click time. A plain search submit stays a clean GET with no token in the URL.
+	 */
+	public static function print_form_auth_attributes() {
+		echo ' data-form-auth-key="' . htmlspecialchars( self::get_secure_key(), ENT_QUOTES, 'UTF-8' ) . '"';
+	}
+
 	public static function get_secure_key() {
 		// generate a secure key for all sensitive form submissions.
 		$hash = module_config::c( 'secure_hash', 0 );

@@ -191,3 +191,43 @@ function open_shut(id){
 	}
 	return false;
 }
+
+/**
+ * Submit the form a button lives in as a POST that carries the form auth token.
+ *
+ * The list pages are GET forms so a search stays bookmarkable, and a hidden token field
+ * in a GET form ends up in the query string, the browser history, the server access log
+ * and the Referer header of any link on the results page. So the token rides on the
+ * button instead (module_form::print_form_auth_attributes) and is added here, at click
+ * time, on the one submit that actually needs it.
+ */
+ucm.submit_guarded = function (el) {
+	var $el = jQuery(el);
+	var $form = $el.closest('form');
+	if (!$form.length) {
+		return false;
+	}
+	return ucm.submit_guarded_form($form, $el.data('form-auth-key'));
+};
+
+/**
+ * As above, for the cases where the button is not inside the form it submits - the CSV
+ * export popdown hands its fields to whichever list form is on the page.
+ */
+ucm.submit_guarded_form = function ($form, key) {
+	$form = jQuery($form);
+	if (!$form.length || !$form[0]) {
+		return false;
+	}
+	if (key) {
+		$form.attr('method', 'post');
+		var $field = $form.find('input[name="form_auth_key"]');
+		if (!$field.length) {
+			$field = jQuery('<input>').attr({type: 'hidden', name: 'form_auth_key'});
+			$form.append($field);
+		}
+		$field.val(key);
+	}
+	$form[0].submit();
+	return true;
+};

@@ -787,16 +787,14 @@ class module_group extends module_base
                         <?php
 	            }
 	            ?>
-                    <?php module_form::print_form_auth(); ?>
                     <input type="hidden" name="add_group_go" id="add_group_go" value="">
 		            <input type="button" name="add_group_button" id="add_group_button"
-		                   value="<?php _e( 'Add to group' ); ?>">
+		                   value="<?php _e( 'Add to group' ); ?>"<?php module_form::print_form_auth_attributes(); ?>>
 		            <script type="text/javascript">
                         $(function () {
                             $('#add_group_button').click(function () {
                                 $('#add_group_go').val('yes');
-                                // todo: if no form, create one them submit.
-                                $('#add_group_go').parents('form')[0].submit();
+                                ucm.submit_guarded(this);
                             });
                         });
                     </script>
@@ -854,16 +852,14 @@ class module_group extends module_base
 		            <?php
 	            }
 	            ?>
-	            <?php module_form::print_form_auth(); ?>
 	            <input type="hidden" name="bulk_action_go" id="bulk_action_go" value="">
                     <input type="button" name="bulk_action_button" id="bulk_action_button"
-                           value="<?php _e( 'Perform Bulk Actions' ); ?>">
+                           value="<?php _e( 'Perform Bulk Actions' ); ?>"<?php module_form::print_form_auth_attributes(); ?>>
                     <script type="text/javascript">
                         $(function () {
                             $('#bulk_action_button').click(function () {
                                 $('#bulk_action_go').val('yes');
-                                // todo: if no form, create one them submit.
-                                $('#bulk_action_go').parents('form')[0].submit();
+                                ucm.submit_guarded(this);
                             });
                         });
                     </script>

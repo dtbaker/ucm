@@ -191,7 +191,11 @@ print_heading( $header );
 
 	<?php
 
-	module_form::print_form_auth();
+	// No form_auth_key field here. This form is _DEFAULT_FORM_METHOD, which is GET when
+	// rewrite links are on, so a token in the markup would go into the query string on
+	// every search - and from there into history, logs and Referer headers. The controls
+	// that need a token (bulk actions, CSV export) carry it on their own button and
+	// switch the form to POST when clicked.
 
 	$search_bar = array(
 		'elements' => array(

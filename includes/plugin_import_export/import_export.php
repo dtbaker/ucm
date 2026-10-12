@@ -197,21 +197,19 @@ class module_import_export extends module_base
         <span id="import_export_popdown"
               style="position: absolute; width: 200px; display: none; background: #EFEFEF; margin-left: -210px; margin-top: 30px; border: 1px solid #CCC; text-align: left; padding: 6px; z-index: 3;">
             <strong><?php _e( 'Export all these results:' ); ?></strong><br/>
-            <input type="hidden" name="form_auth_key" id="import_export_auth"
-                   value="<?php echo htmlspecialchars( module_form::get_secure_key() ); ?>">
             <input type="hidden" name="import_export_go" id="import_export_go" value="">
             <input type="button" name="import_export_button" id="import_export_button"
-                   value="<?php _e( 'Export CSV File' ); ?>">
+                   value="<?php _e( 'Export CSV File' ); ?>"<?php module_form::print_form_auth_attributes(); ?>>
             <script type="text/javascript">
                 $(function () {
                     $('#import_export_button').click(function () {
                         $('#import_export_go').val('yes');
 			                <?php if (isset( self::$pagination_options['parent_form'] ) && self::$pagination_options['parent_form']) { ?>
-                        $('#<?php echo self::$pagination_options['parent_form'];?>').append($('#import_export_go').clone());
-                        $('#<?php echo self::$pagination_options['parent_form'];?>').append($('#import_export_auth').clone());
-                        $('#<?php echo self::$pagination_options['parent_form'];?>')[0].submit();
+                        var $target = $('#<?php echo self::$pagination_options['parent_form'];?>');
+                        $target.append($('#import_export_go').clone());
+                        ucm.submit_guarded_form($target, $(this).data('form-auth-key'));
 			                <?php } else { ?>
-                        $('#import_export_go').parents('form')[0].submit();
+                        ucm.submit_guarded(this);
 			                <?php } ?>
 
                         $('#import_export_popdown').css('display', 'none');
