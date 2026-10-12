@@ -535,7 +535,7 @@ Comment: {COMMENT}
 						?>
 					</div>
 					<?php if ( $editable ) { ?>
-						<a href="#" class="file_edit<?php echo $file_item['owner_table']; ?>_<?php echo $file_item['owner_id']; ?>"
+						<a href="#" class="file_edit<?php echo db_identifier( $file_item['owner_table'] ); ?>_<?php echo (int) $file_item['owner_id']; ?>"
 						   rel="<?php echo $file_item['file_id']; ?>"><?php echo nl2br( wordwrap( htmlspecialchars( $file_item['file_name'] ), 15, '<wbr>', true ) ); ?></a>
 					<?php } else { ?>
 						<a href="<?php echo $this->link( '', array(
@@ -550,7 +550,7 @@ Comment: {COMMENT}
 				?>
 				<span class="file_<?php echo $file_item['file_id']; ?>">
 				<?php if ( $editable ) { ?>
-					<a href="#" class="file_edit<?php echo $file_item['owner_table']; ?>_<?php echo $file_item['owner_id']; ?>"
+					<a href="#" class="file_edit<?php echo db_identifier( $file_item['owner_table'] ); ?>_<?php echo (int) $file_item['owner_id']; ?>"
 					   rel="<?php echo $file_item['file_id']; ?>"><?php echo nl2br( htmlspecialchars( $file_item['file_name'] ) ); ?></a>
 				<?php } else { ?>
 					<a href="<?php echo $this->link( '', array(
@@ -787,7 +787,9 @@ Comment: {COMMENT}
 				$file_data = array(
 					'file_id'     => $file_id,
 					'owner_id'    => (int) $_REQUEST['owner_id'],
-					'owner_table' => $_REQUEST['owner_table'],
+					// A table name, and it is echoed back into class names and javascript
+					// function names all over the file UI, so it is normalised going in.
+					'owner_table' => db_identifier( $_REQUEST['owner_table'] ),
 					'file_time'   => time(), // allow UI to set a file time? nah.
 					'file_name'   => $file_name,
 					'file_path'   => $file_path,
@@ -812,7 +814,7 @@ Comment: {COMMENT}
 			<script type="text/javascript">
           // check if it exists in parent window
           var new_html = '<?php echo addcslashes( preg_replace( '/\s+/', ' ', $this->print_file( $file_id, $layout_type, true, $options ) ), "'" );?>';
-          parent.new_file_added<?php echo $file_data['owner_table'];?>_<?php echo $file_data['owner_id'];?>(<?php echo $file_id;?>, '<?php echo $file_data['owner_table'];?>',<?php echo $file_data['owner_id'];?>, new_html);
+          parent.new_file_added<?php echo db_identifier( $file_data['owner_table'] );?>_<?php echo (int) $file_data['owner_id'];?>(<?php echo (int) $file_id;?>, '<?php echo db_identifier( $file_data['owner_table'] );?>',<?php echo (int) $file_data['owner_id'];?>, new_html);
 			</script>
 			<?php
 			exit;
@@ -1093,7 +1095,7 @@ Comment: {COMMENT}
 					?>
 					<script type="text/javascript">
               var new_html = '';
-              parent.new_file_added<?php echo $file_data['owner_table'];?>_<?php echo $file_data['owner_id'];?>(<?php echo $file_id;?>, '<?php echo $file_data['owner_table'];?>',<?php echo $file_data['owner_id'];?>, new_html);
+              parent.new_file_added<?php echo db_identifier( $file_data['owner_table'] );?>_<?php echo (int) $file_data['owner_id'];?>(<?php echo (int) $file_id;?>, '<?php echo db_identifier( $file_data['owner_table'] );?>',<?php echo (int) $file_data['owner_id'];?>, new_html);
 					</script>
 					<?php
 				}
