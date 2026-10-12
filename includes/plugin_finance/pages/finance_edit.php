@@ -117,9 +117,14 @@ if ( $finance_id > 0 && ( count( $linked_invoice_payments ) || count( $linked_fi
   });
 	<?php } ?>
 </script>
-<form action="" method="post">
+<?php
+module_form::print_form_open_tag( array(
+	'process' => 'save_finance',
+	'hidden'  => array(
+		'finance_id' => $finance_id,
+	),
+) );
 
-	<?php
 	module_form::prevent_exit( array(
 			'valid_exits' => array(
 				// selectors for the valid ways to exit this form.
@@ -128,13 +133,7 @@ if ( $finance_id > 0 && ( count( $linked_invoice_payments ) || count( $linked_fi
 		)
 	);
 
-	?>
-
-
-	<?php module_form::print_form_auth(); ?>
-	<input type="hidden" name="_process" value="save_finance"/>
-	<input type="hidden" name="finance_id" value="<?php echo $finance_id; ?>"/>
-	<?php if ( isset( $_REQUEST['invoice_payment_id'] ) ) { ?>
+	if ( isset( $_REQUEST['invoice_payment_id'] ) ) { ?>
 		<input type="hidden" name="invoice_payment_id"
 		       value="<?php echo isset( $_REQUEST['invoice_payment_id'] ) ? (int) $_REQUEST['invoice_payment_id'] : ''; ?>"/>
 	<?php } ?>
@@ -669,7 +668,4 @@ if ( $finance_id > 0 && ( count( $linked_invoice_payments ) || count( $linked_fi
 	);
 	echo module_form::generate_form_actions( $form_actions );
 
-	?>
-
-
-</form>
+	module_form::print_form_close_tag();

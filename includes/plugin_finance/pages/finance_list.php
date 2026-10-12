@@ -261,11 +261,16 @@ print_heading( array(
 	</script>
 
 
-	<form action="" method="post" id="quick_add_form">
-		<?php module_form::print_form_auth(); ?>
-		<input type="hidden" name="_process" value="quick_save_finance">
-		<input type="hidden" name="finance_id" value="new">
-		<?php module_form::set_default_field( 'new_transaction_name' );
+<?php
+	module_form::print_form_open_tag( array(
+		'id'      => 'quick_add_form',
+		'process' => 'quick_save_finance',
+		'hidden'  => array(
+			'finance_id' => 'new',
+		),
+	) );
+
+		module_form::set_default_field( 'new_transaction_name' );
 
 
 		$table_manager                  = module_theme::new_table_manager();
@@ -537,9 +542,7 @@ print_heading( array(
 		$table_manager->pagination = true;
 		$table_manager->print_table();
 
-		?>
-	</form>
-<?php
+		module_form::print_form_close_tag();
 
 if ( $show_excluded_payment_info ) {
 	?>

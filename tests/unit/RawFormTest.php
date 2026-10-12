@@ -55,7 +55,7 @@ class RawFormTest extends TestCase
 	 * Lower this as forms move to module_form::print_form_open_tag(). Never raise it:
 	 * a new form has a helper to go through.
 	 */
-	private const RAW_FORM_BUDGET = 155;
+	private const RAW_FORM_BUDGET = 152;
 
 	public function test_a_raw_form_that_posts_a_write_field_publishes_the_token() {
 		$offenders = array();

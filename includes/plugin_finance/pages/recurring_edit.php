@@ -17,10 +17,12 @@ if ( ! $finance_recurring_id ) {
 } else {
 	$module->page_title = _l( 'Recurring: %s', htmlspecialchars( $recurring['name'] ) );
 }
-?>
-<form action="" method="post">
-
-	<?php
+module_form::print_form_open_tag( array(
+	'process' => 'save_recurring',
+	'hidden'  => array(
+		'finance_recurring_id' => $finance_recurring_id,
+	),
+) );
 
 	module_form::set_required( array(
 		'fields' => array(
@@ -37,11 +39,6 @@ if ( ! $finance_recurring_id ) {
 		)
 	);
 	?>
-
-
-	<?php module_form::print_form_auth(); ?>
-	<input type="hidden" name="_process" value="save_recurring"/>
-	<input type="hidden" name="finance_recurring_id" value="<?php echo $finance_recurring_id; ?>"/>
 
 	<?php ob_start(); ?>
 
@@ -307,7 +304,5 @@ if ( ! $finance_recurring_id ) {
 		),
 	);
 	echo module_form::generate_form_actions( $form_actions );
-	?>
 
-
-</form>
+	module_form::print_form_close_tag();
