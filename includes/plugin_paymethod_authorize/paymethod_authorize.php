@@ -35,11 +35,42 @@ class module_paymethod_authorize extends module_base
 		// 2.22 - 2013-04-27 - cancel url on payments screen
 		// 2.21 - 2013-04-20 - initial release
 
+		self::retire();
+	}
+
+	/**
+	 * Switch this payment method off, once, on the first page load after upgrading.
+	 *
+	 * The rule everywhere else in this release is that an install which upgrades and does
+	 * nothing else behaves exactly as before. This is the one deliberate exception. An
+	 * earlier version let a payer set the amount their own card was charged and mark an
+	 * invoice paid in full for a cent; the hole itself is fixed, but leaving a method
+	 * that collects raw card numbers on the merchant's own server switched on, in a
+	 * release that retires it, is worse than making the admin turn it back on knowingly.
+	 *
+	 * Nothing is deleted. Every credential and setting stays where it is, the settings
+	 * page stays reachable, and payment history is untouched. The admin is told what
+	 * happened and why on that page.
+	 *
+	 * @return void
+	 */
+	private static function retire() {
+		if ( module_config::c( 'payment_method_authorize_retired', false ) ) {
+			return;
+		}
+		module_config::save_config( 'payment_method_authorize_retired', 1 );
+
+		if ( ! module_config::c( 'payment_method_authorize_enabled', 0 ) ) {
+			return;
+		}
+		module_config::save_config( 'payment_method_authorize_enabled', 0 );
+		// Remembered so the settings page keeps showing, and can explain itself.
+		module_config::save_config( 'payment_method_authorize_was_enabled', 1 );
 	}
 
 	public function pre_menu() {
 
-		if ( module_config::can_i( 'view', 'Settings' ) ) {
+		if ( module_config::can_i( 'view', 'Settings' ) && self::show_settings_page() ) {
 			$this->links[] = array(
 				"name"                => "Authorize",
 				"p"                   => "authorize_settings",
@@ -48,6 +79,24 @@ class module_paymethod_authorize extends module_base
 				'menu_include_parent' => 1,
 			);
 		}
+	}
+
+	/**
+	 * Whether this install should see the settings page at all.
+	 *
+	 * Retired, so it is hidden from a fresh install - but an install that is using it,
+	 * that was using it before an upgrade turned it off, or that has payment history
+	 * against it keeps the page, because that is where the explanation lives and where
+	 * the credentials can still be read.
+	 *
+	 * @return bool
+	 */
+	public static function show_settings_page() {
+		if ( self::is_enabled() || module_config::c( 'payment_method_authorize_was_enabled', false ) ) {
+			return true;
+		}
+
+		return module_invoice::payment_method_has_history( self::get_payment_method_key(), array( 'Authorize', self::get_payment_method_name() ) );
 	}
 
 	public function handle_hook( $hook ) {
@@ -99,6 +148,17 @@ class module_paymethod_authorize extends module_base
 	 */
 	public static function get_payment_method_key() {
 		return 'authorize';
+	}
+
+	/**
+	 * Retired. The method still works everywhere it is already in use - it starts
+	 * payments, answers its notification endpoint, and its history renders unchanged -
+	 * but a fresh install never sees it.
+	 *
+	 * @return bool
+	 */
+	public function is_deprecated() {
+		return true;
 	}
 
 	public static function get_payment_method_name() {
@@ -206,6 +266,14 @@ class module_paymethod_authorize extends module_base
 	}
 
 	public function external_hook( $hook ) {
+		// Unlike the other retired gateways, this hook is not a provider callback with a
+		// payment possibly in flight behind it - it is the merchant's own card form
+		// posting back, synchronously. There is nothing to lose by closing it with the
+		// method, and it is the surface that carries the card number.
+		if ( ! self::is_enabled() ) {
+			echo _l( 'This payment method is no longer available.' );
+			exit;
+		}
 		switch ( $hook ) {
 			case 'pay':
 				// result is retured via ajax and displayed on the page.
