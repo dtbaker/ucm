@@ -83,7 +83,7 @@ if ( isset( $_REQUEST['run_import'] ) && $_REQUEST['run_import'] == 'true' ) {
 		unset( $rows[ $rowid ] );
 	}
 
-	if ( $import_options['callback'] ) {
+	if ( isset( $import_options['callback'] ) && module_import_export::is_import_callback( $import_options['callback'] ) ) {
 		$extra_options = array();
 		if ( isset( $import_options['options'] ) && is_array( $import_options['options'] ) ) {
 			foreach ( $import_options['options'] as $option_id => $option_values ) {
@@ -226,7 +226,7 @@ if ( isset( $_REQUEST['run_import'] ) && $_REQUEST['run_import'] == 'true' ) {
 						</th>
 						<?php
 					}
-					if ( isset( $import_options['callback_preview'] ) && strlen( $import_options['callback_preview'] ) ) {
+					if ( isset( $import_options['callback_preview'] ) && module_import_export::is_import_callback( $import_options['callback_preview'] ) ) {
 						?>
 						<th><?php _e( 'Info' ); ?></th>
 						<?php
@@ -253,7 +253,7 @@ if ( isset( $_REQUEST['run_import'] ) && $_REQUEST['run_import'] == 'true' ) {
 							</td>
 							<?php
 						}
-						if ( isset( $import_options['callback_preview'] ) && $import_options['callback_preview'] ) {
+						if ( isset( $import_options['callback_preview'] ) && module_import_export::is_import_callback( $import_options['callback_preview'] ) ) {
 							$extra_options = array();
 							if ( isset( $import_options['options'] ) && is_array( $import_options['options'] ) ) {
 								foreach ( $import_options['options'] as $option_id => $option_values ) {

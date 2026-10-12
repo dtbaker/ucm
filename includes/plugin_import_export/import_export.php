@@ -227,6 +227,23 @@ class module_import_export extends module_base
 		self::$pagination_options                 = $options;
 	}
 
+	/**
+	 * The import options travel out to the browser as a JSON blob and come back in the
+	 * request, so by the time the import page reads the callback name out of them it is
+	 * request data, not ours. Every caller of import_link() names a module import
+	 * handler, so insist on that shape before calling it - the same guard
+	 * module_email::send_email() puts on its success callback.
+	 *
+	 * @param mixed $callback
+	 *
+	 * @return bool
+	 */
+	public static function is_import_callback( $callback ) {
+		return is_string( $callback )
+		       && preg_match( '#^module_[a-z0-9_]+::[a-z0-9_]+$#i', $callback )
+		       && is_callable( $callback );
+	}
+
 	public static function import_link( $options = array() ) {
 		$m = get_display_mode();
 		if ( $m == 'mobile' || $m == 'iframe' ) {
