@@ -66,10 +66,14 @@ if ( class_exists( 'module_security', false ) ) {
 }
 
 
+module_form::print_form_open_tag( array(
+	'id'      => 'customer_form',
+	'process' => 'save_customer',
+	'hidden'  => array(
+		'customer_id' => $customer_id,
+	),
+) );
 ?>
-<form action="" method="post" id="customer_form">
-	<input type="hidden" name="_process" value="save_customer"/>
-	<input type="hidden" name="customer_id" value="<?php echo $customer_id; ?>"/>
 	<input type="hidden" name="_redirect" value="" id="form_redirect"/>
 
 	<?php
@@ -90,8 +94,6 @@ if ( class_exists( 'module_security', false ) ) {
 			)
 		)
 	);
-
-	module_form::print_form_auth();
 
 	//!(int)$customer['customer_id'] &&
 	if ( isset( $_REQUEST['move_user_id'] ) && (int) $_REQUEST['move_user_id'] > 0 && module_customer::can_i( 'create', 'Customers' ) ) {
@@ -665,8 +667,6 @@ if ( class_exists( 'module_security', false ) ) {
 	);
 	echo module_form::generate_form_actions( $form_actions );
 
+	module_form::print_form_close_tag();
 	?>
-
-
-</form>
 

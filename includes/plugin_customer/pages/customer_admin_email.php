@@ -457,13 +457,15 @@ if ( isset( $_REQUEST['preview_email'] ) ) {
 
 } else {
 
-	?>
-	<form action="" method="post" id="customer_form">
-		<input type="hidden" name="customer_id" value="<?php echo $customer_id; ?>"/>
-		<input type="hidden" name="email" value="1"/>
-		<input type="hidden" name="preview_email" value="1"/>
+		module_form::print_form_open_tag( array(
+			'id'     => 'customer_form',
+			'hidden' => array(
+				'customer_id'   => $customer_id,
+				'email'         => 1,
+				'preview_email' => 1,
+			),
+		) );
 
-		<?php
 		module_form::prevent_exit( array(
 				'valid_exits' => array(
 					// selectors for the valid ways to exit this form.
@@ -471,8 +473,6 @@ if ( isset( $_REQUEST['preview_email'] ) ) {
 				)
 			)
 		);
-
-		module_form::print_form_auth();
 
 		$elements      = array();
 		$elements []   = array(
@@ -625,10 +625,5 @@ if ( isset( $_REQUEST['preview_email'] ) ) {
 		);
 		echo module_form::generate_form_actions( $form_actions );
 
-		?>
-
-
-	</form>
-
-
-<?php }
+		module_form::print_form_close_tag();
+}
