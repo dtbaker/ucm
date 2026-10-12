@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Changelog &mdash; Ultimate Client Manager</title>
+<link rel="stylesheet" href="assets/docs.css">
+</head>
+<body>
+<div class="layout">
+<aside class="sidebar">
+	<a class="brand" href="index.html">Ultimate Client Manager<span>Documentation</span></a>
+	<nav aria-label="Documentation">
+		<h2>Getting started</h2>
+		<ol>
+			<li><a href="index.html">Overview</a></li>
+			<li><a href="requirements.html">Requirements</a></li>
+			<li><a href="installation.html">Installing</a></li>
+			<li><a href="upgrading.html">Upgrading from 2.x</a></li>
+		</ol>
+		<h2>Running it</h2>
+		<ol>
+			<li><a href="configuration.html">Configuration</a></li>
+			<li><a href="cron.html">Scheduled tasks</a></li>
+			<li><a href="payments.html">Payment methods</a></li>
+		</ol>
+		<h2>Making it yours</h2>
+		<ol>
+			<li><a href="plugins.html">The plugin system</a></li>
+			<li><a href="customising.html">Customising</a></li>
+		</ol>
+		<h2>Reference</h2>
+		<ol>
+			<li><a href="troubleshooting.html">Troubleshooting</a></li>
+			<li><a href="changelog.html" aria-current="page">Changelog</a></li>
+			<li><a href="credits.html">Credits and licences</a></li>
+		</ol>
+	</nav>
+</aside>
+<main>
+
+<p class="kicker">Reference</p>
+<h1>Changelog</h1>
+<p class="lead">What changed in this release. Security fixes are marked, as are the changes
+that need you to do something.</p>
+
+<h2>This release</h2>
+
+<p>A full modernisation. The application now runs on current PHP, a long list of security
+weaknesses has been closed, and features that depended on services which no longer exist have
+been removed.</p>
+
+<div class="stop">
+	<strong>Read <a href="upgrading.html">Upgrading from 2.x</a> before updating an existing
+	installation.</strong> This release needs PHP 8.4 and changes where your database settings
+	are stored. Both will stop an old installation from loading if you skip the steps.
+</div>
+
+<h3>Platform</h3>
+
+<ul>
+	<li><strong>PHP 8.4 is now the minimum</strong>, up from 5.3. PHP 8.5 is also tested and
+	supported.</li>
+	<li>The deprecated <code>mysql_*</code> database functions are gone entirely; everything
+	uses MySQLi.</li>
+	<li>Deprecated and removed PHP functions have been replaced throughout, so pages no longer
+	produce warnings on a modern PHP.</li>
+	<li>Automated tests now run on every change, covering the installer, the login flow, form
+	security and the pages most likely to break.</li>
+</ul>
+
+<h3>Security</h3>
+
+<p>Every item in this section is a security fix.</p>
+
+<ul>
+	<li><strong>Password verification bypass fixed.</strong> A flaw let a stored password hash
+	be used in place of the password itself. Anyone who had obtained a copy of the database
+	could log in as any user without knowing their password.</li>
+	<li><strong>Form security checks now actually block.</strong> The protection against
+	cross-site request forgery existed but its result was discarded, so it stopped nothing. It
+	now blocks, and the check has been applied across the save and delete actions throughout
+	the product &mdash; customers, invoices, quotes, jobs, tickets, users, roles, templates,
+	settings, payments and the rest.</li>
+	<li><strong>Automatic PDF library downloader removed.</strong> A feature fetched a PHP
+	library from a third-party site over an unencrypted connection and ran it, with no
+	signature or checksum. Anyone able to intercept that connection could have run code of
+	their choosing on your server.</li>
+	<li><strong>Untrusted data is no longer deserialised.</strong> Several places took a value
+	from the request and reconstructed PHP objects from it, which is a well known route to
+	running arbitrary code.</li>
+	<li><strong>A page that could read any database table has been removed.</strong></li>
+	<li><strong>Building a class name with <code>eval()</code> has been removed.</strong></li>
+	<li><strong>Upload folders are no longer web accessible.</strong> Files you upload,
+	ticket attachments and the temporary folder are now blocked from being fetched directly.
+	Previously anyone who guessed an address could download them, including generated invoices
+	and session files.</li>
+	<li><strong>Uploads are checked before being saved</strong>, and file actions now verify
+	the user is allowed to perform them.</li>
+	<li><strong>Database errors are no longer shown on screen</strong> outside debug mode. They
+	could disclose query structure and file paths.</li>
+	<li><strong>Purchase codes are no longer sent to a third-party site.</strong></li>
+	<li><strong>Two scripts were being loaded from a content delivery network that no longer
+	exists</strong>, which meant anyone acquiring that address could have run code in your
+	administrators&rsquo; browsers. Both have been removed.</li>
+	<li><strong>Logged-out background requests now return a proper error</strong> rather than a
+	login page, which stopped some actions failing silently.</li>
+	<li><strong>The installation secret can now be set from the environment</strong>, so a
+	scripted deployment no longer has to fall back to a guessable value.</li>
+</ul>
+
+<h3>Fixes</h3>
+
+<ul>
+	<li>The setup wizard could not complete on a fresh installation. Fixed.</li>
+	<li>Setup no longer requires a purchase code to finish. It is optional and can be skipped.</li>
+	<li>Setup no longer writes your database settings into a file that updates overwrite. It
+	writes <code>includes/config.local.php</code> instead, which is left alone from now on.</li>
+	<li>Setup no longer blocks on an outbound connectivity test against a server that no longer
+	exists.</li>
+	<li>The credit note screen was losing its discount fields. Fixed.</li>
+	<li>The member newsletter screen crashed. Fixed.</li>
+	<li>Opening a record that had been deleted produced an error instead of a message.</li>
+	<li>The email composition form warned about an undefined variable.</li>
+	<li>The custom data search failed on a particular combination of options.</li>
+	<li>Sorting failed in several places under PHP 8.</li>
+	<li>Login history was failing to resolve hostnames.</li>
+	<li>Generated PDFs are now written to disk rather than streamed, which fixes corrupted
+	downloads on some hosts.</li>
+	<li>Wide tables no longer stretch the page on phones.</li>
+	<li>A broken logo image was being loaded from an external site into every printed and
+	emailed invoice. Removed.</li>
+</ul>
+
+<h3>Removed</h3>
+
+<ul>
+	<li><strong>Facebook and Twitter integration.</strong> Both services withdrew the APIs these
+	used. Nothing has been able to work for years.</li>
+	<li><strong>The automatic mPDF installer.</strong> See the security section above. PDF
+	generation is unaffected and uses the library included in the download.</li>
+	<li><strong>reCAPTCHA v1.</strong> Switched off by Google in 2018. Use reCAPTCHA v2.</li>
+	<li><strong>Payment gateways whose APIs have been discontinued</strong> are no longer
+	offered for new setup. Existing payment records are untouched &mdash; see
+	<a href="payments.html">Payment methods</a>.</li>
+	<li>Three redundant copies of a JavaScript library, which reduces the download size.</li>
+</ul>
+
+<h3>Documentation and packaging</h3>
+
+<ul>
+	<li><strong>This documentation.</strong> The product previously shipped without any.</li>
+	<li><strong>A licensing folder</strong> listing every third-party component included in the
+	download, with the licence of each and its full text. See
+	<a href="credits.html">Credits and licences</a>.</li>
+	<li>The download is now organised into <code>Main Files</code>, <code>Documentation</code>
+	and <code>Licensing</code>, and no longer includes development files that were never of any
+	use to you.</li>
+</ul>
+
+<h2>Things to do after updating</h2>
+
+<ol>
+	<li>Run <em>Settings &rarr; Upgrade &rarr; Run Manual Upgrades</em>.</li>
+	<li>Check whether the original sample accounts are still present with their default
+	passwords, under <em>Settings &rarr; Users</em>.</li>
+	<li>If you used a payment gateway that has been retired, set up a current one and move any
+	recurring billing across.</li>
+	<li>If you had edited shipped files, move those changes into <code>custom/</code> so the
+	next update leaves them alone. See <a href="customising.html">Customising</a>.</li>
+	<li>Confirm your scheduled task still runs, particularly if your PHP version changed. See
+	<a href="cron.html">Scheduled tasks</a>.</li>
+</ol>
+
+<h2>Earlier versions</h2>
+
+<p>Ultimate Client Manager was released and updated regularly through the 2.x series. Those
+changes were published on the item&rsquo;s CodeCanyon page at the time and are not reproduced
+here &mdash; this changelog starts with the modernisation release above.</p>
+
+<div class="pager">
+	<a href="troubleshooting.html">Troubleshooting</a>
+	<a class="next" href="credits.html">Credits and licences</a>
+</div>
+
+</main>
+</div>
+</body>
+</html>

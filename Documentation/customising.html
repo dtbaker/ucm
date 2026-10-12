@@ -1,0 +1,228 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Customising &mdash; Ultimate Client Manager</title>
+<link rel="stylesheet" href="assets/docs.css">
+</head>
+<body>
+<div class="layout">
+<aside class="sidebar">
+	<a class="brand" href="index.html">Ultimate Client Manager<span>Documentation</span></a>
+	<nav aria-label="Documentation">
+		<h2>Getting started</h2>
+		<ol>
+			<li><a href="index.html">Overview</a></li>
+			<li><a href="requirements.html">Requirements</a></li>
+			<li><a href="installation.html">Installing</a></li>
+			<li><a href="upgrading.html">Upgrading from 2.x</a></li>
+		</ol>
+		<h2>Running it</h2>
+		<ol>
+			<li><a href="configuration.html">Configuration</a></li>
+			<li><a href="cron.html">Scheduled tasks</a></li>
+			<li><a href="payments.html">Payment methods</a></li>
+		</ol>
+		<h2>Making it yours</h2>
+		<ol>
+			<li><a href="plugins.html">The plugin system</a></li>
+			<li><a href="customising.html" aria-current="page">Customising</a></li>
+		</ol>
+		<h2>Reference</h2>
+		<ol>
+			<li><a href="troubleshooting.html">Troubleshooting</a></li>
+			<li><a href="changelog.html">Changelog</a></li>
+			<li><a href="credits.html">Credits and licences</a></li>
+		</ol>
+	</nav>
+</aside>
+<main>
+
+<p class="kicker">Making it yours</p>
+<h1>Customising</h1>
+<p class="lead">You can change almost any screen, template or stylesheet in the product without
+editing a single file you were shipped. Do it this way and your changes survive every future
+update untouched.</p>
+
+<h2>The golden rule</h2>
+
+<div class="stop">
+	<strong>Never edit a file inside <code>includes/</code> or at the top level</strong>
+	<p>Every one of them is replaced when you update. Any change you make there is gone, with no
+	warning and no way to recover it short of your backup.</p>
+	<p>Instead, copy the file into a folder called <code>custom/</code> and edit the copy. The
+	application looks there first.</p>
+</div>
+
+<h2>The <code>custom/</code> folder</h2>
+
+<p>Create a folder called <code>custom</code> at the top level of your installation, next to
+<code>index.php</code>. It does not exist to begin with, and it is never part of an update.</p>
+
+<p>Inside it, recreate the path of whatever you want to change. If you want to change</p>
+
+<pre><code>includes/plugin_invoice/template/invoice_print.php</code></pre>
+
+<p>then copy it to</p>
+
+<pre><code>custom/includes/plugin_invoice/template/invoice_print.php</code></pre>
+
+<p>and edit that. From then on the application uses your copy and ignores the original. Delete
+your copy to go back to the standard behaviour.</p>
+
+<h3>What can be overridden</h3>
+
+<p>Anything the application includes as a file, which is most of it:</p>
+
+<div class="table-wrap">
+<table>
+	<thead><tr><th>To change</th><th>Copy to</th></tr></thead>
+	<tbody>
+		<tr><td>The printed and emailed invoice</td><td><code>custom/includes/plugin_invoice/template/invoice_print.php</code></td></tr>
+		<tr><td>The page header</td><td><code>custom/design_header.php</code></td></tr>
+		<tr><td>The page footer</td><td><code>custom/design_footer.php</code></td></tr>
+		<tr><td>The main menu</td><td><code>custom/design_menu.php</code></td></tr>
+		<tr><td>The login screen</td><td><code>custom/pages/login.php</code></td></tr>
+		<tr><td>The dashboard</td><td><code>custom/pages/home.php</code></td></tr>
+		<tr><td>Any plugin screen</td><td><code>custom/includes/plugin_&lt;name&gt;/pages/&lt;page&gt;.php</code></td></tr>
+		<tr><td>The whole behaviour of a plugin</td><td><code>custom/includes/plugin_&lt;name&gt;/&lt;name&gt;.php</code></td></tr>
+		<tr><td>The customer portal</td><td><code>custom/includes/plugin_customer/portal/index.php</code></td></tr>
+	</tbody>
+</table>
+</div>
+
+<h3>Adding a page that does not exist</h3>
+
+<p>The same mechanism adds new screens. Create</p>
+
+<pre><code>custom/includes/plugin_customer/pages/my_report.php</code></pre>
+
+<p>and it becomes reachable in the application as a page called <code>my_report</code> in the
+customer area, even though no such file exists in the product. This is the tidiest way to add a
+report of your own.</p>
+
+<h3>The order things are searched</h3>
+
+<p>When the application needs a file it looks in this order and takes the first it finds:</p>
+
+<ol>
+	<li>Your <code>custom/</code> copy, mobile version</li>
+	<li>Your <code>custom/</code> copy</li>
+	<li>The standard file, mobile version</li>
+	<li>The active theme&rsquo;s copy</li>
+	<li>The standard file</li>
+</ol>
+
+<p>So <code>custom/</code> beats a theme, and a theme beats the standard file. Switching themes
+never disturbs your own overrides.</p>
+
+<div class="warn">
+	<strong>An override is a copy, frozen in time</strong>
+	<p>Once you override a file, you stop receiving updates to it &mdash; including fixes. After
+	a major update it is worth comparing your copy against the new standard version and bringing
+	across anything that changed. Override the smallest file that does the job, and keep a note
+	of which files you have copied.</p>
+</div>
+
+<div class="note">
+	<strong>Protect the folder if you can</strong>
+	<p><code>custom/</code> sits inside your web space and the download does not include a rule
+	to stop it being fetched directly. If your server lets you, deny direct web access to it the
+	same way the upload folders are protected.</p>
+</div>
+
+<h2>Themes</h2>
+
+<p>Eight themes are included. Choose one under <em>Settings &rarr; Theme</em>.</p>
+
+<div class="table-wrap">
+<table>
+	<thead><tr><th>Theme</th><th>Notes</th></tr></thead>
+	<tbody>
+		<tr><td><strong>Metis</strong></td><td>The default on a new installation.</td></tr>
+		<tr><td><strong>AdminLTE</strong></td><td>A wide, dense administrative layout.</td></tr>
+		<tr><td><strong>Blocks</strong></td><td>A card-based layout.</td></tr>
+		<tr><td><strong>White Label</strong></td><td>A plain layout intended for rebranding.</td></tr>
+		<tr><td><strong>Blue</strong>, <strong>Left</strong>, <strong>Pro</strong></td><td>Older variations on the original design.</td></tr>
+		<tr><td><strong>Default</strong></td><td>No theme. The underlying unstyled layout.</td></tr>
+	</tbody>
+</table>
+</div>
+
+<p>A theme can also be set per user, if you turn that option on, so staff can each pick their
+own.</p>
+
+<h3>Small visual changes</h3>
+
+<p>For colours, logos, spacing and the like, use the custom CSS box on
+<em>Settings &rarr; Theme</em>. Whatever you put there is appended to the stylesheet on every
+page, so you do not need a file override at all. This is the right tool for the great majority
+of appearance changes.</p>
+
+<pre><code>.main-bar h3 { color: #1b4f82; }
+#logo img    { max-height: 48px; }</code></pre>
+
+<div class="note">
+	<strong>If a style change does not appear</strong>
+	<p>Stylesheets and scripts are combined and cached for speed. Reload the page bypassing the
+	browser cache &mdash; <kbd>Ctrl</kbd> or <kbd>Cmd</kbd> with <kbd>Shift</kbd> and
+	<kbd>R</kbd>. If it still does not show, clear the files in <code>temp/</code>, which is
+	where the combined copy is kept.</p>
+</div>
+
+<h3>Building a theme</h3>
+
+<p>A theme is a folder under <code>includes/plugin_theme/themes/</code> containing at minimum an
+<code>init.php</code> that registers its stylesheet, and a <code>style.php</code>. It is picked
+up automatically once the folder is there.</p>
+
+<p>To change a screen only for your theme, mirror the path inside the theme folder &mdash;
+<code>includes/plugin_theme/themes/yourtheme/includes/plugin_customer/pages/customer_admin_edit.php</code>
+overrides that one screen for that theme only. This is the same mechanism as
+<code>custom/</code>, one level further down the search order.</p>
+
+<p>The simplest way to start is to copy an existing theme folder, rename it, and work from
+there. <strong>Copy rather than edit</strong>, so that updates to the original theme do not
+overwrite your work.</p>
+
+<h2>Changing wording</h2>
+
+<p>Before overriding a file to change some text, check whether you can change it from the
+interface instead:</p>
+
+<ul>
+	<li><strong>Emails and documents</strong> &mdash; <em>Settings &rarr; Templates</em> holds
+	the wording of everything the system sends.</li>
+	<li><strong>Interface labels</strong> &mdash; <em>Settings &rarr; Languages</em> lets you
+	replace any text in the interface, including in your own language. It is the right way to
+	change &ldquo;Customer&rdquo; to &ldquo;Client&rdquo; throughout.</li>
+</ul>
+
+<p>Both survive updates with no effort on your part, which makes them better than an override
+wherever they are enough.</p>
+
+<h2>Putting it together</h2>
+
+<p>A good order to reach for things, from least to most work:</p>
+
+<ol>
+	<li>A setting under <em>Settings</em>.</li>
+	<li>A template or a language replacement.</li>
+	<li>Custom CSS on the theme screen.</li>
+	<li>A file override in <code>custom/</code>.</li>
+	<li>A plugin of your own.</li>
+</ol>
+
+<p>Each step up costs you more to maintain at update time. Most things people want are
+available in the first three.</p>
+
+<div class="pager">
+	<a href="plugins.html">The plugin system</a>
+	<a class="next" href="troubleshooting.html">Troubleshooting</a>
+</div>
+
+</main>
+</div>
+</body>
+</html>
