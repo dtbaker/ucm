@@ -241,7 +241,7 @@ if ( isset( $_REQUEST['print'] ) ) {
 								echo 'Initial Version';
 							} else {
 								// find out changed fields.
-								$sql = "SELECT * FROM `" . _DB_PREFIX . "data_store` WHERE data_record_revision_id = '" . $data_record_revision['data_record_revision_id'] . "' AND data_record_id = '" . $data_record_id . "'";
+								$sql = "SELECT * FROM `" . _DB_PREFIX . "data_store` WHERE data_record_revision_id = '" . (int) $data_record_revision['data_record_revision_id'] . "' AND data_record_id = '" . (int) $data_record_id . "'";
 								$res = qa( $sql );
 								if ( ! count( $res ) ) {
 									echo 'no changes';
@@ -494,7 +494,7 @@ if ( isset( $_REQUEST['print'] ) ) {
 									echo 'Initial Version';
 								} else {
 									// find out changed fields.
-									$sql = "SELECT * FROM `" . _DB_PREFIX . "data_store` WHERE data_record_revision_id = '" . $current_revision['data_record_revision_id'] . "' AND data_record_id = '" . $data_record_id . "'";
+									$sql = "SELECT * FROM `" . _DB_PREFIX . "data_store` WHERE data_record_revision_id = '" . (int) $current_revision['data_record_revision_id'] . "' AND data_record_id = '" . (int) $data_record_id . "'";
 									$res = qa( $sql );
 									if ( ! count( $res ) ) {
 										echo 'no changes';
@@ -540,7 +540,7 @@ if ( isset( $_REQUEST['print'] ) ) {
 							"data_type_id"   => $data_type_id,
 							"data_record_id" => $data_record_id
 						) ); ?>"/>
-						<input type="hidden" name="data_record_id" value="<?php echo $data_record_id; ?>"/>
+						<input type="hidden" name="data_record_id" value="<?php echo htmlspecialchars( $data_record_id ); ?>"/>
 						<input type="hidden" name="parent_data_record_id"
 						       value="<?php echo (int) $data_record['parent_data_record_id']; ?>"/>
 						<input type="hidden" name="data_type_id" value="<?php echo $data_type_id; ?>"/>

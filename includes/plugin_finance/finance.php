@@ -282,7 +282,10 @@ class module_finance extends module_base
 					$account_id = update_insert( 'finance_account_id', 'new', 'finance_account', array( 'name' => $account_id ) );
 				}
 				$data['finance_account_id'] = $account_id;
-				$finance_id                 = update_insert( 'finance_id', isset( $_REQUEST['finance_id'] ) ? $_REQUEST['finance_id'] : 'new', 'finance', $data );
+				// update_insert() hands back whatever id it was given for an existing record,
+				// and that id came out of the request. The category queries below put it
+				// straight into SQL unquoted, so make it a number here rather than there.
+				$finance_id                 = (int) update_insert( 'finance_id', isset( $_REQUEST['finance_id'] ) ? $_REQUEST['finance_id'] : 'new', 'finance', $data );
 
 				module_extra::save_extras( 'finance', 'finance_id', $finance_id );
 
@@ -420,7 +423,9 @@ class module_finance extends module_base
 				}
 
 				$data['finance_account_id'] = $account_id;
-				$finance_recurring_id       = update_insert( 'finance_recurring_id', isset( $_REQUEST['finance_recurring_id'] ) ? $_REQUEST['finance_recurring_id'] : 'new', 'finance_recurring', $data );
+				// Same as save_finance above: the id comes back out of the request, and the
+				// catrel queries below interpolate it unquoted.
+				$finance_recurring_id       = (int) update_insert( 'finance_recurring_id', isset( $_REQUEST['finance_recurring_id'] ) ? $_REQUEST['finance_recurring_id'] : 'new', 'finance_recurring', $data );
 
 				if ( (int) $finance_recurring_id > 0 ) {
 					$category_ids = isset( $_REQUEST['finance_category_id'] ) && is_array( $_REQUEST['finance_category_id'] ) ? $_REQUEST['finance_category_id'] : array();
