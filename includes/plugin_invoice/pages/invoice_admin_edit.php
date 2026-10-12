@@ -98,8 +98,14 @@ $default_payment_method = module_config::c( 'invoice_default_payment_method', 'p
 </script>
 
 
-<form action="" method="post" id="invoice_form">
-	<?php module_form::print_form_auth(); ?>
+<?php
+module_form::print_form_open_tag( array(
+	'id' => 'invoice_form',
+) );
+?>
+	<!-- _process stays as markup: the no_permissions class keeps check_page() from
+	     stripping it on a view-only user's page, and the helper's hidden fields
+	     cannot carry a class. -->
 	<input type="hidden" name="_process" value="save_invoice" class="no_permissions"/>
 	<input type="hidden" name="invoice_id" value="<?php echo $invoice_id; ?>"/>
 	<?php if ( $invoice['customer_id'] && ! isset( $_REQUEST['change_customer'] ) ) { ?>
@@ -2021,8 +2027,4 @@ $default_payment_method = module_config::c( 'invoice_default_payment_method', 'p
 	);
 	echo module_form::generate_form_actions( $form_actions );
 
-
-	?>
-
-
-</form>
+	module_form::print_form_close_tag();
