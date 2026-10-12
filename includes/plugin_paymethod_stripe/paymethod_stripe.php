@@ -354,8 +354,6 @@ class module_paymethod_stripe extends module_base
 						}
 						$stripe_amount = $payment_amount * 100;
 
-						ini_set( 'display_errors', true );
-						ini_set( 'error_reporting', E_ALL );
 						// create or retrieve this subscription.
 						require_once( 'includes/plugin_paymethod_stripe/stripe-php/lib/Stripe.php' );
 						$stripe = array(

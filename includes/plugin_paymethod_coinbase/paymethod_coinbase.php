@@ -366,9 +366,9 @@ class module_paymethod_coinbase extends module_base
 				$event_json = json_decode( $body );
 
 				ob_start();
-				echo "UCM coinbase DEBUG:<br><br>JSON: <br>\n";
-				print_r( $event_json );
-				echo "<br><br>\n";
+				// The body is attacker-controlled and this endpoint is public. It is
+				// already written to the payment's own log further down, where it belongs;
+				// it does not also need to go into the debug email.
 				$success = false;
 
 				$bits = explode( ':', isset( $event_json->order->custom ) ? $event_json->order->custom : '' );
