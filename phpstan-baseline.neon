@@ -4111,18 +4111,6 @@ parameters:
 			path: includes/plugin_security/pages/data_access.php
 
 		-
-			message: '#^Call to an undefined static method module_security\:\:get_access_level\(\)\.$#'
-			identifier: staticMethod.notFound
-			count: 1
-			path: includes/plugin_security/pages/data_access_ui.php
-
-		-
-			message: '#^Variable \$module might not be defined\.$#'
-			identifier: variable.undefined
-			count: 1
-			path: includes/plugin_security/pages/data_access_ui.php
-
-		-
 			message: '#^Constant _DB_PREFIX not found\.$#'
 			identifier: constant.notFound
 			count: 5

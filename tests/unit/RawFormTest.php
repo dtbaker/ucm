@@ -43,8 +43,6 @@ class RawFormTest extends TestCase
 	 * entry fails the test too, so this cannot rot.
 	 */
 	private const ALLOWED = array(
-		'includes/plugin_security/pages/data_access_ui.php'
-			=> 'Posts _process=save_data_access_popup, but the handler is commented out in security.php and the form has no submit button. Dead markup; delete rather than migrate.',
 		'includes/plugin_ticket/public/ticket_customer_new.php'
 			=> 'Public page on ext.php. Handled by external_hook(), which has no _process dispatch, and the visitor has no session to mint a token from.',
 		'includes/plugin_ticket/public/ticket_customer_view.php'
@@ -57,7 +55,7 @@ class RawFormTest extends TestCase
 	 * Lower this as forms move to module_form::print_form_open_tag(). Never raise it:
 	 * a new form has a helper to go through.
 	 */
-	private const RAW_FORM_BUDGET = 163;
+	private const RAW_FORM_BUDGET = 162;
 
 	public function test_a_raw_form_that_posts_a_write_field_publishes_the_token() {
 		$offenders = array();
