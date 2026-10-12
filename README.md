@@ -77,9 +77,37 @@ docker-compose up -d
 npm install && npm run test:e2e
 ```
 
+## Documentation
+
+`Documentation/` and `Licensing/` are the buyer-facing halves of the release archive.
+They are written by hand, live in the repository, and are `export-ignore`d so they land
+beside `Main Files` in the zip rather than inside it.
+
+- `Documentation/` - installing, upgrading from 2.x, configuration, the plugin system,
+  the `custom/` override mechanism, payment setup, troubleshooting and the changelog.
+  Plain HTML with no external requests, because it is read out of a zip offline.
+- `Licensing/` - `third-party-libraries.tsv` is the source of truth for every bundled
+  component; the web page beside it is generated from that file at build time.
+
+## Building the release archive
+
+```bash
+./scripts/build-release.sh --verify
+```
+
+Writes `build/ucm-codecanyon.zip` in the three-folder layout CodeCanyon requires, then
+checks it: nothing but those three folders at the root, no development files inside
+`Main Files`, real documentation rather than a placeholder, and a licence manifest whose
+entries all resolve. CI runs the same command.
+
+`Main Files` comes from `git archive`, so only committed files ship and
+[.gitattributes](.gitattributes) decides what stays out. Nothing in the working copy can
+leak in by accident.
+
 ## Upgrading
 
-See [UPGRADE.md](UPGRADE.md) for breaking changes and migration notes.
+See [UPGRADE.md](UPGRADE.md) for breaking changes and migration notes, and
+`Documentation/upgrading.html` for the version written for buyers.
 
 ## File Structure
 
