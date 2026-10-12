@@ -37,12 +37,15 @@ if ( class_exists( 'module_security', false ) ) {
 
 <?php hook_handle_callback( 'layout_column_half', 1 ); ?>
 
-	<form action="" method="post" id="subscription_form">
-		<input type="hidden" name="_process" value="save_subscription"/>
-		<input type="hidden" name="subscription_id" value="<?php echo $subscription_id; ?>"/>
+<?php
+	module_form::print_form_open_tag( array(
+		'id'      => 'subscription_form',
+		'process' => 'save_subscription',
+		'hidden'  => array(
+			'subscription_id' => $subscription_id,
+		),
+	) );
 
-		<?php
-		module_form::print_form_auth();
 		module_form::set_required( array(
 				'fields' => array(
 					'name'   => 'Name',
@@ -289,9 +292,8 @@ if ( class_exists( 'module_security', false ) ) {
 		);
 		echo module_form::generate_form_actions( $form_actions );
 
+		module_form::print_form_close_tag();
 		?>
-
-	</form>
 
 <?php hook_handle_callback( 'layout_column_half', 2 ); ?>
 
