@@ -100,7 +100,7 @@ module_form::print_form_open_tag( array(
 		<input type="hidden" name="customer_id" value="<?php echo $invoice['customer_id']; ?>"/>
 	<?php } ?>
 	<input type="hidden" name="job_id" value="<?php echo isset( $invoice['job_id'] ) ? (int) $invoice['job_id'] : 0; ?>"/>
-	<input type="hidden" name="hourly_rate" value="<?php echo htmlspecialchars( $invoice['hourly_rate'] ); ?>"/>
+	<input type="hidden" name="hourly_rate" value="<?php echo htmlspecialchars( $invoice['hourly_rate'] ?? '' ); ?>"/>
 
 	<input type="hidden" name="_redirect" value="" id="form_redirect"/>
 
@@ -480,7 +480,9 @@ module_form::print_form_open_tag( array(
 				'value'   => $invoice['tax_type'],
 			),
 		);
-		if ( $discounts_allowed ) {
+		// This page keeps its own copy of the Advanced fieldset, so it asks the document
+		// class the same question generate_advanced_fieldset() does.
+		if ( $ucminvoice->discounts_allowed() ) {
 			$fieldset_data['elements'][] = array(
 				'title'  => 'Discount Amount',
 				'fields' => array(
@@ -945,9 +947,9 @@ module_form::print_form_open_tag( array(
 						<?php } ?>
 						<td>
 							<input type="hidden" name="invoice_invoice_item[<?php echo $invoice_item_id; ?>][task_id]"
-							       value="<?php echo htmlspecialchars( $invoice_item_data['task_id'] ); ?>">
+							       value="<?php echo htmlspecialchars( $invoice_item_data['task_id'] ?? '' ); ?>">
 							<input type="hidden" name="invoice_invoice_item[<?php echo $invoice_item_id; ?>][timer_id]"
-							       value="<?php echo htmlspecialchars( $invoice_item_data['timer_id'] ); ?>">
+							       value="<?php echo htmlspecialchars( $invoice_item_data['timer_id'] ?? '' ); ?>">
 
 							<input type="text" name="invoice_invoice_item[<?php echo $invoice_item_id; ?>][description]"
 							       value="<?php echo htmlspecialchars( $invoice_item_data['custom_description'] ? $invoice_item_data['custom_description'] : $invoice_item_data['description'] ); ?>"

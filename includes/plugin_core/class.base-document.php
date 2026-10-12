@@ -222,6 +222,25 @@ class UCMBaseDocument extends UCMBaseSingle
 		return false;
 	}
 
+	/**
+	 * Whether this document can carry a discount.
+	 *
+	 * A deposit invoice against a job and a contract are both for a fixed amount, so the
+	 * discount fields are left off those. Everything else, credit notes included, can be
+	 * discounted - a credit note is an ordinary invoice record and get_invoice() applies
+	 * its discount to the totals the same way.
+	 */
+	public function discounts_allowed() {
+		if ( $this->document_type == 'job' && $this->get( 'deposit_job_id' ) ) {
+			return false;
+		}
+		if ( $this->document_type == 'contract' ) {
+			return false;
+		}
+
+		return true;
+	}
+
 	public function generate_calendar_fieldset() {
 
 		// the options set here hook into the legacy module_job::hook_calendar_events() method for calendar display.
@@ -521,15 +540,7 @@ class UCMBaseDocument extends UCMBaseSingle
 			);
 		}
 
-		$discounts_allowed = true;
-		if ( $this->document_type == 'job' && $this->get( 'deposit_job_id' ) ) {
-			$discounts_allowed = false;
-		}
-		if ( $this->document_type == 'contract' ) {
-			$discounts_allowed = false;
-		}
-
-		if ( $discounts_allowed ) {
+		if ( $this->discounts_allowed() ) {
 
 			$self                                         = $this;
 			$fieldset_data['elements']['discount_amount'] = array(

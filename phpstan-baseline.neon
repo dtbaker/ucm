@@ -2611,12 +2611,6 @@ parameters:
 			path: includes/plugin_invoice/pages/invoice_admin_credit.php
 
 		-
-			message: '#^Variable \$discounts_allowed might not be defined\.$#'
-			identifier: variable.undefined
-			count: 1
-			path: includes/plugin_invoice/pages/invoice_admin_credit.php
-
-		-
 			message: '#^Variable \$find_other_templates in isset\(\) always exists and is not nullable\.$#'
 			identifier: isset.variable
 			count: 1

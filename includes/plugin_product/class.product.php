@@ -163,7 +163,7 @@ if ( class_exists( 'UCMBaseSingle' ) ) {
 							$invoice_tasks['items'][ $task['invoice_id'] ] = array(
 								'text'  => $data['date_paid'] != '0000-00-00' ? _l( 'Paid %s', print_date( $data['date_paid'] ) ) : _l( 'Not Paid' ),
 								'link'  => module_invoice::link_open( $task['invoice_id'], true ),
-								'date'  => $task['date_updated'] != '0000-00-00' ? strtotime( $task['date_updated'] ) : strtotime( $task['date_created'] ),
+								'date'  => ! empty( $task['date_updated'] ) && $task['date_updated'] != '0000-00-00' ? strtotime( $task['date_updated'] ) : strtotime( $task['date_created'] ),
 								'count' => 0,
 							);
 						}
@@ -189,7 +189,7 @@ if ( class_exists( 'UCMBaseSingle' ) ) {
 							$job_tasks['items'][ $task['job_id'] ] = array(
 								'text'  => $data['date_completed'] != '0000-00-00' ? _l( 'Completed %s', print_date( $data['date_completed'] ) ) : _l( 'Not Completed' ),
 								'link'  => module_job::link_open( $task['job_id'], true ),
-								'date'  => $task['date_updated'] != '0000-00-00' ? strtotime( $task['date_updated'] ) : strtotime( $task['date_created'] ),
+								'date'  => ! empty( $task['date_updated'] ) && $task['date_updated'] != '0000-00-00' ? strtotime( $task['date_updated'] ) : strtotime( $task['date_created'] ),
 								'count' => 0,
 							);
 						}
@@ -215,7 +215,7 @@ if ( class_exists( 'UCMBaseSingle' ) ) {
 							$quote_tasks['items'][ $task['quote_id'] ] = array(
 								'text'  => $data['date_approved'] != '0000-00-00' ? _l( 'Approved %s', print_date( $data['date_approved'] ) ) : _l( 'Not Approved' ),
 								'link'  => module_quote::link_open( $task['quote_id'], true ),
-								'date'  => $task['date_updated'] != '0000-00-00' ? strtotime( $task['date_updated'] ) : strtotime( $task['date_created'] ),
+								'date'  => ! empty( $task['date_updated'] ) && $task['date_updated'] != '0000-00-00' ? strtotime( $task['date_updated'] ) : strtotime( $task['date_created'] ),
 								'count' => 0,
 							);
 						}
