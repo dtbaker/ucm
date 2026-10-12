@@ -71,8 +71,20 @@ couple of minutes and the application tells you exactly what to paste.</p>
 
 <h2>Finding the command</h2>
 
-<p>Go to <em>Settings &rarr; Cron</em>. That screen shows you two things, both filled in with
-the real paths for your installation:</p>
+<p>The application works out the exact command for your installation and shows it on a screen
+of its own. There is no entry for it in the Settings menu, so there are two ways to reach
+it:</p>
+
+<ul>
+	<li>If the task has not run in the last day, the dashboard shows an alert reading
+	<em>CRON Job Not Setup</em>. Click it &mdash; on a new installation this is how you will
+	find the screen.</li>
+	<li>Otherwise go to it directly, by adding
+	<code>?m=config&amp;p=config_cron</code> to your site address.</li>
+</ul>
+
+<p>That screen shows two things, both filled in with the real paths for your
+installation:</p>
 
 <ul>
 	<li>A <strong>command line</strong>, for hosts that let you schedule a command.</li>
@@ -142,8 +154,9 @@ less than three minutes ago, so more frequent runs exit immediately without doin
 
 <h2>Checking it is working</h2>
 
-<p>The <em>Settings &rarr; Upgrade</em> screen shows when the scheduled task last ran. If that
-says <em>Never</em>, or shows a time from days ago, it is not running.</p>
+<p>If the task has not run in the last day, the dashboard shows a <em>CRON Job Not Setup</em>
+alert telling you when it last ran, or <em>Never</em> if it never has. No alert means it ran
+within the last day, which is the result you want.</p>
 
 <p>To test it by hand, open the web address version in a browser. A working run returns a page
 with little or nothing on it &mdash; that is correct, it is not meant to be read. If you see

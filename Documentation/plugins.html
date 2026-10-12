@@ -137,7 +137,7 @@ database table.</p>
 	<strong>There is no screen for this</strong>
 	<p>The value has to be set in the database directly, which means phpMyAdmin or similar. If
 	you are not comfortable editing the database, do not disable plugins &mdash; most things you
-	might want to hide can be hidden with permissions under <em>Settings &rarr; Roles</em>
+	might want to hide can be hidden with permissions under <em>Settings &rarr; User Roles</em>
 	instead, which is reversible from the interface.</p>
 </div>
 
@@ -222,9 +222,10 @@ everything.</p>
 		<tr><td><code>paymethod_stripe</code></td><td>2.245</td><td>Card payments through Stripe.</td></tr>
 		<tr><td><code>paymethod_paypal</code></td><td>2.261</td><td>PayPal.</td></tr>
 		<tr><td><code>paymethod_banktransfer</code></td><td>2.241</td><td>Offline bank transfer instructions.</td></tr>
-		<tr><td><code>paymethod_check</code></td><td>2.11</td><td>Offline cheque instructions.</td></tr>
+		<tr><td><code>paymethod_check</code></td><td>2.11</td><td>Offline cheque instructions. Shown in the interface as <em>Check</em>.</td></tr>
 		<tr><td><code>paymethod_other</code></td><td>2.12</td><td>Any other offline arrangement, with wording of your own.</td></tr>
-		<tr><td><code>paymethod_authorize</code></td><td>2.23</td><td>Authorize.Net. Retained for existing users; see <a href="payments.html">Payment methods</a>.</td></tr>
+		<tr><td><code>paymethod_authorize</code></td><td>2.23</td><td>Authorize.Net. Retired in this release and no longer offered for new setup, so it does not appear under <em>Settings &rarr; Payments</em>. Existing payment records are untouched &mdash; see <a href="payments.html">Payment methods</a>.</td></tr>
+		<tr><td><code>paymethod_coinbase</code>, <code>paymethod_multisafepay</code>, <code>paymethod_paynl</code></td><td>2.11, 2.222, 2.2</td><td>Also retired. The code remains so that historical payments still render correctly; none of the three can take a new payment.</td></tr>
 	</tbody>
 </table>
 </div>
