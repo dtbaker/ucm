@@ -43,10 +43,14 @@ if ( class_exists( 'module_security', false ) ) {
 }
 
 
+module_form::print_form_open_tag( array(
+	'id'      => 'vendor_form',
+	'process' => 'save_vendor',
+	'hidden'  => array(
+		'vendor_id' => $vendor_id,
+	),
+) );
 ?>
-<form action="" method="post" id="vendor_form">
-	<input type="hidden" name="_process" value="save_vendor"/>
-	<input type="hidden" name="vendor_id" value="<?php echo $vendor_id; ?>"/>
 	<input type="hidden" name="_redirect" value="" id="form_redirect"/>
 
 	<?php
@@ -64,8 +68,6 @@ if ( class_exists( 'module_security', false ) ) {
 			)
 		)
 	);
-
-	module_form::print_form_auth();
 
 	//!(int)$vendor['vendor_id'] &&
 	if ( isset( $_REQUEST['move_user_id'] ) && (int) $_REQUEST['move_user_id'] > 0 && module_vendor::can_i( 'create', 'Vendors' ) ) {
@@ -398,8 +400,4 @@ if ( class_exists( 'module_security', false ) ) {
 	);
 	echo module_form::generate_form_actions( $form_actions );
 
-	?>
-
-
-</form>
-
+	module_form::print_form_close_tag();
