@@ -92,6 +92,15 @@ class module_paymethod_paynl extends module_base
 		query( $sql );
 	}
 
+	/**
+	 * The stable identifier for this payment method, never the admin-editable label.
+	 *
+	 * @return string
+	 */
+	public static function get_payment_method_key() {
+		return 'paynl';
+	}
+
 	public static function get_payment_method_name() {
 		return module_config::s( 'payment_method_paynl_label', 'paynl' );
 	}
@@ -212,8 +221,20 @@ class module_paymethod_paynl extends module_base
 		if ( ! $token ) {
 			return;
 		}
-		$sql = "SELECT * FROM `" . _DB_PREFIX . "invoice_payment` ip WHERE 1 ";
-		$sql .= " AND  `method` = 'paynl' ";
+		// This used to be `method` = 'paynl', the lowercase factory default of an
+		// admin-editable label. Renaming the payment method in settings stopped
+		// reconciliation for good, and because Pay.nl has no webhook this cron is the
+		// only way one of its payments is ever recorded. Match the stable key, and keep
+		// matching the label for rows written before method_key existed.
+		$label  = db_escape( self::get_payment_method_name() );
+		$fields = get_fields( 'invoice_payment' );
+		$sql    = "SELECT * FROM `" . _DB_PREFIX . "invoice_payment` ip WHERE 1 ";
+		if ( isset( $fields['method_key'] ) ) {
+			$sql .= " AND ( `method_key` = '" . db_escape( self::get_payment_method_key() ) . "' OR ( `method_key` = '' AND `method` IN ( 'paynl', '" . $label . "' ) ) ) ";
+		} else {
+			// Pre-upgrade database, the column is not there yet.
+			$sql .= " AND `method` IN ( 'paynl', '" . $label . "' ) ";
+		}
 		$sql .= " AND  `date_paid` = '0000-00-00' ";
 		$sql .= " AND  `other_id` != '' ";
 		foreach ( qa( $sql ) as $payment ) {

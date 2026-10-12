@@ -104,6 +104,15 @@ class module_paymethod_coinbase extends module_base
 	}
 
 
+	/**
+	 * The stable identifier for this payment method, never the admin-editable label.
+	 *
+	 * @return string
+	 */
+	public static function get_payment_method_key() {
+		return 'coinbase';
+	}
+
 	public static function get_payment_method_name() {
 		return module_config::s( 'payment_method_coinbase_label', 'Bitcoin' );
 	}

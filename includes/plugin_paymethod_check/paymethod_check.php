@@ -102,6 +102,15 @@ Amount: <strong>{AMOUNT}</strong>', 'Check details for invoice payments.' );
 	}
 
 
+	/**
+	 * The stable identifier for this payment method, never the admin-editable label.
+	 *
+	 * @return string
+	 */
+	public static function get_payment_method_key() {
+		return 'check';
+	}
+
 	public static function get_payment_method_name() {
 		return module_config::s( 'payment_method_check_label', 'Check' );
 	}

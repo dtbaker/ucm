@@ -122,6 +122,15 @@ class module_paymethod_paypal extends module_base
 		query( $sql );
 	}
 
+	/**
+	 * The stable identifier for this payment method, never the admin-editable label.
+	 *
+	 * @return string
+	 */
+	public static function get_payment_method_key() {
+		return 'paypal';
+	}
+
 	public static function get_payment_method_name() {
 		return module_config::s( 'payment_method_paypal_label', 'PayPal' );
 	}

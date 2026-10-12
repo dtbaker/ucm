@@ -103,6 +103,15 @@ Amount: <strong>{AMOUNT}</strong>', 'Details displayed on the invoice payments a
 	}
 
 
+	/**
+	 * The stable identifier for this payment method, never the admin-editable label.
+	 *
+	 * @return string
+	 */
+	public static function get_payment_method_key() {
+		return 'other';
+	}
+
 	public static function get_payment_method_name() {
 		return module_config::s( 'payment_method_other_label', 'Other' );
 	}

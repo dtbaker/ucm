@@ -1,5 +1,7 @@
 <?php
 
+require_once( dirname( __FILE__ ) . '/payment_verification.php' );
+
 define( '_INVOICE_ACCESS_ALL', 'All invoices in system' );
 define( '_INVOICE_ACCESS_JOB', 'Invoices from Jobs I have access to' );
 define( '_INVOICE_ACCESS_STAFF', 'Only my Staff Invoices' );
@@ -3463,6 +3465,95 @@ Job: <strong>{JOB_NAME}</strong> <br/>
 		return $statuses;
 	}
 
+	/**
+	 * The stable key for a payment method plugin, e.g. 'stripe'.
+	 *
+	 * invoice_payment.method holds the admin-editable *label*, so it changes whenever
+	 * somebody renames a payment method in settings. Anything that needs to know which
+	 * gateway a payment belongs to asks for the key instead.
+	 *
+	 * A payment plugin from outside this release will not declare one. Its directory name
+	 * is the next best thing, and it matches every key shipped here, so third party
+	 * payment plugins keep working without being touched.
+	 *
+	 * @param object $payment_method a plugin object from handle_hook( 'get_payment_methods' )
+	 *
+	 * @return string
+	 */
+	public static function payment_method_key( $payment_method ) {
+		if ( ! is_object( $payment_method ) ) {
+			return '';
+		}
+		if ( method_exists( $payment_method, 'get_payment_method_key' ) ) {
+			$key = $payment_method->get_payment_method_key();
+			if ( is_string( $key ) && $key !== '' ) {
+				return $key;
+			}
+		}
+		if ( ! empty( $payment_method->module_name ) ) {
+			return preg_replace( '#^paymethod_#', '', $payment_method->module_name );
+		}
+
+		return '';
+	}
+
+	/**
+	 * Fill in method_key for payments recorded before the column existed.
+	 *
+	 * There is nothing to match on but the label, which is exactly the weakness the key
+	 * exists to fix - so this maps every label a shipped plugin could have written: the
+	 * one configured right now, the factory default, and the "(IPN)" and "(Subscription)"
+	 * variants the gateways wrote directly.
+	 *
+	 * Anything it cannot place keeps an empty key and carries on rendering from `method`
+	 * exactly as before. Manually entered payments, credits and offline methods are
+	 * supposed to land there. Nothing is ever overwritten and `method` is never touched.
+	 *
+	 * @return string SQL, statement-per-semicolon, to run straight after the ALTER
+	 */
+	private static function payment_method_key_backfill_sql() {
+		// key => every label that key has ever been stored as
+		$defaults = array(
+			'authorize'    => 'Authorize',
+			'banktransfer' => 'Bank Transfer',
+			'check'        => 'Check',
+			'coinbase'     => 'Bitcoin',
+			'multisafepay' => 'MultiSafepay',
+			'other'        => 'Other',
+			'paynl'        => 'paynl',
+			'paypal'       => 'PayPal',
+			'stripe'       => 'Stripe',
+		);
+
+		$labels = array();
+		foreach ( $defaults as $key => $default_label ) {
+			$configured = module_config::s( 'payment_method_' . $key . '_label', $default_label );
+			foreach ( array( $default_label, $configured ) as $label ) {
+				$label = trim( (string) $label );
+				if ( $label === '' ) {
+					continue;
+				}
+				foreach ( array( $label, $label . ' (IPN)', $label . ' (Subscription)' ) as $variant ) {
+					$labels[ $variant ] = $key;
+				}
+			}
+		}
+		// MultiSafepay wrote this one with different capitalisation to its own label.
+		$labels['Multisafepay (IPN)'] = 'multisafepay';
+
+		$sql = '';
+		foreach ( $labels as $label => $key ) {
+			// install_upgrade() splits this on semicolons, so a label containing one
+			// cannot be expressed here. Leaving it unmatched is the safe outcome.
+			if ( strpos( $label, ';' ) !== false ) {
+				continue;
+			}
+			$sql .= 'UPDATE `' . _DB_PREFIX . 'invoice_payment` SET `method_key` = \'' . db_escape( $key ) . '\' WHERE `method_key` = \'\' AND `method` = \'' . db_escape( $label ) . '\';';
+		}
+
+		return $sql;
+	}
+
 	public function handle_payment() {
 		// handle a payment request via post data from
 		$invoice_id = (int) $_REQUEST['invoice_id'];
@@ -3475,10 +3566,17 @@ Job: <strong>{JOB_NAME}</strong> <br/>
 			$invoice_payment_data = module_invoice::get_invoice_payment( $_REQUEST['invoice_payment_id'] );
 			if ( $invoice_payment_data['invoice_id'] == $invoice_id && $invoice_payment_data['date_paid'] == '0000-00-00' && $invoice_payment_data['invoice_payment_id'] == $_REQUEST['invoice_payment_id'] ) {
 				// we can resume this incomplete payment.
-				// hack to find out which payment method plugin we are using, this is bad!
+				// Match on the stable key. This used to compare the stored label against
+				// each plugin's current label, so renaming a payment method in settings
+				// silently killed every in-flight payment. Rows written before method_key
+				// existed still only have the label, so fall back to it for those.
+				$stored_key = isset( $invoice_payment_data['method_key'] ) ? trim( (string) $invoice_payment_data['method_key'] ) : '';
 				$payment_methods = handle_hook( 'get_payment_methods', $this );
 				foreach ( $payment_methods as &$payment_method ) {
-					if ( $payment_method->is_enabled() && $payment_method->is_method( 'online' ) && $payment_method->get_payment_method_name() == $invoice_payment_data['method'] ) {
+					$matches = $stored_key !== ''
+						? self::payment_method_key( $payment_method ) === $stored_key
+						: $payment_method->get_payment_method_name() == $invoice_payment_data['method'];
+					if ( $payment_method->is_enabled() && $payment_method->is_method( 'online' ) && $matches ) {
 						$payment_method_name = $payment_method->module_name;
 						global $plugins;
 						if ( isset( $plugins[ $payment_method_name ] ) ) {
@@ -3510,7 +3608,10 @@ Job: <strong>{JOB_NAME}</strong> <br/>
 						'invoice_id'  => $invoice_id,
 						'amount'      => $payment_amount,
 						'currency_id' => $invoice_data['currency_id'],
+						// the label, for display and for every report that already reads it
 						'method'      => $plugins[ '' . $payment_method ]->get_payment_method_name(),
+						// and the key, for anything that needs to know which gateway this is
+						'method_key'  => self::payment_method_key( $plugins[ '' . $payment_method ] ),
 					) );
 					module_cache::clear( 'invoice' );
 
@@ -4626,6 +4727,10 @@ Job: <strong>{JOB_NAME}</strong> <br/>
 		}
 
 		$fields = get_fields( 'invoice_payment' );
+		if ( ! isset( $fields['method_key'] ) ) {
+			$sql .= 'ALTER TABLE `' . _DB_PREFIX . 'invoice_payment` ADD `method_key` varchar(40) NOT NULL DEFAULT \'\' AFTER `method`;';
+			$sql .= self::payment_method_key_backfill_sql();
+		}
 		if ( ! isset( $fields['currency_id'] ) ) {
 			$sql .= 'ALTER TABLE `' . _DB_PREFIX . 'invoice_payment` ADD `currency_id` int(11) NOT NULL DEFAULT \'1\' AFTER `method`;';
 		}
@@ -4888,6 +4993,7 @@ Job: <strong>{JOB_NAME}</strong> <br/>
 		`parent_finance_id` int(11) NULL,
 		`amount` decimal(10,2) NOT NULL,
 		`method` varchar(50) NOT NULL,
+		`method_key` varchar(40) NOT NULL DEFAULT '',
 		`currency_id` int(11) NOT NULL DEFAULT '1',
 		`date_paid` date NOT NULL,
 		`data` LONGBLOB NULL,

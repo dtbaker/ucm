@@ -140,6 +140,21 @@ class module_paymethod_stripe extends module_base
 		query( $sql );
 	}
 
+	/**
+	 * The stable identifier for this payment method.
+	 *
+	 * Not the label. get_payment_method_name() returns admin-editable free text, and
+	 * invoice_payment.method stores a copy of whatever it said at the time - which is why
+	 * renaming "Stripe" to "Credit Card" used to break the resume-a-payment lookup, and
+	 * why Pay.nl's reconciliation cron stopped for good if anyone touched its label. This
+	 * never changes, and it is what invoice_payment.method_key records.
+	 *
+	 * @return string
+	 */
+	public static function get_payment_method_key() {
+		return 'stripe';
+	}
+
 	public static function get_payment_method_name() {
 		return module_config::s( 'payment_method_stripe_label', 'Stripe' );
 	}
