@@ -34,10 +34,16 @@ test.describe('Customer address', () => {
 
     await expect(page.locator('body')).toContainText(/customer saved successfully/i);
 
-    // Saving lands on the customer list, so open the one that was just made.
-    await page.getByRole('link', { name }).first().click();
+    // Saving lands on the customer list, so find the one that was just made. Filter by
+    // name rather than scanning the page: the list is paginated at 20, so on a database
+    // that has been used for a while the newest customer is not on the first page.
+    await page.goto('/?m[]=customer&p[]=customer_admin_list&customer_type_id=0&search[generic]=' + encodeURIComponent(name));
+    const link = page.getByRole('link', { name }).first();
+    await expect(link, 'the new customer should be findable by name').toBeVisible();
+    await link.click();
+
     const customerId = page.url().match(/customer_id[=\/](\d+)/)?.[1];
-    expect(customerId, 'the new customer should be on the list').toBeTruthy();
+    expect(customerId, 'opening the customer should put its id in the url').toBeTruthy();
 
     await page.goto('/?m[]=customer&p[]=customer_admin_edit&customer_id=' + customerId);
     await expect(page.locator('input[name$="[line_1]"]').first()).toHaveValue('99 Test Street');
