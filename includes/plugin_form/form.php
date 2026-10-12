@@ -1158,14 +1158,41 @@ class module_form extends module_base
 		echo '</form>';
 	}
 
+	/**
+	 * Open a form.
+	 *
+	 * Anything that is not a key this function knows about is printed straight through as
+	 * an attribute, so `id`, `class`, `action`, `enctype`, `target` and friends all work
+	 * without being listed here.
+	 *
+	 * Recognised keys:
+	 *  - `method`  POST unless you say otherwise.
+	 *  - `process` the `_process` value the module dispatches on.
+	 *  - `hidden`  name => value pairs printed as hidden fields.
+	 *  - `ajax`    submits through the ajax form handler.
+	 *  - `auth`    whether to publish the form token. See below.
+	 */
 	public static function print_form_open_tag( $options ) {
 		$defaults = array(
 			'method' => 'post',
 		);
 		$options  = array_merge( $defaults, $options );
+
+		// The token belongs in a request body, never in a query string. A GET form would
+		// put it in the URL, and from there into browser history, the access log and the
+		// Referer header of every outbound link on the page - and the token is per session
+		// and does not expire. So POST forms get one by default, GET forms do not, and a
+		// caller that knows better says so out loud. Nobody gets a token into a GET by
+		// accident. A GET form that needs a guarded submit puts the token on the button
+		// instead, with print_form_auth_attributes().
+		if ( ! isset( $options['auth'] ) ) {
+			$options['auth'] = ( 'post' === strtolower( (string) $options['method'] ) );
+		}
+
 		echo '<form';
 		foreach ( $options as $key => $val ) {
 			switch ( $key ) {
+				case 'auth':
 				case 'hidden':
 				case 'process':
 				case '_process':
@@ -1205,7 +1232,9 @@ class module_form extends module_base
 			}
 		}
 
-		self::print_form_auth();
+		if ( $options['auth'] ) {
+			self::print_form_auth();
+		}
 	}
 
 	public static function print_form_auth() {
