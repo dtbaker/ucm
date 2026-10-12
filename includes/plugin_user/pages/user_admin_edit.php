@@ -201,4 +201,3 @@ module_form::print_form_open_tag( array(
 	echo module_form::generate_form_actions( $form_actions );
 
 	module_form::print_form_close_tag();
-	?>
