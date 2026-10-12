@@ -439,11 +439,16 @@ hook_handle_callback( 'layout_column_half', 1, '35' );
 
 ?>
 
-<form action="" method="post" id="job_form">
-	<?php module_form::print_form_auth(); ?>
-	<input type="hidden" name="_process" value="save_job"/>
-	<input type="hidden" name="job_id" value="<?php echo $job_id; ?>"/>
-	<input type="hidden" name="customer_id" value="<?php echo $job['customer_id']; ?>"/>
+<?php
+module_form::print_form_open_tag( array(
+	'id'      => 'job_form',
+	'process' => 'save_job',
+	'hidden'  => array(
+		'job_id'      => $job_id,
+		'customer_id' => $job['customer_id'],
+	),
+) );
+?>
 	<input type="hidden" name="_redirect" value="" id="form_redirect"/>
 
 	<?php
@@ -1082,11 +1087,9 @@ hook_handle_callback( 'layout_column_half', 1, '35' );
 	);
 	echo module_form::generate_form_actions( $form_actions );
 
-	?>
+	module_form::print_form_close_tag();
 
-</form>
-
-<?php if ( $do_perm_finish_check ) {
+	if ( $do_perm_finish_check ) {
 	// we call our permission check
 	// render finish method here instead of in index.php
 	// this allows job task edit permissions without job edit permissions.
@@ -1104,16 +1107,20 @@ hook_handle_callback( 'layout_column_half', 2, '65' );
 	        style="display:none; width:0; height:0;" frameborder="0"></iframe>
 <?php } ?>
 
-<form action="" method="post"
-      id="job_task_form" <?php if ( module_config::c( 'job_ajax_tasks', 1 ) ) { ?> target="job_task_ajax_submit"<?php } ?>>
-	<?php module_form::print_form_auth(); ?>
-	<input type="hidden" name="_process" value="save_job<?php if ( module_config::c( 'job_ajax_tasks', 1 ) ) {
-		echo '_tasks_ajax';
-	} ?>"/>
-	<input type="hidden" name="job_id" value="<?php echo $job_id; ?>"/>
-	<input type="hidden" name="customer_id" value="<?php echo $job['customer_id']; ?>"/>
-
-	<?php
+<?php
+$job_task_form = array(
+	'id'      => 'job_task_form',
+	'process' => module_config::c( 'job_ajax_tasks', 1 ) ? 'save_job_tasks_ajax' : 'save_job',
+	'hidden'  => array(
+		'job_id'      => $job_id,
+		'customer_id' => $job['customer_id'],
+	),
+);
+if ( module_config::c( 'job_ajax_tasks', 1 ) ) {
+	// the tasks post into a hidden iframe so the page does not reload.
+	$job_task_form['target'] = 'job_task_ajax_submit';
+}
+module_form::print_form_open_tag( $job_task_form );
 
 	module_form::set_default_field( 'task_desc_new' );
 	module_form::prevent_exit( array(
@@ -1431,10 +1438,8 @@ hook_handle_callback( 'layout_column_half', 2, '65' );
 		include( 'includes/plugin_finance/pages/finance_job_edit.php' );
 	}
 
-	?>
+	module_form::print_form_close_tag();
 
-</form>
-<?php
 // run the custom data hook to display items in this particular hook location
 hook_handle_callback( 'custom_data_hook_location', _CUSTOM_DATA_HOOK_LOCATION_JOB_FOOTER, 'job', $job_id, $job );
 

@@ -122,15 +122,17 @@ $job_tasks = module_job::get_tasks( $job_id );
     });
 </script>
 
-<form action="" method="post" id="job_form" class="job_form_new">
-	<?php module_form::print_form_auth(); ?>
-	<input type="hidden" name="_process" value="save_job"/>
-	<input type="hidden" name="job_id" value="<?php echo $job_id; ?>"/>
-	<input type="hidden" name="customer_id" value="<?php echo (int) $job['customer_id']; ?>"/>
-	<input type="hidden" name="quote_id" value="<?php echo (int) $job['quote_id']; ?>"/>
-
-
-	<?php
+<?php
+module_form::print_form_open_tag( array(
+	'id'      => 'job_form',
+	'class'   => 'job_form_new',
+	'process' => 'save_job',
+	'hidden'  => array(
+		'job_id'      => $job_id,
+		'customer_id' => (int) $job['customer_id'],
+		'quote_id'    => (int) $job['quote_id'],
+	),
+) );
 
 	$fields = array(
 		'fields' => array(
@@ -845,6 +847,4 @@ $job_tasks = module_job::get_tasks( $job_id );
 
 	hook_handle_callback( 'layout_column_half', 'end' );
 
-	?>
-
-</form>
+	module_form::print_form_close_tag();
