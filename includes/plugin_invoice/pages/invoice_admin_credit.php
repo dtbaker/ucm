@@ -1428,7 +1428,7 @@ $x = 1;
 							<?php }
 							if ( $invoice_payment_data['date_paid'] == '0000-00-00' ) {
 								?> (<a
-									href="<?php echo htmlspecialchars( $_SERVER['REQUEST_URI'] ) . '&_process=make_payment&invoice_payment_id=' . $invoice_payment_id; ?>"><?php _e( 'complete' ); ?></a>) <?php
+									href="<?php echo htmlspecialchars( $_SERVER['REQUEST_URI'] ) . '&_process=make_payment&invoice_payment_id=' . $invoice_payment_id . '&form_auth_key=' . urlencode( module_form::get_secure_key() ); ?>"><?php _e( 'complete' ); ?></a>) <?php
 							}
 							?>
 						</td>

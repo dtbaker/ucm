@@ -437,13 +437,31 @@ test.describe('Form auth key, popups', () => {
     expect(response.status()).toBe(403);
   });
 
-  test('starting a payment is deliberately left outside the token check', async ({ page }) => {
-    // Payments round trip through gateway pages that cannot carry the token. If this
-    // ever starts returning 403, paying an invoice has been broken.
+  test('completing a payment from the admin link is refused without a token', async ({ page }) => {
+    // make_payment is only reached from the "complete" links on the invoice and credit
+    // pages, and both send the token. Customers paying an invoice do not come through
+    // here - that is external_hook('public_pay'), which checks its own signed link - and
+    // nor do gateway callbacks, which use external_hook('ipn'/'event_ipn').
     const response = await page.request.post('/?m[]=invoice&invoice_id=1', {
       form: { _process: 'make_payment' },
     });
-    expect(response.status()).not.toBe(403);
+    expect(response.status()).toBe(403);
+  });
+
+  test('the customer payment route does not go through the token check', async ({ page }) => {
+    // Customers pay through external_hook('public_pay'), which checks its own signed
+    // link hash and then calls handle_payment() directly. The token guard on
+    // _process=make_payment must not reach it, or every payment link breaks.
+    //
+    // The hash here is wrong on purpose: a real one needs the install's secret. What
+    // matters is the failure mode - the route declines quietly, it does not 403 from
+    // the form token check, which would mean the guard had leaked into this path.
+    const response = await page.request.get(
+      '/external/m.invoice/h.public_pay/i.1/hash.00000000000000000000000000000000',
+      { headers: { Cookie: '' } },
+    );
+    expect(response.status()).toBe(200);
+    expect(await response.text()).not.toContain('Invalid or expired form submission');
   });
 
   /**

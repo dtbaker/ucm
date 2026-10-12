@@ -1596,10 +1596,16 @@ Job: <strong>{JOB_NAME}</strong> <br/>
 
 	public function process() {
 		$errors = array();
-		// Everything below except the payment hand-off is a form submit from a UCM page
-		// and must carry the form auth key. Payments are deliberately left out: they round
-		// trip through gateway pages and printable templates that have no token to send.
-		if ( 'make_payment' != $_REQUEST['_process'] && ! module_form::check_secure_key() ) {
+		// Every branch below is a form submit or an admin link from a UCM page, so all of
+		// them must carry the form auth key - make_payment included.
+		//
+		// Customers paying an invoice do not come through here. That path is
+		// external_hook( 'public_pay' ), which checks its own signed link hash and then
+		// calls handle_payment() directly, so guarding this does not touch it. Gateways
+		// return through external_hook too ( 'ipn' / 'event_ipn' ), never through here.
+		// The only callers of _process=make_payment are the two "complete" links on the
+		// admin invoice and credit pages, and both now send the token.
+		if ( ! module_form::check_secure_key() ) {
 			module_form::reject_invalid_form_auth();
 		}
 		if ( $_REQUEST['_process'] == 'make_payment' ) {
@@ -1863,7 +1869,12 @@ Job: <strong>{JOB_NAME}</strong> <br/>
 			}
 		}
 		if ( ! count( $errors ) ) {
-			redirect_browser( $_REQUEST['_redirect'] );
+			// Only the save branches set _redirect. Completing a payment from the admin
+			// link does not, and redirecting to an empty URL sent the browser nowhere.
+			$redirect = isset( $_REQUEST['_redirect'] ) && $_REQUEST['_redirect'] && is_string( $_REQUEST['_redirect'] )
+				? $_REQUEST['_redirect']
+				: self::link_open( (int) $_REQUEST['invoice_id'] );
+			redirect_browser( $redirect );
 			exit;
 		}
 		print_error( $errors, true );
