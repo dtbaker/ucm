@@ -104,18 +104,18 @@ if ( isset( $user[ $use_master_key ] ) && $user[ $use_master_key ] ) {
 	die( 'Wrong file' );
 }
 
+module_form::print_form_open_tag( array(
+	'autocomplete' => 'off',
+	'process'      => 'save_user',
+	'hidden'       => array(
+		'user_id'       => $user_id,
+		$use_master_key => $user[ $use_master_key ],
+	),
+) );
 ?>
-
-
-<form action="" method="post" autocomplete="off">
-	<?php module_form::print_form_auth(); ?>
-	<input type="hidden" name="_process" value="save_user"/>
 	<!-- <input type="hidden" name="_redirect" value="<?php echo $module->link( "", array( "saved"   => true,
 	                                                                                       "user_id" => ( (int) $user_id ) ? $user_id : ''
 	) ); ?>" /> -->
-	<input type="hidden" name="user_id" value="<?php echo $user_id; ?>"/>
-	<input type="hidden" name="<?php echo $use_master_key; ?>" value="<?php echo $user[ $use_master_key ]; ?>"/>
-
 
 	<?php
 
@@ -319,6 +319,6 @@ if ( isset( $user[ $use_master_key ] ) && $user[ $use_master_key ] ) {
 		),
 	);
 	echo module_form::generate_form_actions( $form_actions );
-	?>
 
-</form>
+	module_form::print_form_close_tag();
+	?>
