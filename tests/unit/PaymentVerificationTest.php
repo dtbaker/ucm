@@ -218,6 +218,36 @@ class PaymentVerificationTest extends TestCase
 		$this->assertTrue( ucm_payment_verification::check_belongs_to( $row, array( 'method_key' => 'stripe' ) )['ok'] );
 	}
 
+	/**
+	 * Stripe and Square both quote in the currency's smallest unit. Sending 1000 for a
+	 * 10 JPY invoice charges a thousand yen.
+	 */
+	public function test_an_ordinary_currency_converts_through_cents() {
+		$this->assertSame( 10000, ucm_payment_verification::to_minor_units( 100.00, 'USD' ) );
+		$this->assertSame( 1, ucm_payment_verification::to_minor_units( 0.01, 'usd' ) );
+		$this->assertSame( 100.00, ucm_payment_verification::from_minor_units( 10000, 'USD' ) );
+	}
+
+	public function test_a_zero_decimal_currency_is_not_multiplied() {
+		$this->assertSame( 1000, ucm_payment_verification::to_minor_units( 1000, 'JPY' ) );
+		$this->assertSame( 1000.0, ucm_payment_verification::from_minor_units( 1000, 'jpy' ) );
+	}
+
+	public function test_float_error_does_not_lose_a_cent() {
+		// 1.15 * 100 is 114.99999999999999 in binary floating point.
+		$this->assertSame( 115, ucm_payment_verification::to_minor_units( 1.15, 'USD' ) );
+		$this->assertSame( 8090, ucm_payment_verification::to_minor_units( 80.90, 'EUR' ) );
+	}
+
+	public function test_a_converted_amount_round_trips() {
+		foreach ( array( 0.01, 1.15, 80.90, 100.00, 12345.67 ) as $amount ) {
+			$this->assertSame(
+				$amount,
+				ucm_payment_verification::from_minor_units( ucm_payment_verification::to_minor_units( $amount, 'USD' ), 'USD' )
+			);
+		}
+	}
+
 	public function test_missing_arrays_do_not_fatal() {
 		$result = ucm_payment_verification::check( array(), array() );
 

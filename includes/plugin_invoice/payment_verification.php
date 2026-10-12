@@ -156,6 +156,52 @@ class ucm_payment_verification
 	}
 
 	/**
+	 * Currencies quoted without a fractional part.
+	 *
+	 * Stripe and Square both take and return amounts in the currency's smallest unit, and
+	 * both use this same list. Sending 1000 for a 10 JPY invoice charges a thousand yen,
+	 * so it is worth getting right in one place rather than in each gateway.
+	 *
+	 * @return array
+	 */
+	public static function zero_decimal_currencies() {
+		return array(
+			'BIF', 'CLP', 'DJF', 'GNF', 'JPY', 'KMF', 'KRW', 'MGA',
+			'PYG', 'RWF', 'UGX', 'VND', 'VUV', 'XAF', 'XOF', 'XPF',
+		);
+	}
+
+	/**
+	 * @param float  $amount
+	 * @param string $currency_code
+	 *
+	 * @return int
+	 */
+	public static function to_minor_units( $amount, $currency_code ) {
+		if ( in_array( strtoupper( trim( (string) $currency_code ) ), self::zero_decimal_currencies(), true ) ) {
+			return (int) round( (float) $amount );
+		}
+
+		return (int) round( (float) $amount * 100 );
+	}
+
+	/**
+	 * @param int    $amount
+	 * @param string $currency_code
+	 *
+	 * @return float
+	 */
+	public static function from_minor_units( $amount, $currency_code ) {
+		if ( in_array( strtoupper( trim( (string) $currency_code ) ), self::zero_decimal_currencies(), true ) ) {
+			return (float) $amount;
+		}
+
+		// Cast: PHP's / returns an int when the division comes out even, and a caller
+		// comparing against a float amount should not have to care.
+		return (float) ( ( (int) $amount ) / 100 );
+	}
+
+	/**
 	 * Is this payment row the one the notification is talking about?
 	 *
 	 * A gateway's notification endpoint is public. Nothing stops a Stripe webhook

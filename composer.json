@@ -5,7 +5,8 @@
     "license": "proprietary",
     "require": {
         "php": "^8.4",
-        "ezyang/htmlpurifier": "^4.19"
+        "ezyang/htmlpurifier": "^4.19",
+        "stripe/stripe-php": "^17.0"
     },
     "require-dev": {
         "pheromone/phpcs-security-audit": "^2.0",

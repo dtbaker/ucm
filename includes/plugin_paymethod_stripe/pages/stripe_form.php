@@ -25,7 +25,8 @@ if ( isset( $_POST['stripeToken'] ) && isset( $invoice_payment_data ) && $invoic
 	$token = $_POST['stripeToken'];
 
 	if ( module_config::c( 'stripe_payment_debug', 0 ) ) {
-		send_error( "Stripe Debug, receiving a payment via web form " . var_export( $charge, true ) );
+		// This used to var_export( $charge ) - four lines before $charge is assigned.
+		send_error( "Stripe Debug, receiving a payment via web form for invoice payment " . (int) $invoice_payment_id );
 	}
 	// Create the charge on Stripe's servers - this will charge the user's card
 	try {

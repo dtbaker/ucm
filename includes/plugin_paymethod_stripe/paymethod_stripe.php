@@ -24,21 +24,26 @@ class module_paymethod_stripe extends module_base
 	}
 
 	/**
-	 * Declared so the library shows up in the registry as a bundled copy. It is NOT on
-	 * Composer yet: the version here is stripe-php 1.x, whose class names
-	 * (Stripe_Charge and friends) no longer exist in any current release, so swapping it
-	 * is a rewrite of the payment flow rather than a change of where the files live.
+	 * No bundled fallback, deliberately.
+	 *
+	 * The copy in includes/plugin_paymethod_stripe/stripe-php is 1.11.0, from 2014. It
+	 * predates namespaces entirely (Stripe_Charge, not \Stripe\Charge) and it speaks the
+	 * Charges API, which Stripe no longer accepts from new integrations at all. It cannot
+	 * stand in for the modern SDK, so it is not declared as a fallback here - it is still
+	 * on disk and still loaded by name on the legacy paths below, which is a different
+	 * thing.
 	 *
 	 * @return array
 	 */
 	public function third_party_libraries() {
 		return array(
 			'stripe' => array(
-				'name'    => 'Stripe PHP',
-				'package' => 'stripe/stripe-php',
-				'class'   => 'Stripe',
-				'bundled' => 'includes/plugin_paymethod_stripe/stripe-php/lib/Stripe.php',
-				'feature' => 'Stripe credit card payments',
+				'name'       => 'Stripe PHP',
+				'package'    => 'stripe/stripe-php',
+				'constraint' => '^17.0',
+				'class'      => 'Stripe\\StripeClient',
+				'bundled'    => '',
+				'feature'    => 'Stripe Checkout payments',
 			),
 		);
 	}
@@ -181,6 +186,203 @@ class module_paymethod_stripe extends module_base
 		}
 		$payment_data[ $key ][] = $val;
 		update_insert( 'invoice_payment_id', $invoice_payment_id, 'invoice_payment', array( 'data' => serialize( $payment_data ) ) );
+	}
+
+	/**
+	 * Is the modern Stripe SDK available to us?
+	 *
+	 * @return bool
+	 */
+	public static function have_sdk() {
+		return class_exists( 'ucm_libraries', false ) && ucm_libraries::have( 'stripe' );
+	}
+
+	/**
+	 * Should this install take payments through Checkout Sessions?
+	 *
+	 * Yes, unless the SDK is missing or an admin has deliberately gone back to the old
+	 * flow. The escape hatch exists because 5,000 installs upgrade at once and "there is
+	 * a checkbox" is a better answer to a surprise than "open a support ticket".
+	 *
+	 * @return bool
+	 */
+	public static function use_checkout_sessions() {
+		if ( module_config::c( 'payment_method_stripe_legacy_checkout', 0 ) ) {
+			return false;
+		}
+
+		return self::have_sdk();
+	}
+
+	/**
+	 * @return string
+	 */
+	public static function secret_key() {
+		return trim( (string) module_config::c( 'payment_method_stripe_secret_key', '' ) );
+	}
+
+	/**
+	 * Stripe keys carry their own mode, so there is no separate sandbox setting to get
+	 * out of step with the keys.
+	 *
+	 * @return bool
+	 */
+	public static function is_sandbox() {
+		return strpos( self::secret_key(), 'sk_live' ) !== 0;
+	}
+
+	/**
+	 * @return \Stripe\StripeClient
+	 */
+	public static function stripe_client() {
+		return new \Stripe\StripeClient( self::secret_key() );
+	}
+
+	/**
+	 * The URL to paste into Stripe as the webhook endpoint.
+	 *
+	 * Shown on the settings page, because it differs per install depending on how
+	 * _EXTERNAL_TUNNEL is configured and nobody can be expected to guess it.
+	 *
+	 * @return string
+	 */
+	public static function webhook_url() {
+		return full_link( _EXTERNAL_TUNNEL . '?m=paymethod_stripe&h=event_ipn' );
+	}
+
+	/**
+	 * Where Stripe sends the payer back to once Checkout is done.
+	 *
+	 * @param int  $invoice_payment_id
+	 * @param bool $h return the hash rather than the link
+	 *
+	 * @return string
+	 */
+	public static function link_checkout_complete( $invoice_payment_id, $h = false ) {
+		if ( $h ) {
+			return md5( 'stripe checkout complete ' . _UCM_SECRET . ' ' . (int) $invoice_payment_id );
+		}
+
+		return full_link( _EXTERNAL_TUNNEL . '?m=paymethod_stripe&h=complete&i=' . (int) $invoice_payment_id . '&hash=' . self::link_checkout_complete( $invoice_payment_id, true ) );
+	}
+
+	/**
+	 * Hand the payer to a Stripe-hosted Checkout page.
+	 *
+	 * This replaces a form on the merchant's own domain that POSTed a card token to the
+	 * Charges API. Stripe does not accept that from a new integration at all any more,
+	 * and where it still works it has no way to answer an SCA challenge, so EEA and UK
+	 * cards decline with authentication_required and the payer has no retry path.
+	 *
+	 * Never returns on the success path.
+	 *
+	 * @param int    $invoice_id
+	 * @param float  $payment_amount
+	 * @param int    $invoice_payment_id
+	 * @param array  $invoice_payment_data
+	 * @param string $description
+	 *
+	 * @return bool
+	 */
+	public static function start_checkout_session( $invoice_id, $payment_amount, $invoice_payment_id, $invoice_payment_data, $description ) {
+		if ( self::secret_key() === '' ) {
+			echo htmlspecialchars( _l( 'This site is not finished setting up card payments. Please contact us to arrange payment another way.' ) );
+			exit;
+		}
+
+		$currency      = module_config::get_currency( $invoice_payment_data['currency_id'] );
+		$currency_code = isset( $currency['code'] ) ? $currency['code'] : 'USD';
+
+		try {
+			$session = self::stripe_client()->checkout->sessions->create( array(
+				'mode'                => 'payment',
+				// Echoed back on both the return and the webhook, and checked against
+				// the row before anything is recorded.
+				'client_reference_id' => (string) (int) $invoice_payment_id,
+				'line_items'          => array(
+					array(
+						'quantity'   => 1,
+						'price_data' => array(
+							'currency'     => strtolower( $currency_code ),
+							'unit_amount'  => ucm_payment_verification::to_minor_units( $payment_amount, $currency_code ),
+							'product_data' => array(
+								'name' => $description,
+							),
+						),
+					),
+				),
+				'metadata'            => array(
+					'invoice_id'         => (string) (int) $invoice_id,
+					'invoice_payment_id' => (string) (int) $invoice_payment_id,
+				),
+				'success_url'         => self::link_checkout_complete( $invoice_payment_id ) . '&session_id={CHECKOUT_SESSION_ID}',
+				'cancel_url'          => module_invoice::link_public( $invoice_id ),
+			) );
+		} catch ( Exception $e ) {
+			module_invoice::add_payment_data( $invoice_payment_id, 'log', 'Stripe refused to open a Checkout Session: ' . $e->getMessage() );
+			send_error( 'Stripe Checkout Session could not be created for invoice payment ' . (int) $invoice_payment_id . ': ' . $e->getMessage() );
+			echo htmlspecialchars( _l( 'Sorry, we could not start this payment. Please try again, or contact us.' ) );
+			exit;
+		}
+
+		module_invoice::add_payment_data( $invoice_payment_id, 'log', 'Stripe Checkout Session ' . $session->id . ' opened for ' . number_format( (float) $payment_amount, 2 ) . ' ' . $currency_code . '.' );
+		redirect_browser( $session->url );
+
+		return true;
+	}
+
+	/**
+	 * Read a Checkout Session back from Stripe and record the payment it represents.
+	 *
+	 * The retrieve is authenticated with the secret key, so whatever comes back is
+	 * Stripe's own account of what happened rather than anything the caller supplied.
+	 * That is what makes this safe to call from both the payer's return and the webhook,
+	 * and verify_and_record() makes it safe to call twice.
+	 *
+	 * @param string $session_id
+	 * @param int    $expect_invoice_payment_id 0 to accept whatever the session says
+	 *
+	 * @return array the verification result
+	 */
+	public static function record_checkout_session( $session_id, $expect_invoice_payment_id = 0 ) {
+		$session_id = trim( (string) $session_id );
+		if ( ! preg_match( '#^cs_[A-Za-z0-9_]+$#', $session_id ) ) {
+			return array( 'ok' => false, 'code' => 'bad_session_id', 'message' => 'Not a Stripe Checkout Session id.', 'amount' => 0, 'flags' => array() );
+		}
+
+		try {
+			$session = self::stripe_client()->checkout->sessions->retrieve( $session_id, array( 'expand' => array( 'payment_intent' ) ) );
+		} catch ( Exception $e ) {
+			return array( 'ok' => false, 'code' => 'retrieve_failed', 'message' => 'Stripe would not return this session: ' . $e->getMessage(), 'amount' => 0, 'flags' => array() );
+		}
+
+		$invoice_payment_id = (int) $session->client_reference_id;
+		if ( $expect_invoice_payment_id && $invoice_payment_id !== (int) $expect_invoice_payment_id ) {
+			return array( 'ok' => false, 'code' => 'wrong_payment', 'message' => 'This Checkout Session belongs to a different payment.', 'amount' => 0, 'flags' => array() );
+		}
+
+		// The PaymentIntent id is the same on the return and on every webhook delivery,
+		// so it is what de-duplication keys on. A session that somehow has none falls
+		// back to its own id rather than arriving without a reference at all.
+		$payment_intent = isset( $session->payment_intent ) ? $session->payment_intent : null;
+		$transaction_id = is_object( $payment_intent ) ? (string) $payment_intent->id : (string) $payment_intent;
+		if ( $transaction_id === '' ) {
+			$transaction_id = (string) $session->id;
+		}
+
+		$payload = array(
+			'amount'         => ucm_payment_verification::from_minor_units( $session->amount_total, $session->currency ),
+			'currency'       => (string) $session->currency,
+			'transaction_id' => $transaction_id,
+			'paid'           => ( $session->payment_status === 'paid' ),
+			'test'           => ! $session->livemode,
+		);
+
+		return module_invoice::verify_and_record( $invoice_payment_id, $payload, array(
+			'method_key' => self::get_payment_method_key(),
+			'invoice_id' => isset( $session->metadata['invoice_id'] ) ? (int) $session->metadata['invoice_id'] : 0,
+			'sandbox'    => self::is_sandbox(),
+		) );
 	}
 
 	public static function start_payment( $invoice_id, $payment_amount, $invoice_payment_id, $user_id = false ) {
@@ -493,6 +695,15 @@ class module_paymethod_stripe extends module_base
 			}
 
 			$description = _l( 'Payment for invoice %s', $invoice_data['name'] );
+
+			if ( self::use_checkout_sessions() ) {
+				return self::start_checkout_session( $invoice_id, $payment_amount, $invoice_payment_id, $invoice_payment_data, $description );
+			}
+
+			// The Charges API form. Kept only for an install whose vendor/ folder has not
+			// arrived yet, or whose admin has deliberately switched back. Stripe will not
+			// accept this from an account opened today, and it cannot answer an SCA
+			// challenge, so EEA and UK cards decline on it with no retry path.
 			//self::stripe_redirect($description,$payment_amount,$user_id,$invoice_payment_id,$invoice_id,$invoice_payment_data['currency_id']);
 			$currency      = module_config::get_currency( $invoice_payment_data['currency_id'] );
 			$currency_code = $currency['code'];
@@ -507,9 +718,113 @@ class module_paymethod_stripe extends module_base
 		return false;
 	}
 
+	/**
+	 * Handle a Stripe webhook for a Checkout Session.
+	 *
+	 * Returns true when it dealt with the delivery and has already answered Stripe.
+	 * Returns false to let the legacy subscription handler below have a look, which is
+	 * the only reason this is not simply the whole of event_ipn.
+	 *
+	 * @return bool
+	 */
+	private static function handle_checkout_webhook() {
+		$body      = (string) @file_get_contents( 'php://input' );
+		$secret    = trim( (string) module_config::c( 'payment_method_stripe_webhook_secret', '' ) );
+		$signature = isset( $_SERVER['HTTP_STRIPE_SIGNATURE'] ) ? (string) $_SERVER['HTTP_STRIPE_SIGNATURE'] : '';
+		$event     = null;
+
+		if ( $secret !== '' ) {
+			try {
+				$event = \Stripe\Webhook::constructEvent( $body, $signature, $secret );
+			} catch ( Exception $e ) {
+				// Wrong signature, no signature, or outside the timestamp tolerance.
+				// Stripe retries a non-2xx, which is the correct outcome if this was a
+				// real delivery and something is misconfigured.
+				header( 'HTTP/1.1 400 Bad Request' );
+				echo 'Signature verification failed.';
+
+				return true;
+			}
+		} else {
+			// No signing secret configured yet. Rather than fail closed - which would
+			// silently drop real payments on every install that upgrades - fall back to
+			// what this endpoint has always done: take the event id from the body and
+			// re-fetch the event with the secret key. A forged body cannot invent an
+			// event that way, so it is sound; it just has no replay protection, which is
+			// why the settings page asks for the secret.
+			$posted   = json_decode( $body, true );
+			$event_id = is_array( $posted ) && isset( $posted['id'] ) ? (string) $posted['id'] : '';
+			if ( ! preg_match( '#^evt_[A-Za-z0-9_]+$#', $event_id ) ) {
+				return false;
+			}
+			try {
+				$event = self::stripe_client()->events->retrieve( $event_id );
+			} catch ( Exception $e ) {
+				return false;
+			}
+		}
+
+		if ( ! $event || $event->type !== 'checkout.session.completed' ) {
+			return false;
+		}
+
+		$session = $event->data->object;
+		$result  = self::record_checkout_session( isset( $session->id ) ? $session->id : '' );
+
+		if ( $secret === '' ) {
+			$invoice_payment_id = isset( $session->client_reference_id ) ? (int) $session->client_reference_id : 0;
+			if ( $invoice_payment_id ) {
+				module_invoice::add_payment_data( $invoice_payment_id, 'log', 'Webhook accepted without a signing secret (compatibility mode). Set the Stripe webhook signing secret in Settings to turn signature checking on.' );
+			}
+		}
+
+		// Stripe only needs a 2xx. It does not need to be told what we did with it, and
+		// this endpoint is public.
+		echo $result['ok'] ? 'Payment recorded.' : 'Nothing to do.';
+
+		return true;
+	}
+
 	public function external_hook( $hook ) {
 		switch ( $hook ) {
+			case 'complete':
+				// Stripe sends the payer back here once Checkout is done. The payment is
+				// recorded from an authenticated re-fetch rather than from anything in
+				// this request, so a payer who edits the URL achieves nothing - and
+				// because it is the same idempotent path the webhook uses, an install
+				// whose webhook never arrives (no public URL, blocked outbound, a host
+				// that eats the raw body) still records its payments.
+				$invoice_payment_id = isset( $_REQUEST['i'] ) ? (int) $_REQUEST['i'] : 0;
+				$hash               = isset( $_REQUEST['hash'] ) ? (string) $_REQUEST['hash'] : '';
+				$session_id         = isset( $_REQUEST['session_id'] ) ? (string) $_REQUEST['session_id'] : '';
+
+				if ( ! $invoice_payment_id || ! hash_equals( self::link_checkout_complete( $invoice_payment_id, true ), $hash ) ) {
+					echo htmlspecialchars( _l( 'Sorry, this payment link is not valid.' ) );
+					exit;
+				}
+
+				$payment = get_single( 'invoice_payment', 'invoice_payment_id', $invoice_payment_id );
+				if ( ! $payment ) {
+					echo htmlspecialchars( _l( 'Sorry, this payment link is not valid.' ) );
+					exit;
+				}
+
+				if ( $session_id !== '' && self::have_sdk() ) {
+					self::record_checkout_session( $session_id, $invoice_payment_id );
+				}
+
+				redirect_browser( module_invoice::link_public_payment_complete( $payment['invoice_id'] ) );
+				exit;
 			case 'event_ipn':
+				if ( self::use_checkout_sessions() && self::handle_checkout_webhook() ) {
+					exit;
+				}
+				if ( ! module_config::c( 'payment_method_stripe_subscriptions', 0 ) ) {
+					// Nothing else here handles anything, and answering 2xx stops Stripe
+					// retrying a delivery we are never going to do anything with.
+					echo 'OK';
+					exit;
+				}
 				require_once( 'includes/plugin_paymethod_stripe/stripe-php/lib/Stripe.php' );
 
 				$stripe = array(
@@ -523,14 +838,9 @@ class module_paymethod_stripe extends module_base
 				$event_json = json_decode( $body );
 
 				ob_start();
-				//                 echo "INPUT: <br>\n";
-				//                 print_r($body);
-				//                 echo "<br><br>\n";
-				echo "UCM STRIPE DEBUG:<br><br>JSON: <br>\n";
-				print_r( $event_json );
-				echo "<br><br>\n";
-
-				$event_id = $event_json->id;
+				// The request body is attacker-controlled and this endpoint is public,
+				// so it does not get echoed back, not even into the debug buffer.
+				$event_id = isset( $event_json->id ) ? (string) $event_json->id : '';
 				try {
 					$event = Stripe_Event::retrieve( $event_id );
 					// This will send receipts on succesful invoices

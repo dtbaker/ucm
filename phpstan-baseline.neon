@@ -3637,12 +3637,6 @@ parameters:
 			path: includes/plugin_paymethod_stripe/pages/stripe_form.php
 
 		-
-			message: '#^Variable \$charge might not be defined\.$#'
-			identifier: variable.undefined
-			count: 1
-			path: includes/plugin_paymethod_stripe/pages/stripe_form.php
-
-		-
 			message: '#^Variable \$currency_code might not be defined\.$#'
 			identifier: variable.undefined
 			count: 2
@@ -3669,7 +3663,7 @@ parameters:
 		-
 			message: '#^Variable \$invoice_payment_id might not be defined\.$#'
 			identifier: variable.undefined
-			count: 5
+			count: 6
 			path: includes/plugin_paymethod_stripe/pages/stripe_form.php
 
 		-
