@@ -694,8 +694,16 @@ Comment: {COMMENT}
 
 		} elseif ( 'download' == $_REQUEST['_process'] ) {
 			@ob_end_clean();
-			$file_id   = (int) $_REQUEST['file_id'];
+			$file_id   = isset( $_REQUEST['file_id'] ) ? (int) $_REQUEST['file_id'] : 0;
 			$file_data = $this->get_file( $file_id );
+			// get_file() hands back a blank "new file" array both when the id does not
+			// exist and when this user is not allowed to see it, and that array has no
+			// file_path at all - so reaching for one warned twice under E_ALL and printed
+			// both warnings above the "Not found" the caller was meant to get.
+			if ( ! $file_id || empty( $file_data['file_id'] ) || $file_data['file_id'] != $file_id ) {
+				echo 'Not found';
+				exit;
+			}
 			if ( isset( $file_data['file_url'] ) && strlen( $file_data['file_url'] ) ) {
 				redirect_browser( $file_data['file_url'] );
 			} elseif ( is_file( $file_data['file_path'] ) ) {
@@ -1918,6 +1926,14 @@ Comment: {COMMENT}
 					if ( hash_equals( $correct_hash, $hash ) ) {
 						// all good to print a receipt for this payment.
 						$file_data = $this->get_file( $file_id, false );
+						// A link outlives the file it points at. Without this the customer
+						// following an old link got two PHP warnings about the missing
+						// file_path instead of being told the file is gone - the same check
+						// the 'view' hook above already makes.
+						if ( empty( $file_data['file_id'] ) || $file_data['file_id'] != $file_id ) {
+							echo 'Not found';
+							exit;
+						}
 						if ( isset( $file_data['file_url'] ) && strlen( $file_data['file_url'] ) ) {
 							redirect_browser( $file_data['file_url'] );
 						} elseif ( is_file( $file_data['file_path'] ) ) {
