@@ -190,8 +190,17 @@ if ( isset( $_POST['bulk_remove_priority'] ) && $_POST['bulk_remove_priority'] =
 		'id'     => 'process_button_form',
 	) ); ?>
 		<input type="hidden" name="bulk_process_go" value="true">
-		<input type="submit" name="go" id="process_button" value="<?php _e( 'Start Processing Below Tickets' ); ?>"
-		       onclick="this.value='<?php _e( 'Please wait...' ); ?>';">
+		<?php echo module_form::generate_form_actions( array(
+			'elements' => array(
+				array(
+					'type'    => 'save_button',
+					'name'    => 'go',
+					'id'      => 'process_button',
+					'value'   => _l( 'Start Processing Below Tickets' ),
+					'onclick' => "this.value='" . _l( 'Please wait...' ) . "';",
+				),
+			),
+		) ); ?>
 	<?php module_form::print_form_close_tag(); ?>
 
 	<table class="tableclass tableclass_full tableclass_rows">

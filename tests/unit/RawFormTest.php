@@ -90,6 +90,64 @@ class RawFormTest extends TestCase
 		'includes/plugin_form/form.php' => 1,
 	);
 
+	/**
+	 * The raw </form> tags that are left, and why.
+	 *
+	 * Opening a form with the helper and closing it by hand only does half the job: the
+	 * point of the helper is that there is one place to change what every form emits, and
+	 * that has to include the end of it. All 164 forms now close with
+	 * module_form::print_form_close_tag().
+	 *
+	 * What is left is the closing half of the RESIDUE forms above, plus the theme login
+	 * pages - those are str_replace() arguments rewriting markup that has already been
+	 * generated, not a form being printed, which is why there are two in each.
+	 */
+	private const CLOSE_RESIDUE = array(
+		'includes/plugin_contract/contract.php'                  => 1,
+		'includes/plugin_invoice/invoice.php'                    => 1,
+		'includes/plugin_member/member.php'                      => 1,
+		'includes/plugin_newsletter/newsletter.php'              => 1,
+		'includes/plugin_paymethod_paypal/paymethod_paypal.php'  => 1,
+		'includes/plugin_paymethod_stripe/paymethod_stripe.php'  => 1,
+		'includes/plugin_quote/quote.php'                        => 1,
+		'includes/plugin_form/form.php'                          => 1,
+
+		'includes/plugin_paymethod_authorize/anet_php_1.1.8/lib/AuthorizeNetDPM.php' => 1,
+		'includes/plugin_paymethod_multisafepay/MultiSafepay.combined.php'           => 3,
+
+		// str_replace( '</form>', ... ) - rewriting generated markup, not printing a form.
+		'includes/plugin_theme/themes/blue/pages/login.php'        => 2,
+		'includes/plugin_theme/themes/left/pages/login.php'        => 2,
+		'includes/plugin_theme/themes/metis/pages/login.php'       => 2,
+		'includes/plugin_theme/themes/pro/pages/login.php'         => 2,
+		'includes/plugin_theme/themes/whitelabel1/pages/login.php' => 2,
+	);
+
+	public function test_every_form_is_closed_by_the_helper_too() {
+		$counts = array();
+		foreach ( self::source_files() as $file ) {
+			$source = file_get_contents( _UCM_FOLDER . $file );
+			if ( false === $source ) {
+				continue;
+			}
+			$n = preg_match_all( '#</form>#i', $source );
+			if ( $n ) {
+				$counts[ $file ] = $n;
+			}
+		}
+		ksort( $counts );
+		$expected = self::CLOSE_RESIDUE;
+		ksort( $expected );
+
+		$this->assertSame( $expected, $counts, "\n"
+			. "The set of hand-written </form> tags has changed. Close a form with\n"
+			. "module_form::print_form_close_tag() rather than printing the tag, so there stays\n"
+			. "one place to change what every form emits at both ends. If a file genuinely\n"
+			. "cannot - a database template body, third-party code, or a str_replace() on markup\n"
+			. "that is already generated - add it to RawFormTest::CLOSE_RESIDUE with the reason.\n"
+		);
+	}
+
 	public function test_a_raw_form_that_posts_a_write_field_publishes_the_token() {
 		$offenders = array();
 		foreach ( self::forms() as $form ) {

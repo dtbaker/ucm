@@ -274,7 +274,15 @@ if ( isset( $_REQUEST['process_upgrade'] ) && isset( $_REQUEST['via_ajax'] ) ) {
 
 	<?php module_form::print_form_open_tag( array( 'action' => '' ) ); ?>
 		<input type="hidden" name="run_upgrade" value="true">
-		<input type="submit" name="go" value="<?php _e( 'Complete Upgrade Process' ); ?>" class="submit_button">
+		<?php echo module_form::generate_form_actions( array(
+			'elements' => array(
+				array(
+					'type'  => 'save_button',
+					'name'  => 'go',
+					'value' => _l( 'Complete Upgrade Process' ),
+				),
+			),
+		) ); ?>
 	<?php module_form::print_form_close_tag(); ?>
 	<?php
 
