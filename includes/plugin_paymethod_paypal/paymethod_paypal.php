@@ -1,6 +1,7 @@
 <?php
 
 require_once( dirname( __FILE__ ) . '/orders.php' );
+require_once( dirname( __FILE__ ) . '/recurring.php' );
 
 //306412171 ucm_1306412206_per@gmail.com
 
@@ -353,6 +354,78 @@ class module_paymethod_paypal extends module_base
 
 	}
 
+	/**
+	 * Can this install offer a PayPal subscription?
+	 *
+	 * Only the admin setting gates it, because recurring payments do not go through the
+	 * Orders v2 rewrite - they use PayPal's subscription buttons and come back by IPN, so
+	 * they work with nothing but the PayPal email address, exactly as they always have.
+	 * That inconsistency is deliberate and the settings page says so.
+	 *
+	 * @return bool
+	 */
+	public static function subscriptions_available() {
+		return (bool) module_config::c( 'payment_method_paypal_subscriptions', 0 );
+	}
+
+	/**
+	 * The UCM subscription an invoice was generated from, if any.
+	 *
+	 * @param int $invoice_id
+	 *
+	 * @return array|false id, name, days, months, years and the PayPal period mapping
+	 */
+	public static function invoice_subscription( $invoice_id ) {
+		if ( ! class_exists( 'module_subscription', false ) ) {
+			return false;
+		}
+		$subscription_history = get_single( 'subscription_history', 'invoice_id', $invoice_id );
+		if ( ! $subscription_history || empty( $subscription_history['subscription_id'] ) ) {
+			return false;
+		}
+		$subscription       = module_subscription::get_subscription( $subscription_history['subscription_id'] );
+		$subscription_owner = module_subscription::get_subscription_owner( $subscription_history['subscription_owner_id'] );
+		if ( ! $subscription || ! $subscription_owner || empty( $subscription_owner['owner_table'] ) || empty( $subscription_owner['owner_id'] ) ) {
+			return false;
+		}
+		// The owner still has to hold this subscription - an invoice can outlive the
+		// attachment it was generated from.
+		$members_subscriptions = module_subscription::get_subscriptions_by( $subscription_owner['owner_table'], $subscription_owner['owner_id'] );
+		if ( ! isset( $members_subscriptions[ $subscription_history['subscription_id'] ] ) ) {
+			return false;
+		}
+
+		return array(
+			'id'       => (int) $subscription_history['subscription_id'],
+			'name'     => isset( $subscription['name'] ) ? $subscription['name'] : '',
+			'days'     => (int) $subscription['days'],
+			'months'   => (int) $subscription['months'],
+			'years'    => (int) $subscription['years'],
+			'settings' => isset( $subscription['settings'] ) ? $subscription['settings'] : array(),
+			'period'   => ucm_paypal_recurring::period( $subscription['days'], $subscription['months'], $subscription['years'] ),
+		);
+	}
+
+	/**
+	 * @param array $subscription as returned by invoice_subscription()
+	 *
+	 * @return array
+	 */
+	private static function period_in_words( $subscription ) {
+		$bits = array();
+		if ( $subscription['days'] > 0 ) {
+			$bits[] = _l( '%s days', $subscription['days'] );
+		}
+		if ( $subscription['months'] > 0 ) {
+			$bits[] = _l( '%s months', $subscription['months'] );
+		}
+		if ( $subscription['years'] > 0 ) {
+			$bits[] = _l( '%s years', $subscription['years'] );
+		}
+
+		return $bits;
+	}
+
 	public static function start_payment( $invoice_id, $payment_amount, $invoice_payment_id, $user_id = false ) {
 		if ( $invoice_id && $payment_amount && $invoice_payment_id ) {
 			// we are starting a payment via paypal!
@@ -392,71 +465,19 @@ class module_paymethod_paypal extends module_base
 			}
 
 			// we check if this payment is a recurring payment or a standard one off payment.
-			if ( module_config::c( 'payment_method_paypal_subscriptions', 0 ) ) {
-				// we support subscriptions!
-				// first check if the subscription module is active, and if this invoice is part of an active subscription.
-				$is_subscription = false;
-				if ( class_exists( 'module_subscription', false ) ) {
-					$subscription_history = get_single( 'subscription_history', 'invoice_id', $invoice_id );
-					if ( $subscription_history && $subscription_history['subscription_id'] ) {
-						// this invoice is for a subscription! woo!
-						// work out when we should bill for this subscription.
-						$subscription       = module_subscription::get_subscription( $subscription_history['subscription_id'] );
-						$subscription_owner = module_subscription::get_subscription_owner( $subscription_history['subscription_owner_id'] );
-						if ( $subscription_owner['owner_table'] && $subscription_owner['owner_id'] ) {
-							// work out when the next invoice will be generated for this subscription.
-							$members_subscriptions = module_subscription::get_subscriptions_by( $subscription_owner['owner_table'], $subscription_owner['owner_id'] );
-							if ( isset( $members_subscriptions[ $subscription_history['subscription_id'] ] ) ) {
-								$member_subscription = $members_subscriptions[ $subscription_history['subscription_id'] ];
-								// everything checks out! good to go....
+			if ( self::subscriptions_available() ) {
+				$subscription = self::invoice_subscription( $invoice_id );
 
-								// for now we just do a basic "EVERY X TIME" subscription
-								// todo: work out how long until next generate date, and set that (possibly smaller) time period as the first portion of the subscription
-								/*echo '<pre>';
-								print_r($subscription_history);
-								print_r($subscription);
-								print_r($subscription_owner);
-								print_r($member_subscription);
-								exit;*/
+				if ( $subscription && $subscription['period']['ok'] ) {
 
-								$is_subscription = array();
-								if ( $subscription['days'] > 0 ) {
-									$is_subscription['days'] = $subscription['days'];
-								}
-								if ( $subscription['months'] > 0 ) {
-									$is_subscription['months'] = $subscription['months'];
-								}
-								if ( $subscription['years'] > 0 ) {
-									$is_subscription['years'] = $subscription['years'];
-								}
-								if ( count( $is_subscription ) ) {
-									$is_subscription['name'] = $subscription['name'];
-								}
-
-							}
-						}
-					}
-				}
-				// todo: check if this invoice has a manual renewal date, perform subscription feature as above.
-
-				if ( $is_subscription ) {
-
-					$bits = array();
-					if ( isset( $is_subscription['days'] ) && $is_subscription['days'] > 0 ) {
-						$bits[] = _l( '%s days', $is_subscription['days'] );
-					}
-					if ( isset( $is_subscription['months'] ) && $is_subscription['months'] > 0 ) {
-						$bits[] = _l( '%s months', $is_subscription['months'] );
-					}
-					if ( isset( $is_subscription['years'] ) && $is_subscription['years'] > 0 ) {
-						$bits[] = _l( '%s years', $is_subscription['years'] );
-					}
+					$bits = self::period_in_words( $subscription );
 
 					$invoice_payment_data = module_invoice::get_invoice_payment( $invoice_payment_id );
 					if ( isset( $invoice_payment_data['invoice_payment_subscription_id'] ) && (int) $invoice_payment_data['invoice_payment_subscription_id'] > 0 ) {
-						// existing subscription already!
-						// not really sure what to do here, just redirect to paypal as if the user is doing it for the first time.
-						$_REQUEST['payment_subscription'] = true; // hacks!
+						// This payment already has a subscription row against it, so the
+						// payer has been here before and is coming back to finish. Send
+						// them to PayPal rather than asking the question again.
+						$_REQUEST['payment_subscription'] = true;
 					}
 
 					if ( isset( $_REQUEST['payment_subscription'] ) || module_config::c( 'payment_method_paypal_force_subscription', 0 ) ) {
@@ -464,16 +485,14 @@ class module_paymethod_paypal extends module_base
 
 						// we create an entry in our database for this particular subscription
 						// or if one exists for this payment already then we just continue with that (ie: the user is going in again to redo it)
-
-						// setup a new subscription in the database for us.
 						if ( isset( $invoice_payment_data['invoice_payment_subscription_id'] ) && (int) $invoice_payment_data['invoice_payment_subscription_id'] > 0 ) {
-							$invoice_payment_subscription_id = $invoice_payment_data['invoice_payment_subscription_id'];
+							$invoice_payment_subscription_id = (int) $invoice_payment_data['invoice_payment_subscription_id'];
 						} else {
 							$invoice_payment_subscription_id = update_insert( 'invoice_payment_subscription_id', false, 'invoice_payment_subscription', array(
 								'status'        => _INVOICE_SUBSCRIPTION_PENDING,
-								'days'          => isset( $is_subscription['days'] ) ? $is_subscription['days'] : 0,
-								'months'        => isset( $is_subscription['months'] ) ? $is_subscription['months'] : 0,
-								'years'         => isset( $is_subscription['years'] ) ? $is_subscription['years'] : 0,
+								'days'          => $subscription['days'],
+								'months'        => $subscription['months'],
+								'years'         => $subscription['years'],
 								'date_start'    => '0000-00-00',
 								'date_last_pay' => '0000-00-00',
 								'date_next'     => '0000-00-00',
@@ -483,35 +502,11 @@ class module_paymethod_paypal extends module_base
 							) );
 						}
 
-						$description = _l( 'Recurring payment for %s every %s', $is_subscription['name'], implode( ', ', $bits ) );
-						unset( $is_subscription['name'] ); // so reset/key cals below rosk.
+						$description = _l( 'Recurring payment for %s every %s', $subscription['name'], implode( ', ', $bits ) );
 
 						$currency = module_config::get_currency( $invoice_payment_data['currency_id'] );
 
 						$url = 'https://www.' . ( self::is_sandbox() ? 'sandbox.' : '' ) . 'paypal.com/cgi-bin/webscr?';
-
-						// if there are more than 1 recurring amounts then we convert it to days, as paypal only supports one time period.
-						if ( count( $is_subscription ) > 1 ) {
-							$days = isset( $is_subscription['days'] ) ? $is_subscription['days'] : 0;
-							if ( isset( $is_subscription['months'] ) ) {
-								$days += ( $is_subscription['months'] * 30 );
-								unset( $is_subscription['months'] );
-							}
-							if ( isset( $is_subscription['years'] ) ) {
-								$days += ( $is_subscription['years'] * 365 );
-								unset( $is_subscription['years'] );
-							}
-							$is_subscription['days'] = $days;
-						}
-						reset( $is_subscription );
-						$time = key( $is_subscription );
-						if ( $time == 'days' ) {
-							$time = 'D';
-						} elseif ( $time == 'months' ) {
-							$time = 'M';
-						} elseif ( $time == 'years' ) {
-							$time = 'Y';
-						}
 
 						$fields = array(
 							'cmd'           => '_xclick-subscriptions',
@@ -527,8 +522,8 @@ class module_paymethod_paypal extends module_base
 							'notify_url'    => full_link( _EXTERNAL_TUNNEL . '?m=paymethod_paypal&h=ipn&method=paypal' ),
 							'custom'        => self::paypal_custom( $user_id, $invoice_payment_id, $invoice_id, $invoice_payment_subscription_id ),
 							'a3'            => $payment_amount,
-							'p3'            => current( $is_subscription ),
-							't3'            => $time,
+							'p3'            => $subscription['period']['count'],
+							't3'            => $subscription['period']['unit'],
 							'src'           => 1,
 							'sra'           => 1,
 							'no_note'       => 1,
@@ -547,17 +542,15 @@ class module_paymethod_paypal extends module_base
 							$real_amount    += $real_fee_total;
 							$fields['a3']   = $real_amount;
 							$fields['a1']   = $payment_amount; // $real_amount + (isset($subscription['settings']['trial_price_adjust']) ? $subscription['settings']['trial_price_adjust'] : 0);
-							$fields['p1']   = current( $is_subscription ); // * $subscription['settings']['trial_period'];
-							$fields['t1']   = $time;
+							$fields['p1']   = $subscription['period']['count'];
+							$fields['t1']   = $subscription['period']['unit'];
 						}
-						//echo '<pre>'; print_r($fields);exit;
-
 
 						foreach ( $fields as $key => $val ) {
 							$url .= $key . '=' . urlencode( $val ) . '&';
 						}
 
-						//echo '<a href="'.$url.'">'.$url.'</a>';exit;
+						module_invoice::add_payment_data( $invoice_payment_id, 'log', 'PayPal subscription button opened for ' . number_format( (float) $payment_amount, 2 ) . ' ' . $currency['code'] . ' every ' . $subscription['period']['count'] . $subscription['period']['unit'] . '.' );
 
 						redirect_browser( $url );
 
@@ -599,9 +592,17 @@ class module_paymethod_paypal extends module_base
 						exit;
 					}
 
-
+				} elseif ( $subscription ) {
+					// The subscription has a period PayPal cannot repeat exactly. Rather
+					// than approximate it - a month counted as thirty days, a year as
+					// three hundred and sixty five, which drifts away from UCM's own
+					// schedule a little more every cycle - automatic payments are simply
+					// not offered. The payer pays this invoice once and the scheduled job
+					// generates the next one.
+					module_invoice::add_payment_data( $invoice_payment_id, 'log', 'Automatic payments not offered: ' . $subscription['period']['message'] );
 				}
 			}
+
 
 			$description = _l( 'Payment for Invoice %s', $invoice_data['name'] );
 
