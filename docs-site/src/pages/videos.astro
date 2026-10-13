@@ -1,0 +1,41 @@
+---
+/**
+ * The video library, assembled from every article that carries a `video` id.
+ *
+ * There is nothing to maintain here. Paste an eleven character YouTube id into an
+ * article's frontmatter, commit, and it appears on this page with a link to the article
+ * it belongs to. Remove the id and it disappears.
+ */
+import { getCollection } from 'astro:content';
+import StarlightPage from '@astrojs/starlight/components/StarlightPage.astro';
+import Video from '../components/Video.astro';
+
+const entries = ( await getCollection( 'docs' ) )
+	.filter( ( entry ) => typeof entry.data.video === 'string' && entry.data.video.length === 11 )
+	.sort( ( a, b ) => a.id.localeCompare( b.id ) );
+---
+
+<StarlightPage
+	frontmatter={ {
+		title: 'Videos',
+		description: 'Short walkthroughs of the things people ask about most.',
+	} }
+>
+	{
+		entries.length === 0 ? (
+			<p>
+				There are no videos yet. When there are, every one of them will be listed here
+				automatically.
+			</p>
+		) : (
+			<ul class="ucm-video-index">
+				{ entries.map( ( entry ) => (
+					<li>
+						<Video id={ entry.data.video! } title={ entry.data.title } />
+						<a href={ `/${ entry.id }/` }>{ entry.data.title }</a>
+					</li>
+				) ) }
+			</ul>
+		)
+	}
+</StarlightPage>

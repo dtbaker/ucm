@@ -1,0 +1,132 @@
+---
+title: 'Payment methods'
+description: 'A payment method is how a customer settles an invoice. Some are online gateways that take the money and mark the invoice paid by themselves; others simply tell the customer where to send a bank transfer and wait for you to confirm it.'
+sidebar:
+  order: 3
+offline: true
+help_keys:
+  - config-config_payment
+---
+
+## How they work
+
+Each payment method is a plugin. When one is switched on it offers itself on invoices, and the customer sees it as a button on the invoice they were emailed or on their portal page.
+
+Every method, online or offline, shares the same set of options on its settings screen:
+
+<table><thead><tr><th>Option</th><th>What it does</th></tr></thead><tbody><tr><td>Enable</td><td>Whether this method exists at all. Off means it is never offered and does not appear on invoices.</td></tr><tr><td>Available By Default On Invoices</td><td>On means every new invoice offers it. Off means it exists but has to be ticked on each invoice individually — useful for a method you only offer certain customers.</td></tr><tr><td>Payment Method Label</td><td>What the customer sees. Change “Stripe” to “Pay by card” if that reads better to your customers.</td></tr><tr><td>Which Currencies To Support</td><td>A comma separated list such as <code>AUD,USD</code>. Leave it blank for all. An invoice in a currency not on the list will not offer this method.</td></tr><tr><td>Amount limits</td><td>Offer the method only above or below a given amount. Useful for steering large invoices towards bank transfer and away from card fees.</td></tr></tbody></table>
+
+Online gateways add their credential fields on top of that. Offline methods add a box for the instructions the customer should see.
+
+## Where to find them
+
+_Settings → Payments_ lists every method that is available. Click one to open its own screen and configure it. Switching a method on and filling in its credentials is all that is needed; there is no separate step to publish it.
+
+A method that has been retired does not appear in that list, which is how you can tell at a glance which ones are still current.
+
+## Offline methods
+
+These need no account anywhere and nothing can stop working. They show the customer some text, and you mark the invoice paid yourself when the money arrives.
+
+<table><thead><tr><th>Method</th><th>What to put in the details box</th></tr></thead><tbody><tr><td><strong>Bank transfer</strong></td><td>Your account name, account number, sort code or BSB, IBAN, SWIFT — whatever your customers need to pay you. Ask them to quote the invoice number as the reference.</td></tr><tr><td><strong>Check</strong></td><td>Who to make it payable to and where to post it.</td></tr><tr><td><strong>Other</strong></td><td>Anything that does not fit the two above — cash on collection, an existing direct debit, a purchase order process. The label is yours to set, so this doubles as a way to add a method of your own without writing any code.</td></tr></tbody></table>
+
+The details box accepts formatted text, so you can lay bank details out as a list.
+
+:::note[Marking an offline payment received]
+Open the invoice and add a payment against it. The invoice moves to paid, the customer gets the receipt if you have that template switched on, and the figure appears in your finance reporting like any other.
+:::
+
+## Online gateways
+
+These need an account with the provider. The shape of setting one up is the same for all of them:
+
+1.  ### Create the account
+    
+    Sign up with the provider and complete whatever business verification they ask for. You can usually get test credentials before verification is finished, which means you can set everything up and prove it works while you wait.
+    
+2.  ### Find the credentials
+    
+    Every provider calls these something slightly different but they are always in the developer or API section of their dashboard, and they always come in a test set and a live set.
+    
+3.  ### Paste them in
+    
+    Open that gateway’s screen under _Settings_ and copy each value into the matching field. Start with the test credentials.
+    
+4.  ### Set the webhook, if the gateway uses one
+    
+    A webhook is an address at your site that the provider calls to confirm a payment. The gateway’s settings screen shows the exact address to register; copy it into the provider’s dashboard.
+    
+5.  ### Test it
+    
+    Send yourself an invoice and pay it with a test card. Confirm the invoice shows as paid afterwards.
+    
+6.  ### Swap to live credentials
+    
+    Replace the test values with the live set and take one small real payment to confirm the money arrives.
+    
+
+:::caution[Always test before going live]
+A gateway that is configured but not tested fails at the worst moment — when a customer is trying to pay you. Every provider gives you test card numbers; use them.
+:::
+
+### Stripe
+
+Cards, and in most countries wallets such as Apple Pay and Google Pay without extra setup. Available in most of the world.
+
+From the Stripe dashboard you will need the **publishable key** and the **secret key** for the mode you are configuring, and a **webhook signing secret** for the webhook you register. Stripe keeps test and live keys clearly separated and labels them, so it is hard to mix them up.
+
+If you bill on a repeating schedule, switch on subscriptions on the same screen. That option relies on the webhook, so register it first.
+
+### PayPal
+
+PayPal balance and cards, without the customer needing a PayPal account in most countries. Widely recognised, which helps with customers who are reluctant to type card details into a site they do not know.
+
+From the PayPal developer dashboard you will need a **client ID** and **secret** for your application. PayPal provides a separate sandbox environment with its own set of both, plus test buyer accounts to pay with.
+
+### Square
+
+Cards. Worth choosing if you already use Square for in-person sales, since the money lands in the same account and reconciles together.
+
+From the Square developer dashboard you will need an **access token** and a **location ID**, each of which exists separately for sandbox and production.
+
+:::note[Square is not available everywhere]
+Square does not process payments in every country. Check it covers yours before you plan around it — notably it does not operate in Germany, Italy or the Netherlands.
+:::
+
+### Which to choose
+
+There is no reason to pick only one. Enabling two gives customers a choice and gives you a fallback if one has an outage. A common arrangement is one card gateway plus bank transfer, with an amount limit so that large invoices are steered to the transfer and you do not pay card fees on them.
+
+## Gateways that have been retired
+
+Several gateways are no longer offered for new setup, because the payment APIs they were built against have been discontinued by the providers. Keeping them would mean shipping buttons that cannot take money.
+
+:::tip[Your payment history is safe]
+Retiring a gateway does not touch anything already recorded. Invoices paid through it stay paid, the payment record stays on the invoice, the method name still appears on screen and in reports, and your finance totals are unchanged. What stops is the ability to take a _new_ payment that way.
+:::
+
+If one of your invoices is currently unpaid and was set up to be paid through a retired gateway, open the invoice and tick a different method. The customer’s next reminder then offers the new one.
+
+If you were taking recurring payments through a retired gateway, those subscriptions need to be set up again with a current one. The customer has to re-authorise — a stored card cannot be moved between providers. Plan a short message to those customers explaining why they are being asked.
+
+## Testing
+
+The reliable way to test is end to end:
+
+1.  Create an invoice for a small amount against your own email address.
+2.  Email it to yourself from the invoice screen.
+3.  Open it as the customer would, from the link in the email.
+4.  Pay it with the provider’s test card.
+5.  Confirm the invoice shows as paid and the payment is recorded against it.
+
+Step 5 is the one that matters. A payment taken by the provider but not recorded on the invoice almost always means the webhook is not reaching your site — check that the address registered with the provider matches the one on the gateway’s settings screen exactly, including whether it has `https` and a trailing slash.
+
+## Common problems
+
+<table><thead><tr><th>Symptom</th><th>Usually means</th></tr></thead><tbody><tr><td>The method does not appear on an invoice</td><td>It is off, or not ticked on that invoice, or the invoice currency is not in the supported list, or the amount falls outside the limits you set.</td></tr><tr><td>The customer pays but the invoice stays unpaid</td><td>The webhook is not reaching your site. Check the address registered with the provider, and whether your gateway settings screen shows the same one.</td></tr><tr><td>“Invalid API key” or similar</td><td>Test credentials in live mode or the other way round. Check the key against the mode you are in.</td></tr><tr><td>Cards from Europe or the UK are declined</td><td>Those cards require additional authentication. Make sure you are on the current version of the software, which handles it.</td></tr><tr><td>A subscription stops renewing</td><td>Either the scheduled task is not running (see <a href="/running/scheduled-tasks/">Scheduled tasks</a>) or the stored card has expired. Both show on the subscription record.</td></tr></tbody></table>
+
+## A note on card security
+
+With the gateways above, card details are entered on the provider’s own hosted page or in their own secure field. The numbers never pass through your server and are never stored in your database, which keeps your compliance obligations as light as they can be.
+
+If you are considering any other way of taking cards — including an older gateway that collects the card number on your own domain — be aware that doing so puts you in a much more demanding tier of card industry compliance. The hosted approach is strongly preferable.

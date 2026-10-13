@@ -1,0 +1,113 @@
+---
+/**
+ * A video, loaded only when somebody asks for it.
+ *
+ * An ordinary YouTube <iframe> contacts Google and sets cookies the moment the page
+ * loads, before anyone presses play. On documentation that is partly about not leaking
+ * data that would be a poor look, and in several jurisdictions it is a consent question.
+ *
+ * So this renders a still frame and a play button, and swaps in the real player on click.
+ * Until then the page makes no third party request at all. The still comes from the
+ * build - see scripts/fetch-posters.mjs - so even the thumbnail is served from here.
+ *
+ * Usage, in the frontmatter of an article:   video: dQw4w9WgXcQ
+ * Or inline, anywhere in an .mdx file:       <Video id="dQw4w9WgXcQ" title="..." />
+ */
+interface Props {
+	id: string;
+	title?: string;
+	/** Swap this for another provider later without touching a single article. */
+	provider?: 'youtube';
+}
+
+const { id, title = 'Watch the video', provider = 'youtube' } = Astro.props;
+
+const embed = `https://www.youtube-nocookie.com/embed/${ id }?autoplay=1&rel=0&modestbranding=1`;
+const watch = `https://www.youtube-nocookie.com/watch?v=${ id }`;
+const poster = `/video-posters/${ id }.jpg`;
+---
+
+<figure class="ucm-video" data-embed={ embed } data-provider={ provider }>
+	<button type="button" class="ucm-video-facade" aria-label={ `Play: ${ title }` }>
+		<img src={ poster } alt="" loading="lazy" width="1280" height="720" />
+		<span class="ucm-video-play" aria-hidden="true">▶</span>
+	</button>
+	<figcaption>
+		{ title } —
+		<a href={ watch } target="_blank" rel="noopener noreferrer">open on YouTube</a>
+	</figcaption>
+</figure>
+
+<style>
+	.ucm-video {
+		margin: 1.5rem 0;
+	}
+
+	.ucm-video-facade {
+		position: relative;
+		display: block;
+		width: 100%;
+		padding: 0;
+		border: 1px solid var(--sl-color-gray-5);
+		border-radius: 0.5rem;
+		overflow: hidden;
+		background: var(--sl-color-gray-6);
+		cursor: pointer;
+		line-height: 0;
+	}
+
+	.ucm-video-facade img {
+		width: 100%;
+		height: auto;
+		aspect-ratio: 16 / 9;
+		object-fit: cover;
+	}
+
+	.ucm-video-play {
+		position: absolute;
+		inset: 0;
+		display: grid;
+		place-items: center;
+		font-size: 3rem;
+		line-height: 1;
+		color: #fff;
+		text-shadow: 0 2px 12px rgba(0, 0, 0, 0.6);
+		background: rgba(0, 0, 0, 0.2);
+	}
+
+	.ucm-video-facade:hover .ucm-video-play {
+		background: rgba(0, 0, 0, 0.35);
+	}
+
+	.ucm-video iframe {
+		width: 100%;
+		aspect-ratio: 16 / 9;
+		border: 0;
+		border-radius: 0.5rem;
+	}
+
+	.ucm-video figcaption {
+		margin-top: 0.5rem;
+		font-size: 0.9rem;
+		color: var(--sl-color-gray-3);
+	}
+</style>
+
+<script>
+	// Nothing third party is contacted until this runs, and it only runs on a click.
+	document.querySelectorAll< HTMLElement >( '.ucm-video' ).forEach( ( figure ) => {
+		const facade = figure.querySelector( '.ucm-video-facade' );
+		const embed = figure.dataset.embed;
+		if ( ! facade || ! embed ) {
+			return;
+		}
+		facade.addEventListener( 'click', () => {
+			const frame = document.createElement( 'iframe' );
+			frame.src = embed;
+			frame.allow = 'accelerometer; autoplay; encrypted-media; picture-in-picture';
+			frame.allowFullscreen = true;
+			frame.title = facade.getAttribute( 'aria-label' ) || 'Video';
+			facade.replaceWith( frame );
+		} );
+	} );
+</script>

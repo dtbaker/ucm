@@ -1,0 +1,128 @@
+---
+title: 'The plugin system'
+description: 'Nearly all of Ultimate Client Manager is plugins. The core is small: it loads the plugins, connects to the database, and gets out of the way. Everything you think of as a feature &mdash; customers, invoices, tickets, even the themes &mdash; is a plugin.'
+sidebar:
+  order: 1
+offline: true
+help_keys:
+  - config-config_upgrade
+---
+
+This page is the reference for what ships and how the pieces fit together. You do not need any of it to use the product. It matters if you want to know what a plugin is for, or if you are writing one.
+
+## How plugins are found
+
+Every folder under `includes/` whose name starts with `plugin_` is a plugin, provided it contains a PHP file named after the folder. So `includes/plugin_invoice/` must contain `invoice.php`, and that file defines a class called `module_invoice`.
+
+There is no registry and no list to maintain. Adding a folder in the right shape adds a plugin; removing the folder removes it.
+
+Seven plugins load first, in a fixed order, because everything else depends on them: `core`, `cache`, `db`, `debug`, `config`, `security` and `language`. The rest load afterwards and are ordered by a position number each one declares, which is what sets the order of the menu.
+
+## What a plugin provides
+
+A plugin extends a shared base class and fills in the parts it needs. Nothing is compulsory except a constructor and an `init()` method.
+
+<table><thead><tr><th>Method</th><th>When it is called</th></tr></thead><tbody><tr><td><code>__construct()</code></td><td>At load. Sets the plugin name, its menu position and its version number.</td></tr><tr><td><code>init()</code></td><td>On every request, after all plugins have been constructed. This is where menus are declared, hooks are registered and stylesheets and scripts are added.</td></tr><tr><td><code>get_install_sql()</code></td><td>When the plugin’s tables do not yet exist. Returns the SQL to create them.</td></tr><tr><td><code>get_upgrade_sql()</code></td><td>When the installed version is older than the version in the files. Returns the SQL to bring the schema up to date.</td></tr><tr><td><code>process()</code></td><td>When a form on one of the plugin’s pages is submitted.</td></tr><tr><td><code>handle_hook()</code></td><td>Whenever any part of the system raises a hook. See below.</td></tr><tr><td><code>run_cron()</code></td><td>Each time the scheduled task runs.</td></tr><tr><td><code>external_hook()</code></td><td>For requests that have to work without a login — a payment gateway calling back, or a customer opening an emailed link.</td></tr><tr><td><code>can_i()</code></td><td>Permission check for this plugin’s features.</td></tr><tr><td><code>autocomplete()</code></td><td>Supplies results to the search box at the top of the admin area.</td></tr></tbody></table>
+
+## How plugins talk to each other
+
+Plugins never call each other directly. They use hooks, and there are two kinds.
+
+### Broadcast hooks
+
+Something raises a named hook, every plugin that implements `handle_hook()` is asked about it, and the answers are collected into an array. This is how open-ended questions are asked — for example, when an invoice needs to know which payment methods exist, it raises `get_payment_methods` and each payment plugin that is configured answers.
+
+Other examples: `invoice_paid` fires when an invoice is settled, so other areas can react; `ticket_sidebar` lets any plugin add a panel to the ticket screen.
+
+### Registered callbacks
+
+A plugin can register a specific function against a named hook during `init()`, and it is called when that hook fires. This is used for the points in page rendering where plugins add content — the top of the page, the end of the menu, the foot of the content area.
+
+The practical difference: broadcast hooks ask everybody, registered callbacks only call the plugins that asked to be called. Broadcast is simpler; registered is cheaper and more precise.
+
+## Database tables
+
+A plugin that stores data returns the SQL to create its tables from `get_install_sql()`. The installer runs that the first time, records the plugin’s version number, and from then on compares that recorded number against the version in the files. When the files are newer, `get_upgrade_sql()` is asked for the statements to close the gap, they are run, and the recorded version moves forward.
+
+This is what _Settings → Upgrade → Run Manual Upgrades_ does, one plugin at a time. It is safe to run repeatedly: a plugin already at the current version does nothing.
+
+Of the 65 plugins that ship, 41 own tables. The rest are behaviour only — the payment methods mostly store their settings in the shared configuration table rather than a table of their own.
+
+## Switching a plugin off
+
+A plugin can be disabled by setting a configuration value named `plugin_enabled_` followed by its name to `0` in the `config` database table.
+
+:::caution[There is no screen for this]
+The value has to be set in the database directly, which means phpMyAdmin or similar. If you are not comfortable editing the database, do not disable plugins — most things you might want to hide can be hidden with permissions under _Settings → User Roles_ instead, which is reversible from the interface.
+:::
+
+Disabling a plugin stops it setting itself up on each request, which removes its menu entries, its hooks and its stylesheets. It does not remove it from the system entirely: its scheduled work still runs and it still answers broadcast hooks. It is a way to hide a feature, not to uninstall one. Its tables and data are left alone, so switching it back on restores everything.
+
+## Everything that ships
+
+Sixty five plugins, with the version of each in this release.
+
+### Core and infrastructure
+
+<table><thead><tr><th>Plugin</th><th>Version</th><th>What it does</th></tr></thead><tbody><tr><td><code>core</code></td><td>2.154</td><td>Shared behaviour the rest of the system builds on.</td></tr><tr><td><code>db</code></td><td>2.140</td><td>The database layer.</td></tr><tr><td><code>config</code></td><td>2.435</td><td>Stored settings, the Settings screens, and the upgrade process.</td></tr><tr><td><code>security</code></td><td>2.527</td><td>Login, roles, permissions and HTML sanitising.</td></tr><tr><td><code>session</code></td><td>2.168</td><td>Login sessions, in files or in the database.</td></tr><tr><td><code>form</code></td><td>2.277</td><td>Form rendering and the security token that protects form submissions.</td></tr><tr><td><code>cache</code></td><td>2.232</td><td>Caching.</td></tr><tr><td><code>language</code></td><td>2.181</td><td>Translation of the interface.</td></tr><tr><td><code>setup</code></td><td>2.324</td><td>The installation wizard.</td></tr><tr><td><code>debug</code></td><td>2.121</td><td>The timing and query panel shown in debug mode.</td></tr><tr><td><code>log</code></td><td>2.1</td><td>Activity logging.</td></tr><tr><td><code>hook</code></td><td>2.1</td><td>A placeholder. It does nothing in this release.</td></tr><tr><td><code>api</code></td><td>2.1</td><td>A minimal external access point.</td></tr><tr><td><code>encrypt</code></td><td>2.270</td><td>Public key encryption used for sensitive stored values.</td></tr><tr><td><code>captcha</code></td><td>2.24</td><td>Bot protection on public forms.</td></tr><tr><td><code>backup</code></td><td>2.117</td><td>Database and file backups.</td></tr><tr><td><code>help</code></td><td>2.13</td><td>In-application help links.</td></tr></tbody></table>
+
+### Customers and people
+
+<table><thead><tr><th>Plugin</th><th>Version</th><th>What it does</th></tr></thead><tbody><tr><td><code>customer</code></td><td>2.490</td><td>Customers, customer types such as leads and suppliers, and the customer portal.</td></tr><tr><td><code>user</code></td><td>2.289</td><td>Staff and contact accounts.</td></tr><tr><td><code>address</code></td><td>2.226</td><td>Addresses attached to customers and invoices.</td></tr><tr><td><code>member</code></td><td>2.185</td><td>Membership records.</td></tr><tr><td><code>vendor</code></td><td>2.122</td><td>Suppliers you buy from.</td></tr><tr><td><code>group</code></td><td>2.198</td><td>Grouping records for filtering and bulk actions.</td></tr><tr><td><code>company</code></td><td>2.143</td><td>Running more than one business from one installation.</td></tr></tbody></table>
+
+### Sales and money
+
+<table><thead><tr><th>Plugin</th><th>Version</th><th>What it does</th></tr></thead><tbody><tr><td><code>invoice</code></td><td>2.809</td><td>Invoices, credit notes, tax, currencies and payments. The largest plugin in the system.</td></tr><tr><td><code>quote</code></td><td>2.179</td><td>Quotes, including customer approval.</td></tr><tr><td><code>contract</code></td><td>2.11</td><td>Contracts, built on the same machinery as quotes.</td></tr><tr><td><code>subscription</code></td><td>2.204</td><td>Repeating billing.</td></tr><tr><td><code>product</code></td><td>2.168</td><td>Your product and service list, and categories for it.</td></tr><tr><td><code>finance</code></td><td>2.311</td><td>Income and expense transactions and summary reporting.</td></tr><tr><td><code>statistic</code></td><td>2.167</td><td>Dashboard figures and charts.</td></tr><tr><td><code>signature</code></td><td>2.21</td><td>Drawn signatures for approving quotes and contracts.</td></tr></tbody></table>
+
+### Payment methods
+
+<table><thead><tr><th>Plugin</th><th>Version</th><th>What it does</th></tr></thead><tbody><tr><td><code>paymethod_stripe</code></td><td>2.245</td><td>Card payments through Stripe.</td></tr><tr><td><code>paymethod_paypal</code></td><td>2.261</td><td>PayPal.</td></tr><tr><td><code>paymethod_banktransfer</code></td><td>2.241</td><td>Offline bank transfer instructions.</td></tr><tr><td><code>paymethod_check</code></td><td>2.11</td><td>Offline cheque instructions. Shown in the interface as <em>Check</em>.</td></tr><tr><td><code>paymethod_other</code></td><td>2.12</td><td>Any other offline arrangement, with wording of your own.</td></tr><tr><td><code>paymethod_authorize</code></td><td>2.23</td><td>Authorize.Net. Retired in this release and no longer offered for new setup, so it does not appear under <em>Settings → Payments</em>. Existing payment records are untouched — see <a href="/running/payment-methods/">Payment methods</a>.</td></tr><tr><td><code>paymethod_coinbase</code>, <code>paymethod_multisafepay</code>, <code>paymethod_paynl</code></td><td>2.11, 2.222, 2.2</td><td>Also retired. The code remains so that historical payments still render correctly; none of the three can take a new payment.</td></tr></tbody></table>
+
+### Work and communication
+
+<table><thead><tr><th>Plugin</th><th>Version</th><th>What it does</th></tr></thead><tbody><tr><td><code>job</code></td><td>2.616</td><td>Jobs and the tasks inside them.</td></tr><tr><td><code>job_discussion</code></td><td>2.153</td><td>A comment thread per job.</td></tr><tr><td><code>change_request</code></td><td>2.298</td><td>Requests to change the scope of a job.</td></tr><tr><td><code>timer</code></td><td>2.141</td><td>Time tracking against jobs and tasks.</td></tr><tr><td><code>ticket</code></td><td>2.504</td><td>Support tickets, including collecting replies from a mailbox.</td></tr><tr><td><code>email</code></td><td>2.365</td><td>Sending mail, and the sent mail record.</td></tr><tr><td><code>newsletter</code></td><td>2.469</td><td>Bulk email with its own subscriber lists.</td></tr><tr><td><code>template</code></td><td>2.260</td><td>The editable wording of every email and document.</td></tr><tr><td><code>note</code></td><td>2.278</td><td>Notes attached to any record.</td></tr><tr><td><code>calendar</code></td><td>2.238</td><td>A calendar view, with feeds other calendar software can subscribe to.</td></tr><tr><td><code>faq</code></td><td>2.150</td><td>A question and answer library.</td></tr><tr><td><code>pin</code></td><td>2.12</td><td>Pinning records for quick access.</td></tr><tr><td><code>dashboard</code></td><td>2.142</td><td>The home screen and its panels.</td></tr></tbody></table>
+
+### Data, files and presentation
+
+<table><thead><tr><th>Plugin</th><th>Version</th><th>What it does</th></tr></thead><tbody><tr><td><code>file</code></td><td>2.574</td><td>File uploads attached to records.</td></tr><tr><td><code>data</code></td><td>2.185</td><td>A general purpose structured data store for things the product does not model directly.</td></tr><tr><td><code>extra</code></td><td>2.265</td><td>Custom fields on the built-in record types.</td></tr><tr><td><code>import_export</code></td><td>2.242</td><td>Bulk import and export.</td></tr><tr><td><code>pdf</code></td><td>2.135</td><td>PDF generation for invoices, quotes and statements.</td></tr><tr><td><code>table_sort</code></td><td>2.228</td><td>Sorting, filtering and paging on list screens.</td></tr><tr><td><code>map</code></td><td>2.21</td><td>Showing an address on a map.</td></tr><tr><td><code>website</code></td><td>2.271</td><td>Website records against a customer.</td></tr><tr><td><code>theme</code></td><td>2.407</td><td>Theme selection, custom CSS and the asset pipeline.</td></tr><tr><td><code>theme_adminlte</code></td><td>2.159</td><td>The AdminLTE theme.</td></tr><tr><td><code>theme_blocks</code></td><td>2.129</td><td>The Blocks theme.</td></tr></tbody></table>
+
+## Writing your own
+
+The smallest working plugin is a folder, a file and a class:
+
+```
+includes/plugin_example/example.php
+```
+
+```
+<?php
+
+class module_example extends module_base {
+
+    public function __construct() {
+        $this->module_name     = 'example';
+        $this->module_position = 600;
+        $this->version         = 1.0;
+    }
+
+    public static function get_class() {
+        return __CLASS__;
+    }
+
+    public function init() {
+        $this->links = array(
+            'example_list' => array(
+                'name'  => 'Example',
+                'page'  => 'example_list',
+                'menu'  => true,
+            ),
+        );
+    }
+}
+```
+
+Pages live in `includes/plugin_example/pages/`, named after the page key — so the above looks for `pages/example_list.php`. Add a `get_install_sql()` if you need tables, and run _Settings → Upgrade → Run Manual Upgrades_ to create them.
+
+:::caution[Put your plugin in custom/ if you can]
+A plugin folder you add under `includes/` is at risk from an update that ships a folder of the same name. Overriding an existing plugin is better done through the `custom/` folder — see [Customising](/developers/customising/). For a genuinely new plugin, pick a name that is unlikely to collide.
+:::
