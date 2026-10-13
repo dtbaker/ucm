@@ -886,7 +886,9 @@ class module_form extends module_base
 							} else {
 								$printval = $val;
 							}
-							if ( strlen( $printval ) == 0 ) {
+							// A null option label is an empty one. Reading its length
+							// without saying so deprecates under PHP 8.4.
+							if ( strlen( (string) $printval ) == 0 ) {
 								continue;
 							}
 							$sel .= '<option value="' . htmlspecialchars( $key ) . '"';

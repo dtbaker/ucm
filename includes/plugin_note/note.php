@@ -1,7 +1,14 @@
 <?php
 
+/**
+ * Newest note first.
+ *
+ * This used to return a boolean, which PHP 8.4 deprecates and PHP 9 refuses - and which
+ * was never right anyway: false came back both for "equal" and for "a is later", so two
+ * notes with the same timestamp sorted arbitrarily.
+ */
 function sort_notes( $a, $b ) {
-	return $a['note_time'] < $b['note_time'];
+	return $b['note_time'] <=> $a['note_time'];
 }
 
 class module_note extends module_base
