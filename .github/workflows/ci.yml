@@ -244,6 +244,12 @@ jobs:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           fetch-depth: 0
+      # The build runs `composer install` to put vendor/ in the archive, and the lock file
+      # is for PHP 8.4. Without this the runner's own PHP decides, and it is older.
+      - uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # v2
+        with:
+          php-version: '8.4'
+          coverage: none
       - name: Build it and check its shape
         run: ./scripts/build-release.sh --verify
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
