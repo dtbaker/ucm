@@ -83,6 +83,7 @@ print_heading( 'Stripe Settings' ); ?>
 			'default'     => '',
 			'type'        => 'text',
 			'description' => 'Your Stripe Publishable Key (Test or Live)',
+			'help'        => 'Only used by the old Stripe Checkout. Stripe Checkout and subscriptions both run on the secret key alone, so you can leave this blank unless you have turned the old flow back on.',
 		),
 		array(
 			'key'         => 'payment_method_stripe_webhook_secret',
