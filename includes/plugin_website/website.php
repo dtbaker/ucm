@@ -258,7 +258,7 @@ class module_website extends module_base
 			module_form::reject_invalid_form_auth();
 		}
 		$errors = array();
-		if ( isset( $_REQUEST['butt_del'] ) && $_REQUEST['butt_del'] && $_REQUEST['website_id'] ) {
+		if ( isset( $_REQUEST['butt_del'] ) && $_REQUEST['butt_del'] && $_REQUEST['website_id'] && self::can_i( 'delete', 'Websites' ) ) {
 			$data = self::get_website( $_REQUEST['website_id'] );
 			if ( module_form::confirm_delete( 'website_id', "Really delete " . module_config::c( 'project_name_single', 'Website' ) . ": " . $data['name'], self::link_open( $_REQUEST['website_id'] ) ) ) {
 				$this->delete_website( $_REQUEST['website_id'] );

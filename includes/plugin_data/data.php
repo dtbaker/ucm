@@ -461,7 +461,7 @@ class module_data extends module_base
 			echo 'done';
 			exit;
 		} elseif ( "save_data_type" == $_REQUEST['_process'] ) {
-			if ( isset( $_REQUEST['butt_del'] ) ) {
+			if ( isset( $_REQUEST['butt_del'] ) && self::can_i( 'delete', _MODULE_DATA_NAME ) ) {
 				$data_type_id = (int) $_REQUEST['data_type_id'];
 				if ( module_form::confirm_delete( 'data_type_id', 'Really delete this entire custom data group? All it\'s records and revisions as well?', $this->link( '', array( "data_type_id" => $data_type_id ) ) ) ) {
 					$this->delete_data_type( $data_type_id );

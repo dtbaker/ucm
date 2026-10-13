@@ -319,7 +319,7 @@ class module_member extends module_base
 		if ( ! module_form::check_secure_key() ) {
 			module_form::reject_invalid_form_auth();
 		}
-		if ( isset( $_REQUEST['butt_del'] ) && $_REQUEST['butt_del'] && $_REQUEST['member_id'] ) {
+		if ( isset( $_REQUEST['butt_del'] ) && $_REQUEST['butt_del'] && $_REQUEST['member_id'] && self::can_i( 'delete', 'Members' ) ) {
 			$data = self::get_member( $_REQUEST['member_id'] );
 			if ( module_form::confirm_delete( 'member_id', "Really delete member: " . $data['first_name'] . ' ' . $data['last_name'], self::link_open( $_REQUEST['member_id'] ) ) ) {
 				$this->delete_member( $_REQUEST['member_id'] );

@@ -379,7 +379,7 @@ class module_newsletter extends module_base
 			module_form::reject_invalid_form_auth();
 		}
 		$errors = array();
-		if ( isset( $_REQUEST['butt_del'] ) && $_REQUEST['butt_del'] && $_REQUEST['newsletter_id'] ) {
+		if ( isset( $_REQUEST['butt_del'] ) && $_REQUEST['butt_del'] && $_REQUEST['newsletter_id'] && self::can_i( 'delete', 'Newsletters' ) ) {
 			$data = self::get_newsletter( $_REQUEST['newsletter_id'] );
 			if ( module_form::confirm_delete( 'newsletter_id', "Really delete newsletter: " . $data['subject'], self::link_open( $_REQUEST['newsletter_id'] ) ) ) {
 				$this->delete_newsletter( $_REQUEST['newsletter_id'] );
