@@ -22,6 +22,10 @@ $ucm_upgrade_manager = new ucm_upgrade_manager();
  * established the session.
  */
 $ucm_upgrade_writes = isset( $_REQUEST['save_license_codes'] )
+                      // Checking is not a write, but it reads and hashes every file under
+                      // includes/ and then makes an outbound request, which is not
+                      // something a link in an email should be able to set off either.
+                      || isset( $_REQUEST['check_upgrade'] )
                       || isset( $_REQUEST['install_upgrade'] )
                       || isset( $_REQUEST['process_upgrade'] )
                       || isset( $_REQUEST['run_upgrade'] )
@@ -750,12 +754,7 @@ if ( isset( $_REQUEST['process_upgrade'] ) && isset( $_REQUEST['via_ajax'] ) ) {
 			'elements_after' => module_form::generate_form_actions( $form_actions ),
 		);
 		$url           = module_config::c( 'ucm_upgrade_url', 'https://api.ultimateclientmanager.com/upgrade.php' );
-		if (
-			$url != 'http://ultimateclientmanager.com/api/upgrade.php' &&
-			$url != 'http://api.ultimateclientmanager.com/upgrade.php' &&
-			$url != 'https://ultimateclientmanager.com/api/upgrade.php' &&
-			$url != 'https://api.ultimateclientmanager.com/upgrade.php'
-		) {
+		if ( ! module_config::upgrade_url_is_allowed( $url ) ) {
 			$fieldset_data['elements_before'] = '<div class="error_text text-center">Warning, "ucm_upgrade_url" setting is incorrect. Please contact <a href="http://ultimateclientmanager.com/support/support-ticket/">Support</a></div>';
 		}
 		echo module_form::generate_fieldset( $fieldset_data );
