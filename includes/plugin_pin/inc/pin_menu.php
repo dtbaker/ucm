@@ -22,7 +22,10 @@
 			<?php } ?>
 		</ul>
 
-		<form action="" method="post" id="pin_action_form">
+		<?php module_form::print_form_open_tag( array(
+			'action' => '',
+			'id'     => 'pin_action_form',
+		) ); ?>
 			<input type="hidden" name="pin_process" value="pin_save">
 			<input type="hidden" name="pin_id" id="pin_id" value="">
 			<input type="hidden" name="current_url" value="<?php echo htmlspecialchars( $_SERVER['REQUEST_URI'] ); ?>">

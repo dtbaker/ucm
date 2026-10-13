@@ -44,8 +44,7 @@ print_heading( array(
 ) );
 ?>
 
-<form action="" method="post">
-	<?php module_form::print_form_auth(); ?>
+<?php module_form::print_form_open_tag( array( 'action' => '' ) ); ?>
 	<input type="hidden" name="_process" value="save_data_field"/>
 	<input type="hidden" name="_redirect" value=""/>
 	<input type="hidden" name="data_field_id" value="<?php echo htmlspecialchars( (string) $data_field_id, ENT_QUOTES, 'UTF-8' ); ?>"/>

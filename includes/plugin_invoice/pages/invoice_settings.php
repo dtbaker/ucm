@@ -189,7 +189,7 @@ if ( count( $blank_invoices ) ) {
 		<?php } ?>
 	</ul>
 	You can remove all these invoices manually, or click the button below to remove them automatically.
-	<form action="" method="post">
+	<?php module_form::print_form_open_tag( array( 'action' => '' ) ); ?>
 		<input type="hidden" name="remove_duplicates" value="yes">
 		<input type="submit" value="Remove these <?php echo count( $blank_invoices ); ?> invoices">
 	</form>

@@ -129,7 +129,11 @@ print_heading( array(
 ?>
 
 
-	<form action="" method="post" id="finance_form" class="search_form">
+	<?php module_form::print_form_open_tag( array(
+		'action' => '',
+		'id'     => 'finance_form',
+		'class'  => 'search_form',
+	) ); ?>
 
 		<?php
 		$categories_rel = array();

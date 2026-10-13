@@ -70,11 +70,10 @@ if ( $show_theme_selector ) {
 
 ?>
 
-<form action="" method="post">
+<?php module_form::print_form_open_tag( array( 'action' => '' ) ); ?>
 	<input type="hidden" name="_config_settings_hook" value="save_config">
 
 	<?php
-	module_form::print_form_auth();
 	module_form::prevent_exit( array(
 			'valid_exits' => array(
 				// selectors for the valid ways to exit this form.

@@ -198,7 +198,10 @@ if ( module_finance::can_i( 'create', 'Finance Upcoming' ) ) {
 print_heading( $heading );
 ?>
 
-<form action="" method="post" id="finance_recurring_form">
+<?php module_form::print_form_open_tag( array(
+	'action' => '',
+	'id'     => 'finance_recurring_form',
+) ); ?>
 
 	<?php
 

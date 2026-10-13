@@ -22,7 +22,10 @@ if ( ! $template ) {
 	module_security::sanatise_data( 'template', $template );
 }
 ?>
-<form action="<?php echo module_template::link_open( false ); ?>" method="post" id="template_form">
+<?php module_form::print_form_open_tag( array(
+	'action' => module_template::link_open( false ),
+	'id'     => 'template_form',
+) ); ?>
 
 	<?php
 	module_form::prevent_exit( array(
@@ -53,7 +56,6 @@ if ( ! $template ) {
 	?>
 
 
-	<?php module_form::print_form_auth(); ?>
 	<input type="hidden" name="_process" value="save_template"/>
 	<input type="hidden" name="template_id" value="<?php echo htmlspecialchars( (string) $template_id, ENT_QUOTES, 'UTF-8' ); ?>"/>
 	<input type="hidden" name="return"

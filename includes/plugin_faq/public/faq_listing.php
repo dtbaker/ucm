@@ -14,7 +14,10 @@ $show_product = isset( $_REQUEST['show_product'] ) ? $_REQUEST['show_product'] :
 
 
 <?php if ( $show_search ) { ?>
-	<form action="" method="<?php echo _DEFAULT_FORM_METHOD; ?>">
+	<?php module_form::print_form_open_tag( array(
+		'action' => '',
+		'method' => _DEFAULT_FORM_METHOD,
+	) ); ?>
 
 	<input type="hidden" name="customer_id"
 	       value="<?php echo isset( $_REQUEST['customer_id'] ) ? (int) $_REQUEST['customer_id'] : ''; ?>">

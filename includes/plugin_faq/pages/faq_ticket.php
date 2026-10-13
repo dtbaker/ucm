@@ -32,7 +32,7 @@ if ( ! isset( $_REQUEST['iframe'] ) ) {
 	?>
 
 
-	<form action="" method="POST">
+	<?php module_form::print_form_open_tag( array( 'action' => '' ) ); ?>
 
 	<input type="hidden" name="customer_id"
 	       value="<?php echo isset( $_REQUEST['customer_id'] ) ? (int) $_REQUEST['customer_id'] : ''; ?>">

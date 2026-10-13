@@ -32,7 +32,10 @@ if (
 	die( 'Permission denied' );
 }
 ?>
-<form action="" method="post" id="calendar_event_form">
+<?php module_form::print_form_open_tag( array(
+	'action' => '',
+	'id'     => 'calendar_event_form',
+) ); ?>
 	<?php
 	module_form::set_required( array(
 			'fields' => array(

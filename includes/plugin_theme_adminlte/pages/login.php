@@ -26,7 +26,10 @@
 	<div id="forgot" class="tab-pane">
 		<div class="form-box" id="forgot-box">
 			<div class="header"><?php _e( 'Reset Password' ); ?></div>
-			<form action="" class="form-signin" method="post">
+			<?php module_form::print_form_open_tag( array(
+				'action' => '',
+				'class'  => 'form-signin',
+			) ); ?>
 				<input type="hidden" name="_process_reset" value="true">
 				<div class="body bg-gray">
 					<p
@@ -54,7 +57,10 @@
 	<div id="login" class="tab-pane active">
 		<div class="form-box" id="login-box">
 			<div class="header"><?php _e( 'Sign In' ); ?></div>
-			<form action="" class="form-signin" method="post">
+			<?php module_form::print_form_open_tag( array(
+				'action' => '',
+				'class'  => 'form-signin',
+			) ); ?>
 				<input type="hidden" name="_process_login" value="true">
 				<?php if ( _DEMO_MODE ) { ?>
 					<div class="body bg-gray">

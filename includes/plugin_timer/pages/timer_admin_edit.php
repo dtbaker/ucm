@@ -59,7 +59,7 @@ if ( ! empty( $_GET['timer_segment_id'] ) ) {
 ?>
 
 
-<form action="<?php echo module_timer::link_open( $timer_id ); ?>" method="post">
+<?php module_form::print_form_open_tag( array( 'action' => module_timer::link_open( $timer_id ) ) ); ?>
 	<input type="hidden" name="_process" value="save_timer"/>
 	<input type="hidden" name="timer_id" value="<?php echo $timer_id; ?>"/>
 	<input type="hidden" name="return"
@@ -76,7 +76,6 @@ if ( ! empty( $_GET['timer_segment_id'] ) ) {
 			)
 		)
 	);
-	module_form::print_form_auth();
 	//module_form::set_default_field('timer_description');
 
 

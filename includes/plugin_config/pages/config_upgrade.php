@@ -255,8 +255,7 @@ if ( isset( $_REQUEST['process_upgrade'] ) && isset( $_REQUEST['via_ajax'] ) ) {
 			</ul>
 		</div>
 
-		<form action="" method="post">
-			<?php module_form::print_form_auth(); ?>
+		<?php module_form::print_form_open_tag( array( 'action' => '' ) ); ?>
 			<input type="hidden" name="install_upgrade" value="true">
 			<?php if ( ! isset( $setup_upgrade_hack ) ) {
 				foreach ( $upgrade_plugins as $key => $val ) {
@@ -273,8 +272,7 @@ if ( isset( $_REQUEST['process_upgrade'] ) && isset( $_REQUEST['via_ajax'] ) ) {
 	?>
 	Update has completed! Please click the button below to finish installation:
 
-	<form action="" method="post">
-		<?php module_form::print_form_auth(); ?>
+	<?php module_form::print_form_open_tag( array( 'action' => '' ) ); ?>
 		<input type="hidden" name="run_upgrade" value="true">
 		<input type="submit" name="go" value="<?php _e( 'Complete Upgrade Process' ); ?>" class="submit_button">
 	</form>
@@ -404,7 +402,7 @@ if ( isset( $_REQUEST['process_upgrade'] ) && isset( $_REQUEST['via_ajax'] ) ) {
 			$errors = array();
 			?>
 
-			<form action="" method="post">
+			<?php module_form::print_form_open_tag( array( 'action' => '' ) ); ?>
 				We found <?php count( $available_updates['plugins'] ); ?> available updates! <br>
 				<!-- This will upgrade your system from version <?php echo module_config::current_version(); ?> to <?php echo $available_updates['new_version']; ?> <br> -->
 
@@ -671,9 +669,8 @@ if ( isset( $_REQUEST['process_upgrade'] ) && isset( $_REQUEST['via_ajax'] ) ) {
 	}
 	?>
 
-	<form action="" method="post">
+	<?php module_form::print_form_open_tag( array( 'action' => '' ) ); ?>
 		<?php
-		module_form::print_form_auth();
 		$form_actions  = array(
 			'class'    => 'action_bar action_bar_center action_bar_single',
 			'elements' => array(

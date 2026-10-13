@@ -20,7 +20,7 @@ print_heading( array(
 ?>
 
 
-<form action="" method="post">
+<?php module_form::print_form_open_tag( array( 'action' => '' ) ); ?>
 
 	<table width="100%" border="0" cellspacing="0" cellpadding="2" class="tableclass tableclass_rows">
 		<thead>

@@ -21,8 +21,7 @@ if ( $data_field_group_id && $data_field_group_id != 'new' ) {
 
 ?>
 
-	<form action="" method="post">
-		<?php module_form::print_form_auth(); ?>
+	<?php module_form::print_form_open_tag( array( 'action' => '' ) ); ?>
 		<input type="hidden" name="_process" value="save_data_field_group"/>
 		<input type="hidden" name="_redirect" value=""/>
 		<input type="hidden" name="data_type_id" value="<?php echo $data_type_id; ?>"/>
@@ -246,7 +245,7 @@ if ( $data_field_group_id && $data_field_group_id != 'new' ) {
 					border: 1px dashed #CCC !important;
 				}
 			</style>
-			<form action="" method="post">
+			<?php module_form::print_form_open_tag( array( 'action' => '' ) ); ?>
 				<p>Choose what you would like to administer below:
 					<select name="admin_edit_what" onchange="this.form.submit();">
 						<option value="position"<?php echo ( $admin_edit_what == 'position' ) ? ' selected' : ''; ?>>Position of

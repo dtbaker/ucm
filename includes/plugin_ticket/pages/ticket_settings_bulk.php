@@ -184,7 +184,11 @@ if ( isset( $_POST['bulk_remove_priority'] ) && $_POST['bulk_remove_priority'] =
 	?>
 
 	<iframe src="about:blank" name="bulk_process" id="bulk_process" style="display:none;"></iframe>
-	<form action="" method="post" target="bulk_process" id="process_button_form">
+	<?php module_form::print_form_open_tag( array(
+		'action' => '',
+		'target' => 'bulk_process',
+		'id'     => 'process_button_form',
+	) ); ?>
 		<input type="hidden" name="bulk_process_go" value="true">
 		<input type="submit" name="go" id="process_button" value="<?php _e( 'Start Processing Below Tickets' ); ?>"
 		       onclick="this.value='<?php _e( 'Please wait...' ); ?>';">
@@ -292,7 +296,7 @@ if ( isset( $_POST['bulk_remove_priority'] ) && $_POST['bulk_remove_priority'] =
 	?>
 
 
-	<form action="" method="post">
+	<?php module_form::print_form_open_tag( array( 'action' => '' ) ); ?>
 		<input type="hidden" name="bulk" value="go">
 		<?php
 		$example_message = "<p>Hello {NAME},</p>
@@ -369,7 +373,7 @@ if ( isset( $_POST['bulk_remove_priority'] ) && $_POST['bulk_remove_priority'] =
 	</form>
 
 
-	<form action="" method="post">
+	<?php module_form::print_form_open_tag( array( 'action' => '' ) ); ?>
 		<input type="hidden" name="bulk_remove_priority" value="go">
 		<?php
 		$fieldset_data = array(

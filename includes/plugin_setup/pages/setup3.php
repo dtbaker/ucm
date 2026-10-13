@@ -41,7 +41,7 @@ if (
 	</p>
 
 	<div style="padding:10px;">
-		<form action="" method="post">
+		<?php module_form::print_form_open_tag( array( 'action' => '' ) ); ?>
 
 			<input type="hidden" name="install_upgrade" value="true">
 			<input type="hidden" name="save_license_codes" value="true">

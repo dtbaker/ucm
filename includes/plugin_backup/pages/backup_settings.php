@@ -36,7 +36,7 @@ if ( isset( $_REQUEST['backup_id'] ) && $_REQUEST['backup_id'] ) {
 
 			?>
 
-			<form action="" method="post">
+			<?php module_form::print_form_open_tag( array( 'action' => '' ) ); ?>
 				<input type="hidden" name="_process" value="save_backup">
 
 				<script type="text/javascript">
@@ -45,7 +45,6 @@ if ( isset( $_REQUEST['backup_id'] ) && $_REQUEST['backup_id'] ) {
 				</script>
 				<?php
 
-				module_form::print_form_auth();
 
 				$fieldset_data = array(
 					'heading'  => array(
@@ -254,12 +253,11 @@ if ( isset( $_REQUEST['backup_id'] ) && $_REQUEST['backup_id'] ) {
 
 			?>
 
-			<form action="" method="post">
+			<?php module_form::print_form_open_tag( array( 'action' => '' ) ); ?>
 				<input type="hidden" name="_process" value="save_backup">
 
 				<?php
 
-				module_form::print_form_auth();
 
 				echo module_form::generate_fieldset( $fieldset_data );
 				unset( $fieldset_data );
@@ -304,12 +302,11 @@ if ( isset( $_REQUEST['backup_id'] ) && $_REQUEST['backup_id'] ) {
 		);
 		?>
 
-		<form action="" method="post">
+		<?php module_form::print_form_open_tag( array( 'action' => '' ) ); ?>
 			<input type="hidden" name="_process" value="save_backup">
 
 			<?php
 
-			module_form::print_form_auth();
 
 			echo module_form::generate_fieldset( $fieldset_data );
 			unset( $fieldset_data );

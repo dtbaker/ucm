@@ -6,13 +6,12 @@ if ( ! isset( $this_timer_segment ) ) {
 
 ?>
 
-<form action="<?php echo module_timer::link_open( $timer_id ); ?>" method="post">
+<?php module_form::print_form_open_tag( array( 'action' => module_timer::link_open( $timer_id ) ) ); ?>
 	<input type="hidden" name="_process" value="save_timer_segment"/>
 	<input type="hidden" name="timer_id" value="<?php echo (int) $timer_id; ?>"/>
 	<input type="hidden" name="timer_segment_id" value="<?php echo (int) $this_timer_segment['timer_segment_id']; ?>"/>
 
 	<?php
-	module_form::print_form_auth();
 	//module_form::set_default_field('timer_description');
 
 	$fieldset_data = array(

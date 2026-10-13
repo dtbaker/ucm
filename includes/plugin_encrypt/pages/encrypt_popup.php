@@ -395,7 +395,7 @@ if ( $encrypt_id ) {
 		</tbody>
 	</table>
 <?php if ( module_encrypt::can_i( 'create', 'Encrypts' ) ) { ?>
-	<form action="" method="post">
+	<?php module_form::print_form_open_tag( array( 'action' => '' ) ); ?>
 		<table class="tableclass tableclass_form tableclass_full" id="enc_create_new" style="display:none;">
 			<tbody>
 			<tr>

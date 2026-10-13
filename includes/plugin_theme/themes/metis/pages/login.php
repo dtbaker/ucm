@@ -17,7 +17,10 @@
 
 		<div class="tab-content">
 			<div id="forgot" class="tab-pane active">
-				<form action="" method="post" class="form-signin">
+				<?php module_form::print_form_open_tag( array(
+					'action' => '',
+					'class'  => 'form-signin',
+				) ); ?>
 					<input type="hidden" name="_process_reset" value="true">
 					<p
 						class="text-muted text-center"><?php echo _l( 'Please enter your email address below to reset your password.' ); ?></p>
@@ -54,7 +57,10 @@
 
 		<div class="tab-content">
 			<div id="login" class="tab-pane active">
-				<form action="" class="form-signin" method="post">
+				<?php module_form::print_form_open_tag( array(
+					'action' => '',
+					'class'  => 'form-signin',
+				) ); ?>
 					<input type="hidden" name="_process_login" value="true">
 					<?php if ( _DEMO_MODE ) { ?>
 						<p class="text-muted text-center"

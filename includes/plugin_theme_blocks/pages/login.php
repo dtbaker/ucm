@@ -32,7 +32,10 @@
 					<p><?php echo htmlspecialchars( module_config::s( 'admin_system_name' ) ); ?>
 						<br><span><?php _e( 'Reset Password' ); ?></span></p>
 				</div>
-				<form action="" class="form-signin" method="post">
+				<?php module_form::print_form_open_tag( array(
+					'action' => '',
+					'class'  => 'form-signin',
+				) ); ?>
 					<input type="hidden" name="_process_reset" value="true">
 					<div class="fields">
 						<fieldset>
@@ -78,7 +81,10 @@
 						</div>
 					</div>
 				<?php } ?>
-				<form action="" class="form-signin" method="post">
+				<?php module_form::print_form_open_tag( array(
+					'action' => '',
+					'class'  => 'form-signin',
+				) ); ?>
 					<input type="hidden" name="_process_login" value="true">
 					<div class="fields">
 						<fieldset>

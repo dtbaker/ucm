@@ -113,7 +113,10 @@ switch ( $display_mode ) {
 									}
 							?>
 							<div id="searchbox">
-									<form id="searchform" autocomplete="off">
+									<?php module_form::print_form_open_tag( array(
+										'id'           => 'searchform',
+										'autocomplete' => 'off',
+									) ); ?>
 											<input type="search" name="query" id="ajax_search_text" placeholder="<?php _e('Quick Search:'); ?>" class="">
 									</form>
 							</div>

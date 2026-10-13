@@ -17,8 +17,11 @@ if ($file_id) {
 ?>
 
 <iframe src="about:blank" name="file_popup_iframe<?php echo db_identifier($file['owner_table']);?>_<?php echo $file['owner_id'];?>" id="file_popup_iframe" style="display:none;"></iframe>
-<form action="<?php echo $module->link();?>" method="post" target="file_popup_iframe<?php echo db_identifier($file['owner_table']);?>_<?php echo $file['owner_id'];?>" enctype="multipart/form-data">
-	<?php module_form::print_form_auth(); ?>
+<?php module_form::print_form_open_tag( array(
+	'action'  => $module->link(),
+	'target'  => 'file_popup_iframe' . db_identifier($file['owner_table']) . '_' . $file['owner_id'],
+	'enctype' => 'multipart/form-data',
+) ); ?>
 	<input type="hidden" name="_process" value="save_file_popup">
 	<input type="hidden" name="_redirect" class="redirect" value="">
 	<input type="hidden" name="layout" value="<?php echo htmlspecialchars((isset($_REQUEST['layout'])) ? $_REQUEST['layout'] : 'gallery');?>">

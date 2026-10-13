@@ -86,10 +86,9 @@ if ( isset( $_REQUEST['f'] ) && is_array( $_REQUEST['f'] ) ) {
 	<tr>
 		<td width="70%" valign="top">
 
-			<form action="" method="post">
+			<?php module_form::print_form_open_tag( array( 'action' => '' ) ); ?>
 				<input type="hidden" name="newsletter_id" value="<?php echo (int) $newsletter_id; ?>">
 				<input type="hidden" name="send_id" value="<?php echo (int) $send_id; ?>">
-				<?php module_form::print_form_auth(); ?>
 				<input type="hidden" name="_process" value="send_send">
 
 
@@ -235,7 +234,7 @@ if ( isset( $_REQUEST['f'] ) && is_array( $_REQUEST['f'] ) ) {
 		</td>
 		<td width="30%" valign="top">
 
-			<form action="" method="POST">
+			<?php module_form::print_form_open_tag( array( 'action' => '' ) ); ?>
 				<input type="hidden" name="newsletter_id" value="<?php echo $newsletter_id; ?>">
 				<input type="hidden" name="send_id" value="<?php echo $send_id; ?>">
 				<?php print_heading( array(

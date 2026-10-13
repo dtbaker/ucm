@@ -34,7 +34,7 @@ if ( isset( $_REQUEST['company_id'] ) ) {
 	?>
 
 
-	<form action="" method="post">
+	<?php module_form::print_form_open_tag( array( 'action' => '' ) ); ?>
 
 		<table class="tableclass tableclass_rows tableclass_full">
 			<thead>

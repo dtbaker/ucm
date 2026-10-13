@@ -95,7 +95,7 @@ if ( isset( $_REQUEST['_email'] ) ) {
 hook_handle_callback( 'layout_column_half', 1 );
 print_heading( 'Send a test email' );
 ?>
-	<form action="" method="post">
+	<?php module_form::print_form_open_tag( array( 'action' => '' ) ); ?>
 		<input type="hidden" name="_email" value="true">
 		<p>Please enter your email address:</p>
 		<p><input type="text" name="email" value="<?php echo htmlspecialchars( $demo_email ); ?>" size="40"></p>

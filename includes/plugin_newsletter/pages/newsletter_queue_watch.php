@@ -39,10 +39,9 @@ if ( $retry_failures && $send['total_fail_count'] <= 0 ) {
 $start_time = $send['start_time'];
 ?>
 
-<form action="" method="post">
+<?php module_form::print_form_open_tag( array( 'action' => '' ) ); ?>
 	<input type="hidden" name="newsletter_id" value="<?php echo (int) $newsletter_id; ?>">
 	<input type="hidden" name="send_id" value="<?php echo (int) $send_id; ?>">
-	<?php module_form::print_form_auth(); ?>
 	<input type="hidden" name="_process" value="modify_send">
 
 

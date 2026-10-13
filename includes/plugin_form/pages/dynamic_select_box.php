@@ -1,4 +1,4 @@
-<form id="dynamic_select_form">
+<?php module_form::print_form_open_tag( array( 'id' => 'dynamic_select_form' ) ); ?>
 	<?php
 	// we pull up a list of entries for this particular form
 	$table      = isset( $_POST['table'] ) ? $_POST['table'] : false;

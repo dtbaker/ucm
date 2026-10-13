@@ -37,7 +37,7 @@ if ( isset( $_REQUEST['currency_id'] ) ) {
 
 	?>
 
-	<form action="" method="post">
+	<?php module_form::print_form_open_tag( array( 'action' => '' ) ); ?>
 		<input type="hidden" name="currency_id" value="<?php echo $currency_id; ?>">
 		<input type="hidden" name="save" value="true">
 
@@ -119,7 +119,7 @@ if ( isset( $_REQUEST['currency_id'] ) ) {
 
 	?>
 
-	<form action="" method="post">
+	<?php module_form::print_form_open_tag( array( 'action' => '' ) ); ?>
 
 		<table width="100%" border="0" cellspacing="0" cellpadding="2" class="tableclass tableclass_rows">
 			<thead>

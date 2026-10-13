@@ -78,17 +78,23 @@ $options = module_email::get_email_compose_options( $options );
 ?>
 
 <?php if ( $can_edit_emails ) { ?>
-	<form action="" method="post" id="template_change_form">
+	<?php module_form::print_form_open_tag( array(
+		'action' => '',
+		'id'     => 'template_change_form',
+	) ); ?>
 		<input type="hidden" name="template_name" value="" id="template_name_change">
 	</form>
 
-<form action="" method="post" enctype="multipart/form-data" id="email_send_form">
+<?php module_form::print_form_open_tag( array(
+	'action'  => '',
+	'enctype' => 'multipart/form-data',
+	'id'      => 'email_send_form',
+) ); ?>
 	<input type="hidden" name="_process" id="process_tag" value="send_email">
 	<input type="hidden" name="email_id" id="email_id" value="<?php echo (int) $email_id; ?>">
 	<input type="hidden" name="options" value="<?php echo base64_encode( serialize( $options ) ); ?>">
 
 	<?php
-	module_form::print_form_auth();
 	}
 
 

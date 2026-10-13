@@ -55,9 +55,8 @@ print_heading($header);
 ?>
 
 
-<form action="" method="post">
+<?php module_form::print_form_open_tag( array( 'action' => '' ) ); ?>
 
-    <?php module_form::print_form_auth();?>
 
 
 <?php $search_bar = array(

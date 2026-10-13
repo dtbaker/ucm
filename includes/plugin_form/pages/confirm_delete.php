@@ -13,7 +13,7 @@ $module->page_title = _l( 'Delete Confirmation' );
 ob_start();
 ?>
 
-	<form action="<?php echo htmlspecialchars( $form_data[2] ); ?>" method="post">
+	<?php module_form::print_form_open_tag( array( 'action' => htmlspecialchars( $form_data[2] ) ) ); ?>
 		<input type="hidden" name="_confirm_delete" value="<?php echo htmlspecialchars( $hash ); ?>">
 		<?php foreach ( $form_data[1] as $key => $val ) {
 			if ( is_array( $val ) ) {

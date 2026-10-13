@@ -52,10 +52,9 @@ if ( count( $sends_warning ) ) {
 
 ?>
 
-<form action="" method="post">
+<?php module_form::print_form_open_tag( array( 'action' => '' ) ); ?>
 	<input type="hidden" name="newsletter_id" value="<?php echo (int) $newsletter_id; ?>">
 	<input type="hidden" name="send_id" value="<?php echo (int) $send_id; ?>">
-	<?php module_form::print_form_auth(); ?>
 	<input type="hidden" name="_process" value="enque_send">
 
 	<p><?php _e( 'Please select the people you would like to send this newsletter to.' ); ?></p>

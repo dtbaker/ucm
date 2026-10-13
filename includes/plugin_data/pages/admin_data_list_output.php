@@ -12,7 +12,10 @@ if ( empty( $embed_form ) && $allow_search ) {
 	?>
 
 
-	<form action="" method="post" id="custom_data_form">
+	<?php module_form::print_form_open_tag( array(
+		'action' => '',
+		'id'     => 'custom_data_form',
+	) ); ?>
 
 	<?php
 

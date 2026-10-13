@@ -28,13 +28,12 @@ if ( ! $company ) {
 	module_security::sanatise_data( 'company', $company );
 }
 ?>
-<form action="" method="post">
+<?php module_form::print_form_open_tag( array( 'action' => '' ) ); ?>
 
 	<input type="hidden" name="_process" value="save_company"/>
 	<input type="hidden" name="company_id" value="<?php echo $company_id; ?>"/>
 
 	<?php
-	module_form::print_form_auth();
 	module_form::prevent_exit( array(
 			'valid_exits' => array(
 				// selectors for the valid ways to exit this form.

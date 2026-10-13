@@ -68,8 +68,10 @@ if ( count( $sends_warning ) ) {
 }
 ?>
 
-<form action="" method="post" id="newsletter_form">
-	<?php module_form::print_form_auth(); ?>
+<?php module_form::print_form_open_tag( array(
+	'action' => '',
+	'id'     => 'newsletter_form',
+) ); ?>
 	<input type="hidden" name="_process" value="save_newsletter">
 
 	<?php

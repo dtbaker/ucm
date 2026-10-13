@@ -15,7 +15,10 @@
       $('#hide_item_form')[0].submit();
   }
 </script>
-<form action="" method="post" id="hide_item_form">
+<?php module_form::print_form_open_tag( array(
+	'action' => '',
+	'id'     => 'hide_item_form',
+) ); ?>
 	<input type="hidden" name="hide_item" value="" id="hide_item">
 </form>
 <div id="dashboard_tabs">

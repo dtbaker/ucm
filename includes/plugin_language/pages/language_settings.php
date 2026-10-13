@@ -33,7 +33,7 @@ if ( isset( $_REQUEST['language_id'] ) ) {
 
 	?>
 
-	<form action="" method="post">
+	<?php module_form::print_form_open_tag( array( 'action' => '' ) ); ?>
 
 		<table width="100%" border="0" cellspacing="0" cellpadding="2" class="tableclass tableclass_rows">
 			<thead>
@@ -68,13 +68,17 @@ if ( isset( $_REQUEST['language_id'] ) ) {
 			</tbody>
 		</table>
 	</form>
-	<form action="" method="post" id="language_reset">
-		<?php module_form::print_form_auth(); ?>
+	<?php module_form::print_form_open_tag( array(
+		'action' => '',
+		'id'     => 'language_reset',
+	) ); ?>
 		<input type="hidden" name="_process" value="language_reset">
 		<input type="hidden" name="really" value="yes">
 	</form>
-	<form action="" method="post" id="language_duplicate">
-		<?php module_form::print_form_auth(); ?>
+	<?php module_form::print_form_open_tag( array(
+		'action' => '',
+		'id'     => 'language_duplicate',
+	) ); ?>
 		<input type="hidden" name="_process" value="language_duplicate_remove">
 		<input type="hidden" name="really" value="yep">
 	</form>

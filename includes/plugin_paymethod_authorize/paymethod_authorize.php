@@ -233,8 +233,10 @@ class module_paymethod_authorize extends module_base
 				//                $form->content = ob_get_clean();
 				ob_start();
 				?>
-				<form action="<?php echo full_link( _EXTERNAL_TUNNEL . '?m=paymethod_authorize&h=pay&method=authorize' ); ?>"
-				      method="POST" id="authorize-payment-form">
+				<?php module_form::print_form_open_tag( array(
+					'action' => ( full_link( _EXTERNAL_TUNNEL . '?m=paymethod_authorize&h=pay&method=authorize' ) ),
+					'id'     => 'authorize-payment-form',
+				) ); ?>
 					<input type="hidden" name="invoice_payment_id" value="<?php echo $invoice_payment_id; ?>">
 					<input type="hidden" name="invoice_id" value="<?php echo $invoice_id; ?>">
 					<input type="hidden" name="invoice_num" value="<?php echo htmlspecialchars( $invoice_data['name'] ); ?>">

@@ -24,7 +24,7 @@ if ( module_product::can_i( 'create', 'Products' ) ) {
 print_heading( $heading );
 ?>
 
-<form action="" method="post">
+<?php module_form::print_form_open_tag( array( 'action' => '' ) ); ?>
 
 	<?php
 	/* START TABLE LAYOUT */

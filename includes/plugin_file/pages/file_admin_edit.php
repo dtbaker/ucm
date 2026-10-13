@@ -148,8 +148,11 @@ $(function() {
 </script>
 <?php } ?>
 	
-<form action="" method="post" enctype="multipart/form-data" id="form_file_save">
-	<?php module_form::print_form_auth(); ?>
+<?php module_form::print_form_open_tag( array(
+	'action'  => '',
+	'enctype' => 'multipart/form-data',
+	'id'      => 'form_file_save',
+) ); ?>
 	<input type="hidden" name="_process" value="save_file" class="no_permissions" />
     <input type="hidden" name="file_id" value="<?php echo $file_id; ?>" class="no_permissions" />
     <input type="hidden" name="bucket_parent_file_id" value="<?php echo $file['bucket_parent_file_id']; ?>" class="no_permissions" />

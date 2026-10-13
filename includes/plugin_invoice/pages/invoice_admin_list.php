@@ -209,9 +209,8 @@ print_heading( $header );
 ?>
 
 
-	<form action="" method="post">
+	<?php module_form::print_form_open_tag( array( 'action' => '' ) ); ?>
 
-		<?php module_form::print_form_auth(); ?>
 
 		<?php $search_bar = array(
 			'elements' => array(
@@ -508,8 +507,7 @@ print_heading( $header );
 	</form>
 
 <?php if ( function_exists( 'convert_html2pdf' ) && get_display_mode() != 'mobile' ) { ?>
-	<form action="<?php echo module_invoice::link_generate( false, array( 'arguments' => array( 'print' => 1 ) ) ); ?>"
-	      method="post">
+	<?php module_form::print_form_open_tag( array( 'action' => ( module_invoice::link_generate( false, array( 'arguments' => array( 'print' => 1 ) ) ) ) ) ); ?>
 		<input type="hidden" name="invoice_ids" value="<?php echo implode( ",", $all_invoice_ids ); ?>">
 		<input type="submit" name="butt_print" value="<?php echo _l( 'Export all results as PDF' ); ?>"
 		       class="submit_button"/>

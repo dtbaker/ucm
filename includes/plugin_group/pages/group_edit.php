@@ -26,7 +26,7 @@ if ( ! $group ) {
 	module_security::sanatise_data( 'group', $group );
 }
 ?>
-<form action="" method="post">
+<?php module_form::print_form_open_tag( array( 'action' => '' ) ); ?>
 
 	<?php
 	module_form::prevent_exit( array(
@@ -39,7 +39,6 @@ if ( ! $group ) {
 	?>
 
 
-	<?php module_form::print_form_auth(); ?>
 	<input type="hidden" name="_process" value="save_group"/>
 	<input type="hidden" name="group_id" value="<?php echo $group_id; ?>"/>
 

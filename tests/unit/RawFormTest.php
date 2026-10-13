@@ -9,12 +9,14 @@ use PHPUnit\Framework\TestCase;
  * <form> does not, so a hand-written form that posts a _process is an unprotected
  * write the moment the module guards it - and nothing about writing one looks wrong.
  *
- * This test reads the source and says so. It does two things:
+ * The migration is finished: every form a page prints is opened by the helper. This test
+ * reads the source and keeps it that way. It does two things:
  *
  *  1. Every raw <form> that submits something a module dispatches on must publish the
- *     token, or be named in $allowed below with a reason.
- *  2. The number of raw <form> tags may go down but not up. New forms go through the
- *     helper. This is what stops the problem growing back while the migration runs.
+ *     token, or be named in ALLOWED below with a reason.
+ *  2. The raw <form> tags that remain must be exactly the ones in RESIDUE - the three
+ *     kinds that cannot go through a PHP helper. Not a budget: an exact list, so a new
+ *     raw form fails whether or not it happens to post a write field.
  *
  * It is a source scan, not a browser test, because it has to be able to say "this file
  * is wrong" about a page nothing in the suite happens to visit.
@@ -26,8 +28,10 @@ class RawFormTest extends TestCase
 	 * next three are read straight out of $_REQUEST by the pagination hooks, and the last
 	 * two by the import page, which writes rows without going through _process at all.
 	 *
-	 * _process_login and _process_reset are deliberately NOT here - login forms are
-	 * pre-session and have no token to publish. See the note in $allowed.
+	 * _process_login and _process_reset are deliberately NOT here. Login forms go through
+	 * the helper now and so do carry a token, but it is minted against the visitor's
+	 * pre-login session and nothing checks it - requiring one would mean a login that
+	 * breaks whenever the session turns over.
 	 */
 	private const WRITE_FIELDS = array(
 		'_process',
@@ -41,24 +45,49 @@ class RawFormTest extends TestCase
 	/**
 	 * Raw forms that submit a write field and legitimately have no token.
 	 *
-	 * Adding an entry here is the whole point of the list: it is a visible, reviewable
-	 * act with a reason attached, rather than a form that quietly has no token. A stale
-	 * entry fails the test too, so this cannot rot.
+	 * Empty, and worth keeping that way. The two public ticket pages used to be here,
+	 * on the grounds that an anonymous visitor has no session to mint a token from; they
+	 * go through the helper now, which publishes one against whatever session the visitor
+	 * does have. Nothing checks it on those pages, so it costs a hidden field and removes
+	 * the exception.
+	 *
+	 * Adding an entry is a visible, reviewable act with a reason attached, rather than a
+	 * form that quietly has no token. A stale entry fails the test too, so this cannot rot.
 	 */
-	private const ALLOWED = array(
-		'includes/plugin_ticket/public/ticket_customer_new.php'
-			=> 'Public page on ext.php. Handled by external_hook(), which has no _process dispatch, and the visitor has no session to mint a token from.',
-		'includes/plugin_ticket/public/ticket_customer_view.php'
-			=> 'Same as ticket_customer_new.php.',
-	);
+	private const ALLOWED = array();
 
 	/**
-	 * How many raw <form> tags the tree is allowed to contain.
+	 * The raw <form> tags that are left, and why each one is still raw.
 	 *
-	 * Lower this as forms move to module_form::print_form_open_tag(). Never raise it:
-	 * a new form has a helper to go through.
+	 * Every form a page prints goes through module_form::print_form_open_tag(). What is
+	 * left is the three kinds that cannot.
+	 *
+	 * This is an exact list rather than a budget, which catches more: a new raw form fails
+	 * because the file is not listed, a second form in a listed file fails because the
+	 * count is wrong, and a file that no longer needs to be here fails as stale.
 	 */
-	private const RAW_FORM_BUDGET = 144;
+	private const RESIDUE = array(
+		// Default template bodies, seeded into the database by init_template() and edited
+		// by the user afterwards. They are rows, not code - there is no PHP left to run by
+		// the time one is rendered, only placeholder substitution. The payment ones post to
+		// {PAYMENT_URL} and are filled in and shown to a customer who has no session.
+		'includes/plugin_contract/contract.php'                  => 1,
+		'includes/plugin_file/file.php'                          => 1,
+		'includes/plugin_invoice/invoice.php'                    => 1,
+		'includes/plugin_member/member.php'                      => 1,
+		'includes/plugin_newsletter/newsletter.php'              => 1,
+		'includes/plugin_paymethod_paypal/paymethod_paypal.php'  => 1,
+		'includes/plugin_paymethod_stripe/paymethod_stripe.php'  => 1,
+		'includes/plugin_quote/quote.php'                        => 1,
+
+		// Third-party libraries bundled inside a plugin. Not ours to rewrite, same reason
+		// htmlpurifier is skipped by the file walk.
+		'includes/plugin_paymethod_authorize/anet_php_1.1.8/lib/AuthorizeNetDPM.php' => 1,
+		'includes/plugin_paymethod_multisafepay/MultiSafepay.combined.php'           => 3,
+
+		// The helper itself, which is where the one real <form> now comes from.
+		'includes/plugin_form/form.php' => 1,
+	);
 
 	public function test_a_raw_form_that_posts_a_write_field_publishes_the_token() {
 		$offenders = array();
@@ -96,37 +125,33 @@ class RawFormTest extends TestCase
 		);
 	}
 
-	public function test_the_number_of_raw_forms_does_not_grow() {
-		$count = count( self::forms() );
+	public function test_the_only_raw_forms_left_are_the_ones_that_cannot_be_converted() {
+		$counts = array();
+		foreach ( self::forms() as $form ) {
+			$counts[ $form['file'] ] = ( $counts[ $form['file'] ] ?? 0 ) + 1;
+		}
+		ksort( $counts );
+		$expected = self::RESIDUE;
+		ksort( $expected );
 
-		$this->assertLessThanOrEqual( self::RAW_FORM_BUDGET, $count, "\n"
-			. "The tree has $count raw <form> tags, over the budget of " . self::RAW_FORM_BUDGET . ".\n"
-			. "New forms go through module_form::print_form_open_tag() so the token, and anything\n"
-			. "else that has to be on every form, is structural rather than remembered.\n"
-		);
-
-		// And if the migration has got ahead of the budget, say so, so the ratchet tightens.
-		$this->assertGreaterThan( self::RAW_FORM_BUDGET - 10, $count, "\n"
-			. "Only $count raw <form> tags left, well under the budget of " . self::RAW_FORM_BUDGET . ".\n"
-			. "Lower RawFormTest::RAW_FORM_BUDGET to $count so the ratchet keeps holding.\n"
+		$this->assertSame( $expected, $counts, "\n"
+			. "The set of raw <form> tags has changed.\n"
+			. "A file here that is not in RawFormTest::RESIDUE is a form that should be opened\n"
+			. "with module_form::print_form_open_tag(), which emits form_auth_key for you. If it\n"
+			. "genuinely cannot be - a database template body, or third-party code - add it to\n"
+			. "RESIDUE with the reason. A file in RESIDUE that no longer appears has been\n"
+			. "converted: remove it, so the list keeps meaning something.\n"
 		);
 	}
 
 	public function test_the_scanner_finds_what_it_is_supposed_to_find() {
 		// A scanner that silently matched nothing would make every test above pass.
-		$forms = self::forms();
-		$this->assertGreaterThan( 100, count( $forms ), 'the scan found almost nothing - the file walk is probably wrong' );
+		$this->assertGreaterThan( 400, count( self::source_files() ), 'the file walk found almost nothing' );
 
-		// Liveness floors, not budgets. They only have to be high enough that a scanner
-		// which stopped recognising write fields or tokens would trip them, and low
-		// enough that migrating forms to the helper - which is the point - does not. The
-		// fixtures below are what actually prove the two detections work; these just say
-		// the real tree still exercises them.
-		$writes = array_filter( $forms, static fn( $f ) => (bool) $f['writes'] );
-		$tokens = array_filter( $forms, static fn( $f ) => $f['token'] );
-		$this->assertGreaterThan( 10, count( $writes ), 'no raw form appears to post a write field' );
-		$this->assertGreaterThan( 10, count( $tokens ), 'no raw form appears to publish a token' );
-
+		// The fixtures below are what prove the two detections work. They used to be backed
+		// up by floors on the real tree ("at least 10 raw forms publish a token"), which only
+		// held while the tree still had raw forms to count. It does not any more, so the
+		// fixtures stand alone.
 		// And it has to be able to see a form that is wrong, not just ones that are right.
 		$bad = self::scan( 'fixture.php', '<form action="" method="post">'
 			. '<input type="hidden" name="_process" value="save_thing"></form>' );

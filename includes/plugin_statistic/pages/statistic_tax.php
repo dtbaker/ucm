@@ -64,7 +64,10 @@ print_heading( array(
 <p>This report will show an overview of the taxible income and expenditure from items recorded in the "Transactions"
 	area.</p>
 
-<form action="" method="post" id="statistic_form">
+<?php module_form::print_form_open_tag( array(
+	'action' => '',
+	'id'     => 'statistic_form',
+) ); ?>
 
 	<?php
 	$search_bar = array(

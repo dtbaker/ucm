@@ -25,7 +25,7 @@ print_heading( $header );
 
 ?>
 
-<form action="" method="post">
+<?php module_form::print_form_open_tag( array( 'action' => '' ) ); ?>
 
 	<?php
 

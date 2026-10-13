@@ -55,7 +55,7 @@
 			<p><?php echo _l( 'Please enter your email address below to reset your password.' ); ?></p>
 
 
-			<form action="" method="post">
+			<?php module_form::print_form_open_tag( array( 'action' => '' ) ); ?>
 				<input type="hidden" name="_process_reset" value="true">
 				<table width="100%" class="tableclass">
 					<tr>
@@ -94,7 +94,7 @@
 		<p
 			align="center"><?php echo _l( 'Welcome to %s - Please Login Below', module_config::s( 'admin_system_name' ) ); ?></p>
 
-		<form action="" method="post">
+		<?php module_form::print_form_open_tag( array( 'action' => '' ) ); ?>
 			<input type="hidden" name="_process_login" value="true">
 			<table width="100%" class="tableclass tableclass_form">
 				<tr>

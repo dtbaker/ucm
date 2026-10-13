@@ -51,7 +51,7 @@
 			<p><?php echo _l( 'Please enter your email address below to reset your password.' ); ?></p>
 
 
-			<form action="" method="post">
+			<?php module_form::print_form_open_tag( array( 'action' => '' ) ); ?>
 				<input type="hidden" name="_process_reset" value="true">
 				<table width="100%" class="tableclass">
 					<tr>
@@ -97,7 +97,7 @@
 					<img src="<?php echo _BASE_HREF; ?>images/lock.png" alt="lock"/>
 				</td>
 				<td>
-					<form action="" method="post">
+					<?php module_form::print_form_open_tag( array( 'action' => '' ) ); ?>
 						<input type="hidden" name="_process_login" value="true">
 						<table width="100%" class="tableclass">
 							<tr>

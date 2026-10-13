@@ -534,10 +534,13 @@ if ( isset( $_REQUEST['print'] ) ) {
 					}
 
 					?>
-					<form action="" method="post" class="validate" enctype="multipart/form-data">
+					<?php module_form::print_form_open_tag( array(
+						'action'  => '',
+						'class'   => 'validate',
+						'enctype' => 'multipart/form-data',
+					) ); ?>
 					<?php if ( ! $view_revision_id ) { ?>
 						<input type="hidden" name="form_id" value="<?php echo $GLOBALS['form_id']; ?>">
-						<?php module_form::print_form_auth(); ?>
 						<input type="hidden" name="_process" value="save_data_record"/>
 						<input type="hidden" name="_redirect" value="<?php echo $module->link( "", array(
 							"saved"          => true,

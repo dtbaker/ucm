@@ -9,14 +9,20 @@ $options = module_email::get_email_compose_options( $options );
 extract( $options );
 ?>
 
-<form action="" method="post" id="template_change_form">
+<?php module_form::print_form_open_tag( array(
+	'action' => '',
+	'id'     => 'template_change_form',
+) ); ?>
 	<input type="hidden" name="template_name" value="" id="template_name_change">
 </form>
 
-<form action="<?php echo full_link( 'email.email_compose_basic' ); ?>" method="post" enctype="multipart/form-data">
+<?php module_form::print_form_open_tag( array(
+	'action'  => full_link( 'email.email_compose_basic' ),
+	'enctype' => 'multipart/form-data',
+) ); ?>
 	<input type="hidden" name="_process" value="send_email">
 	<input type="hidden" name="options" value="<?php echo base64_encode( serialize( $options ) ); ?>">
-	<?php module_form::print_form_auth();
+	<?php
 
 	$fieldset_data = array(
 		'title'    => isset( $title ) ? $title : false,

@@ -52,8 +52,7 @@ if ( isset( $_REQUEST['export_json'] ) ) {
 ?>
 
 
-	<form action="" method="post">
-		<?php module_form::print_form_auth(); ?>
+	<?php module_form::print_form_open_tag( array( 'action' => '' ) ); ?>
 		<input type="hidden" name="_process" value="save_security_role"/>
 		<input type="hidden" name="security_role_id" value="<?php echo htmlspecialchars( (string) $security_role_id, ENT_QUOTES, 'UTF-8' ); ?>"/>
 

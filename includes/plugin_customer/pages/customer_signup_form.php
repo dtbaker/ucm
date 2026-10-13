@@ -76,7 +76,10 @@
 		margin: 0;
 	}
 </style>
-<form action="<?php echo module_customer::link_public_signup(); ?>" enctype="multipart/form-data" method="post">
+<?php module_form::print_form_open_tag( array(
+	'action'  => module_customer::link_public_signup(),
+	'enctype' => 'multipart/form-data',
+) ); ?>
 	<div id="ucmsignup">
 		<fieldset>
 			<legend>Customer Information</legend>

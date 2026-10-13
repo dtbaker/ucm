@@ -121,7 +121,10 @@ switch ( $display_mode ) {
 								}
 								?>
 								<li>
-									<form class="mini-search" action="<?php echo _BASE_HREF; ?>?p=search_results" method="post">
+									<?php module_form::print_form_open_tag( array(
+										'class'  => 'mini-search',
+										'action' => _BASE_HREF . '?p=search_results',
+									) ); ?>
 										<div class="input-group">
 											<input type="text" class="input-small form-control"
 											       value="<?php echo isset( $_REQUEST['search'] ) && is_string( $_REQUEST['search'] ) ? htmlspecialchars( $_REQUEST['search'] ) : ''; ?>"
@@ -275,7 +278,10 @@ switch ( $display_mode ) {
 							module_form::set_default_field( 'ajax_search_text' );
 						}
 						?>
-						<form class="main-search" action="<?php echo _BASE_HREF; ?>?p=search_results" method="post">
+						<?php module_form::print_form_open_tag( array(
+							'class'  => 'main-search',
+							'action' => _BASE_HREF . '?p=search_results',
+						) ); ?>
 							<div class="input-group">
 
 								<input type="text" class="input-small form-control" name="quicksearch"

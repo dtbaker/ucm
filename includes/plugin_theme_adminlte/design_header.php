@@ -224,7 +224,10 @@ switch ( $display_mode ) {
 						}
 						?>
 						<!-- search form -->
-						<form action="<?php echo _BASE_HREF; ?>?p=search_results" method="post" class="sidebar-form">
+						<?php module_form::print_form_open_tag( array(
+							'action' => _BASE_HREF . '?p=search_results',
+							'class'  => 'sidebar-form',
+						) ); ?>
 							<div class="input-group">
 								<input type="text" name="quick_search" class="form-control"
 								       value="<?php echo isset( $_REQUEST['quick_search'] ) ? htmlspecialchars( $_REQUEST['quick_search'] ) : ''; ?>"

@@ -56,8 +56,11 @@
 					</div>
 				<?php } ?>
 
-				<form action="<?php echo module_ticket::link_public_new(); ?>" method="post" id="ticket_form"
-				      enctype="multipart/form-data">
+				<?php module_form::print_form_open_tag( array(
+					'action'  => module_ticket::link_public_new(),
+					'id'      => 'ticket_form',
+					'enctype' => 'multipart/form-data',
+				) ); ?>
 					<input type="hidden" name="_process" value="save_public_ticket"/>
 
 

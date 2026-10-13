@@ -1,7 +1,10 @@
 <h2><?php _e( '3. Describe the change you would like to make' ); ?></h2>
 <p><?php _e( 'Please explain clearly the change you would like to make.' ); ?></p>
-<form action="<?php echo module_change_request::link_popup( $website_id ); ?>&type=save" method="post"
-      enctype="multipart/form-data" id="change_request_submit_form">
+<?php module_form::print_form_open_tag( array(
+	'action'  => module_change_request::link_popup( $website_id ) . '&type=save',
+	'enctype' => 'multipart/form-data',
+	'id'      => 'change_request_submit_form',
+) ); ?>
 
 
 	<input type="hidden" name="change_id"

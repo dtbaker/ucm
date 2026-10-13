@@ -76,7 +76,7 @@ if ( isset( $_REQUEST['save'] ) ) {
 	<em>Please contact your hosting provider for assistance with creating a database.</em>
 </p>
 
-<form action="?m=setup&amp;step=<?php echo $step; ?>&amp;save=true" method="post">
+<?php module_form::print_form_open_tag( array( 'action' => '?m=setup&step=' . $step . '&save=true' ) ); ?>
 	<?php
 	module_form::set_required( array(
 		'fields' => array(

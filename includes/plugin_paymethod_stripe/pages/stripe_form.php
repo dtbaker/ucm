@@ -89,7 +89,7 @@ if ( isset( $_POST['stripeToken'] ) && isset( $invoice_payment_data ) && $invoic
 	?>
 
 	<h1><?php echo htmlspecialchars( $description ); ?></h1>
-	<form action="<?php echo full_link( _EXTERNAL_TUNNEL . '?m=paymethod_stripe&h=pay&method=stripe' ); ?>" method="post">
+	<?php module_form::print_form_open_tag( array( 'action' => ( full_link( _EXTERNAL_TUNNEL . '?m=paymethod_stripe&h=pay&method=stripe' ) ) ) ); ?>
 		<input type="hidden" name="invoice_payment_id" value="<?php echo $invoice_payment_id; ?>">
 		<input type="hidden" name="invoice_id" value="<?php echo $invoice_id; ?>">
 		<script src="https://checkout.stripe.com/v2/checkout.js" class="stripe-button"

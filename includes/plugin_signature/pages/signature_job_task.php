@@ -208,7 +208,10 @@ if ( isset( $_REQUEST['save_signature'] ) ) {
 		<link rel="stylesheet"
 		      href="<?php echo _BASE_HREF . "includes/plugin_signature/css/jquery.signaturepad.css"; ?>"
 		      type="text/css"/>
-		<form method="post" action="" class="sigPad">
+		<?php module_form::print_form_open_tag( array(
+			'action' => '',
+			'class'  => 'sigPad',
+		) ); ?>
 			<input type="hidden" name="job_id" value="<?php echo $job_id; ?>">
 			<input type="hidden" name="task_id" value="<?php echo $task_id; ?>">
 			<input type="hidden" name="save_signature" value="1">

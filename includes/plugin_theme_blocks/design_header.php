@@ -198,7 +198,7 @@ switch ( $display_mode ) {
 						<?php } ?>
 						<a href="<?php echo _BASE_HREF; ?>index.php?_logout=true" class="options"><i
 								class="fa fa-power-off"></i></a>
-						<form action="<?php echo _BASE_HREF; ?>?p=search_results" method="post">
+						<?php module_form::print_form_open_tag( array( 'action' => _BASE_HREF . '?p=search_results' ) ); ?>
 							<input type="text" name="quick_search" class="form-control"
 							       value="<?php echo isset( $_REQUEST['quick_search'] ) ? htmlspecialchars( $_REQUEST['quick_search'] ) : ''; ?>"
 							       placeholder="<?php _e( 'Quick Search:' ); ?>"/>

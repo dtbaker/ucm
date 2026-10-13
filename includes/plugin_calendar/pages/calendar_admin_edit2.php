@@ -210,8 +210,11 @@ $base_path = _BASE_HREF . 'includes/plugin_calendar/wdCalendar/';
 	<div style="clear: both">
 	</div>
 	<div class="infocontainer">
-		<form action="php/datafeed.php?method=adddetails<?php echo isset( $event ) ? "&id=" . $event->Id : ""; ?>"
-		      class="fform" id="fmEdit" method="post">
+		<?php module_form::print_form_open_tag( array(
+			'action' => 'php/datafeed.php?method=adddetails' . ( isset( $event ) ? '&id=' . $event->Id : '' ),
+			'class'  => 'fform',
+			'id'     => 'fmEdit',
+		) ); ?>
 			<label>
             <span>                        *Subject:
             </span>

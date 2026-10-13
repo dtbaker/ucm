@@ -219,7 +219,7 @@ if ( $data_type_id ) {
 
 		?>
 
-		<form action="" method="POST">
+		<?php module_form::print_form_open_tag( array( 'action' => '' ) ); ?>
 			<input type="hidden" name="search_go" value="true">
 
 			<script type="text/javascript">

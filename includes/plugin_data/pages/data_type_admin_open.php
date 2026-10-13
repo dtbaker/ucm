@@ -17,8 +17,10 @@ if ( (int)$data_type_id > 0 ) {
 ?>
 
 
-<form action="" method="post" enctype="multipart/form-data">
-<?php module_form::print_form_auth(); ?>
+<?php module_form::print_form_open_tag( array(
+	'action'  => '',
+	'enctype' => 'multipart/form-data',
+) ); ?>
 <input type="hidden" name="_process" value="save_data_type" />
 <input type="hidden" name="_redirect" value="<?php echo $module->link("",array("saved" => true,"data_type_id" => ((int)$data_type_id) ? $data_type_id : '')); ?>" />
 <input type="hidden" name="data_type_id" value="<?php echo htmlspecialchars( (string) $data_type_id, ENT_QUOTES, 'UTF-8' ); ?>" />

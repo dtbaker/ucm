@@ -25,8 +25,7 @@ if ( isset( $_REQUEST['faq_id'] ) && $_REQUEST['faq_id'] ) {
 	?>
 
 
-	<form action="" method="post">
-		<?php module_form::print_form_auth(); ?>
+	<?php module_form::print_form_open_tag( array( 'action' => '' ) ); ?>
 		<input type="hidden" name="_process" value="save_faq">
 		<input type="hidden" name="faq_id" value="<?php echo $faq_id; ?>"/>
 

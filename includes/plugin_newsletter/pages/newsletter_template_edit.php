@@ -7,8 +7,7 @@ $newsletter_template    = module_newsletter::get_newsletter_template( $newslette
 
 ?>
 
-<form action="" method="post">
-	<?php module_form::print_form_auth(); ?>
+<?php module_form::print_form_open_tag( array( 'action' => '' ) ); ?>
 	<input type="hidden" name="_process" value="save_newsletter_template">
 	<?php
 	module_form::set_required( array(

@@ -183,9 +183,8 @@ echo strpos( $link, '?' ) ? '&' : '?';?>customer_id=' + cust.customer_id + '">' 
 
 </script>
 
-<form action="" method="post">
+<?php module_form::print_form_open_tag( array( 'action' => '' ) ); ?>
 
-	<?php module_form::print_form_auth(); ?>
 
 	<?php $search_bar = array(
 		'elements' => array(
