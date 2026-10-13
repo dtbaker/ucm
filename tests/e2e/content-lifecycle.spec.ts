@@ -130,6 +130,51 @@ test.describe( 'Content lifecycles', () => {
   } );
 
 
+  test( 'a custom data record keeps what was typed into it', async ( { page } ) => {
+    await login( page );
+
+    // A data type that already carries fields. A type with none renders a form with
+    // nothing in it, which would make this test pass while proving nothing.
+    const typeId = '3';
+    await page.goto( `/?m[]=data&p[]=admin_data_open&data_type_id=${ typeId }&data_record_id=new` );
+
+    const form = page.locator( 'form:has(input[name="_process"][value="save_data_record"])' ).first();
+    await expect( form, 'the data type should render a record form' ).toBeAttached();
+
+    // The form carries data_save_hash, which the handler insists on before it will save.
+    // Taking it from the form rather than computing it is the point - it is how a person
+    // gets one, and it keeps the test honest if the hash ever becomes a real secret.
+    const hash = await form.locator( 'input[name="data_save_hash"]' ).first().inputValue();
+    expect( hash, 'the form should carry a save hash' ).toBeTruthy();
+
+    const first = form.locator( 'input[name^="data_field["][type="text"]' ).first();
+    await expect( first, 'the type should offer at least one text field' ).toBeAttached();
+    const fieldName = await first.getAttribute( 'name' );
+    const value = 'Data Record ' + Date.now();
+    await first.fill( value );
+
+    await Promise.all( [
+      page.waitForNavigation( { waitUntil: 'load' } ),
+      form.locator( 'input[name="butt_save"], button[name="butt_save"]' ).first().click(),
+    ] );
+
+    // Find it again through the list for this type, then read the value back off its own
+    // form. Reading it back is the point - the handler reporting success is not evidence
+    // that the field reached the database.
+    await page.goto( `/?m[]=data&p[]=admin_data&data_type_id=${ typeId }` );
+    const link = page.getByRole( 'link', { name: value } ).first();
+    await expect( link, 'the new record should be listed' ).toBeVisible();
+    await link.click();
+
+    // A saved record renders as a view rather than the form it was created with, so the
+    // value is read off the page. fieldName is kept above so the failure says which field
+    // was being checked.
+    expect( await page.content(), `the value typed into ${ fieldName } should come back` )
+      .toContain( value );
+    expect( await page.content(), 'the record should render without a PHP warning' )
+      .not.toContain( 'Warning</b>' );
+  } );
+
   test( 'a custom data group and its fieldset come back on their own page', async ( { page } ) => {
     await login( page );
     const stamp = Date.now();
