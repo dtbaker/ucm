@@ -166,3 +166,14 @@ print_heading( 'Square Settings' ); ?>
 
 <p>Square processes card payments in Australia, Canada, France, Ireland, Japan, Spain, the United Kingdom and the
 	United States. Elsewhere, use Stripe or PayPal.</p>
+
+<?php print_heading( 'Square and subscriptions:' ); ?>
+
+<p><strong>Square does not bill subscriptions here, and there is no setting to turn on.</strong> A subscription
+	invoice paid by Square is paid like any other invoice: the scheduled job generates and emails the next
+	renewal invoice when it is due, and the customer pays it. That path needs no webhook, no saved card and no
+	agreement with Square, and it is the same whatever the subscription's billing period - including the mixed
+	periods Stripe and PayPal cannot repeat exactly.</p>
+
+<p>Stripe and PayPal can optionally keep the schedule themselves, charging a saved card without the customer
+	doing anything. Square is the simplest of the three and the one with the least that can drift out of step.</p>
