@@ -129,18 +129,38 @@ test.describe( 'Content lifecycles', () => {
     }
   } );
 
-  /**
-   * Custom data groups are not covered here.
-   *
-   * Each was attempted and each needs more than a save and a read-back, so guessing at it
-   * was costing more than it was proving:
-   *
-   *  - save_data_type creates a group and returns its id, but admin_data_list_type answers
-   *    "No $data_type" for it, so either the page wants a different parameter or the group
-   *    needs a field group before it will render.
-   *
-   * None of that is evidence of a bug - it is evidence that these three need a person to
-   * drive the screens once and see how they actually fit together. Left honestly
-   * uncovered rather than asserted on a guess.
-   */
+
+  test( 'a custom data group and its fieldset come back on their own page', async ( { page } ) => {
+    await login( page );
+    const stamp = Date.now();
+    const typeName = 'Data Type ' + stamp;
+    const groupName = 'Fieldset ' + stamp;
+
+    const dataTypeId = await createRecord( page, '/?m[]=data', {
+      _process: 'save_data_type',
+      data_type_id: 'new',
+      data_type_name: typeName,
+    }, 'data_type_id' );
+
+    // A group on its own renders nothing useful - the page wants a fieldset before it has
+    // anything to show, which is why asking for it straight after creating the group
+    // answered "No $data_type" and an earlier attempt at this test read that as a bug.
+    const groupId = await createRecord( page, '/?m[]=data', {
+      _process: 'save_data_field_group',
+      data_field_group_id: 'new',
+      data_type_id: dataTypeId,
+      name: groupName,
+      _redirect: '/',
+    }, 'data_field_group_id' );
+
+    expect( groupId, 'the fieldset should have been given an id' ).toMatch( /^\d+$/ );
+
+    await page.goto( `/?m[]=data&p[]=admin_data&data_type_id=${ dataTypeId }&data_field_group_id=${ groupId }` );
+    const body = await page.content();
+
+    expect( body, 'the data group should be named on its own page' ).toContain( typeName );
+    expect( body, 'the page should not be complaining there is no data type' )
+      .not.toContain( 'No $data_type' );
+    expect( body, 'the page should render without a PHP warning' ).not.toContain( 'Warning</b>' );
+  } );
 } );
