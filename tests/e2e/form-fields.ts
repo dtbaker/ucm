@@ -16,13 +16,18 @@ import { Page, expect } from '@playwright/test';
 
 export type Field = string;
 
-/** Every named control inside the form that carries `process`, as "name|tag|type". */
-export async function formFields( page: Page, url: string, process: string ): Promise<Field[]> {
-  await page.goto( url );
+/** Pick a form by the hidden _process it dispatches on. */
+export function byProcess( process: string ): string {
+  return `form:has(input[name="_process"][value="${ process }"])`;
+}
 
-  return page.evaluate( ( processValue ) => {
-    const marker = document.querySelector( `input[name="_process"][value="${ processValue }"]` );
-    const form = marker ? marker.closest( 'form' ) : document.querySelector( 'form' );
+/**
+ * Every named control inside `formSelector`, as "name|tag|type", read off the page as it
+ * currently stands. Navigate first - some of these forms are only reachable by posting.
+ */
+export async function fieldsIn( page: Page, formSelector: string ): Promise<Field[]> {
+  return page.evaluate( ( selector ) => {
+    const form = document.querySelector( selector );
     if ( ! form ) {
       return [];
     }
@@ -40,31 +45,47 @@ export async function formFields( page: Page, url: string, process: string ): Pr
         return;
       }
       names.push( node.name );
+      // A row index is data, not shape: add_to_group[17] and add_to_group[18] are the
+      // same control repeated, and how many there are depends on what is in the database.
+      const shape = node.name.replace( /\[\d+\]/g, '[*]' );
       const kind = node.tagName.toLowerCase();
-      seen.push( `${ node.name }|${ kind }|${ kind === 'input' ? node.type : '' }` );
+      seen.push( `${ shape }|${ kind }|${ kind === 'input' ? node.type : '' }` );
     } );
 
     // generate_form_element() pairs every checkbox with a hidden default_<name>, so the
     // handler can tell "unticked" from "not on this form". That companion is the helper's
     // own plumbing, like the token - but it is only ignored when the real control it
     // belongs to is present, so a rename still shows up as a difference.
-    return seen
+    return [ ...new Set( seen ) ]
       .filter( ( entry ) => {
         const name = entry.split( '|' )[ 0 ];
         return ! ( name.startsWith( 'default_' ) && names.indexOf( name.slice( 8 ) ) !== -1 );
       } )
       .sort();
-  }, process );
+  }, formSelector );
+}
+
+/** Go to `url`, then read the controls of the form that dispatches `process`. */
+export async function formFields( page: Page, url: string, process: string ): Promise<Field[]> {
+  await page.goto( url );
+
+  return fieldsIn( page, byProcess( process ) );
 }
 
 /**
- * Assert a page's controls are exactly `expected`.
+ * Assert the form's controls are exactly `expected`.
  *
  * The failure prints both sides, because the useful information when this breaks is
  * which control went missing, not that a count changed.
  */
-export async function expectFields( page: Page, url: string, process: string, expected: Field[] ) {
-  const actual = await formFields( page, url, process );
+export async function expectFieldsIn( page: Page, formSelector: string, expected: Field[] ) {
+  const actual = await fieldsIn( page, formSelector );
   expect( actual, 'the form should render the same controls as before the conversion' )
     .toEqual( [ ...expected ].sort() );
+}
+
+/** Go to `url` and assert the controls of the form that dispatches `process`. */
+export async function expectFields( page: Page, url: string, process: string, expected: Field[] ) {
+  await page.goto( url );
+  await expectFieldsIn( page, byProcess( process ), expected );
 }

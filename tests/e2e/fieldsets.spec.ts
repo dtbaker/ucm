@@ -1,6 +1,6 @@
 import { test, expect, Page } from '@playwright/test';
 import { createRecord, login } from './seed';
-import { expectFields, formFields } from './form-fields';
+import { byProcess, expectFields, expectFieldsIn, fieldsIn } from './form-fields';
 
 /**
  * Pages whose form markup is being moved from a hand-written
@@ -103,5 +103,55 @@ test.describe( 'Forms moved to generate_fieldset', () => {
       .toBe( 'a default' );
     expect( await saved!.locator( 'input[name="required"]' ).first().isChecked(), 'required should have stuck' )
       .toBe( true );
+  } );
+
+  test( 'the import screen keeps its controls', async ( { page } ) => {
+    await login( page );
+
+    // The import screen is only reachable by posting: a list page renders a hidden form
+    // carrying the import options, and the Import link submits it. Building the options
+    // by hand here would test a request the application never makes.
+    await page.goto( '/?m[]=customer&p[]=customer_admin_list&customer_type_id=0' );
+    await Promise.all( [
+      page.waitForNavigation( { waitUntil: 'load' } ),
+      page.evaluate( () => ( document.forms as any ).import_form.submit() ),
+    ] );
+
+    await expectFieldsIn( page, 'form:has(input[name="csv"])', [
+      'add_to_group[*]|input|checkbox',
+      'cancel|input|button',
+      'csv|input|file',
+      'customer_type_id|select|',
+      'go|input|submit',
+      'import_options|input|hidden',
+      'upload_import|input|hidden',
+    ] );
+  } );
+
+  test( 'the newsletter send screen keeps its controls', async ( { page } ) => {
+    await login( page );
+    const stamp = Date.now();
+    const newsletterId = await createRecord( page, '/?m[]=newsletter', {
+      _process: 'save_newsletter',
+      newsletter_id: 'new',
+      subject: 'Fieldset Newsletter ' + stamp,
+      from_name: 'Fieldset Sender',
+      from_email: 'sender@example.com',
+      content: 'Body text.',
+    }, 'newsletter_id' );
+
+    // start_time is a text input in the source and a hidden one here: the date_time_field
+    // class hands it to a picker widget on load. This reads the page as a person gets it,
+    // which is the thing that has to keep working.
+    await expectFields( page, `/?m[]=newsletter&p[]=newsletter_send&newsletter_id=${ newsletterId }`,
+      'enque_send', [
+        'cancel|input|button',
+        'group[*]|input|checkbox',
+        'ignore|input|text',
+        'newsletter_id|input|hidden',
+        'send_id|input|hidden',
+        'send|input|submit',
+        'start_time|input|hidden',
+      ] );
   } );
 } );

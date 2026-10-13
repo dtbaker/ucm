@@ -462,68 +462,78 @@ if ( isset( $_REQUEST['run_import'] ) && $_REQUEST['run_import'] == 'true' ) {
 	) );
 	?>
 		<h3><?php _e( 'Import' ); ?></h3>
-		<table class="tableclass tableclass_form tableclass_full">
-			<tbody>
-			<tr>
-				<th class="width2"><?php _e( 'Your CSV file (formatted to the above specification):' ); ?></th>
-				<td>
-					<input type="file" name="csv">
-				</td>
-			</tr>
-			<?php if ( isset( $import_options['options'] ) && is_array( $import_options['options'] ) ) {
-				foreach ( $import_options['options'] as $option_id => $option_values ) {
-					?>
-					<tr>
-						<th>
-							<?php echo $option_values['label']; ?>
-						</th>
-						<td>
-							<?php module_form::generate_form_element( $option_values['form_element'] ); ?>
-						</td>
-					</tr>
-				<?php }
-			} ?>
-			<?php if ( class_exists( 'module_group', false ) && isset( $import_options['group'] ) && $import_options['group'] ) {
-				// hack to support multiple groups (for members)
-				if ( ! is_array( $import_options['group'] ) ) {
-					$import_options['group'] = array( $import_options['group'] );
+		<?php
+		$elements = array(
+			'csv' => array(
+				'title' => _l( 'Your CSV file (formatted to the above specification):' ),
+				'field' => array(
+					'type' => 'file',
+					'name' => 'csv',
+				),
+			),
+		);
+
+		// Whatever the calling module asked for. These already arrive as form element
+		// definitions, which is exactly what a fieldset element takes.
+		if ( isset( $import_options['options'] ) && is_array( $import_options['options'] ) ) {
+			foreach ( $import_options['options'] as $option_id => $option_values ) {
+				$elements[ 'option_' . $option_id ] = array(
+					'title' => $option_values['label'],
+					'field' => $option_values['form_element'],
+				);
+			}
+		}
+
+		if ( class_exists( 'module_group', false ) && isset( $import_options['group'] ) && $import_options['group'] ) {
+			// hack to support multiple groups (for members)
+			if ( ! is_array( $import_options['group'] ) ) {
+				$import_options['group'] = array( $import_options['group'] );
+			}
+			foreach ( $import_options['group'] as $group_index => $group_option ) {
+				$groups = module_group::get_groups( $group_option );
+				$fields = array();
+				if ( ! count( $groups ) ) {
+					$fields[] = _l( 'Sorry, no groups exist. Please create a %s group first.', $group_option );
 				}
-				foreach ( $import_options['group'] as $group_option ) {
-					?>
-					<tr>
-						<th>
-							<?php _e( 'Add imported records to group:' ); ?>
-						</th>
-						<td>
-							<?php $groups = module_group::get_groups( $group_option );
-							if ( ! count( $groups ) ) {
-								_e( 'Sorry, no groups exist. Please create a %s group first.', $group_option );
-							}
-							foreach ( $groups as $group ) {
-								$group_id = $group['group_id'];
-								?>
-								<input type="checkbox" class="add_to_group" name="add_to_group[<?php echo $group['group_id']; ?>]"
-								       id="groupchk<?php echo $group_id; ?>" value="yes">
-								<label for="groupchk<?php echo $group_id; ?>"><?php echo htmlspecialchars( $group['name'] ); ?></label>
-								<br/>
-								<?php
-							} ?>
-						</td>
-					</tr>
-					<?php
+				foreach ( $groups as $group ) {
+					$group_id = (int) $group['group_id'];
+					$fields[] = '<input type="checkbox" class="add_to_group" name="add_to_group[' . $group_id . ']"'
+					            . ' id="groupchk' . $group_id . '" value="yes">'
+					            . '<label for="groupchk' . $group_id . '">'
+					            . htmlspecialchars( $group['name'] ) . '</label><br/>';
 				}
-			} ?>
-			<tr>
-				<th></th>
-				<td>
-					<input type="submit" name="go" value="<?php _e( 'Upload' ); ?>" class="submit_button save_button">
-					<?php if ( $import_options['return_url'] ) { ?>
-						<input type="button" name="cancel" value="<?php _e( 'Cancel' ); ?>" class="submit_button"
-						       onclick="window.location.href='<?php echo htmlspecialchars( $import_options['return_url'] ); ?>';">
-					<?php } ?>
-				</td>
-			</tr>
-			</tbody>
-		</table>
+				$elements[ 'group_' . $group_index ] = array(
+					'title'  => _l( 'Add imported records to group:' ),
+					'fields' => $fields,
+				);
+			}
+		}
+
+		$actions = array(
+			array(
+				'type'  => 'save_button',
+				'name'  => 'go',
+				'value' => _l( 'Upload' ),
+			),
+		);
+		if ( $import_options['return_url'] ) {
+			$actions[] = array(
+				'type'    => 'button',
+				'name'    => 'cancel',
+				'value'   => _l( 'Cancel' ),
+				'class'   => 'submit_button',
+				'onclick' => "window.location.href='" . htmlspecialchars( $import_options['return_url'] ) . "';",
+			);
+		}
+		$elements['actions'] = array(
+			'title'  => '',
+			'fields' => $actions,
+		);
+
+		echo module_form::generate_fieldset( array(
+			'class'    => 'tableclass tableclass_form tableclass_full',
+			'elements' => $elements,
+		) );
+		?>
 	<?php module_form::print_form_close_tag(); ?>
 <?php } ?>
