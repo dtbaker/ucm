@@ -47,7 +47,11 @@ export async function fieldsIn( page: Page, formSelector: string ): Promise<Fiel
       names.push( node.name );
       // A row index is data, not shape: add_to_group[17] and add_to_group[18] are the
       // same control repeated, and how many there are depends on what is in the database.
-      const shape = node.name.replace( /\[\d+\]/g, '[*]' );
+      const shape = node.name
+        .replace( /\[\d+\]/g, '[*]' )
+        // prevent_exit_<md5> names itself after what it is guarding, so the hash is not
+        // part of the form's shape either.
+        .replace( /_[0-9a-f]{32}\b/g, '_*' );
       const kind = node.tagName.toLowerCase();
       seen.push( `${ shape }|${ kind }|${ kind === 'input' ? node.type : '' }` );
     } );
@@ -88,4 +92,20 @@ export async function expectFieldsIn( page: Page, formSelector: string, expected
 export async function expectFields( page: Page, url: string, process: string, expected: Field[] ) {
   await page.goto( url );
   await expectFieldsIn( page, byProcess( process ), expected );
+}
+
+/**
+ * The visible text of a region, whitespace-normalised.
+ *
+ * Some of these tables carry no controls at all - they are read-only statistics that sit
+ * inside a form and wear the form table's class for styling. For those the invariant is
+ * not "the same fields" but "the same labels and values", so this is what their specs
+ * compare.
+ */
+export async function regionText( page: Page, selector: string ): Promise<string> {
+  return page.evaluate( ( sel ) => {
+    const el = document.querySelector( sel );
+
+    return el ? ( el as HTMLElement ).innerText.replace( /\s+/g, ' ' ).trim() : '';
+  }, selector );
 }

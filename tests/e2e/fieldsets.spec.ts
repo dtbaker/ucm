@@ -1,5 +1,5 @@
 import { test, expect, Page } from '@playwright/test';
-import { createRecord, login } from './seed';
+import { aFile, createRecord, login } from './seed';
 import { byProcess, expectFields, expectFieldsIn, fieldsIn } from './form-fields';
 
 /**
@@ -153,5 +153,41 @@ test.describe( 'Forms moved to generate_fieldset', () => {
         'send|input|submit',
         'start_time|input|hidden',
       ] );
+  } );
+
+  test( 'the customer file screen keeps its controls', async ( { page } ) => {
+    await login( page );
+    const fileId = await aFile( page );
+
+    await expectFields( page, `/?m[]=file&p[]=file_customer_edit&file_id=${ fileId }`, 'save_file', [
+      '_plugin_form_name|input|hidden',
+      'butt_del|input|submit',
+      'butt_save|input|submit',
+      'cancel|input|button',
+      'description|textarea|',
+      'file_id|input|hidden',
+      'file_upload|input|file',
+      'prevent_exit_*|input|hidden',
+    ] );
+  } );
+
+  test( 'the public ticket form keeps its controls', async ( { page } ) => {
+    // No login: this is the page an anonymous visitor reaches through ext.php, which is
+    // the reason to be careful with it. generate_fieldset only reads or writes its
+    // per-user display settings when the fieldset has an id, so this one is given none.
+    await page.goto( '/ext.php?m=ticket&h=public_new' );
+
+    await expectFieldsIn( page, '#ticket_form', [
+      '_plugin_form_name|input|hidden',
+      'attachment[]|input|file',
+      'butt_save|input|submit',
+      'email|input|text',
+      'faq_product_id|select|',
+      'name|input|text',
+      'new_ticket_message|textarea|',
+      'subject|input|text',
+      'ticket_extra[*]|input|text',
+      'ticket_type_id|select|',
+    ] );
   } );
 } );
