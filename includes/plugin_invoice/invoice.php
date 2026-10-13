@@ -4624,7 +4624,24 @@ Job: <strong>{JOB_NAME}</strong> <br/>
 							} else {
 								echo " - failed to send subscription invoice " . module_invoice::link_open( $invoice_id, true ) . " to customer <br>\n";
 							}
-							exit;
+							// Send the invoice, then carry on and answer the caller. This
+							// used to exit here, which threw the payment away: the only
+							// callers are gateway notification handlers, and the money
+							// has already moved by the time one of them gets here. The
+							// caller takes the invoice and payment returned below and
+							// marks them paid; ending the request instead left the
+							// generated invoice sitting on a Pending Subscription payment
+							// of $0.00 with no paid date, the subscription period never
+							// advanced, and nothing anywhere recording that the customer
+							// had been charged.
+							//
+							// Reached whenever the gateway bills before UCM's own cron has
+							// generated the invoice for the period, which is the usual way
+							// round when the gateway charges before invoice_automatic_after_time.
+							// Reproduced by calling this directly against a paid
+							// subscription invoice: with automatic_email on it never
+							// returned, with it off it returned and the payment was
+							// recorded.
 						}
 
 						return array(

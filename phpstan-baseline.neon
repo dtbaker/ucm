@@ -7,6 +7,18 @@ parameters:
 			path: ajax.php
 
 		-
+			message: '#^Constant _DB_NAME not found\.$#'
+			identifier: constant.notFound
+			count: 1
+			path: cron.php
+
+		-
+			message: '#^Constant _DB_PREFIX not found\.$#'
+			identifier: constant.notFound
+			count: 1
+			path: cron.php
+
+		-
 			message: '#^Variable \$plugins might not be defined\.$#'
 			identifier: variable.undefined
 			count: 1
