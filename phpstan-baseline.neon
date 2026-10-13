@@ -5119,20 +5119,8 @@ parameters:
 			path: includes/plugin_timer/class.timer.php
 
 		-
-			message: '#^Access to an undefined property UCMTimerSegment\:\:\$start_time\.$#'
-			identifier: property.notFound
-			count: 1
-			path: includes/plugin_timer/class.timer.php
-
-		-
 			message: '#^Constant _DB_PREFIX not found\.$#'
 			identifier: constant.notFound
-			count: 1
-			path: includes/plugin_timer/class.timer.php
-
-		-
-			message: '#^Undefined variable\: \$timer_segment$#'
-			identifier: variable.undefined
 			count: 1
 			path: includes/plugin_timer/class.timer.php
 

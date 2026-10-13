@@ -228,10 +228,22 @@ if ( class_exists( 'UCMBaseSingle' ) ) {
 		);
 
 		public function paused() {
+			// A segment that is still running stops now. One that already carries an end
+			// time keeps it: pausing twice, or pausing a segment whose times have been
+			// corrected on the segment form, used to recalculate the duration from the
+			// wall clock and bill every hour since the start time.
+			$start_time   = (int) $this->get( 'start_time' );
+			$recorded_end = (int) $this->get( 'end_time' );
+			$end_time     = time();
+			if ( $this->get( 'timer_status' ) != _TIMER_STATUS_RUNNING
+			     && $recorded_end > 0
+			     && $recorded_end >= $start_time ) {
+				$end_time = $recorded_end;
+			}
 			$this->update( 'timer_status', _TIMER_STATUS_PAUSED );
-			$this->update( 'end_time', time() );
+			$this->update( 'end_time', $end_time );
 			// calc duration
-			$this->update( 'duration_calc', time() - $this->start_time );
+			$this->update( 'duration_calc', $end_time - $start_time );
 		}
 
 		public function get_status_text() {
@@ -266,8 +278,8 @@ if ( class_exists( 'UCMBaseSingle' ) ) {
 
 					if ( isset( $_REQUEST['butt_del'] ) && $_REQUEST['butt_del'] && module_timer::can_i( 'delete', 'Timers' ) ) {
 
-						$return = self::link_open( $_REQUEST['timer_id'] );
-						$timer_segment->delete_with_confirm( false, $return );
+						// $this is the segment being deleted; the timer is where we go back to.
+						$this->delete_with_confirm( false, $timer->link_open() );
 
 					} elseif ( module_timer::can_i( 'edit', 'Timers' ) ) {
 
@@ -277,6 +289,11 @@ if ( class_exists( 'UCMBaseSingle' ) ) {
 							if ( ! empty( $_POST['end_time'] ) ) {
 								$seg_data['end_time']      = max( (int) $_POST['start_time'], (int) $_POST['end_time'] );
 								$seg_data['duration_calc'] = $seg_data['end_time'] - $seg_data['start_time'];
+								// An end time means this segment has finished. Without
+								// saying so the segment stayed "running", so the next
+								// pause recalculated its duration from the wall clock
+								// and threw the corrected times away.
+								$seg_data['timer_status'] = _TIMER_STATUS_PAUSED;
 							}
 						}
 						//                        print_r($_POST);

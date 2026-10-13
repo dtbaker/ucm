@@ -229,29 +229,35 @@ if ( ! empty( $_GET['timer_segment_id'] ) ) {
 				'class'    => 'tableclass tableclass_form tableclass_full',
 				'elements' => array()
 			);
+			$invoice_fields = array(
+				array(
+					'type'   => 'text',
+					'name'   => 'invoice_id',
+					'value'  => $timer['invoice_id'],
+					'lookup' => array(
+						'key'         => 'invoice_id',
+						'display_key' => 'name',
+						'plugin'      => 'invoice',
+						'lookup'      => 'name',
+						'return_link' => true,
+					),
+				),
+			);
+			// Time that has already been billed is not offered for billing again - the
+			// timer list has always left invoiced timers out of its own invoice link,
+			// and this screen used to go on offering a second invoice for the same work.
+			if ( ! (int) $timer['invoice_id'] ) {
+				$invoice_fields[] = ' ';
+				$invoice_fields[] = array(
+					'type'    => 'button',
+					'name'    => 'new_invoice',
+					'value'   => _l( 'New Invoice' ),
+					'onclick' => "window.location.href='" . module_timer::invoice_link( array( $timer_id ) ) . "';",
+				);
+			}
 			$fieldset_data['elements'][] = array(
 				'title'  => _l( 'Linked Invoice' ),
-				'fields' => array(
-					array(
-						'type'   => 'text',
-						'name'   => 'invoice_id',
-						'value'  => $timer['invoice_id'],
-						'lookup' => array(
-							'key'         => 'invoice_id',
-							'display_key' => 'name',
-							'plugin'      => 'invoice',
-							'lookup'      => 'name',
-							'return_link' => true,
-						),
-					),
-					' ',
-					array(
-						'type'    => 'button',
-						'name'    => 'new_invoice',
-						'value'   => _l( 'New Invoice' ),
-						'onclick' => "window.location.href='" . module_timer::invoice_link( array( $timer_id ) ) . "';",
-					),
-				)
+				'fields' => $invoice_fields,
 			);
 
 			echo module_form::generate_fieldset( $fieldset_data );

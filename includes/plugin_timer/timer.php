@@ -230,15 +230,26 @@ class module_timer extends module_base
 	public static function invoice_link( $billable_timers = array() ) {
 		$url = module_invoice::link_open( 'new', false ) . '&timer_ids=' . implode( ',', $billable_timers );
 		// we also have to pass any ticket_ids through
-		$ticket_ids = array();
+		$ticket_ids   = array();
+		$customer_ids = array();
 		foreach ( $billable_timers as $timer_id ) {
 			$timer = new UCMTimer( $timer_id );
 			if ( $timer->owner_table && $timer->owner_id && $timer->owner_table == 'ticket' ) {
 				$ticket_ids[] = (int) $timer->owner_id;
 			}
+			$timer_customer_id = (int) $timer->get( 'customer_id' );
+			if ( $timer_customer_id > 0 ) {
+				$customer_ids[ $timer_customer_id ] = true;
+			}
 		}
 		$other_ids = array( 'ticket_ids' => $ticket_ids );
 		$url       .= '&' . http_build_query( $other_ids );
+		// The timers know whose work this was. Without passing it on, the invoice opened
+		// with no customer at all and the customer's own tax and rate defaults were
+		// never applied. Only when every timer agrees, otherwise we would be guessing.
+		if ( count( $customer_ids ) === 1 ) {
+			$url .= '&customer_id=' . key( $customer_ids );
+		}
 
 		return $url;
 	}
