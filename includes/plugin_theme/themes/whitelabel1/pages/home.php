@@ -77,10 +77,10 @@ if ( is_array( $home_widgets2 ) ) {
 				<h3 class="handle">UCM Demonstration Website</h3>
 				<div style="text-align: center">
 					<p>Welcome to the live demo for <a
-							href="http://ultimateclientmanager.com/?utm_source=Demo&utm_medium=HomePage&utm_campaign=WhiteLabel&utm_content=WhiteLabel"
+							href="https://ultimateclientmanager.com/?utm_source=Demo&utm_medium=HomePage&utm_campaign=WhiteLabel&utm_content=WhiteLabel"
 							target="_blank" title="UCM: Open Source CRM, Website and Project Management" style="font-weight: bold">Ultimate
 							Client Manager Pro Edition</a> using the lovely <a
-							href="http://themeforest.net/item/ucm-theme-white-label/4120556?ref=dtbaker" target="_blank"
+							href="https://themeforest.net/item/ucm-theme-white-label/4120556?ref=dtbaker" target="_blank"
 							style="font-weight: bold;">White Label</a> theme. <br/>
 						This demo resets every now and then, so please feel free to test it out by entering or changing any of the
 						data. <br/>

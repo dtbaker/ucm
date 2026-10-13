@@ -62,7 +62,7 @@
 							<strong>Login details for the UCM demo are:</strong><br/>
 							Administrator: admin@example.com / password <br/>
 							Customer: user@example.com / password <br/>
-							<a href="http://ultimateclientmanager.com/support/faq-knowledge-base/faq-item/?ucm_faq_id=20"
+							<a href="https://ultimateclientmanager.com/support/faq-knowledge-base/faq-item/?ucm_faq_id=20"
 							   target="_blank">FAQ: create your own Customer login</a>
 						</p>
 					<?php } ?>
