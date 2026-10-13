@@ -206,21 +206,20 @@ module_form::print_form_open_tag( array(
 	// files
 	if ( $contract_id > 0 ) {
 		ob_start();
-		$files = module_file::get_files( array( 'contract_id' => $contract_id ), true );
+		// A file belongs to a contract through owner_table/owner_id, the way it does for a
+		// newsletter. There is no `contract_id` column on the file table, and
+		// module_file::get_files() only honours the keys it recognises - so searching on
+		// `contract_id` was not a filter at all and this counted, and linked to, every
+		// file in the installation as though all of them belonged to this contract.
+		$file_owner = array( 'owner_table' => 'contract', 'owner_id' => $contract_id );
+		$files      = module_file::get_files( $file_owner, true );
 		if ( count( $files ) > 0 ) {
 			?>
 			<a href="<?php
 
 			echo module_file::link_generate( false, array(
-				'arguments' => array(
-					'contract_id' => $contract['contract_id'],
-				),
-				'data'      => array(
-					// we do this to stop the 'customer_id' coming through
-					// so we link to the full contract page, not the customer contract page.
-
-					'contract_id' => $contract['contract_id'],
-				),
+				'arguments' => $file_owner,
+				'data'      => $file_owner,
 			) ); ?>"><?php echo _l( 'View all %d files in this contract', count( $files ) ); ?></a>
 			<?php
 		} else {
@@ -229,9 +228,7 @@ module_form::print_form_open_tag( array(
 		echo '<br/>';
 		?>
 		<a href="<?php echo module_file::link_generate( 'new', array(
-			'arguments' => array(
-				'contract_id' => $contract['contract_id'],
-			)
+			'arguments' => $file_owner,
 		) ); ?>"><?php _e( 'Add New File' ); ?></a>
 		<?php
 		$fieldset_data['elements']['files'] = array(

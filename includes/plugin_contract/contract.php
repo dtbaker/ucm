@@ -1317,7 +1317,15 @@ Thank you,<br><br>
 		$sql = "DELETE FROM " . _DB_PREFIX . "contract WHERE contract_id = '" . $contract_id . "' LIMIT 1";
 		$res = query( $sql );
 		if ( class_exists( 'module_file', false ) ) {
-			$sql = "UPDATE " . _DB_PREFIX . "file SET contract_id = 0 WHERE contract_id = '" . $contract_id . "'";
+			// There is no `contract_id` column on the file table and there never has been
+			// - a file belongs to a contract through the generic owner_table/owner_id pair,
+			// the way it does for a newsletter. The old query named a column that does not
+			// exist, so every contract delete printed "Unknown column 'contract_id' in
+			// 'where clause'" into the page, which then stopped redirect_browser() sending
+			// its header: the user was left looking at a SQL error instead of the list,
+			// with no "deleted successfully" message, and the files stayed attached.
+			$sql = "UPDATE " . _DB_PREFIX . "file SET owner_id = 0, owner_table = '' ";
+			$sql .= " WHERE owner_table = 'contract' AND owner_id = '" . $contract_id . "'";
 			query( $sql );
 		}
 
