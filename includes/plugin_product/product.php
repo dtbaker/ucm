@@ -735,8 +735,15 @@ Current Inventory Level: {PRODUCT_QUANTITY} <br/><br/>
 		$products_ids = array();
 		foreach ( $invoice_items as $invoice_item ) {
 			if ( ! empty( $invoice_item['product_id'] ) ) {
-				// we store how many "qty" is been deleted, and hence return this number to the inventory pool
-				$products_ids[ $invoice_item['product_id'] ] = $invoice_item['hours'];
+				// We store how many "qty" is being deleted, and hence return this number to
+				// the inventory pool. An invoice can list the same product on more than one
+				// line, and get_product_usage() below counts every one of them - so these
+				// have to add up. Assigning instead of adding kept only the last line's
+				// quantity, and the rest of the stock was never returned.
+				if ( ! isset( $products_ids[ $invoice_item['product_id'] ] ) ) {
+					$products_ids[ $invoice_item['product_id'] ] = 0;
+				}
+				$products_ids[ $invoice_item['product_id'] ] += $invoice_item['hours'];
 			}
 		}
 		foreach ( $products_ids as $product_id => $qty_deleted ) {
