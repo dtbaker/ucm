@@ -480,33 +480,25 @@ class module_paymethod_stripe extends module_base
 	}
 
 	/**
-	 * Hand the payer to a Stripe-hosted Checkout page that sets up a subscription.
+	 * Build the Checkout Session request for a subscription.
 	 *
-	 * This replaces a Plan created through the 2014 bundled library and a checkout.js v2
-	 * modal. The Plan call passed a top-level `name`, which Stripe stopped accepting when
-	 * it introduced Products, and the modal cannot answer a 3-D Secure challenge. The
-	 * recurring price is built inline here, so there is no Plan or Product to create,
-	 * retrieve, keep in step with an edited subscription, or leave behind in the account.
+	 * Kept apart from the call that sends it so the request itself can be checked without
+	 * a Stripe key. Everything Stripe would reject is decided here - the mode, the inline
+	 * recurring price, the amount in minor units, and the metadata that ties a renewal
+	 * back to the row it belongs to - and none of it is otherwise provable until somebody
+	 * has a real key in their hand.
 	 *
-	 * Never returns on the success path.
+	 * Verified against Stripe's documented Checkout Session schema on 2026-10-13 by calling
+	 * this with a monthly $49.95 subscription and reading the result: mode subscription,
+	 * currency lowercased, unit_amount 4995 in minor units, the recurring interval inline on
+	 * price_data, {CHECKOUT_SESSION_ID} present in success_url, and the ucm ids on both the
+	 * session and the subscription metadata. What that does not prove is that Stripe accepts
+	 * it - the request is rejected at authentication before the body is looked at, so the
+	 * last word needs a test key.
 	 *
-	 * @param int    $invoice_id
-	 * @param float  $payment_amount
-	 * @param int    $invoice_payment_id
-	 * @param array  $invoice_payment_data
-	 * @param string $description
-	 * @param array  $subscription as returned by invoice_subscription()
-	 * @param int    $invoice_payment_subscription_id
-	 * @param array  $user_data
-	 *
-	 * @return bool
+	 * @return array the arguments for checkout->sessions->create()
 	 */
-	public static function start_subscription_checkout( $invoice_id, $payment_amount, $invoice_payment_id, $invoice_payment_data, $description, $subscription, $invoice_payment_subscription_id, $user_data = array() ) {
-		if ( self::secret_key() === '' ) {
-			echo htmlspecialchars( _l( 'This site is not finished setting up card payments. Please contact us to arrange payment another way.' ) );
-			exit;
-		}
-
+	public static function subscription_session_args( $invoice_id, $payment_amount, $invoice_payment_id, $invoice_payment_data, $description, $subscription, $invoice_payment_subscription_id, $user_data = array() ) {
 		$currency      = module_config::get_currency( $invoice_payment_data['currency_id'] );
 		$currency_code = isset( $currency['code'] ) ? $currency['code'] : 'USD';
 		$product_name  = trim( (string) $subscription['name'] );
@@ -555,6 +547,43 @@ class module_paymethod_stripe extends module_base
 		if ( isset( $user_data['email'] ) && strpos( (string) $user_data['email'], '@' ) ) {
 			$args['customer_email'] = $user_data['email'];
 		}
+
+		return $args;
+	}
+
+	/**
+	 * Hand the payer to a Stripe-hosted Checkout page that sets up a subscription.
+	 *
+	 * This replaces a Plan created through the 2014 bundled library and a checkout.js v2
+	 * modal. The Plan call passed a top-level `name`, which Stripe stopped accepting when
+	 * it introduced Products, and the modal cannot answer a 3-D Secure challenge. The
+	 * recurring price is built inline here, so there is no Plan or Product to create,
+	 * retrieve, keep in step with an edited subscription, or leave behind in the account.
+	 *
+	 * Never returns on the success path.
+	 *
+	 * @param int    $invoice_id
+	 * @param float  $payment_amount
+	 * @param int    $invoice_payment_id
+	 * @param array  $invoice_payment_data
+	 * @param string $description
+	 * @param array  $subscription as returned by invoice_subscription()
+	 * @param int    $invoice_payment_subscription_id
+	 * @param array  $user_data
+	 *
+	 * @return bool
+	 */
+	public static function start_subscription_checkout( $invoice_id, $payment_amount, $invoice_payment_id, $invoice_payment_data, $description, $subscription, $invoice_payment_subscription_id, $user_data = array() ) {
+		if ( self::secret_key() === '' ) {
+			echo htmlspecialchars( _l( 'This site is not finished setting up card payments. Please contact us to arrange payment another way.' ) );
+			exit;
+		}
+
+		$args = self::subscription_session_args(
+			$invoice_id, $payment_amount, $invoice_payment_id, $invoice_payment_data,
+			$description, $subscription, $invoice_payment_subscription_id, $user_data
+		);
+		$currency_code = strtoupper( (string) $args['line_items'][0]['price_data']['currency'] );
 
 		try {
 			$session = self::stripe_client()->checkout->sessions->create( $args );
