@@ -26,10 +26,10 @@
 class ucm_help_docs
 {
 	/** Where a human reads the documentation. */
-	const DOCS_WEB = 'https://docs.ultimateclientmanager.com/';
+	const DOCS_WEB = 'https://ultimateclientmanager.com/docs/';
 
 	/** Where this code reads the documentation. Static JSON, served by a CDN. */
-	const DOCS_API = 'https://docs.ultimateclientmanager.com/api/v1/';
+	const DOCS_API = 'https://ultimateclientmanager.com/docs/api/v1/';
 
 	/** Fixed. No version suffix, no install address, nothing that varies per site. */
 	const USER_AGENT = 'UCM-Help/1.0';

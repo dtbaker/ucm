@@ -33,14 +33,14 @@ class HelpDocsTest extends TestCase
 
 	public function test_the_request_url_is_exactly_this_and_nothing_more() {
 		$this->assertSame(
-			'https://docs.ultimateclientmanager.com/api/v1/customers.json?v=3.556&lang=en',
+			'https://ultimateclientmanager.com/docs/api/v1/customers.json?v=3.556&lang=en',
 			ucm_help_docs::api_url( 'customers', '3.556', 'en' )
 		);
 	}
 
 	public function test_a_nested_slug_keeps_its_slash() {
 		$this->assertSame(
-			'https://docs.ultimateclientmanager.com/api/v1/customers/editing.json?v=3.556&lang=en',
+			'https://ultimateclientmanager.com/docs/api/v1/customers/editing.json?v=3.556&lang=en',
 			ucm_help_docs::api_url( 'customers/editing', '3.556', 'en' )
 		);
 	}
@@ -106,8 +106,15 @@ class HelpDocsTest extends TestCase
 	public function test_the_request_only_ever_goes_to_the_documentation_host() {
 		$host = parse_url( ucm_help_docs::api_url( 'customers', '3.5', 'en' ), PHP_URL_HOST );
 
-		$this->assertSame( 'docs.ultimateclientmanager.com', $host );
+		$this->assertSame( 'ultimateclientmanager.com', $host );
 		$this->assertSame( 'https', parse_url( ucm_help_docs::api_url( 'customers', '3.5', 'en' ), PHP_URL_SCHEME ) );
+		// The documentation is a folder on the main site rather than a host of its own,
+		// so the right host is no longer enough on its own - the path has to stay inside
+		// the documentation too.
+		$this->assertStringStartsWith(
+			'https://ultimateclientmanager.com/docs/api/v1/',
+			ucm_help_docs::api_url( 'customers', '3.5', 'en' )
+		);
 	}
 
 	// ---------------------------------------------------------------- the whitelist
@@ -146,9 +153,14 @@ class HelpDocsTest extends TestCase
 			$url = ucm_help_docs::api_url( $attempt, '3.5', 'en' );
 			if ( $url ) {
 				$this->assertSame(
-					'docs.ultimateclientmanager.com',
+					'ultimateclientmanager.com',
 					parse_url( $url, PHP_URL_HOST ),
 					'built a URL pointing somewhere else from: ' . $attempt
+				);
+				$this->assertStringStartsWith(
+					'https://ultimateclientmanager.com/docs/api/v1/',
+					$url,
+					'built a URL outside the documentation folder from: ' . $attempt
 				);
 			}
 		}
@@ -161,8 +173,8 @@ class HelpDocsTest extends TestCase
 	}
 
 	public function test_the_web_url_for_no_slug_is_the_documentation_index() {
-		$this->assertSame( 'https://docs.ultimateclientmanager.com/', ucm_help_docs::web_url( '' ) );
-		$this->assertSame( 'https://docs.ultimateclientmanager.com/customers/editing/', ucm_help_docs::web_url( 'customers/editing' ) );
+		$this->assertSame( 'https://ultimateclientmanager.com/docs/', ucm_help_docs::web_url( '' ) );
+		$this->assertSame( 'https://ultimateclientmanager.com/docs/customers/editing/', ucm_help_docs::web_url( 'customers/editing' ) );
 	}
 
 	// ---------------------------------------------------------------- page to article
