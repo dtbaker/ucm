@@ -1879,20 +1879,40 @@ Invoice: <strong>{INVOICE_LINK}</strong>
 
 	}
 
+	/**
+	 * The customer's credit balance, read from the row rather than the cache.
+	 *
+	 * Adding and removing credit is a read, a sum and a write. get_customer() caches, so
+	 * reading the balance through it meant a second adjustment within the cache lifetime
+	 * started from the balance as it was before the first one - and overwrote it. Two
+	 * overpayments assigned to the same customer lost the first.
+	 *
+	 * @param int $customer_id
+	 *
+	 * @return float
+	 */
+	private static function stored_credit( $customer_id ) {
+		$row = get_single( 'customer', 'customer_id', (int) $customer_id );
+
+		return ( $row && isset( $row['credit'] ) ) ? (float) $row['credit'] : 0.0;
+	}
+
 	public static function add_credit( $customer_id, $credit, $note = false ) {
-		$customer_data           = self::get_customer( $customer_id );
-		$customer_data['credit'] += $credit;
-		update_insert( 'customer_id', $customer_id, 'customer', array( 'credit' => $customer_data['credit'] ) );
+		$balance = self::stored_credit( $customer_id ) + $credit;
+		update_insert( 'customer_id', $customer_id, 'customer', array( 'credit' => $balance ) );
+		module_cache::clear( 'customer' );
 		if ( $note ) {
 			self::add_history( $customer_id, $note );
 		}
 	}
 
 	public static function remove_credit( $customer_id, $credit, $note = false ) {
-		$customer_data           = self::get_customer( $customer_id );
-		$customer_data['credit'] -= $credit;
-		update_insert( 'customer_id', $customer_id, 'customer', array( 'credit' => $customer_data['credit'] ) );
+		$balance = self::stored_credit( $customer_id ) - $credit;
+		update_insert( 'customer_id', $customer_id, 'customer', array( 'credit' => $balance ) );
 		module_cache::clear( 'customer' );
+		if ( $note ) {
+			self::add_history( $customer_id, $note );
+		}
 	}
 
 

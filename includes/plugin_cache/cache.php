@@ -301,12 +301,20 @@ class module_cache extends module_base
 			// we have to clear this entire group, not just the individual key
 			// add in an expiry time for this cache group
 			self::$_cache_expiry[ $group ] = time();
-			// for sessions and memcache.
-			if ( self::$_use_memcache ) {
-				// no way to delete all entries from a memcache based on "group", so we use the 'cache' expiry table above to invalidate entries across the system.
+			// Record the expiry whichever backend is in use. Deleting the rows is not
+			// enough on its own: another request that is part way through has the group
+			// in memory and writes it back when it finishes (shutdown_write_cached_data),
+			// which puts the rows this just deleted straight back with their old
+			// contents. get() checks this expiry, so a resurrected row is refused.
+			//
+			// Demonstrated before this line existed: open a customer in one request, and
+			// while it is still running rename the customer in another. The row reads
+			// the new name, the customer's own screen keeps rendering the old one.
+			if ( self::db_table_exists( 'cache' ) ) {
 				$sql = "REPLACE INTO `" . _DB_PREFIX . "cache` SET `cache_group` = '" . db_escape( $group ) . "', `expire_time` = " . time();
 				query( $sql );
-			} else {
+			}
+			if ( ! self::$_use_memcache ) {
 				// session mode, remove all cache elements from this item.
 				if ( self::db_table_exists( 'cache_store' ) ) {
 					$sql = "DELETE FROM `" . _DB_PREFIX . "cache_store` WHERE `cache_group` = '" . db_escape( $group ) . "'";// AND `create_user_id` = ".module_security::get_loggedin_id();
