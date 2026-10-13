@@ -175,18 +175,17 @@ test.describe('Tickets', () => {
     ]);
     await expect(page.locator('body'), 'deleting should ask for confirmation first')
       .toContainText(/really delete/i);
-    await page.evaluate(() => {
-      const flag = document.getElementById('really_confirm_delete') as HTMLInputElement;
-      flag.value = 'yep';
-      const form = flag.form as HTMLFormElement;
-      const button = document.createElement('input');
-      button.type = 'hidden';
-      button.name = 'butt_del';
-      button.value = '1';
-      form.appendChild(button);
-      form.submit();
-    });
-    await page.waitForLoadState('load');
+
+    // Press the button the confirmation screen actually shows. Submitting the form from
+    // script with a made up butt_del value looks equivalent and is not - the handler never
+    // deletes, and the test then reports the app as broken when it is not.
+    await Promise.all([
+      page.waitForNavigation({ waitUntil: 'load' }),
+      page.locator('input[name="butt_del"][value="Confirm Delete"], button[name="butt_del"]').first().click(),
+    ]);
+
+    await expect(page.locator('body'), 'the app should say it deleted the ticket')
+      .toContainText(/ticket deleted successfully/i);
 
     expect(await searchTickets(page, subject), 'the deleted ticket should be gone from the list')
       .not.toContain(ticketId);
