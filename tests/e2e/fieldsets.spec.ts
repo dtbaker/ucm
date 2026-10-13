@@ -36,6 +36,35 @@ async function aDataFieldGroup( page: Page ): Promise<{ typeId: string; groupId:
   return { typeId, groupId };
 }
 
+/**
+ * Still hand-written, and why. Each of these was looked at and left deliberately, rather
+ * than converted without a spec to prove the fields survived.
+ *
+ *  includes/plugin_setup/pages/setup1.php
+ *      Cannot be converted. generate_fieldset reads its per-user display settings from
+ *      the `form` table, and step 1 of the wizard is where the database credentials are
+ *      still being typed in. Converting it replaced the form with "Table 'ucm_form'
+ *      doesn't exist" - checked against an empty database with scripts/install-test.sh,
+ *      then reverted. Same shape as the form token problem the wizard already opts out of.
+ *
+ *  includes/plugin_newsletter/pages/newsletter_member.php
+ *  includes/plugin_newsletter/pages/newsletter_queue.php
+ *  includes/plugin_newsletter/pages/newsletter_queue_watch.php
+ *      Read-only statistics tables that only render once a newsletter has been queued to
+ *      a send. That needs a group with members in it, and enqueuing refuses with "Please
+ *      select at least 1 person" until there is one. The fixture did not come together -
+ *      saving a customer with used_group_module set writes no group_member row - so there
+ *      is no passing spec to convert them against.
+ *
+ *  includes/plugin_encrypt/pages/encrypt_popup.php
+ *      The encrypt plugin is not reachable in the development install: the popup answers
+ *      with a 35 byte access denied, so there is nothing to record a baseline from.
+ *
+ *  includes/plugin_theme/themes/whitelabel1/pages/login.php
+ *      A theme's own login form. It only renders when that theme is active, and themes
+ *      are where bespoke markup belongs - generate_fieldset has a theme override hook, so
+ *      having a theme call the shared helper points that relationship the wrong way.
+ */
 test.describe( 'Forms moved to generate_fieldset', () => {
   test( 'the data field screen keeps its controls and saves what is typed', async ( { page } ) => {
     await login( page );
