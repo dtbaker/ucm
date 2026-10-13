@@ -1362,6 +1362,11 @@ function redirect_browser( $url, $hard = false ) {
 	if ( $hard ) {
 		header( 'HTTP/1.1 301 Moved Permanently' );
 	}
+	// an empty url means "back to the start" - two callers pass one. Reading $url[0] on
+	// it warns under E_ALL, and the warning lands in the body of the redirect.
+	if ( ! strlen( $url ) ) {
+		$url = _BASE_HREF;
+	}
 	if ( ! preg_match( '/^https?:/', $url ) && $url[0] != "/" && $url[0] != "?" ) {
 		$url = _BASE_HREF . $url;
 	}
