@@ -167,7 +167,7 @@ print_heading( 'Member Newsletter History/Statistics' );
 					</tr>
 					</tbody>
 				</table>
-			</form>
+			<?php module_form::print_form_close_tag(); ?>
 			<?php } ?>
 		</td>
 	</tr>

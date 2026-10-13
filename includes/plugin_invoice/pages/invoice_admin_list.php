@@ -504,12 +504,12 @@ print_heading( $header );
 		$table_manager->print_table();
 
 		?>
-	</form>
+	<?php module_form::print_form_close_tag(); ?>
 
 <?php if ( function_exists( 'convert_html2pdf' ) && get_display_mode() != 'mobile' ) { ?>
 	<?php module_form::print_form_open_tag( array( 'action' => ( module_invoice::link_generate( false, array( 'arguments' => array( 'print' => 1 ) ) ) ) ) ); ?>
 		<input type="hidden" name="invoice_ids" value="<?php echo implode( ",", $all_invoice_ids ); ?>">
 		<input type="submit" name="butt_print" value="<?php echo _l( 'Export all results as PDF' ); ?>"
 		       class="submit_button"/>
-	</form>
+	<?php module_form::print_form_close_tag(); ?>
 <?php } ?>

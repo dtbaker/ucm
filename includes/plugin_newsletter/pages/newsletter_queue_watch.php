@@ -434,4 +434,4 @@ $start_time = $send['start_time'];
 		</tbody>
 	</table>
 
-</form>
+<?php module_form::print_form_close_tag();

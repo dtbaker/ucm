@@ -201,5 +201,5 @@ echo strpos( $link, '?' ) ? '&' : '?';?>customer_id=' + cust.customer_id + '">' 
 	echo module_form::search_bar( $search_bar );
 
 	?>
-</form>
+<?php module_form::print_form_close_tag(); ?>
 <div id="map-canvas"></div>

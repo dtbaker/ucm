@@ -277,4 +277,4 @@ print_heading( $header );
 	$pagination = process_pagination( $members );
 	?>
 
-</form>
+<?php module_form::print_form_close_tag();

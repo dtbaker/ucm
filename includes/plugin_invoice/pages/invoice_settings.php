@@ -192,6 +192,6 @@ if ( count( $blank_invoices ) ) {
 	<?php module_form::print_form_open_tag( array( 'action' => '' ) ); ?>
 		<input type="hidden" name="remove_duplicates" value="yes">
 		<input type="submit" value="Remove these <?php echo count( $blank_invoices ); ?> invoices">
-	</form>
+	<?php module_form::print_form_close_tag(); ?>
 	<?php
 }

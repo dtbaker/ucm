@@ -373,7 +373,7 @@ if ( isset( $_REQUEST['export_json'] ) ) {
 		?>
 
 
-	</form>
+	<?php module_form::print_form_close_tag(); ?>
 
 <?php
 if ( isset( $_REQUEST['export_json'] ) ) {

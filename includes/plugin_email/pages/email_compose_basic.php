@@ -14,7 +14,7 @@ extract( $options );
 	'id'     => 'template_change_form',
 ) ); ?>
 	<input type="hidden" name="template_name" value="" id="template_name_change">
-</form>
+<?php module_form::print_form_close_tag(); ?>
 
 <?php module_form::print_form_open_tag( array(
 	'action'  => full_link( 'email.email_compose_basic' ),
@@ -230,5 +230,4 @@ extract( $options );
 	?>
 
 
-</form>
-
+<?php module_form::print_form_close_tag();

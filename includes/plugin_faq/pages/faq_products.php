@@ -133,7 +133,7 @@ if ( isset( $_REQUEST['faq_product_id'] ) && $_REQUEST['faq_product_id'] ) {
 		?>
 
 
-	</form>
+	<?php module_form::print_form_close_tag(); ?>
 
 	<?php
 } else {

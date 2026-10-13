@@ -291,7 +291,7 @@ if ( isset( $_REQUEST['ticket_account_id'] ) && $_REQUEST['ticket_account_id'] )
 		?>
 
 
-	</form>
+	<?php module_form::print_form_close_tag(); ?>
 
 	<?php
 } else {

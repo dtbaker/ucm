@@ -130,7 +130,7 @@ if ( $data_field_group_id && $data_field_group_id != 'new' ) {
 
 		?>
 
-	</form>
+	<?php module_form::print_form_close_tag(); ?>
 
 	<p>&nbsp;</p>
 <?php
@@ -262,7 +262,7 @@ if ( $data_field_group_id && $data_field_group_id != 'new' ) {
 					</select>
 					<!-- <input type="submit" name="go" value="Go" class="submit_button save_button"> -->
 				</p>
-			</form>
+			<?php module_form::print_form_close_tag(); ?>
 
 			<?php
 			include( 'render_group.php' );

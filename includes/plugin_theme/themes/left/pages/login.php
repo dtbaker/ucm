@@ -83,7 +83,7 @@
 					</tr>
 				</table>
 				<?php hook_handle_callback( 'forgot_password_screen' ); ?>
-			</form>
+			<?php module_form::print_form_close_tag(); ?>
 		<?php } else { ?>
 
 		<h2><?php echo _l( 'Please Login' ); ?> </h2>
@@ -147,7 +147,7 @@
 							</tr>
 						</table>
 						<?php hook_handle_callback( 'login_screen' ); ?>
-					</form>
+					<?php module_form::print_form_close_tag(); ?>
 				</td>
 			</tr>
 		</table>

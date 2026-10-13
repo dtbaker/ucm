@@ -431,4 +431,4 @@ if ( ! empty( $_GET['timer_segment_id'] ) ) {
 	?>
 
 
-</form>
+<?php module_form::print_form_close_tag();

@@ -101,7 +101,7 @@ if ( isset( $_POST['stripeToken'] ) && isset( $invoice_payment_data ) && $invoic
 			<?php } ?>
 			      data-label="<?php _e( 'Pay %s by Credit Card', dollar( $payment_amount, true, $invoice_payment_data['currency_id'] ) ); ?>"
 			      data-description="<?php echo htmlspecialchars( $description ); ?>"></script>
-	</form>
+	<?php module_form::print_form_close_tag(); ?>
 
 	<p>&nbsp;</p>
 	<p>

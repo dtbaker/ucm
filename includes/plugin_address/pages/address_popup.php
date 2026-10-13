@@ -15,7 +15,7 @@ if ( $address_id ) {
 		<?php
 		handle_hook( "address_block", $module, $address_data['address_type'], $address_data['owner_table'], false, $address_data['owner_id'] );
 		?>
-	</form>
+	<?php module_form::print_form_close_tag(); ?>
 	<?php
 }
 // exit so ajax load doesn't do everything

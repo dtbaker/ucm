@@ -50,7 +50,7 @@
 					<p><a href="?login"><?php _e( 'Back to Login' ); ?></a></p>
 				</div>
 				<?php hook_handle_callback( 'login_screen' ); ?>
-			</form>
+			<?php module_form::print_form_close_tag(); ?>
 		</div>
 	</div>
 <?php } else { ?>
@@ -107,7 +107,7 @@
 					</p>
 				</div>
 				<?php hook_handle_callback( 'login_screen' ); ?>
-			</form>
+			<?php module_form::print_form_close_tag(); ?>
 		</div>
 	</div>
 	<script type="text/javascript">

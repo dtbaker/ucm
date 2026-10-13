@@ -128,7 +128,7 @@ if ( isset( $_REQUEST['faq_id'] ) && $_REQUEST['faq_id'] ) {
 		?>
 
 
-	</form>
+	<?php module_form::print_form_close_tag(); ?>
 
 	<?php
 } else {

@@ -100,7 +100,7 @@ if ( $invoice_data['total_amount_due'] > 0 ) {
 					</tr>
 					</tbody>
 				</table>
-			</form>
+			<?php module_form::print_form_close_tag(); ?>
 
 			<?php
 		} else {

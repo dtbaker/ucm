@@ -228,5 +228,4 @@ $newsletter_template    = module_newsletter::get_newsletter_template( $newslette
 		</tr>
 		</tbody>
 	</table>
-</form>
-
+<?php module_form::print_form_close_tag();

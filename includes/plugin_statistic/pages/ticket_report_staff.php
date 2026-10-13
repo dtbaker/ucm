@@ -46,7 +46,7 @@ $messages = qa( $sql );
 	);
 	echo module_form::search_bar( $search_bar ); ?>
 
-</form>
+<?php module_form::print_form_close_tag(); ?>
 
 <p>&nbsp;</p>
 

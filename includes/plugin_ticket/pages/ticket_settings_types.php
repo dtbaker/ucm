@@ -118,7 +118,7 @@ if ( isset( $_REQUEST['ticket_type_id'] ) && $_REQUEST['ticket_type_id'] ) {
 		?>
 
 
-	</form>
+	<?php module_form::print_form_close_tag(); ?>
 
 	<?php
 } else {

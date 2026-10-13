@@ -228,7 +228,7 @@ if ( isset( $_REQUEST['save_signature'] ) ) {
 				<canvas class="pad" width="350" height="100"></canvas>
 				<input type="hidden" name="output" class="output">
 			</div>
-		</form>
+		<?php module_form::print_form_close_tag(); ?>
 		<script type="text/javascript">
         setTimeout(function () {
 					<?php if (false && $existing_signature) { ?>

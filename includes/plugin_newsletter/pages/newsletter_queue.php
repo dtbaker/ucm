@@ -229,7 +229,7 @@ if ( isset( $_REQUEST['f'] ) && is_array( $_REQUEST['f'] ) ) {
 						       class="save_button submit_button">
 					<?php } ?>
 				</p>
-			</form>
+			<?php module_form::print_form_close_tag(); ?>
 
 		</td>
 		<td width="30%" valign="top">
@@ -309,7 +309,7 @@ if ( isset( $_REQUEST['f'] ) && is_array( $_REQUEST['f'] ) ) {
 					</tr>
 					</tbody>
 				</table>
-			</form>
+			<?php module_form::print_form_close_tag(); ?>
 
 		</td>
 	</tr>

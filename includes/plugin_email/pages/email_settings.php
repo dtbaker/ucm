@@ -103,7 +103,7 @@ print_heading( 'Send a test email' );
 		<input type="submit" name="send" value="Click here to send a test email" class="submit_button btn btn-success">
 		<p><em>(the subject of this email will be "Test Email from <?php echo module_config::c( 'admin_system_name' ); ?>
 				")</em></p>
-	</form>
+	<?php module_form::print_form_close_tag(); ?>
 <?php hook_handle_callback( 'layout_column_half', 2 ); ?>
 
 <?php

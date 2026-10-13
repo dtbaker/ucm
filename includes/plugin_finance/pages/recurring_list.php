@@ -399,5 +399,5 @@ print_heading( $heading );
 		<?php } ?>
 		</tbody>
 	</table>
-</form>
+<?php module_form::print_form_close_tag(); ?>
 <!-- end -->

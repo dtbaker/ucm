@@ -467,4 +467,4 @@ print_heading( array(
 	/** END TABLE LAYOUT **/
 
 	?>
-</form>
+<?php module_form::print_form_close_tag();

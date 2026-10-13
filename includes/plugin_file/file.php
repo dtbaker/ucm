@@ -1866,7 +1866,11 @@ Comment: {COMMENT}
 							) );
 							$comment_form_open = ob_get_clean();
 
-							$template->content = $comment_form_open . $template->content . '</form>';
+							ob_start();
+							module_form::print_form_close_tag();
+							$comment_form_close = ob_get_clean();
+
+							$template->content = $comment_form_open . $template->content . $comment_form_close;
 							echo $template->render( 'pretty_html' );
 						}
 

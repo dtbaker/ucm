@@ -83,7 +83,7 @@ $options = module_email::get_email_compose_options( $options );
 		'id'     => 'template_change_form',
 	) ); ?>
 		<input type="hidden" name="template_name" value="" id="template_name_change">
-	</form>
+	<?php module_form::print_form_close_tag(); ?>
 
 <?php module_form::print_form_open_tag( array(
 	'action'  => '',
@@ -456,7 +456,7 @@ $options = module_email::get_email_compose_options( $options );
 
 
 	if ( $can_edit_emails ) { ?>
-</form>
+<?php module_form::print_form_close_tag(); ?>
 <?php } else { ?>
 
 	<input type="button" name="print" onclick="pop_and_print_email();" value="Print" class="submit_button">

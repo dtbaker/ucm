@@ -257,3 +257,6 @@ if ((int)$data_type_id > 0) {
     echo module_form::generate_fieldset($fieldset_data);
     unset($fieldset_data);
 }
+
+// Opened at the top of this page and never closed until now.
+module_form::print_form_close_tag();

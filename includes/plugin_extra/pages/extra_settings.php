@@ -216,6 +216,8 @@ if ( isset( $_REQUEST['extra_default_id'] ) && $_REQUEST['extra_default_id'] ) {
 		}
 	}
 
+	// This form was never closed. The branch ends here, so this is where it ends.
+	module_form::print_form_close_tag();
 
 } else {
     ?>

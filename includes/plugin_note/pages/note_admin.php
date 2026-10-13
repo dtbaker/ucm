@@ -77,6 +77,6 @@ if ( isset( $_REQUEST['note_id'] ) ) {
 			}
 		}
 		?>
-	</form>
+	<?php module_form::print_form_close_tag(); ?>
 	<?php
 }

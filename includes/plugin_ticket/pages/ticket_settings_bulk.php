@@ -192,7 +192,7 @@ if ( isset( $_POST['bulk_remove_priority'] ) && $_POST['bulk_remove_priority'] =
 		<input type="hidden" name="bulk_process_go" value="true">
 		<input type="submit" name="go" id="process_button" value="<?php _e( 'Start Processing Below Tickets' ); ?>"
 		       onclick="this.value='<?php _e( 'Please wait...' ); ?>';">
-	</form>
+	<?php module_form::print_form_close_tag(); ?>
 
 	<table class="tableclass tableclass_full tableclass_rows">
 		<thead>
@@ -370,7 +370,7 @@ if ( isset( $_POST['bulk_remove_priority'] ) && $_POST['bulk_remove_priority'] =
 		);
 		echo module_form::generate_form_actions( $form_actions );
 		?>
-	</form>
+	<?php module_form::print_form_close_tag(); ?>
 
 
 	<?php module_form::print_form_open_tag( array( 'action' => '' ) ); ?>
@@ -399,6 +399,6 @@ if ( isset( $_POST['bulk_remove_priority'] ) && $_POST['bulk_remove_priority'] =
 		);
 		echo module_form::generate_form_actions( $form_actions );
 		?>
-	</form>
+	<?php module_form::print_form_close_tag(); ?>
 
 <?php } ?>

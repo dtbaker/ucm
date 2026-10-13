@@ -367,7 +367,7 @@ if ( isset( $_REQUEST['run_import'] ) && $_REQUEST['run_import'] == 'true' ) {
 			}
 			?>
 		</ul>
-	</form>
+	<?php module_form::print_form_close_tag(); ?>
 	<?php
 } else {
 	?>
@@ -525,5 +525,5 @@ if ( isset( $_REQUEST['run_import'] ) && $_REQUEST['run_import'] == 'true' ) {
 			</tr>
 			</tbody>
 		</table>
-	</form>
+	<?php module_form::print_form_close_tag(); ?>
 <?php } ?>

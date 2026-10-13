@@ -134,7 +134,7 @@ switch ( $display_mode ) {
 		                                    class="fa fa-search"></i></button>
                                 </span>
 										</div>
-									</form>
+									<?php module_form::print_form_close_tag(); ?>
 								</li>
 								<?php
 							}
@@ -293,7 +293,7 @@ switch ( $display_mode ) {
 		                                class="fa fa-search"></i></button>
                             </span>
 							</div>
-						</form>
+						<?php module_form::print_form_close_tag(); ?>
 						<?php
 					} ?>
 				</div>

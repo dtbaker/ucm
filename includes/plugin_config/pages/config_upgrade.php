@@ -264,7 +264,7 @@ if ( isset( $_REQUEST['process_upgrade'] ) && isset( $_REQUEST['via_ajax'] ) ) {
 				<?php } ?>
 			<?php } ?>
 			<input type="submit" name="go" value="<?php _e( 'Try Installation Again' ); ?>" class="submit_button save_button">
-		</form>
+		<?php module_form::print_form_close_tag(); ?>
 
 		<?php
 	}
@@ -275,7 +275,7 @@ if ( isset( $_REQUEST['process_upgrade'] ) && isset( $_REQUEST['via_ajax'] ) ) {
 	<?php module_form::print_form_open_tag( array( 'action' => '' ) ); ?>
 		<input type="hidden" name="run_upgrade" value="true">
 		<input type="submit" name="go" value="<?php _e( 'Complete Upgrade Process' ); ?>" class="submit_button">
-	</form>
+	<?php module_form::print_form_close_tag(); ?>
 	<?php
 
 
@@ -552,7 +552,7 @@ if ( isset( $_REQUEST['process_upgrade'] ) && isset( $_REQUEST['via_ajax'] ) ) {
 				<input type="submit" name="install_upgrade" value="<?php _e( 'Start the Upgrade' ); ?>" id="upgrade_start"
 				       class="submit_button save_button">
 				<?php } ?>
-			</form>
+			<?php module_form::print_form_close_tag(); ?>
 
 			<?php
 
@@ -757,7 +757,7 @@ if ( isset( $_REQUEST['process_upgrade'] ) && isset( $_REQUEST['via_ajax'] ) ) {
 		echo module_form::generate_fieldset( $fieldset_data );
 		unset( $fieldset_data );
 		?>
-	</form>
+	<?php module_form::print_form_close_tag(); ?>
 
 	<?php
 	hook_handle_callback( 'layout_column_half', 2 );

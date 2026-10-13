@@ -54,5 +54,5 @@ if ( isset( $_REQUEST['company_id'] ) ) {
 			<?php } ?>
 			</tbody>
 		</table>
-	</form>
+	<?php module_form::print_form_close_tag(); ?>
 <?php } ?>

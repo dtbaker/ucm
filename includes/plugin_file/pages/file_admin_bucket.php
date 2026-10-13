@@ -426,4 +426,4 @@ $type = $ucm_file->get_type();
         <?php } ?>
 
 
-</form>
+<?php module_form::print_form_close_tag();

@@ -555,5 +555,5 @@ $table_manager->print_table();
 
 
 if ( empty( $embed_form ) && $allow_search ) {
-	?> </form> <?php
+	?> <?php module_form::print_form_close_tag(); ?> <?php
 }

@@ -165,7 +165,7 @@ if ( isset( $_REQUEST['check_duplicates'] ) ) {
 		);
 		echo module_form::generate_form_actions( $form_actions );
 		?>
-	</form>
+	<?php module_form::print_form_close_tag(); ?>
 	<?php
 
 } else {
@@ -352,7 +352,7 @@ if ( isset( $_REQUEST['check_duplicates'] ) ) {
 		);
 		echo module_form::generate_form_actions( $form_actions );
 		?>
-	</form>
+	<?php module_form::print_form_close_tag(); ?>
 
 	<script type="text/javascript">
       $(function () {

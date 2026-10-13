@@ -67,7 +67,7 @@ if ( isset( $_REQUEST['go'] ) ) {
 			<input type="hidden" name="invoice_id" id="print_invoice_id" value="0">
 			<input type="hidden" name="go" value="yes">
 			<input type="hidden" name="print" value="1">
-		</form>
+		<?php module_form::print_form_close_tag(); ?>
 		<script type="text/javascript">
         function generate(invoice_id, l) {
             $(l).html('Generating .... please wait');

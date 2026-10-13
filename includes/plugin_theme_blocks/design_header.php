@@ -205,7 +205,7 @@ switch ( $display_mode ) {
 							<button type="submit">
 								<i class="fa fa-search"></i>
 							</button>
-						</form>
+						<?php module_form::print_form_close_tag(); ?>
 					</div>
 				<?php } ?>
 			</header>

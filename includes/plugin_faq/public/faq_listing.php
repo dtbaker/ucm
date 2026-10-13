@@ -92,5 +92,5 @@ $show_product = isset( $_REQUEST['show_product'] ) ? $_REQUEST['show_product'] :
 
 
 <?php if ( $show_search ) { ?>
-	</form>
+	<?php module_form::print_form_close_tag(); ?>
 <?php } ?>

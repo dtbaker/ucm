@@ -106,4 +106,4 @@ $file = module_file::get_file($file_id);
 	</table>
 
 
-</form>
+<?php module_form::print_form_close_tag();

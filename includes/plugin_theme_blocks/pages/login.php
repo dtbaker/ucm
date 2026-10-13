@@ -55,7 +55,7 @@
 						<a href="?login" class="forgot right"><?php _e( 'Back to Login' ); ?></a>
 					</div>
 					<?php hook_handle_callback( 'login_screen' ); ?>
-				</form>
+				<?php module_form::print_form_close_tag(); ?>
 			</div>
 		</div>
 	</div>
@@ -118,7 +118,7 @@
 						?>
 					</div>
 					<?php hook_handle_callback( 'login_screen' ); ?>
-				</form>
+				<?php module_form::print_form_close_tag(); ?>
 			</div>
 		</div>
 	</div>

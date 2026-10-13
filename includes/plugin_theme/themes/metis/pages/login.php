@@ -34,7 +34,7 @@
 					<button class="btn btn-lg btn-danger btn-block" name="reset"
 					        type="submit"><?php echo _l( 'Reset Password' ); ?></button>
 					<?php hook_handle_callback( 'forgot_password_screen' ); ?>
-				</form>
+				<?php module_form::print_form_close_tag(); ?>
 			</div>
 		</div>
 		<div class="text-center">
@@ -86,7 +86,7 @@
 					<button class="btn btn-lg btn-primary btn-block"
 					        type="submit"><?php echo _l( 'Login' ); ?><?php echo ( defined( '_DEMO_MODE' ) && _DEMO_MODE ) ? ' to demo' : ''; ?></button>
 					<?php hook_handle_callback( 'login_screen' ); ?>
-				</form>
+				<?php module_form::print_form_close_tag(); ?>
 			</div>
 		</div>
 		<div class="text-center">

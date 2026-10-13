@@ -182,7 +182,7 @@ if (
 	);
 	echo module_form::generate_form_actions($form_actions);*/
 	?>
-</form>
+<?php module_form::print_form_close_tag(); ?>
 
 <?php
 $base_path = _BASE_HREF . 'includes/plugin_calendar/wdCalendar/';

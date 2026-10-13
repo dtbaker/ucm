@@ -104,5 +104,5 @@
 		       class="wp3changerequest_back wp3changerequest_button wp3changerequest_button_cancel"
 		       value="<?php _e( 'Cancel' ); ?>">
 	</p>
-</form>
+<?php module_form::print_form_close_tag(); ?>
 <p><em><?php _e( "Don't worry if you make a mistake, you can cancel or change this request later." ); ?></em></p>

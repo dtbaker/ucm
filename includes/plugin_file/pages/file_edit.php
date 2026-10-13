@@ -78,7 +78,7 @@ if ($file_id) {
 		</tbody>
 	</table>
 
-</form>
+<?php module_form::print_form_close_tag(); ?>
 
 <?php
 exit;

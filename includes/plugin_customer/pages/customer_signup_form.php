@@ -329,4 +329,4 @@
 		<?php } ?>
 		<p><input type="submit" value="Signup Now"/></p>
 	</div>
-</form>
+<?php module_form::print_form_close_tag();

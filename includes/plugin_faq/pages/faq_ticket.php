@@ -115,4 +115,6 @@ if ( ! isset( $_REQUEST['iframe'] ) ) {
 		</tbody>
 	</table>
 
+<?php module_form::print_form_close_tag(); ?>
+
 <?php } ?>

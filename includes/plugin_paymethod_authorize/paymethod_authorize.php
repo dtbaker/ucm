@@ -243,7 +243,7 @@ class module_paymethod_authorize extends module_base
 					<input type="hidden" name="description"
 					       value="<?php _e( 'Payment for Invoice #%', htmlspecialchars( $invoice_data['name'] ) ); ?>">
 					<?php echo $form->content; ?>
-				</form>
+				<?php module_form::print_form_close_tag(); ?>
 				<?php
 				$form->content = ob_get_clean();
 				$form->assign_values(

@@ -346,7 +346,7 @@ if ( $data_type_id ) {
 				       'data_type_id' => $data_type_id,
 				       'view_all'     => isset( $_REQUEST['view_all'] ) ? 1 : false,
 			       ) ); ?>';">
-		</form>
+		<?php module_form::print_form_close_tag(); ?>
 
 		<?php
 

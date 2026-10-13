@@ -51,7 +51,7 @@ if (
 			<input type="submit" name="go" value="<?php _e( 'Check for Updates' ); ?>" class="submit_button btn btn-success"
 			       onclick="this.value='Checking... this may take a few minutes.'">
 
-		</form>
+		<?php module_form::print_form_close_tag(); ?>
 	</div>
 
 	<?php

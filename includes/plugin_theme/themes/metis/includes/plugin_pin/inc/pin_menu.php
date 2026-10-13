@@ -39,5 +39,5 @@ $pins = $this->get_pins();
 		<input type="hidden" name="current_url" value="<?php echo htmlspecialchars( $_SERVER['REQUEST_URI'] ); ?>">
 		<input type="hidden" name="current_title" id="pin_current_title" value="">
 		<input type="hidden" name="pin_action" id="pin_action" value="">
-	</form>
+	<?php module_form::print_form_close_tag(); ?>
 </li>

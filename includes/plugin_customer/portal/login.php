@@ -3,4 +3,4 @@
 	'id'     => 'portal-login',
 ) ); ?>
 	Please enter your portal password: <input type="password" name="password"> <input type="submit" value="Login">
-</form>
+<?php module_form::print_form_close_tag();

@@ -95,7 +95,7 @@ if ( isset( $_REQUEST['backup_id'] ) && $_REQUEST['backup_id'] ) {
 				echo module_form::generate_form_actions( $form_actions );
 
 				?>
-			</form>
+			<?php module_form::print_form_close_tag(); ?>
 
 
 			<script type="text/javascript">
@@ -283,7 +283,7 @@ if ( isset( $_REQUEST['backup_id'] ) && $_REQUEST['backup_id'] ) {
 				echo module_form::generate_form_actions( $form_actions );
 
 				?>
-			</form>
+			<?php module_form::print_form_close_tag(); ?>
 
 			<?php
 
@@ -334,7 +334,7 @@ if ( isset( $_REQUEST['backup_id'] ) && $_REQUEST['backup_id'] ) {
 			echo module_form::generate_form_actions( $form_actions );
 
 			?>
-		</form>
+		<?php module_form::print_form_close_tag(); ?>
 
 		<?php
 	}

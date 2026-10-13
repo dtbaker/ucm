@@ -135,4 +135,4 @@ module_form::print_form_open_tag( array(
 	</table>
 	<input type="submit" name="next" value="Next Step &raquo;" class="submit_button btn btn-success">
 
-</form>
+<?php module_form::print_form_close_tag();

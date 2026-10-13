@@ -182,5 +182,4 @@ if ( $show_theme_selector ) {
 	unset( $fieldset_data );
 	?>
 
-</form>
-
+<?php module_form::print_form_close_tag();

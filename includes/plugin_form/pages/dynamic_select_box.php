@@ -121,4 +121,4 @@
 		echo 'Invalid permission';
 	}
 	?>
-</form>
+<?php module_form::print_form_close_tag();

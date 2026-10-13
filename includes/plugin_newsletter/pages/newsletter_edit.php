@@ -583,7 +583,7 @@ if ( count( $sends_warning ) ) {
 	);
 	echo module_form::generate_form_actions( $form_actions );
 	?>
-</form>
+<?php module_form::print_form_close_tag(); ?>
 
 
 <script language="javascript" type="text/javascript">

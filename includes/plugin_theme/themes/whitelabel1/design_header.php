@@ -118,7 +118,7 @@ switch ( $display_mode ) {
 										'autocomplete' => 'off',
 									) ); ?>
 											<input type="search" name="query" id="ajax_search_text" placeholder="<?php _e('Quick Search:'); ?>" class="">
-									</form>
+									<?php module_form::print_form_close_tag(); ?>
 							</div>
 					<?php } ?>
 					<div class="headernavwrap">

@@ -605,7 +605,7 @@ if ( isset( $_REQUEST['print'] ) ) {
 				}
 				if ( ! isset( $embed_form ) ) {
 					?>
-					</form>
+					<?php module_form::print_form_close_tag(); ?>
 					<?php
 				}
 				?>

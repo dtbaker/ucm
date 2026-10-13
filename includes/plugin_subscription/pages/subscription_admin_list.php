@@ -85,7 +85,7 @@ print_heading( $heading );
 			</tbody>
 		</table>
 		<?php echo $pagination['links']; ?>
-	</form>
+	<?php module_form::print_form_close_tag(); ?>
 
 <?php
 

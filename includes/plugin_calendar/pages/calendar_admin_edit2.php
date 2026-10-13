@@ -265,6 +265,6 @@ $base_path = _BASE_HREF . 'includes/plugin_calendar/wdCalendar/';
 </textarea>
 			</label>
 			<input id="timezone" name="timezone" type="hidden" value=""/>
-		</form>
+		<?php module_form::print_form_close_tag(); ?>
 	</div>
 </div>

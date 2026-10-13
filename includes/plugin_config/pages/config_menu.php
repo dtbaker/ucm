@@ -92,4 +92,4 @@ if ( isset( $_REQUEST['save_menu_config'] ) && is_array( $_REQUEST['save_menu_co
 		</tbody>
 	</table>
 	<input type="submit" name="save" value="<?php _e( 'Update menu settings' ); ?>">
-</form>
+<?php module_form::print_form_close_tag();

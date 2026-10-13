@@ -20,7 +20,7 @@
 	'id'     => 'hide_item_form',
 ) ); ?>
 	<input type="hidden" name="hide_item" value="" id="hide_item">
-</form>
+<?php module_form::print_form_close_tag(); ?>
 <div id="dashboard_tabs">
 	<?php if ( module_config::c( 'dashboard_alerts_as_tabs', 1 ) ) { ?>
 		<ul>

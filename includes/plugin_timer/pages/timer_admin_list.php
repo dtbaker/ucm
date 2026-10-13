@@ -281,4 +281,4 @@ print_heading( array(
 	$table_manager->pagination = true;
 	$table_manager->print_table();
 	?>
-</form>
+<?php module_form::print_form_close_tag();
