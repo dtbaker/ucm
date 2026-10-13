@@ -2454,6 +2454,11 @@ Thanks,
 			update_insert( 'ticket_id', $ticket_id, 'ticket', array(
 				'invoice_id' => $invoice_id,
 			) );
+			// The check above is the only thing stopping a second invoice for the same
+			// ticket, and it reads the ticket through the object cache. Without clearing
+			// it, a customer who asked for priority support twice inside the cache
+			// timeout was billed twice.
+			module_cache::clear( 'ticket' );
 			module_invoice::add_history( $invoice_id, 'Created invoice from support ticket #' . $this->ticket_number( $ticket_id ) );
 
 			return $invoice_id;
