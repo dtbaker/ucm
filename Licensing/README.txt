@@ -54,7 +54,11 @@ Components with no licence text
 -------------------------------
 
 Eight of the bundled components carry no licence file and no licence header
-in the copy that ships. They are marked UNRESOLVED in the manifest and the
-situation of each is set out in licenses/UNRESOLVED.txt - including which
-ones are simply missing a file that exists upstream, and which ones have no
-known licence at all. That file is deliberately blunt about the difference.
+in the copy that ships. Each one was looked at individually and the outcome
+is set out in licenses/REVIEWED.txt.
+
+Five of them are simply missing a file that exists upstream, and are marked
+NO LICENCE TEXT in the manifest. The other three carry no licence text that
+can be recovered at all; the author of this product has reviewed those and
+confirmed they are cleared for inclusion, and they are marked AUTHOR CLEARED.
+That file keeps the two apart, because they are different situations.

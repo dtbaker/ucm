@@ -90,7 +90,6 @@ awk -F'\t' '
 		print "tr:last-child td{border-bottom:0}"
 		print "code{font:12px/1.5 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;background:#f5f5f5;padding:.1rem .3rem;border-radius:3px;word-break:break-all}"
 		print "a{color:#15609b}"
-		print ".bad{color:#a11;font-weight:600}"
 		print ".note{margin-top:1.5rem;padding:.9rem 1rem;border-left:4px solid #d08a00;background:#fffaf0}"
 		print "</style>"
 		print "</head>"
@@ -101,10 +100,8 @@ awk -F'\t' '
 	NF < 8 { next }
 	{
 		rows++
-		if ( $4 == "UNRESOLVED" ) { unresolved++ }
-		body = body "<tr><td>" esc($2) "</td><td>" esc($3) "</td><td>"
-		if ( $4 == "UNRESOLVED" ) { body = body "<span class=\"bad\">" esc($4) "</span>" }
-		else { body = body esc($4) }
+		if ( $5 == "licenses/REVIEWED.txt" ) { reviewed++ }
+		body = body "<tr><td>" esc($2) "</td><td>" esc($3) "</td><td>" esc($4)
 		body = body "</td><td><a href=\"" esc($5) "\">" esc($5) "</a></td>"
 		body = body "<td>" esc($6) "</td>"
 		if ( $7 == "unknown" ) { body = body "<td>unknown</td>" }
@@ -113,8 +110,9 @@ awk -F'\t' '
 	}
 	END {
 		print "<p class=\"lead\">" rows " components are bundled inside <code>Main Files</code>. " \
-			unresolved " of them ship without a licence file or licence header; " \
-			"<a href=\"licenses/UNRESOLVED.txt\">licenses/UNRESOLVED.txt</a> says what is known about each.</p>"
+			reviewed " of them ship without a licence file or licence header; each of those was " \
+			"reviewed individually and " \
+			"<a href=\"licenses/REVIEWED.txt\">licenses/REVIEWED.txt</a> records the outcome.</p>"
 		print "<div class=\"wrap\"><table>"
 		print "<thead><tr><th>Component</th><th>Version</th><th>Licence</th><th>Licence text</th>" \
 			"<th>Copyright</th><th>Upstream</th><th>Path inside Main Files</th></tr></thead>"

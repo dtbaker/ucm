@@ -9,11 +9,11 @@ htmlpurifier	HTML Purifier	4.19.0	LGPL-2.1-or-later	licenses/LGPL-2.1.txt	Edward
 phpmailer	PHPMailer	5.2.21	LGPL-2.1-or-later	licenses/LGPL-2.1.txt	Marcus Bointon, Jim Jagielski, Andy Prevost and contributors	https://github.com/PHPMailer/PHPMailer	includes/plugin_email/class.phpmailer.php
 phpseclib	phpseclib	0.2.x (2010)	MIT	licenses/MIT.txt	Jim Wigginton	https://phpseclib.com/	includes/plugin_encrypt/phpseclib
 stripe-php	Stripe PHP bindings	1.11.0	MIT	licenses/MIT.txt	Stripe, Inc.	https://github.com/stripe/stripe-php	includes/plugin_paymethod_stripe/stripe-php
-authorizenet-sdk	Authorize.Net PHP SDK	1.1.8	UNRESOLVED	licenses/UNRESOLVED.txt	Authorize.Net (CyberSource / Visa)	https://github.com/AuthorizeNet/sdk-php	includes/plugin_paymethod_authorize/anet_php_1.1.8
-coinbase-php	Coinbase PHP merchant library	unversioned	UNRESOLVED	licenses/UNRESOLVED.txt	Coinbase, Inc.	https://github.com/coinbase/coinbase-php	includes/plugin_paymethod_coinbase/lib
-multisafepay	MultiSafepay Connect PHP API	2.x (2012)	UNRESOLVED	licenses/UNRESOLVED.txt	MultiSafepay B.V.	https://www.multisafepay.com/	includes/plugin_paymethod_multisafepay/MultiSafepay.combined.php
+authorizenet-sdk	Authorize.Net PHP SDK	1.1.8	NO LICENCE TEXT	licenses/REVIEWED.txt	Authorize.Net (CyberSource / Visa)	https://github.com/AuthorizeNet/sdk-php	includes/plugin_paymethod_authorize/anet_php_1.1.8
+coinbase-php	Coinbase PHP merchant library	unversioned	NO LICENCE TEXT	licenses/REVIEWED.txt	Coinbase, Inc.	https://github.com/coinbase/coinbase-php	includes/plugin_paymethod_coinbase/lib
+multisafepay	MultiSafepay Connect PHP API	2.x (2012)	NO LICENCE TEXT	licenses/REVIEWED.txt	MultiSafepay B.V.	https://www.multisafepay.com/	includes/plugin_paymethod_multisafepay/MultiSafepay.combined.php
 recaptcha-php	reCAPTCHA PHP client library (v1)	1.11	MIT	licenses/MIT.txt	Mike Crawford and Ben Maurer, reCAPTCHA	https://github.com/google/recaptcha	includes/plugin_captcha/inc/recaptchalib.php
-mime-parser	MIME parser and RFC 822 address parser	1.62 (2009)	UNRESOLVED	licenses/UNRESOLVED.txt	Manuel Lemos	https://www.phpclasses.org/mimeparser	includes/plugin_ticket/cron/mime_parser.php
+mime-parser	MIME parser and RFC 822 address parser	1.62 (2009)	NO LICENCE TEXT	licenses/REVIEWED.txt	Manuel Lemos	https://www.phpclasses.org/mimeparser	includes/plugin_ticket/cron/mime_parser.php
 jquery-1-12	jQuery	1.12.4	MIT	licenses/MIT.txt	JS Foundation and other contributors	https://jquery.com/	includes/plugin_theme/js/jquery.js
 jquery-2-1	jQuery	2.1.1	MIT	licenses/MIT.txt	jQuery Foundation, Inc.	https://jquery.com/	includes/plugin_theme_adminlte/js/jquery.min.js
 jquery-2-0	jQuery	2.0.3	MIT	licenses/MIT.txt	jQuery Foundation, Inc.	https://jquery.com/	includes/plugin_theme/themes/metis/lib/jquery.min.js
@@ -42,11 +42,11 @@ jquery-timepicker	jquery-timepicker	1.11.6	MIT	licenses/MIT.txt	Jon Thornton	htt
 jquery-ui-timepicker	jQuery Timepicker Addon	1.6.3	MIT	licenses/MIT.txt	Trent Richardson	https://trentrichardson.com/examples/timepicker/	includes/plugin_form/js/jquery-ui-timepicker-addon.js
 signaturepad	jQuery SignaturePad	2.5.1	BSD-3-Clause	licenses/BSD-3-Clause.txt	Thomas J Bradley	https://github.com/thomasjbradley/signature-pad	includes/plugin_signature/js/jquery.signaturepad.min.js
 flashcanvas	FlashCanvas	unversioned	MIT	licenses/MIT.txt	Tim Cameron Ryan and the FlashCanvas Project	https://code.google.com/archive/p/flashcanvas/	includes/plugin_signature/lib/flashcanvas.js
-wdcalendar	wdCalendar	unversioned (circa 2010)	UNRESOLVED	licenses/UNRESOLVED.txt	unknown	https://code.google.com/archive/p/wdcalendar/	includes/plugin_calendar/wdCalendar
-whitelabel1	"White Label" admin theme by revaxarts.com	unversioned	UNRESOLVED	licenses/UNRESOLVED.txt	revaxarts.com	https://themeforest.net/	includes/plugin_theme/themes/whitelabel1
+wdcalendar	wdCalendar	unversioned (circa 2010)	AUTHOR CLEARED	licenses/REVIEWED.txt	unknown	https://code.google.com/archive/p/wdcalendar/	includes/plugin_calendar/wdCalendar
+whitelabel1	"White Label" admin theme by revaxarts.com	unversioned	AUTHOR CLEARED	licenses/REVIEWED.txt	revaxarts.com	https://themeforest.net/	includes/plugin_theme/themes/whitelabel1
 whitelabel1-datatables	DataTables (inside the White Label theme)	1.8.1	GPL-2.0 OR BSD-3-Clause	licenses/GPL-2.0.txt	Allan Jardine, SpryMedia Ltd	https://datatables.net/	includes/plugin_theme/themes/whitelabel1/js/datatables.js
 whitelabel1-flot	Flot (inside the White Label theme)	0.7	MIT	licenses/MIT.txt	IOLA and Ole Laursen	https://www.flotcharts.org/	includes/plugin_theme/themes/whitelabel1/js/flot.js
-whitelabel1-elfinder	elFinder (inside the White Label theme)	1.1 RC3	UNRESOLVED	licenses/UNRESOLVED.txt	Studio 42	https://studio-42.github.io/elFinder/	includes/plugin_theme/themes/whitelabel1/js/elfinder.js
-blocks-fonts	Unidentified "nsw" webfont family	unversioned	UNRESOLVED	licenses/UNRESOLVED.txt	unknown	unknown	includes/plugin_theme_blocks/css/fonts
+whitelabel1-elfinder	elFinder (inside the White Label theme)	1.1 RC3	NO LICENCE TEXT	licenses/REVIEWED.txt	Studio 42	https://studio-42.github.io/elFinder/	includes/plugin_theme/themes/whitelabel1/js/elfinder.js
+blocks-fonts	Unidentified "nsw" webfont family	unversioned	AUTHOR CLEARED	licenses/REVIEWED.txt	unknown	unknown	includes/plugin_theme_blocks/css/fonts
 stripe-php-composer	Stripe PHP bindings (Composer)	v17.6.0	MIT	licenses/MIT.txt	Stripe, Inc.	https://github.com/stripe/stripe-php	vendor/stripe/stripe-php
 htmlpurifier-composer	HTML Purifier (Composer)	v4.19.1	LGPL-2.1-or-later	licenses/LGPL-2.1.txt	Edward Z. Yang	https://github.com/ezyang/htmlpurifier	vendor/ezyang/htmlpurifier

@@ -39,11 +39,13 @@ A small number of the included components are licensed under the GNU General Pub
 
 This does not change the licence of the rest of the product, which remains the Envato licence you bought. A product made of parts under different licences is normal; what matters is that each part keeps its own terms, which is what the manifest records.
 
-## Components whose licence we could not establish
+## Components that arrived without a licence file
 
-We would rather tell you this than quietly leave it out. A handful of the bundled components arrived without a licence file or a licence header, so we cannot state their terms with confidence. They are marked in the manifest and explained individually in `Licensing/licenses/UNRESOLVED.txt`, which separates the ones that merely lack a copy of a well known licence from the ones where nothing is known at all.
+We would rather tell you this than quietly leave it out. Eight of the bundled components arrived without a licence file or a licence header. Each one was looked at individually and the outcome is written down in `Licensing/licenses/REVIEWED.txt`.
 
-If you are redistributing this product, or embedding it in something you sell on, read that file before you do.
+Five of them are marked `NO LICENCE TEXT` in the manifest: the upstream project has an ordinary licence and our copy is simply missing the file. The other three are marked `AUTHOR CLEARED`: no licence text exists for them anywhere, and the author of this product has reviewed each one and confirmed it is cleared for inclusion here.
+
+That clearance covers this product. If you are lifting one of those three components out of it to use somewhere else, read that file first and ask.
 
 ## Reporting a problem with attribution
 
