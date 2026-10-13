@@ -1,4 +1,5 @@
 import { test, expect, Page } from '@playwright/test';
+import { describeDiagnostics } from './diagnostics';
 import { aCustomer, createRecord, formAuthKey, login } from './seed';
 
 /**
@@ -52,7 +53,7 @@ async function amountLabelled(page: Page, label: RegExp): Promise<string | null>
 }
 
 test.describe('Invoice renewal', () => {
-  test('copies the lines, the money and the interval onto a new invoice', async ({ page }) => {
+  test('copies the lines, the money and the interval onto a new invoice', async ({ page, browser }) => {
     test.setTimeout(180000);
     await login(page);
 
@@ -110,6 +111,25 @@ test.describe('Invoice renewal', () => {
       await amountLabelled(page, /^Due:?$/),
       'and all of it should be outstanding - the payment stays on the old invoice',
     ).toContain('150');
+
+    // --- and the copy is fit to send. Its lines have no long description, which is
+    // exactly what the public template used to deprecate on - on the page a customer is
+    // sent to pay.
+    const link = (await page.content()).match(
+      /external\/m\.invoice\/h\.public\/i\.[^/"'\s]+\/hash\.[a-f0-9]+/,
+    );
+    expect(link, 'the invoice screen should publish a public link').toBeTruthy();
+    const payer = await browser.newContext();
+    const payerPage = await payer.newPage();
+    await payerPage.goto('/' + String(link![0]));
+    await payerPage.waitForLoadState('load');
+    const problems = describeDiagnostics(await payerPage.content());
+    expect(
+      problems,
+      'the public invoice page printed PHP diagnostics:\n' + problems.join('\n'),
+    ).toEqual([]);
+    await expect(payerPage.locator('body')).toContainText('150.00');
+    await payer.close();
 
     // --- and the old one points at it
     await page.goto('/?m[]=invoice&p[]=invoice_admin&invoice_id=' + invoiceId);

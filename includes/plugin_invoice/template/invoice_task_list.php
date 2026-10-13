@@ -369,7 +369,9 @@ foreach ( $invoice_tasks as $invoice_item_id => $invoice_item_data ) {
 	}
 	$row_replace['item_description'] .= $invoice_item_data['custom_description'] ? htmlspecialchars( $invoice_item_data['custom_description'] ) : htmlspecialchars( $invoice_item_data['description'] );
 	if ( module_config::c( 'invoice_show_long_desc', 1 ) ) {
-		$long_description = trim( $invoice_item_data['custom_long_description'] ? $invoice_item_data['custom_long_description'] : $invoice_item_data['long_description'] );
+		// Both of these are null on a line that has never had a long description, and
+		// trim() deprecates on null - on the invoice the customer is sent to pay.
+		$long_description = trim( (string) ( $invoice_item_data['custom_long_description'] ? $invoice_item_data['custom_long_description'] : $invoice_item_data['long_description'] ) );
 		if ( $long_description != '' ) {
 			// backwards compat for non-html code:
 			if ( ! is_text_html( $long_description ) ) {

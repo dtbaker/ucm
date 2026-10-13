@@ -147,5 +147,27 @@ test.describe('Quote to job to invoice', () => {
     expect(body, 'the first quoted task should be on the invoice').toContain('Design');
     expect(body, 'the second quoted task should be on the invoice').toContain('Build');
     expect(body, 'and at the amounts that were quoted').toContain('350.00');
+
+    // --- the invoice the customer is sent. Its lines came from a quote, so they have no
+    // long description, which is the case the template used to deprecate on.
+    // Saving an invoice that belongs to a job returns to the job, so the id comes from
+    // the job's own invoice list rather than from the address.
+    const invoiceId = ((await page.content()).match(/invoice_id=(\d+)/) || [])[1];
+    expect(invoiceId, 'the job should now list the invoice it created').toBeTruthy();
+    await page.goto('/?m[]=invoice&p[]=invoice_admin&invoice_id=' + invoiceId);
+    await page.waitForLoadState('load');
+    const invoiceLink = (await page.content()).match(
+      /external\/m\.invoice\/h\.public\/i\.[^/"'\s]+\/hash\.[a-f0-9]+/,
+    );
+    expect(invoiceLink, 'the invoice screen should publish a public link').toBeTruthy();
+
+    const payer = await browser.newContext();
+    const payerPage = await payer.newPage();
+    await payerPage.goto('/' + String(invoiceLink![0]));
+    await payerPage.waitForLoadState('load');
+    await expectClean(payerPage, 'the public invoice page');
+    await expect(payerPage.locator('body'), 'and it bills the customer for the work')
+      .toContainText('350.00');
+    await payer.close();
   });
 });

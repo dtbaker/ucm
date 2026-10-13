@@ -1,6 +1,6 @@
 import { test, expect, Page } from '@playwright/test';
 import { DIAGNOSTIC, describeDiagnostics } from './diagnostics';
-import { login, aCustomer, anInvoice, aFile } from './seed';
+import { login, aCustomer, anInvoice, aFile, existingId } from './seed';
 
 /**
  * The pages a customer sees, loaded with no session at all.
@@ -71,13 +71,29 @@ const SHAPES = [
   'e[]=someone@example.com&a[]=1&s[]=1',
 ];
 
-/** Admin screens that publish real public links, for records that exist or are created. */
+/**
+ * Admin screens that publish real public links, for records that exist or are created.
+ *
+ * Quotes, jobs and contracts are included because the documents a buyer sends to their
+ * own customer are the worst place for a PHP warning, and two were found there - the
+ * quote task list printed two per line item, and the invoice one deprecated on a line
+ * with no long description. A module with no records yet contributes nothing rather
+ * than failing, which is what a fresh install looks like.
+ */
 async function linkSources(page: Page): Promise<string[]> {
-  return [
+  const sources = [
     '/?m[]=customer&p[]=customer_admin_edit&customer_id=' + await aCustomer(page),
     '/?m[]=invoice&p[]=invoice_admin&invoice_id=' + await anInvoice(page),
     '/?m[]=file&p[]=file_admin&file_id=' + await aFile(page),
   ];
+  for (const [module, key] of [['quote', 'quote_id'], ['job', 'job_id'], ['contract', 'contract_id']]) {
+    const id = await existingId(page, `/?m[]=${module}&p[]=${module}_admin`, key);
+    if (id) {
+      sources.push(`/?m[]=${module}&p[]=${module}_admin&${key}=${id}`);
+    }
+  }
+
+  return sources;
 }
 
 test.describe('Public pages under E_ALL', () => {
