@@ -222,44 +222,13 @@ class module_subscription extends module_base
 				'menu_include_parent' => 0,
 			);
 
-			if ( isset( $_GET['subscription_bug_close'] ) ) {
-				module_config::save_config( 'subscription_check_unsent', 0 );
-			}
-			if ( module_config::c( 'subscription_check_unsent', 1 ) ) {
-				hook_add( 'inner_content_start', 'module_subscription::inner_content_start' );
-			}
+			// A notice about subscription invoices that went unsent in a six week window
+			// in 2016 used to be hooked on here. It is gone: the dates it looked for are
+			// a decade old, the query ran on every page that reached this far, and
+			// hooking it from pre_menu() meant it only ever appeared on screens built
+			// from more than one module. See the note on inner_content_start in index.php.
 		}
 
-	}
-
-	public static function inner_content_start() {
-		$sql             = "SELECT * FROM `" . _DB_PREFIX . "subscription_history` p ";
-		$sql             .= " LEFT JOIN `" . _DB_PREFIX . "invoice` i ";
-		$sql             .= " ON p.invoice_id = i.invoice_id";
-		$sql             .= " WHERE p.paid_date = '0000-00-00'";
-		$sql             .= " AND p.date_created >= '2016-09-10'";
-		$sql             .= " AND p.date_created <= '2016-10-21'";
-		$sql             .= " AND i.date_sent = '0000-00-00'";
-		$invoice_items   = qa( $sql );
-		$unsent_invoices = array();
-		foreach ( $invoice_items as $invoice_item ) {
-			// check if these invoices are unsent.
-			$unsent_invoices[ $invoice_item['invoice_id'] ] = module_invoice::link_open( $invoice_item['invoice_id'], true );
-		}
-		if ( count( $unsent_invoices ) ) {
-			?>
-			<div style="padding:10px;margin: 10px; border:1px solid #FF0000;">
-				Notice: there are <?php echo count( $unsent_invoices ); ?> unsent subscription invoices due to a recent bug.
-				Please check all your recent invoices and manually send them to the customer if
-				required: <?php echo implode( ', ', $unsent_invoices ); ?>.
-				&nbsp;
-				&nbsp;
-				&nbsp;
-				&nbsp;
-				<a href="<?php echo _BASE_HREF; ?>?subscription_bug_close">Hide This Notice</a>
-			</div>
-			<?php
-		}
 	}
 
 	/** static stuff */

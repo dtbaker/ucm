@@ -4335,7 +4335,7 @@ parameters:
 		-
 			message: '#^Constant _DB_PREFIX not found\.$#'
 			identifier: constant.notFound
-			count: 48
+			count: 46
 			path: includes/plugin_subscription/subscription.php
 
 		-

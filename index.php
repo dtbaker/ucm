@@ -163,6 +163,17 @@ try {
 			if ( ! is_file( $page_final ) ) {
 				$page_final = module_theme::include_ucm( 'pages/home.php' );
 			}
+			// Fires once for every page this request loads, and a URL can name more than
+			// one - "/customer.customer_admin_open/quote.quote_admin" loads two.
+			//
+			// It fires BEFORE the menu is built, and the menu is what triggers each
+			// plugin's pre_menu(). So a callback registered from a pre_menu() is missing
+			// from the first page's firing and present from the second onwards, which is
+			// why this hook used to look like it ran "before some plugins had
+			// registered". Register from init() if the callback has to run every time.
+			//
+			// Nothing here should be relied on for correctness - a redirect, a permission
+			// gate - for the same reason. It is for banners.
 			hook_handle_callback( 'inner_content_start', $module, $page_final, $page_unique_id );
 			include( $page_final );
 			//include($page);
