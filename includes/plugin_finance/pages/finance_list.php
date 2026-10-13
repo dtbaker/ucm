@@ -402,7 +402,7 @@ print_heading( array(
 				if ( ! isset( $finance['transaction_date'] ) ) {
 					return false;
 				}
-				echo isset( $finance['categories'] ) ? $finance['categories'] : '';
+				echo isset( $finance['categories'] ) ? htmlspecialchars( $finance['categories'] ) : '';
 			},
 		);
 		$columns['finance_tick']        = array(

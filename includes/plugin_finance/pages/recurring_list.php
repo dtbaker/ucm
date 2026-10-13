@@ -375,10 +375,10 @@ print_heading( $heading );
 					?>
 				</td>
 				<td>
-					<?php echo htmlspecialchars( $recurring['account_name'] ); ?>
+					<?php echo isset( $recurring['account_name'] ) ? htmlspecialchars( $recurring['account_name'] ) : ''; ?>
 				</td>
 				<td>
-					<?php echo $recurring['categories']; ?>
+					<?php echo isset( $recurring['categories'] ) ? htmlspecialchars( $recurring['categories'] ) : ''; ?>
 				</td>
 				<td>
 					<?php echo dollar( $balance ); ?>
