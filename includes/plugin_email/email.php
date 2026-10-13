@@ -566,6 +566,9 @@ class module_email extends module_base
 				$args             = $options['success_callback_args'];
 				$args['email_id'] = $email->id;
 				if ( preg_match( '#module_\w#', $options['success_callback'] ) ) {
+					// The callback comes from the caller's options, and the guard above is what
+					// keeps it to a module method.
+					// nosemgrep: php.lang.security.injection.tainted-callable.tainted-callable
 					call_user_func( $options['success_callback'], $args );
 				}
 			}/*else if($options['success_callback']){

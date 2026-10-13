@@ -704,6 +704,10 @@ class module_group extends module_base
 						if ( $bulk_action_id && $flag == 'yes' ) {
 							// do this action! run the callback with $rows array
 							if ( isset( self::$pagination_options['bulk_actions'][ $bulk_action_id ] ) && self::$pagination_options['bulk_actions'][ $bulk_action_id ]['callback'] ) {
+								// The request only picks which bulk action to run. The callback itself
+								// comes out of $pagination_options, which the list page sets in PHP and
+								// nothing from the request can reach.
+								// nosemgrep: php.lang.security.injection.tainted-callable.tainted-callable
 								call_user_func( self::$pagination_options['bulk_actions'][ $bulk_action_id ]['callback'], $rows );
 							}
 						}

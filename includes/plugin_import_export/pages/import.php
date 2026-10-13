@@ -97,6 +97,10 @@ if ( isset( $_REQUEST['run_import'] ) && $_REQUEST['run_import'] == 'true' ) {
 				}
 			}
 		}
+		// The callback does come out of the request, which is why the branch above only
+		// enters when module_import_export::is_import_callback() says it names a module
+		// import handler.
+		// nosemgrep: php.lang.security.injection.tainted-callable.tainted-callable
 		$result = call_user_func( $import_options['callback'], $data, $add_to_group, $extra_options );
 		if ( $result === 0 || (int) $result > 0 ) {
 			_e( 'Successfully imported %s records. Thanks!', $result );

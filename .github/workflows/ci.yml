@@ -152,11 +152,52 @@ jobs:
             --exclude 'includes/plugin_encrypt/phpseclib' \
             --exclude 'includes/plugin_paymethod_stripe/stripe-php' \
             --exclude 'includes/plugin_ticket/cron/mime_parser.php' \
+            --exclude 'js/tiny_mce3.4.4' \
             --sarif --output semgrep.sarif || true
       - uses: github/codeql-action/upload-sarif@9f759ee644a3e7c15c1390abf49868036c00067b # v3
         with:
           sarif_file: semgrep.sarif
         continue-on-error: true
+
+  semgrep-blocking:
+    # The other half of "advisory on purpose": rules that have been worked through until
+    # nothing in the tree matches them. Those block, so the clearing does not quietly
+    # come undone. A rule moves here only once it is at zero and every exception carries
+    # a nosemgrep comment saying why.
+    #
+    # Cleared so far:
+    #   tainted-callable            3 findings. One was real (the import page now insists
+    #                               the callback names a module import handler); the other
+    #                               two are suppressed in place with a reason.
+    #   unknown-value-with-script-tag,
+    #   react-unsanitized-method    only ever matched the bundled TinyMCE, which is
+    #                               excluded with dompdf, htmlpurifier and phpseclib.
+    #
+    # Nearly there, and why not yet:
+    #   plaintext-http-link         one link left, in Documentation/credits.html.
+    #   curl-ssl-verifypeer-off     one, in the bundled Authorize.Net library.
+    name: Semgrep (blocking rules)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    container:
+      image: semgrep/semgrep:latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - name: Rules that are clear, and have to stay clear
+        run: |
+          semgrep scan --error \
+            --config r/php.lang.security.injection.tainted-callable \
+            --config r/javascript.lang.security.audit.unknown-value-with-script-tag \
+            --config r/typescript.react.security.audit.react-unsanitized-method \
+            --exclude vendor --exclude node_modules --exclude temp \
+            --exclude 'includes/plugin_pdf/dompdf' \
+            --exclude 'includes/plugin_security/htmlpurifier' \
+            --exclude 'includes/plugin_encrypt/phpseclib' \
+            --exclude 'includes/plugin_paymethod_stripe/stripe-php' \
+            --exclude 'includes/plugin_ticket/cron/mime_parser.php' \
+            --exclude 'js/tiny_mce3.4.4'
 
   package:
     # The item archive is not the repository. CodeCanyon wants three folders at the top -
