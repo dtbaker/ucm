@@ -272,6 +272,55 @@ function db_identifier( $identifier ) {
 }
 
 /**
+ * The ids generate_fieldset() gives the elements a caller did not name.
+ *
+ * The id is the title with everything but letters and digits removed. A fieldset renders
+ * one element per id and stores the id so a role can be told to hide that field, so two
+ * titles reducing to the same id meant one of the two fields silently never appeared -
+ * which is what happened to "Additional Charge (as %)" and "Additional Charge (as $)" on
+ * the payment settings pages.
+ *
+ * Collisions are resolved from the titles alone, never from their position, because an
+ * id already stored against a role must not move just because the fields were rendered
+ * in a different order. Of the titles sharing a slug the first in sort order keeps it,
+ * and the rest get a suffix taken from the title. A title that collides with nothing
+ * keeps exactly the id it has always had.
+ *
+ * @param array<int|string,string> $titles element key => title
+ *
+ * @return array<int|string,string> the same keys, mapped to ids
+ */
+function ucm_form_element_ids( $titles ) {
+	if ( ! is_array( $titles ) ) {
+		return array();
+	}
+
+	// Which distinct titles want each slug.
+	$wanted = array();
+	foreach ( $titles as $title ) {
+		$slug = preg_replace( '#[^a-zA-Z0-9]#', '', (string) $title );
+		$wanted[ $slug ][ (string) $title ] = true;
+	}
+	$keeps_the_slug = array();
+	foreach ( $wanted as $slug => $claimants ) {
+		$claimants = array_keys( $claimants );
+		sort( $claimants, SORT_STRING );
+		$keeps_the_slug[ $slug ] = $claimants[0];
+	}
+
+	$ids = array();
+	foreach ( $titles as $key => $title ) {
+		$title       = (string) $title;
+		$slug        = preg_replace( '#[^a-zA-Z0-9]#', '', $title );
+		$ids[ $key ] = ( $keeps_the_slug[ $slug ] === $title )
+			? $slug
+			: $slug . '_' . substr( md5( $title ), 0, 6 );
+	}
+
+	return $ids;
+}
+
+/**
  * Build an ORDER BY fragment from a column name and an optional direction.
  *
  * Escaping cannot make an ORDER BY fragment safe - the whole point of the clause is that

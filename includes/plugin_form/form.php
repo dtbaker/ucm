@@ -1420,9 +1420,16 @@ class module_form extends module_base
 		return array();
 	}
 
-	private static function _new_element_id( $element_id, $element_title ) {
+	/**
+	 * @param int|string           $element_id the key the caller used
+	 * @param string               $element_title
+	 * @param array<string,string> $generated  element key => id, from ucm_form_element_ids()
+	 *
+	 * @return string
+	 */
+	private static function _new_element_id( $element_id, $element_title, $generated = array() ) {
 		if ( is_numeric( $element_id ) && $element_title ) {
-			$element_id = preg_replace( '#[^a-zA-Z0-9]#', '', $element_title );
+			return isset( $generated[ $element_id ] ) ? $generated[ $element_id ] : preg_replace( '#[^a-zA-Z0-9]#', '', $element_title );
 		}
 
 		return $element_id;
@@ -1441,12 +1448,23 @@ class module_form extends module_base
 			}
 			$write_settings      = false;
 			$new_option_elements = array();
+			// Work the ids out across the whole set first. Two titles that differ only in
+			// punctuation slug to the same id, and the second element then replaced the
+			// first and never appeared.
+			$element_titles = array();
+			foreach ( $options['elements'] as $element_key => $element ) {
+				if ( is_numeric( $element_key ) && ! empty( $element['title'] ) ) {
+					$element_titles[ $element_key ] = $element['title'];
+				}
+			}
+			$generated_ids = ucm_form_element_ids( $element_titles );
 			foreach ( $options['elements'] as $element_id => $element ) {
 				// we convert numeric element id's into strings.
 				// this prevents duplicates if the page layout is rendered differently based on user permissions.
 				// ie job create / job edit has different fields
 				//
-				$new_element_id                         = self::_new_element_id( $element_id, ! empty( $element['title'] ) ? $element['title'] : '' );
+				$element_title                          = ! empty( $element['title'] ) ? $element['title'] : '';
+				$new_element_id                         = self::_new_element_id( $element_id, $element_title, $generated_ids );
 				$new_option_elements[ $new_element_id ] = $element;
 				unset( $options['elements'][ $element_id ] );
 
