@@ -11,7 +11,7 @@ abstract class Stripe_SingletonApiResource extends Stripe_ApiResource {
 	public static function classUrl( $class ) {
 		$base = self::className( $class );
 
-		return "/v1/${base}";
+		return "/v1/{$base}";
 	}
 
 	public function instanceUrl() {

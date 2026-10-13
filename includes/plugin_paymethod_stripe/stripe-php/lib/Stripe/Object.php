@@ -84,18 +84,22 @@ class Stripe_Object implements ArrayAccess {
 	}
 
 	// ArrayAccess methods
+	#[\ReturnTypeWillChange]
 	public function offsetSet( $k, $v ) {
 		$this->$k = $v;
 	}
 
+	#[\ReturnTypeWillChange]
 	public function offsetExists( $k ) {
 		return array_key_exists( $k, $this->_values );
 	}
 
+	#[\ReturnTypeWillChange]
 	public function offsetUnset( $k ) {
 		unset( $this->$k );
 	}
 
+	#[\ReturnTypeWillChange]
 	public function offsetGet( $k ) {
 		return array_key_exists( $k, $this->_values ) ? $this->_values[ $k ] : null;
 	}
@@ -113,7 +117,7 @@ class Stripe_Object implements ArrayAccess {
 	}
 
 	public static function constructFrom( $values, $apiKey = null ) {
-		$class = get_class();
+		$class = __CLASS__;
 
 		return self::scopedConstructFrom( $class, $values, $apiKey );
 	}

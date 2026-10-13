@@ -2,13 +2,13 @@
 
 class Stripe_Balance extends Stripe_SingletonApiResource {
 	public static function constructFrom( $values, $apiKey = null ) {
-		$class = get_class();
+		$class = __CLASS__;
 
 		return self::scopedConstructFrom( $class, $values, $apiKey );
 	}
 
 	public static function retrieve( $apiKey = null ) {
-		$class = get_class();
+		$class = __CLASS__;
 
 		return self::_scopedSingletonRetrieve( $class, $apiKey );
 	}
