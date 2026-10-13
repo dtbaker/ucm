@@ -172,10 +172,14 @@ jobs:
     #   unknown-value-with-script-tag,
     #   react-unsanitized-method    only ever matched the bundled TinyMCE, which is
     #                               excluded with dompdf, htmlpurifier and phpseclib.
-    #
-    # Nearly there, and why not yet:
-    #   plaintext-http-link         one link left, in Documentation/credits.html.
-    #   curl-ssl-verifypeer-off     one, in the bundled Authorize.Net library.
+    #   curl-ssl-verifypeer-off     one, in the bundled Authorize.Net library: its pinned
+    #                               CA bundle expired in 2012 and the documented
+    #                               workaround was to stop verifying the peer on a request
+    #                               carrying a card number. It verifies against the host's
+    #                               own store now.
+    #   plaintext-http-link         one link left in the credits, now https. The source is
+    #                               docs-site/src/content/docs/reference/credits.md -
+    #                               Documentation/credits.html is generated from it.
     name: Semgrep (blocking rules)
     runs-on: ubuntu-latest
     timeout-minutes: 15
@@ -191,6 +195,8 @@ jobs:
             --config r/php.lang.security.injection.tainted-callable \
             --config r/javascript.lang.security.audit.unknown-value-with-script-tag \
             --config r/typescript.react.security.audit.react-unsanitized-method \
+            --config r/php.lang.security.curl-ssl-verifypeer-off \
+            --config r/html.security.plaintext-http-link \
             --exclude vendor --exclude node_modules --exclude temp \
             --exclude 'includes/plugin_pdf/dompdf' \
             --exclude 'includes/plugin_security/htmlpurifier' \
