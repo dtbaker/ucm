@@ -82,14 +82,14 @@ print_heading( 'Coinbase Settings' ); ?>
 			'description' => '... this amount',
 			'help'        => 'What value to restrict bitcoin payments to',
 		),
-		array(
+		'payment_method_coinbase_charge_percent' => array(
 			'key'         => 'payment_method_coinbase_charge_percent',
 			'default'     => 0,
 			'type'        => 'text',
 			'description' => 'Additional Charge (as %)',
 			'help'        => 'Example: 1.5 do not enter %% sign',
 		),
-		array(
+		'payment_method_coinbase_charge_amount' => array(
 			'key'         => 'payment_method_coinbase_charge_amount',
 			'default'     => 0,
 			'type'        => 'text',

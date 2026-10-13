@@ -73,14 +73,14 @@ print_heading( 'PayNL Settings' ); ?>
 			'description' => '... this amount',
 			'help'        => 'What value to restrict paynl payments to',
 		),
-		array(
+		'payment_method_paynl_charge_percent' => array(
 			'key'         => 'payment_method_paynl_charge_percent',
 			'default'     => 0,
 			'type'        => 'text',
 			'description' => 'Additional Charge (as %)',
 			'help'        => 'Example: 2.9 do not enter %% sign',
 		),
-		array(
+		'payment_method_paynl_charge_amount' => array(
 			'key'         => 'payment_method_paynl_charge_amount',
 			'default'     => 0,
 			'type'        => 'text',
