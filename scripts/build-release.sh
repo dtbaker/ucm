@@ -34,6 +34,24 @@ echo "Assembling Main Files from the current commit..."
 # decides, rather than the copy in the last commit.
 git archive --worktree-attributes HEAD | tar -x -C "$MAIN"
 
+echo "Installing the PHP dependencies buyers need..."
+# Buyers get vendor/ pre-built. Composer is a developer tool: most of them are on shared
+# hosting with no shell, and the modern Stripe SDK is a hard requirement for taking a
+# Stripe payment at all - it has no bundled fallback, because the 2014 copy still on disk
+# speaks an API Stripe no longer accepts. Shipping vendor/ is what keeps that feature
+# working out of the box.
+#
+# --no-dev so the test and analysis tooling stays out, and an authoritative classmap so
+# the autoloader never scans the filesystem at runtime.
+# composer.json and composer.lock are export-ignored, so they are not in the archive we
+# just unpacked. Copy them in, install against them, then take them back out - buyers get
+# the built vendor/ without the manifest that would invite them to rebuild it.
+cp composer.json composer.lock "$MAIN/"
+composer install --no-dev --no-interaction \
+	--no-progress --optimize-autoloader --classmap-authoritative \
+	--working-dir="$MAIN"
+rm -f "$MAIN/composer.json" "$MAIN/composer.lock"
+
 echo "Assembling Documentation..."
 # Written by hand and kept in the repository, the same as Licensing, so that a change to
 # what buyers read shows up in a diff and goes through review like any other change.
@@ -142,7 +160,7 @@ fi
 # bundled libraries legitimately carry their own composer.json and .travis.yml.
 for dir in \
 	'Main Files/.github/' 'Main Files/.git/' 'Main Files/tests/' 'Main Files/docker/' \
-	'Main Files/docs/' 'Main Files/scripts/' 'Main Files/node_modules/' 'Main Files/vendor/' \
+	'Main Files/docs/' 'Main Files/scripts/' 'Main Files/node_modules/' \
 	'Main Files/build/' 'Main Files/playwright-report/' 'Main Files/test-results/'
 do
 	if grep -qF "$dir" <<<"$listing"; then
@@ -166,6 +184,26 @@ do
 		fail=1
 	fi
 done
+
+# The dependencies buyers cannot install themselves. Stripe is the one that bites: it has
+# no bundled fallback, so an archive without vendor/ ships a payment method that cannot
+# take a payment, and nothing else in the build would notice.
+for required in \
+	'Main Files/vendor/autoload.php' \
+	'Main Files/vendor/stripe/stripe-php/init.php'
+do
+	if ! grep -qxF "$required" <<<"$listing"; then
+		echo "FAIL: the archive is missing $required"
+		echo "      Buyers cannot run composer; vendor/ has to be built into the archive."
+		fail=1
+	fi
+done
+
+# ...but the development half of vendor/ must not come with it.
+if grep -qE '^Main Files/vendor/(phpunit|phpstan|squizlabs|friendsofphp)/' <<<"$listing"; then
+	echo "FAIL: development dependencies in the archive - build vendor/ with --no-dev"
+	fail=1
+fi
 
 # Documentation has to be readable without a developer toolchain.
 if ! grep -qiE '^Documentation/.+\.(html?|pdf)$' <<<"$listing"; then

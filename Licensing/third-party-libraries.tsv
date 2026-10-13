@@ -48,3 +48,5 @@ whitelabel1-datatables	DataTables (inside the White Label theme)	1.8.1	GPL-2.0 O
 whitelabel1-flot	Flot (inside the White Label theme)	0.7	MIT	licenses/MIT.txt	IOLA and Ole Laursen	https://www.flotcharts.org/	includes/plugin_theme/themes/whitelabel1/js/flot.js
 whitelabel1-elfinder	elFinder (inside the White Label theme)	1.1 RC3	UNRESOLVED	licenses/UNRESOLVED.txt	Studio 42	https://studio-42.github.io/elFinder/	includes/plugin_theme/themes/whitelabel1/js/elfinder.js
 blocks-fonts	Unidentified "nsw" webfont family	unversioned	UNRESOLVED	licenses/UNRESOLVED.txt	unknown	unknown	includes/plugin_theme_blocks/css/fonts
+stripe-php-composer	Stripe PHP bindings (Composer)	v17.6.0	MIT	licenses/MIT.txt	Stripe, Inc.	https://github.com/stripe/stripe-php	vendor/stripe/stripe-php
+htmlpurifier-composer	HTML Purifier (Composer)	v4.19.1	LGPL-2.1-or-later	licenses/LGPL-2.1.txt	Edward Z. Yang	https://github.com/ezyang/htmlpurifier	vendor/ezyang/htmlpurifier
