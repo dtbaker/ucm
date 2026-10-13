@@ -86,5 +86,7 @@ print_heading( 'Authorize Settings' ); ?>
 <p><strong>Please use SSL on your website (eg: https://) in order to use Authorize.net</strong></p>
 <p>To change how the Authorize credit card form looks please go to Settings > Templates and look for
 	'authorize_credit_card_form'.</p>
-<p>If you get "cannot connect" errors when making a payment please try going to Settings > Advanced and changing
-	'payment_method_authorize_ssl_verify' from 1 to 0</p>
+<p>If you get "cannot connect" errors when making a payment, your server cannot verify Authorize.net's
+	certificate. Ask your host to update the certificate authority bundle PHP uses. This page used to tell you
+	to turn 'payment_method_authorize_ssl_verify' off instead; that setting no longer disables the check,
+	because turning it off sent the card number over a connection nothing had checked.</p>

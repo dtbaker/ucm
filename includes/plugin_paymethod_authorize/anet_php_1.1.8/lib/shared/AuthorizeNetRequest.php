@@ -11,7 +11,9 @@ abstract class AuthorizeNetRequest {
 	protected $_api_login;
 	protected $_transaction_key;
 	protected $_post_string;
-	public $VERIFY_PEER = true; // Set to false if getting connection errors.
+	// Kept because module_paymethod_authorize sets it from a configuration value. It no
+	// longer turns certificate verification off - see _sendRequest() below.
+	public $VERIFY_PEER = true;
 	protected $_sandbox = true;
 	protected $_log_file = false;
 
@@ -85,11 +87,15 @@ abstract class AuthorizeNetRequest {
 		curl_setopt( $curl_request, CURLOPT_TIMEOUT, 45 );
 		curl_setopt( $curl_request, CURLOPT_RETURNTRANSFER, 1 );
 		curl_setopt( $curl_request, CURLOPT_SSL_VERIFYHOST, 2 );
-		if ( $this->VERIFY_PEER ) {
-			curl_setopt( $curl_request, CURLOPT_CAINFO, dirname( dirname( __FILE__ ) ) . '/ssl/cert.pem' );
-		} else {
-			curl_setopt( $curl_request, CURLOPT_SSL_VERIFYPEER, false );
-		}
+		// This request carries a card number, so the certificate is always checked.
+		//
+		// The library shipped a pinned CA bundle at lib/ssl/cert.pem and, when that bundle
+		// stopped matching, told the merchant to set VERIFY_PEER to false - which posts the
+		// card number over a connection nothing has authenticated. The bundle is from 2012
+		// and all but one of its roots have already expired, so it was going to stop
+		// matching. The host's own certificate store is used instead, which is what every
+		// other gateway in this application already does.
+		curl_setopt( $curl_request, CURLOPT_SSL_VERIFYPEER, true );
 
 		if ( preg_match( '/xml/', $post_url ) ) {
 			curl_setopt( $curl_request, CURLOPT_HTTPHEADER, Array( "Content-Type: text/xml" ) );
