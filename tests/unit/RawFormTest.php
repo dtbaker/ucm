@@ -25,8 +25,9 @@ class RawFormTest extends TestCase
 {
 	/**
 	 * Request fields that reach a write handler. _process is the module dispatcher; the
-	 * next three are read straight out of $_REQUEST by the pagination hooks, and the last
-	 * two by the import page, which writes rows without going through _process at all.
+	 * next three are read straight out of $_REQUEST by the pagination hooks, the next two
+	 * by the import page, which writes rows without going through _process at all, and the
+	 * last by the public file page, which saves a comment the same way.
 	 *
 	 * _process_login and _process_reset are deliberately NOT here. Login forms go through
 	 * the helper now and so do carry a token, but it is minted against the visitor's
@@ -40,6 +41,7 @@ class RawFormTest extends TestCase
 		'import_export_go',
 		'run_import',
 		'upload_import',
+		'save_file_comments',
 	);
 
 	/**
@@ -72,7 +74,6 @@ class RawFormTest extends TestCase
 		// the time one is rendered, only placeholder substitution. The payment ones post to
 		// {PAYMENT_URL} and are filled in and shown to a customer who has no session.
 		'includes/plugin_contract/contract.php'                  => 1,
-		'includes/plugin_file/file.php'                          => 1,
 		'includes/plugin_invoice/invoice.php'                    => 1,
 		'includes/plugin_member/member.php'                      => 1,
 		'includes/plugin_newsletter/newsletter.php'              => 1,

@@ -1856,7 +1856,17 @@ Comment: {COMMENT}
 								$template->assign_values( $quote_data );
 							}
 							$template->page_title = $file_data['file_name'];
-							$template->content    = '<form action="" method="post"><input type="hidden" name="save_file_comments" value="1">' . $template->content . '</form>';
+							// Built as a string rather than printed, so the helper's output is captured.
+							// Worth doing rather than hand-writing the tag: this form saves a comment, and
+							// going through the helper is what gives it the form token.
+							ob_start();
+							module_form::print_form_open_tag( array(
+								'action' => '',
+								'hidden' => array( 'save_file_comments' => '1' ),
+							) );
+							$comment_form_open = ob_get_clean();
+
+							$template->content = $comment_form_open . $template->content . '</form>';
 							echo $template->render( 'pretty_html' );
 						}
 
