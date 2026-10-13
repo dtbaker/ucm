@@ -3107,10 +3107,13 @@ Job Name: <strong>{JOB_NAME}</strong> <br/>
 			$job_id            = false;
 		}
 
-		// fix for default hourly rate.
-		if (empty($data['hourly_rate'])) {
-			$customer_hourly_rate = module_customer::c( 'hourly_rate', 60, (int) $data['customer_id'] );
-			if ($customer_hourly_rate > 0) {
+		// Fill in a blank hourly rate from the customer's default - but only when the
+		// save actually carries the field. A partial save (the job task import calls
+		// save_job() with nothing but the tasks) used to land here, warn on the missing
+		// customer_id, and write the global default over the job's real hourly rate.
+		if ( array_key_exists( 'hourly_rate', $data ) && empty( $data['hourly_rate'] ) ) {
+			$customer_hourly_rate = module_customer::c( 'hourly_rate', 60, isset( $data['customer_id'] ) ? (int) $data['customer_id'] : 0 );
+			if ( $customer_hourly_rate > 0 ) {
 				$data['hourly_rate'] = $customer_hourly_rate;
 			}
 		}
