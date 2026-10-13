@@ -1,6 +1,10 @@
 <?php
 
-if (!$file_safe) { die('wrong page');
+// These are sections of the Files screen rather than pages of their own, and file_admin.php
+// sets this before including them. Reaching one directly used to warn about the undefined
+// variable first and then say "wrong page", so the warning was the only thing a person saw.
+if ( empty( $file_safe ) ) {
+	die( 'wrong page' );
 }
 if (!module_file::can_i('edit','File Approval')) { die('no perms');
 }

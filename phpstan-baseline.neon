@@ -2070,11 +2070,6 @@ parameters:
 			count: 1
 			path: includes/plugin_file/pages/file_admin_bucket.php
 
-		-
-			message: '#^Variable \$file_safe might not be defined\.$#'
-			identifier: variable.undefined
-			count: 1
-			path: includes/plugin_file/pages/file_admin_bucket.php
 
 		-
 			message: '#^Variable \$module might not be defined\.$#'
@@ -2106,11 +2101,6 @@ parameters:
 			count: 1
 			path: includes/plugin_file/pages/file_admin_edit.php
 
-		-
-			message: '#^Variable \$file_safe might not be defined\.$#'
-			identifier: variable.undefined
-			count: 1
-			path: includes/plugin_file/pages/file_admin_edit.php
 
 		-
 			message: '#^Variable \$module might not be defined\.$#'
@@ -2130,11 +2120,6 @@ parameters:
 			count: 1
 			path: includes/plugin_file/pages/file_admin_email.php
 
-		-
-			message: '#^Variable \$file_safe might not be defined\.$#'
-			identifier: variable.undefined
-			count: 1
-			path: includes/plugin_file/pages/file_admin_email.php
 
 		-
 			message: '#^Variable \$module might not be defined\.$#'
