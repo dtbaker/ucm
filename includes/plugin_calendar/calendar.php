@@ -227,6 +227,35 @@ class module_calendar extends module_base
 		return md5( 'secret hash for staff member ' . $staff_id . ' with secret ' . _UCM_SECRET );
 	}
 
+	/**
+	 * Escape a value for a calendar feed TEXT field.
+	 *
+	 * The feeds are plain text, not HTML, so htmlspecialchars() is the wrong tool - it
+	 * would leave the characters that actually matter alone and mangle apostrophes in a
+	 * customer's name. RFC 5545 reserves four: a backslash, a semicolon, a comma and a
+	 * line break.
+	 *
+	 * Without this, a comma in a subject - or in a company name, which is how these
+	 * subjects are built - ends the field early and the rest of it reads as another
+	 * property. A line break is worse: it can introduce a property of the attacker's
+	 * choosing, or a whole second event, into a feed the customer's calendar trusts.
+	 *
+	 * @param string $value
+	 *
+	 * @return string
+	 */
+	public static function ical_text( $value ) {
+		if ( ! is_string( $value ) ) {
+			$value = (string) $value;
+		}
+		// Backslash first, or the escapes added below get escaped again.
+		$value = str_replace( '\\', '\\\\', $value );
+		$value = str_replace( array( ';', ',' ), array( '\\;', '\\,' ), $value );
+
+		// Any of the three line endings becomes the literal \n the format asks for.
+		return str_replace( array( "\r\n", "\r", "\n" ), '\\n', $value );
+	}
+
 	public static function link_calendar( $calendar_type, $options = array(), $h = false ) {
 		if ( $h ) {
 			return md5( 's3cret7hash for calendar ' . _UCM_SECRET . ' ' . $calendar_type . serialize( $options ) );

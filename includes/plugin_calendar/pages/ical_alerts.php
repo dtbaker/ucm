@@ -47,8 +47,8 @@ DTEND;VALUE=DATE:'.date('Ymd',strtotime('+1 day',$time)).'*/
 		echo 'DTSTAMP:' . date( 'Ymd' ) . 'T090000Z
 DTSTART:' . date( 'Ymd', $time ) . 'T090000Z
 DTEND:' . date( 'Ymd', strtotime( '+1 day', $time ) ) . 'T010000Z
-SUMMARY: ' . $alert['item'] . ( isset( $alert['name'] ) ? ' - ' . $alert['name'] : '' ) . '
-DESCRIPTION:' . _l( 'Alert Item: %s', $alert['name'] ) . '<br><a href="' . $alert['link'] . '">' . _l( 'Link' ) . '</a>
+SUMMARY: ' . module_calendar::ical_text( $alert['item'] . ( isset( $alert['name'] ) ? ' - ' . $alert['name'] : '' ) ) . '
+DESCRIPTION:' . module_calendar::ical_text( _l( 'Alert Item: %s', $alert['name'] ) ) . '\\n' . module_calendar::ical_text( $alert['link'] ) . '
 END:VEVENT
 ';
 	}
