@@ -1009,16 +1009,31 @@ class module_subscription extends module_base
 				$invoice_id = (int) $foo[1];
 				if ( $invoice_id > 0 ) {
 					// see if any subscriptions match this invoice.
-					//module_cache::clear_cache();
-					$invoice      = module_invoice::get_invoice( $invoice_id );
+					// The one field we want is date_paid, which save_invoice() wrote a
+					// few lines before raising this hook. Read the row directly rather
+					// than through module_invoice::get_invoice(), which is cached: a
+					// cached copy here is the copy from before the payment, and its
+					// empty date_paid would be written to subscription_history as
+					// 0000-00-00 - the invoice paid, and the subscription's own record
+					// of it saying otherwise.
+					//
+					// save_invoice() does clear the invoice cache immediately before
+					// raising this hook (invoice.php, just above the handle_hook call),
+					// so today that cannot happen. Demonstrated by removing that clear:
+					// a renewal paid in full recorded paid_date 0000-00-00. This read
+					// does not depend on a caller three hundred lines away keeping that
+					// discipline, and it is one row instead of a six-table join.
+					$invoice      = get_single( 'invoice', 'invoice_id', $invoice_id );
 					$subscription = get_single( 'subscription_history', 'invoice_id', $invoice_id );
-					if ( $subscription ) {
+					if ( $invoice && $subscription ) {
 						// mark subscription as paid and move onto the next date.
 						update_insert( 'subscription_history_id', $subscription['subscription_history_id'], 'subscription_history', array(
 							'paid_date' => $invoice['date_paid'],
 						) );
 						$subscription_owner = get_single( 'subscription_owner', 'subscription_owner_id', $subscription['subscription_owner_id'] );
-						$this->update_next_due_date( $subscription['subscription_id'], $subscription_owner['owner_table'], $subscription_owner['owner_id'] );
+						if ( $subscription_owner ) {
+							$this->update_next_due_date( $subscription['subscription_id'], $subscription_owner['owner_table'], $subscription_owner['owner_id'] );
+						}
 						/*if($subscription['customer_id']){
                             $this->update_next_due_date($subscription['subscription_id'],$subscription['customer_id'],true);
                         }else{
@@ -1548,7 +1563,66 @@ class module_subscription extends module_base
 		return $return;
 	}
 
+	/**
+	 * Generate the renewals that are due, at most one run at a time.
+	 *
+	 * Two of these running at once bills the customer twice. Nothing in the renewal
+	 * path is atomic: the loop reads `next_due_date`, decides a renewal is due, and only
+	 * writes the date forward at the very end of generate_subscription_invoice() - after
+	 * the invoice, its payment methods and its history row. The whole of that work is the
+	 * window, and two runs inside it both generate.
+	 *
+	 * Reproduced by firing two cron.php requests at the same instant against one
+	 * subscription due today: two invoices, the same invoice number, the same period, the
+	 * same customer, and two subscription_history rows. The merge pass at the end does not
+	 * combine them because each run only knows about the one it made.
+	 *
+	 * That is not an exotic thing to arrange. cron.php's own guard only keeps runs three
+	 * minutes apart, it records the time at the end of the run rather than the start, so a
+	 * run longer than the cron interval is overlapped by the next tick - and this function
+	 * is also called straight out of a customer save when
+	 * subscription_send_invoice_straight_away is on, which never passes through cron.php
+	 * at all.
+	 *
+	 * So the lock lives here rather than in cron.php: this is the one place every caller
+	 * goes through. It is a MySQL named lock, held by the connection, so it is released
+	 * when the request ends however it ends - there is no flag left set by a run that
+	 * died. GET_LOCK answers 1 for acquired, 0 for already held and NULL on error; only a
+	 * definite 0 skips the run, so a database that cannot do named locks goes back to the
+	 * old behaviour instead of quietly stopping every renewal in the system.
+	 */
 	public static function run_cron( $debug = false ) {
+		// 22 characters plus a 32 character hash. Comfortably inside MySQL's 64 character
+		// limit on a lock name, which it refuses with an exception rather than a warning.
+		// The hash keeps two installations sharing one database server out of each
+		// other's way: named locks are server wide, not per database.
+		$lock_name = 'ucm_subscription_cron_' . md5( _DB_NAME . '|' . _DB_PREFIX );
+		$have_lock = false;
+		try {
+			$lock = qa1( "SELECT GET_LOCK('" . db_escape( $lock_name ) . "', 0) AS got_lock" );
+			if ( is_array( $lock ) && isset( $lock['got_lock'] ) && (string) $lock['got_lock'] === '0' ) {
+				if ( $debug ) {
+					echo "Another subscription cron run is already in progress - skipping this one.<br>\n";
+				}
+
+				return;
+			}
+			$have_lock = is_array( $lock ) && isset( $lock['got_lock'] ) && (string) $lock['got_lock'] === '1';
+		} catch ( Exception $e ) {
+			// Whatever went wrong, it is not worth stopping every renewal in the system
+			// over. Carry on unlocked, which is where this code was before.
+			$have_lock = false;
+		}
+		try {
+			self::run_cron_renewals( $debug );
+		} finally {
+			if ( $have_lock ) {
+				query( "SELECT RELEASE_LOCK('" . db_escape( $lock_name ) . "')" );
+			}
+		}
+	}
+
+	private static function run_cron_renewals( $debug = false ) {
 
 		// we only want to perform these cron actions if we're after a certain time of day
 		// because we dont want to be generating these renewals and sending them at midnight, can get confusing

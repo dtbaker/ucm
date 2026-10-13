@@ -4333,9 +4333,15 @@ parameters:
 			path: includes/plugin_subscription/pages/subscription_admin_edit.php
 
 		-
+			message: '#^Constant _DB_NAME not found\.$#'
+			identifier: constant.notFound
+			count: 1
+			path: includes/plugin_subscription/subscription.php
+
+		-
 			message: '#^Constant _DB_PREFIX not found\.$#'
 			identifier: constant.notFound
-			count: 46
+			count: 47
 			path: includes/plugin_subscription/subscription.php
 
 		-
