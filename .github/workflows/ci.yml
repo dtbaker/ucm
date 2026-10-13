@@ -199,6 +199,38 @@ jobs:
             --exclude 'includes/plugin_ticket/cron/mime_parser.php' \
             --exclude 'js/tiny_mce3.4.4'
 
+  docs:
+    # The help files shipped inside the application are build output, not hand maintained
+    # data. Twenty two of them shipped to five thousand installations for a decade pointing
+    # at articles that had moved, on a site that had been restructured, read by nothing -
+    # because nothing ever checked. This is the check.
+    #
+    # It fails if the generated files are out of step with the articles, if an article
+    # claims a screen that no longer exists in the PHP, if two articles claim the same
+    # screen, if an internal link points at nothing, or if the CodeCanyon archive quietly
+    # loses a page.
+    #
+    # The other half of keeping this honest is tests/unit/HelpDocsTest.php, which asserts
+    # the exact outbound URL and header set, and runs in the phpunit job above.
+    name: Documentation
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: docs-site/package-lock.json
+      - run: npm ci
+        working-directory: docs-site
+      - name: Nothing has drifted and nothing points at nothing
+        run: npm run check
+        working-directory: docs-site
+      - name: The site, the archive and the shipped copy all still build
+        run: npm run build
+        working-directory: docs-site
+
   package:
     # The item archive is not the repository. CodeCanyon wants three folders at the top -
     # Main Files, Documentation, Licensing - and it wants nothing in there that only
