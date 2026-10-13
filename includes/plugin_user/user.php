@@ -1287,6 +1287,9 @@ class module_user extends module_base
 		query( $sql );
 		$sql = "UPDATE " . _DB_PREFIX . "user SET linked_parent_user_id = 0 WHERE linked_parent_user_id = '" . $user_id . "'";
 		query( $sql );
+		// get_user() and get_contacts() both cache, so without this the deleted user
+		// keeps turning up on their own screen and in contact lists.
+		module_cache::clear( 'user' );
 	}
 
 	public function login_link( $user_id ) {

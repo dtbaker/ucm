@@ -287,6 +287,10 @@ class module_finance extends module_base
 				// straight into SQL unquoted, so make it a number here rather than there.
 				$finance_id                 = (int) update_insert( 'finance_id', isset( $_REQUEST['finance_id'] ) ? $_REQUEST['finance_id'] : 'new', 'finance', $data );
 
+				// the dashboard income summary is cached under this group, so it shows
+				// the old totals until this clears it.
+				module_cache::clear( 'finance' );
+
 				module_extra::save_extras( 'finance', 'finance_id', $finance_id );
 
 				if ( ! isset( $data['tax_ids'] ) && isset( $data['taxes'] ) && is_array( $data['taxes'] ) ) {
@@ -504,6 +508,8 @@ class module_finance extends module_base
 				if ( isset( $finance['finance_recurring_id'] ) && $finance['finance_recurring_id'] ) {
 					self::calculate_recurring_date( $finance['finance_recurring_id'], true );
 				}
+				// the dashboard income summary is cached under this group.
+				module_cache::clear( 'finance' );
 			}
 		}
 	}

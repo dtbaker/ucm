@@ -129,5 +129,15 @@ test.describe('A customer, end to end', () => {
       await searchCustomers(page, renamed),
       'the deleted customer should not come back from a search',
     ).not.toContain(String(customerId));
+
+    // --- and gone from its own screen too. delete_customer() used to leave the
+    // module_cache entry behind, so the customer's own page kept rendering the deleted
+    // record - name, contacts and all - while the list correctly showed it gone.
+    await page.goto('/?m[]=customer&p[]=customer_admin_open&customer_id=' + customerId);
+    await page.waitForLoadState('load');
+    await expect(
+      page.locator('body'),
+      "a deleted customer's own screen should not render it out of the cache",
+    ).not.toContainText(renamed);
   });
 });

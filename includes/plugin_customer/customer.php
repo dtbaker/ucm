@@ -1069,7 +1069,7 @@ Invoice: <strong>{INVOICE_LINK}</strong>
 		if ( isset( $_REQUEST['butt_del'] ) && $_REQUEST['butt_del'] && ! empty( $_REQUEST['customer_id'] ) && module_customer::can_i( 'delete', 'Customers' ) ) {
 			if ( module_form::check_secure_key() ) {
 				$data = self::get_customer( $_REQUEST['customer_id'] );
-				if ( $data['customer_id'] && $data['customer_id'] = $_REQUEST['customer_id'] ) {
+				if ( ! empty( $data['customer_id'] ) && $data['customer_id'] == $_REQUEST['customer_id'] ) {
 					if ( module_form::confirm_delete(
 						'customer_id',
 						_l( "Really delete customer: %s", $data['customer_name'] ),
@@ -1636,6 +1636,9 @@ Invoice: <strong>{INVOICE_LINK}</strong>
 				// (this is so the above code works with its sql joins)
 				$sql = "DELETE FROM " . _DB_PREFIX . "customer WHERE customer_id = '" . $customer_id . "' LIMIT 1";
 				query( $sql );
+				// get_customer() and get_customers() both cache, so without this the
+				// customer's own screen keeps rendering the deleted record.
+				module_cache::clear( 'customer' );
 			}
 		}
 	}

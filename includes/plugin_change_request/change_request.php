@@ -351,6 +351,9 @@ Change request details:<br><br>
 		if ( $change_request && $change_request['change_request_id'] == $change_request_id ) {
 			$sql = "DELETE FROM " . _DB_PREFIX . "change_request WHERE change_request_id = '" . $change_request_id . "' LIMIT 1";
 			query( $sql );
+			// get_change_requests() caches, so without this the deleted request keeps
+			// coming back.
+			module_cache::clear( 'change_request' );
 		}
 	}
 

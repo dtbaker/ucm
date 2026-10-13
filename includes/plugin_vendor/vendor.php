@@ -740,6 +740,9 @@ class module_vendor extends module_base
 				// (this is so the above code works with its sql joins)
 				$sql = "DELETE FROM " . _DB_PREFIX . "vendor WHERE vendor_id = '" . $vendor_id . "' LIMIT 1";
 				query( $sql );
+				// get_vendor() and get_vendors() both cache, so without this the
+				// vendor's own screen keeps rendering the deleted record.
+				module_cache::clear( 'vendor' );
 			}
 		}
 	}

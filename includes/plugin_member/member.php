@@ -375,6 +375,8 @@ class module_member extends module_base
 				module_group::delete_member( $member_id, 'newsletter_subscription' );
 			}
 			hook_handle_callback( 'member_deleted', $member_id );
+			// get_members() caches, so without this the deleted member keeps coming back.
+			module_cache::clear( 'member' );
 		}
 	}
 
