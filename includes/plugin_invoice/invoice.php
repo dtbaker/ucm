@@ -4378,6 +4378,15 @@ Job: <strong>{JOB_NAME}</strong> <br/>
 
 				module_cache::clear( 'invoice' );
 
+				if ( $new_invoice_id ) {
+					// The invoice was saved before its lines existed, so its cached totals
+					// were written as zero. get_invoice() recalculates them and writes
+					// them back. Without this a renewal reads as $0.00 everywhere the
+					// cached columns are trusted - the income forecast among them - until
+					// somebody happens to open it.
+					self::get_invoice( $new_invoice_id );
+				}
+
 				return $new_invoice_id;
 			}
 		}
