@@ -228,6 +228,64 @@ function ucm_send_auth_required() {
 }
 
 /**
+ * Resolve one directory name inside a fixed root, or false.
+ *
+ * basename() looks like it does this job and does not. basename( '..' ) is '..', so a name
+ * of ".." concatenated onto a root and handed to is_dir() passes - the parent directory
+ * exists - and the caller walks one level up out of the root it meant to stay in. That
+ * mattered in the newsletter templates, where the resolved directory is include()d.
+ *
+ * Returns the single safe folder name (not a path), so the caller can keep building the
+ * relative string it was already using - some of them turn it into a URL.
+ *
+ * @param string $root  directory the name must stay inside
+ * @param string $name  untrusted name, possibly with path separators in it
+ *
+ * @return string|false
+ */
+function ucm_contained_dir( $root, $name ) {
+	$folder = basename( (string) $name );
+	if ( strlen( $folder ) < 2 || '..' === $folder ) {
+		return false;
+	}
+	$root_real = realpath( $root );
+	$candidate = realpath( rtrim( $root, '/\\' ) . DIRECTORY_SEPARATOR . $folder );
+	if ( ! $root_real || ! $candidate || ! is_dir( $candidate ) ) {
+		return false;
+	}
+	if ( $candidate === $root_real ) {
+		return false;
+	}
+	if ( 0 !== strpos( $candidate . DIRECTORY_SEPARATOR, $root_real . DIRECTORY_SEPARATOR ) ) {
+		return false;
+	}
+
+	return $folder;
+}
+
+/**
+ * JSON for a <script> block.
+ *
+ * json_encode() leaves `<`, `>` and `&` alone, which is fine in a JSON response and not
+ * fine inline in a page: a string containing `</script>` closes the block early and the
+ * rest of the value is parsed as markup. The JSON_HEX_* flags write those characters as
+ * \u escapes, which JSON.parse and every JS engine read back as the same string.
+ *
+ * Use this anywhere the result is printed between <script> tags. Plain json_encode() is
+ * still the right call for an AJAX response, where there is no surrounding markup.
+ *
+ * @param mixed $value
+ *
+ * @return string
+ */
+function ucm_json_for_script( $value ) {
+	return json_encode(
+		$value,
+		JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT
+	);
+}
+
+/**
  * Read a request value that is meant to be a plain string, such as a link hash.
  *
  * Anything in $_REQUEST is an array whenever the query string says so - "?hash[]=x" - and

@@ -232,7 +232,7 @@ if ( isset( $_REQUEST['save_signature'] ) ) {
             $('.sigPad').signaturePad({
                 drawOnly: true,
                 lineTop: 80
-            }).regenerate(<?php echo json_encode( json_decode( $existing_signature['signature'] ) );?>);
+            }).regenerate(<?php echo ucm_json_for_script( json_decode( $existing_signature['signature'] ) );?>);
 					<?php } else { ?>
             $('.sigPad').signaturePad({drawOnly: true, lineTop: 80});
 					<?php } ?>

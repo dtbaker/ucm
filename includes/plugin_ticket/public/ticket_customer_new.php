@@ -137,7 +137,14 @@
 											<td>
 												<?php
 												$types = module_ticket::get_types( true );
-												echo print_select_box( $types, 'ticket_type_id', isset( $_REQUEST['ticket_type_id'] ) && isset( $types[ $_REQUEST['ticket_type_id'] ] ) ? $_REQUEST['ticket_type_id'] : $ticket_account['default_type'], '', false, 'name' );
+												// The key is a ticket_type_id, so the cast is what the lookup already means. This
+												// form is the one page of the ticket plugin an anonymous visitor can reach, so
+												// the value that comes back out of it is worth pinning to a number.
+												$selected_type = isset( $_REQUEST['ticket_type_id'] ) ? (int) $_REQUEST['ticket_type_id'] : 0;
+												if ( ! isset( $types[ $selected_type ] ) ) {
+													$selected_type = $ticket_account['default_type'];
+												}
+												echo print_select_box( $types, 'ticket_type_id', $selected_type, '', false, 'name' );
 												?>
 											</td>
 										</tr>

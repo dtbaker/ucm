@@ -25,7 +25,7 @@ foreach ( $roles as $role ) {
 ?>
 	<script type="text/javascript">
       $(function () {
-          var fieldset_settings = <?php echo json_encode( $settings ); ?>;
+          var fieldset_settings = <?php echo ucm_json_for_script( $settings ); ?>;
 
           function fieldset_user_role_change() {
               var role_id = $('#fieldset_change_role_id').val();

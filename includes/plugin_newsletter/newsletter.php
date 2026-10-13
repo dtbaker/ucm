@@ -844,8 +844,18 @@ class module_newsletter extends module_base
 			if ( is_dir( 'includes/plugin_newsletter/email_template/' . (int) $t['newsletter_template_id'] . '/' ) ) {
 				$t['directory'] = 'includes/plugin_newsletter/email_template/' . (int) $t['newsletter_template_id'] . '/';
 			}
-			if ( strlen( basename( $t['newsletter_template_name'] ) ) > 1 && is_dir( 'includes/plugin_newsletter/email_template/' . basename( $t['newsletter_template_name'] ) . '/' ) ) {
-				$t['directory'] = 'includes/plugin_newsletter/email_template/' . basename( $t['newsletter_template_name'] ) . '/';
+			// basename() on its own does not keep this inside the template root: basename( '..' )
+			// is '..', and is_dir() on the result says yes, because the directory one level up
+			// does exist. A template named '..' therefore pointed $directory at
+			// includes/plugin_newsletter/ - and three of the pages that trust this path
+			// include() a PHP file out of it.
+			//
+			// ucm_contained_dir() hands back the folder name rather than a path so the relative
+			// string below stays the shape the callers expect: newsletter_template_edit turns
+			// it into a URL with full_link(), and the edit page prints it.
+			$template_folder = ucm_contained_dir( 'includes/plugin_newsletter/email_template', $t['newsletter_template_name'] );
+			if ( $template_folder ) {
+				$t['directory'] = 'includes/plugin_newsletter/email_template/' . $template_folder . '/';
 			}
 
 			if ( $t['directory'] && ! $t['body'] && is_file( $t['directory'] . 'template.html' ) ) {

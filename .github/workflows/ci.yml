@@ -129,6 +129,13 @@ jobs:
     # job that is red on every single pull request is a security job nobody reads. The
     # results go to the Security tab, where they can be worked through and then promoted
     # to blocking one rule at a time.
+    #
+    # One rule is excluded rather than triaged. request-host-used is an nginx rule written
+    # in generic mode, so it matches the five characters "$host" in any file at all. Its
+    # eight hits are a PHP local variable in module_config::upgrade_url_is_allowed(), which
+    # holds a parse_url() component and exists to refuse hosts that are not on the allow
+    # list. There is no edit to that function that would satisfy the rule short of renaming
+    # the variable, so it is turned off here instead of being renamed to please a linter.
     name: Semgrep (advisory)
     runs-on: ubuntu-latest
     timeout-minutes: 20
@@ -153,6 +160,7 @@ jobs:
             --exclude 'includes/plugin_paymethod_stripe/stripe-php' \
             --exclude 'includes/plugin_ticket/cron/mime_parser.php' \
             --exclude 'js/tiny_mce3.4.4' \
+            --exclude-rule generic.nginx.security.request-host-used.request-host-used \
             --sarif --output semgrep.sarif || true
       - uses: github/codeql-action/upload-sarif@9f759ee644a3e7c15c1390abf49868036c00067b # v3
         with:
