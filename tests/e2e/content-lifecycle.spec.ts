@@ -55,8 +55,53 @@ test.describe( 'Content lifecycles', () => {
       .toBe( renamed );
   } );
 
+
+  test( 'a file record keeps the status it was given, and an edit sticks', async ( { page } ) => {
+    await login( page );
+    const customerId = await aCustomer( page );
+
+    // The Files screen is file_admin. file_admin_edit is a section of it rather than a page
+    // of its own and refuses to load alone, which is why an earlier attempt at this went
+    // nowhere. The file name is not an editable field either - it comes from the upload -
+    // so the status is what a save can be checked against.
+    const fileId = await createRecord( page, '/?m[]=file', {
+      _process: 'save_file',
+      file_id: 'new',
+      owner_table: 'customer',
+      owner_id: customerId,
+      customer_id: customerId,
+    }, 'file_id' );
+
+    await page.goto( `/?m[]=file&p[]=file_admin&file_id=${ fileId }` );
+    const form = page.locator( 'form:has(input[name="_process"][value="save_file"])' ).first();
+    const status = form.locator( 'select[name="status"]' ).first();
+
+    // Take a status the install actually offers rather than inventing one - they are
+    // configurable, so a hard coded value would pass here and fail on a real site.
+    // The list carries its own affordances - Select, Create New, Manage Options - which
+    // are not statuses. Picking one of those is how this test first failed.
+    const options = ( await status.locator( 'option' ).allTextContents() )
+      .map( ( t ) => t.trim() )
+      .filter( ( t ) => t.length > 0 && ! t.startsWith( '-' ) );
+    expect( options.length, 'the status list should offer a real status' ).toBeGreaterThan( 0 );
+    const chosen = options[ 0 ];
+
+    await status.selectOption( { label: chosen } );
+    await Promise.all( [
+      page.waitForNavigation( { waitUntil: 'load' } ),
+      form.locator( 'input[name="butt_save"]' ).first().click(),
+    ] );
+
+    await page.goto( `/?m[]=file&p[]=file_admin&file_id=${ fileId }` );
+    const after = page.locator( 'form:has(input[name="_process"][value="save_file"])' ).first()
+      .locator( 'select[name="status"]' ).first();
+    const selected = ( await after.locator( 'option:checked' ).allTextContents() )
+      .map( ( t ) => t.trim() );
+    expect( selected, 'the status should come back as it was set' ).toContain( chosen );
+  } );
+
   /**
-   * Calendar entries, file records and custom data groups are not covered here.
+   * Calendar entries and custom data groups are not covered here.
    *
    * Each was attempted and each needs more than a save and a read-back, so guessing at it
    * was costing more than it was proving:
@@ -64,9 +109,6 @@ test.describe( 'Content lifecycles', () => {
    *  - save_calendar_entry does not redirect to the new entry, so there is no id to follow.
    *    The calendar screen is drawn by a script that fetches its data separately, so a
    *    useful test has to go through that feed rather than a form.
-   *  - a file record is created by save_file and the id comes back, but file_admin_edit
-   *    does not render a form carrying _process=save_file with the file name in it, so the
-   *    read-back has to come from somewhere else.
    *  - save_data_type creates a group and returns its id, but admin_data_list_type answers
    *    "No $data_type" for it, so either the page wants a different parameter or the group
    *    needs a field group before it will render.
