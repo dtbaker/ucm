@@ -2241,7 +2241,7 @@ parameters:
 		-
 			message: '#^Constant _DB_PREFIX not found\.$#'
 			identifier: constant.notFound
-			count: 81
+			count: 83
 			path: includes/plugin_finance/finance.php
 
 		-

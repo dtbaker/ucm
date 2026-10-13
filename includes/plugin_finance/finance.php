@@ -244,13 +244,13 @@ class module_finance extends module_base
 					module_finance::handle_link_transactions();
 				} else {
 					// check for date / name at least.
-					$date = trim( $_REQUEST['transaction_date'] );
-					$name = trim( $_REQUEST['name'] );
+					$date = isset( $_REQUEST['transaction_date'] ) ? trim( $_REQUEST['transaction_date'] ) : '';
+					$name = isset( $_REQUEST['name'] ) ? trim( $_REQUEST['name'] ) : '';
 					if ( ! $date || ! $name ) {
 						redirect_browser( module_finance::link_open( false ) );
 					}
-					$credit = trim( $_REQUEST['credit'] );
-					$debit  = trim( $_REQUEST['debit'] );
+					$credit = isset( $_REQUEST['credit'] ) ? trim( $_REQUEST['credit'] ) : '';
+					$debit  = isset( $_REQUEST['debit'] ) ? trim( $_REQUEST['debit'] ) : '';
 					if ( $credit > 0 ) {
 						$_POST['type']   = 'i';
 						$_POST['amount'] = $credit;
@@ -258,34 +258,47 @@ class module_finance extends module_base
 						$_POST['type']   = 'e';
 						$_POST['amount'] = $debit;
 					}
+					// The quick add row has no tax fields, so the transaction is its own
+					// sub total. Leaving sub_amount at 0 breaks the invariant the upgrade
+					// in get_upgrade_sql() restores (sub_amount = amount where it is 0),
+					// and the tax report prints a blank sub total for the row.
+					$_POST['sub_amount'] = $_POST['amount'];
 				}
 				// no break
 			case 'save_finance':
+				$posted_finance_id = isset( $_REQUEST['finance_id'] ) ? (int) $_REQUEST['finance_id'] : 0;
 				if ( isset( $_REQUEST['butt_del'] ) ) {
-					$this->delete( $_REQUEST['finance_id'] );
+					$this->delete( $posted_finance_id );
 					redirect_browser( self::link_open( false ) );
 				}
 				if ( isset( $_REQUEST['butt_unlink'] ) ) {
 					// unlink this finance_id from other finance_ids.
-					$sql = "UPDATE `" . _DB_PREFIX . "finance` SET parent_finance_id = 0 WHERE parent_finance_id = '" . (int) $_REQUEST['finance_id'] . "'";
+					$sql = "UPDATE `" . _DB_PREFIX . "finance` SET parent_finance_id = 0 WHERE parent_finance_id = '" . $posted_finance_id . "'";
 					query( $sql );
-					$sql = "UPDATE `" . _DB_PREFIX . "invoice_payment` SET parent_finance_id = 0 WHERE parent_finance_id = '" . (int) $_REQUEST['finance_id'] . "'";
+					$sql = "UPDATE `" . _DB_PREFIX . "invoice_payment` SET parent_finance_id = 0 WHERE parent_finance_id = '" . $posted_finance_id . "'";
 					query( $sql );
 					redirect_browser( self::link_open( false ) );
 				}
-				$temp_data = $this->get_finance( $_REQUEST['finance_id'] );
-				$data      = $_POST + $temp_data;
-				// save the finance categories and account.
-				$account_id = $_REQUEST['finance_account_id'];
-				if ( (string) (int) $account_id != (string) $account_id && strlen( $account_id ) > 2 ) {
-					// we have a new account to create.
-					$account_id = update_insert( 'finance_account_id', 'new', 'finance_account', array( 'name' => $account_id ) );
+				$request_finance_id = isset( $_REQUEST['finance_id'] ) ? $_REQUEST['finance_id'] : 'new';
+				$temp_data          = $this->get_finance( $request_finance_id );
+				$data               = $_POST + $temp_data;
+				// Save the finance categories and account. A save that does not carry the
+				// account field at all - a user whose permissions had the select stripped
+				// out of the form, for one - must leave the account already on the record
+				// alone. Reading the key regardless warned twice under E_ALL, and because
+				// that printed before the redirect the save then never redirected at all.
+				if ( isset( $_REQUEST['finance_account_id'] ) ) {
+					$account_id = $_REQUEST['finance_account_id'];
+					if ( (string) (int) $account_id != (string) $account_id && strlen( $account_id ) > 2 ) {
+						// we have a new account to create.
+						$account_id = update_insert( 'finance_account_id', 'new', 'finance_account', array( 'name' => $account_id ) );
+					}
+					$data['finance_account_id'] = $account_id;
 				}
-				$data['finance_account_id'] = $account_id;
 				// update_insert() hands back whatever id it was given for an existing record,
 				// and that id came out of the request. The category queries below put it
 				// straight into SQL unquoted, so make it a number here rather than there.
-				$finance_id                 = (int) update_insert( 'finance_id', isset( $_REQUEST['finance_id'] ) ? $_REQUEST['finance_id'] : 'new', 'finance', $data );
+				$finance_id                 = (int) update_insert( 'finance_id', $request_finance_id, 'finance', $data );
 
 				// the dashboard income summary is cached under this group, so it shows
 				// the old totals until this clears it.
@@ -368,12 +381,12 @@ class module_finance extends module_base
 				if ( isset( $_REQUEST['finance_recurring_id'] ) && (int) $_REQUEST['finance_recurring_id'] > 0 ) {
 					// if we have set a custom "next recurring date" then we don't recalculate this date unless we are saving a new finance id.
 					$recurring = self::get_recurring( $_REQUEST['finance_recurring_id'] );
-					if ( ! (int) $_REQUEST['finance_id'] || ! $recurring['next_due_date_custom'] ) {
+					if ( ! (int) $request_finance_id || ! $recurring['next_due_date_custom'] ) {
 						self::calculate_recurring_date( (int) $_REQUEST['finance_recurring_id'], true );
 					}
 					// we also have to adjust the starting balance of our recurring amount by this amount.
 					// just a little helpful feature.
-					if ( ! (int) $_REQUEST['finance_id'] ) {
+					if ( ! (int) $request_finance_id ) {
 						$balance = module_config::c( 'finance_recurring_start_balance', 0 );
 						if ( $balance != 0 ) {
 							if ( $data['type'] == 'e' ) {
@@ -410,13 +423,14 @@ class module_finance extends module_base
 				break;
 			case 'save_recurring':
 				if ( isset( $_REQUEST['butt_del'] ) ) {
-					$this->delete_recurring( $_REQUEST['finance_recurring_id'] );
+					$this->delete_recurring( isset( $_REQUEST['finance_recurring_id'] ) ? $_REQUEST['finance_recurring_id'] : 0 );
 					redirect_browser( self::link_open_recurring( false ) );
 				}
 				$data = $_POST;
-				// save the finance categories and account.
-				$account_id = $_REQUEST['finance_account_id'];
-				if ( (string) (int) $account_id != (string) $account_id && strlen( $account_id ) > 2 ) {
+				// Save the finance categories and account. Same as save_finance above: a
+				// save that does not carry the account field leaves the account alone.
+				$account_id = isset( $_REQUEST['finance_account_id'] ) ? $_REQUEST['finance_account_id'] : null;
+				if ( $account_id !== null && (string) (int) $account_id != (string) $account_id && strlen( $account_id ) > 2 ) {
 					// we have a new account to create.
 					$account_id = update_insert( 'finance_account_id', 'new', 'finance_account', array( 'name' => $account_id ) );
 				}
@@ -426,7 +440,9 @@ class module_finance extends module_base
 					$original_finance_recurring = array();
 				}
 
-				$data['finance_account_id'] = $account_id;
+				if ( $account_id !== null ) {
+					$data['finance_account_id'] = $account_id;
+				}
 				// Same as save_finance above: the id comes back out of the request, and the
 				// catrel queries below interpolate it unquoted.
 				$finance_recurring_id       = (int) update_insert( 'finance_recurring_id', isset( $_REQUEST['finance_recurring_id'] ) ? $_REQUEST['finance_recurring_id'] : 'new', 'finance_recurring', $data );
@@ -500,6 +516,9 @@ class module_finance extends module_base
 				$sql = "DELETE FROM " . _DB_PREFIX . "finance WHERE finance_id = '" . $finance_id . "' LIMIT 1";
 				query( $sql );
 				$sql = "DELETE FROM " . _DB_PREFIX . "finance_category_rel WHERE finance_id = '" . $finance_id . "'";
+				query( $sql );
+				// the tax rows belong to this transaction alone, and nothing cleared them.
+				$sql = "DELETE FROM " . _DB_PREFIX . "finance_tax WHERE finance_id = '" . $finance_id . "'";
 				query( $sql );
 				$sql = "UPDATE " . _DB_PREFIX . "finance SET parent_finance_id = 0 WHERE parent_finance_id = '" . $finance_id . "'";
 				query( $sql );
@@ -1481,7 +1500,55 @@ class module_finance extends module_base
 			$finances[ $finance_id ] = $finance;
 		}
 
+		self::fill_missing_sub_amounts( $finances );
+
 		return $finances;
+	}
+
+	/**
+	 * Give every row a sub total, so a report that prints one can add its columns up.
+	 *
+	 * `finance.sub_amount` is a column with a default of 0 and nothing but the full
+	 * transaction form fills it in, so a transaction entered on the quick add row - and
+	 * every transaction recorded before the column existed - stores 0 against a real
+	 * amount. The tax report prints the sub total column straight from these rows and
+	 * skips a 0, so such a transaction showed an empty sub total next to its full total,
+	 * and the sub total column's own footer did not reconcile with the total column's.
+	 *
+	 * The sub total is the amount less whatever tax the transaction carries, which is the
+	 * same rule get_upgrade_sql() applies to the table itself. One query covers the whole
+	 * page, and rows that already carry a sub total are left exactly as they are.
+	 */
+	private static function fill_missing_sub_amounts( &$finances ) {
+		$missing = array();
+		foreach ( $finances as $key => $finance ) {
+			if (
+				isset( $finance['finance_id'] ) && (int) $finance['finance_id'] > 0
+				&& isset( $finance['amount'] ) && (float) $finance['amount'] > 0
+				&& ( ! isset( $finance['sub_amount'] ) || (float) $finance['sub_amount'] == 0 )
+			) {
+				$missing[ (int) $finance['finance_id'] ][] = $key;
+			}
+		}
+		if ( ! $missing ) {
+			return;
+		}
+
+		$tax_totals = array();
+		$sql        = "SELECT finance_id, SUM(amount) AS tax_total FROM `" . _DB_PREFIX . "finance_tax` ";
+		$sql        .= " WHERE finance_id IN (" . implode( ', ', array_keys( $missing ) ) . ") ";
+		$sql        .= " GROUP BY finance_id ";
+		foreach ( qa( $sql ) as $row ) {
+			$tax_totals[ (int) $row['finance_id'] ] = (float) $row['tax_total'];
+		}
+
+		foreach ( $missing as $finance_id => $keys ) {
+			foreach ( $keys as $key ) {
+				$tax_total = isset( $tax_totals[ $finance_id ] ) ? $tax_totals[ $finance_id ] : 0;
+
+				$finances[ $key ]['sub_amount'] = (float) $finances[ $key ]['amount'] - $tax_total;
+			}
+		}
 	}
 
 
