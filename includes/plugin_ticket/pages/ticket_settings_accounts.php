@@ -36,10 +36,12 @@ if ( isset( $_REQUEST['ticket_account_id'] ) && $_REQUEST['ticket_account_id'] )
 	?>
 	<!-- updated -->
 
-	<form action="" method="post">
-		<?php module_form::print_form_auth(); ?>
-		<input type="hidden" name="_process" value="save_ticket_account">
-		<input type="hidden" name="ticket_account_id" value="<?php echo $ticket_account_id; ?>"/>
+	<?php
+	module_form::print_form_open_tag( array(
+		'process' => 'save_ticket_account',
+		'hidden'  => array( 'ticket_account_id' => $ticket_account_id ),
+	) );
+	?>
 
 		<?php
 		$c = array();

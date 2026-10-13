@@ -22,10 +22,12 @@ if ( isset( $_REQUEST['ticket_data_key_id'] ) && $_REQUEST['ticket_data_key_id']
 	?>
 
 
-	<form action="" method="post">
-		<?php module_form::print_form_auth(); ?>
-		<input type="hidden" name="_process" value="save_ticket_data_key">
-		<input type="hidden" name="ticket_data_key_id" value="<?php echo $ticket_data_key_id; ?>"/>
+	<?php
+	module_form::print_form_open_tag( array(
+		'process' => 'save_ticket_data_key',
+		'hidden'  => array( 'ticket_data_key_id' => $ticket_data_key_id ),
+	) );
+	?>
 
 		<?php
 		$options_value = '';
