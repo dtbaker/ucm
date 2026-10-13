@@ -15,20 +15,25 @@
 set -euo pipefail
 
 KEY="${1:-}"
+OFFLINE_ONLY=0
 if [ -z "$KEY" ]; then
-	echo "Usage: $0 sk_test_YOUR_SECRET_KEY" >&2
-	echo >&2
-	echo "Find it at https://dashboard.stripe.com/test/apikeys - the secret key, not the" >&2
-	echo "publishable one. A test key is strongly preferred; a live key would also work" >&2
-	echo "and would still charge nobody, but there is no reason to use one." >&2
-	exit 64
+	# No key is not an error. Without one the request can still be checked against
+	# Stripe's own published schema, which is most of the answer and needs no account.
+	OFFLINE_ONLY=1
+	echo "No key given - checking the request against Stripe's published schema instead."
+	echo "To also ask Stripe whether it accepts the request:"
+	echo "  $0 sk_test_YOUR_SECRET_KEY"
+	echo "The secret key, not the publishable one: https://dashboard.stripe.com/test/apikeys"
+	echo
 fi
 
+if [ "$OFFLINE_ONLY" = "0" ]; then
 case "$KEY" in
 	sk_test_*) ;;
 	sk_live_*) echo "NOTE: that is a live key. Nothing will be charged, but a test key is the safer choice." >&2 ;;
 	*) echo "That does not look like a Stripe secret key (expected sk_test_... or sk_live_...)." >&2; exit 64 ;;
 esac
+fi
 
 # Not `ps --status running`: that flag is not in every compose version, and when it is
 # missing the command fails and the check silently decides nothing is running.
@@ -62,7 +67,21 @@ if [ -z "$PAYLOAD" ] || [ "${PAYLOAD:0:1}" != "{" ]; then
 	exit 70
 fi
 
-echo "Asking Stripe..."
+echo "Checking the request against Stripe's published schema..."
+if ! printf '%s' "$PAYLOAD" | "$(dirname "$0")/stripe/validate-session-args.py"; then
+	echo >&2
+	echo "The request does not match Stripe's schema. Fix that before asking Stripe." >&2
+	exit 1
+fi
+
+if [ "$OFFLINE_ONLY" = "1" ]; then
+	echo
+	echo "Schema check passed. Re-run with a key to have Stripe confirm it."
+	exit 0
+fi
+
+echo
+echo "Asking Stripe..." 
 # Stripe's API takes form encoding, so the JSON is flattened into bracketed keys here
 # rather than in PHP, to keep the payload above exactly what the app produces.
 FORM="$(printf '%s' "$PAYLOAD" | python3 -c '

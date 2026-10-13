@@ -1,0 +1,1689 @@
+{
+	"captured": "2026-10-13",
+	"path": "POST /v1/checkout/sessions",
+	"properties": {
+		"adaptive_pricing": {
+			"properties": {
+				"enabled": {}
+			}
+		},
+		"after_expiration": {
+			"properties": {
+				"recovery": {
+					"properties": {
+						"allow_promotion_codes": {},
+						"enabled": {}
+					},
+					"required": [
+						"enabled"
+					]
+				}
+			}
+		},
+		"allow_promotion_codes": {},
+		"allowed_payment_method_types": {},
+		"automatic_tax": {
+			"properties": {
+				"enabled": {},
+				"liability": {
+					"properties": {
+						"account": {},
+						"type": {
+							"enum": [
+								"account",
+								"self"
+							]
+						}
+					},
+					"required": [
+						"type"
+					]
+				}
+			},
+			"required": [
+				"enabled"
+			]
+		},
+		"billing_address_collection": {
+			"enum": [
+				"auto",
+				"required"
+			]
+		},
+		"branding_settings": {
+			"properties": {
+				"background_color": {},
+				"border_style": {
+					"enum": [
+						"",
+						"pill",
+						"rectangular",
+						"rounded"
+					]
+				},
+				"button_color": {},
+				"display_name": {},
+				"font_family": {
+					"enum": [
+						"",
+						"be_vietnam_pro",
+						"bitter",
+						"chakra_petch",
+						"default",
+						"hahmlet",
+						"inconsolata",
+						"inter",
+						"lato",
+						"lora",
+						"m_plus_1_code",
+						"montserrat",
+						"noto_sans",
+						"noto_sans_jp",
+						"noto_serif",
+						"nunito",
+						"open_sans",
+						"pridi",
+						"pt_sans",
+						"pt_serif",
+						"raleway",
+						"roboto",
+						"roboto_slab",
+						"source_sans_pro",
+						"titillium_web",
+						"ubuntu_mono",
+						"zen_maru_gothic"
+					]
+				},
+				"icon": {
+					"properties": {
+						"file": {},
+						"type": {
+							"enum": [
+								"file",
+								"url"
+							]
+						},
+						"url": {}
+					},
+					"required": [
+						"type"
+					]
+				},
+				"logo": {
+					"properties": {
+						"file": {},
+						"type": {
+							"enum": [
+								"file",
+								"url"
+							]
+						},
+						"url": {}
+					},
+					"required": [
+						"type"
+					]
+				}
+			}
+		},
+		"cancel_url": {},
+		"client_reference_id": {},
+		"consent_collection": {
+			"properties": {
+				"payment_method_reuse_agreement": {
+					"properties": {
+						"position": {
+							"enum": [
+								"auto",
+								"hidden"
+							]
+						}
+					},
+					"required": [
+						"position"
+					]
+				},
+				"promotions": {
+					"enum": [
+						"auto",
+						"none"
+					]
+				},
+				"terms_of_service": {
+					"enum": [
+						"none",
+						"required"
+					]
+				}
+			}
+		},
+		"currency": {},
+		"custom_fields": {
+			"items": {
+				"dropdown": {
+					"properties": {
+						"default_value": {},
+						"options": {
+							"items": {
+								"label": {},
+								"value": {}
+							}
+						}
+					},
+					"required": [
+						"options"
+					]
+				},
+				"key": {},
+				"label": {
+					"properties": {
+						"custom": {},
+						"type": {
+							"enum": [
+								"custom"
+							]
+						}
+					},
+					"required": [
+						"custom",
+						"type"
+					]
+				},
+				"numeric": {
+					"properties": {
+						"default_value": {},
+						"maximum_length": {},
+						"minimum_length": {}
+					}
+				},
+				"optional": {},
+				"text": {
+					"properties": {
+						"default_value": {},
+						"maximum_length": {},
+						"minimum_length": {}
+					}
+				},
+				"type": {
+					"enum": [
+						"dropdown",
+						"numeric",
+						"text"
+					]
+				}
+			}
+		},
+		"custom_text": {
+			"properties": {
+				"after_submit": {},
+				"shipping_address": {},
+				"submit": {},
+				"terms_of_service_acceptance": {}
+			}
+		},
+		"customer": {},
+		"customer_account": {},
+		"customer_creation": {
+			"enum": [
+				"always",
+				"if_required"
+			]
+		},
+		"customer_email": {},
+		"customer_update": {
+			"properties": {
+				"address": {
+					"enum": [
+						"auto",
+						"never"
+					]
+				},
+				"name": {
+					"enum": [
+						"auto",
+						"never"
+					]
+				},
+				"shipping": {
+					"enum": [
+						"auto",
+						"never"
+					]
+				}
+			}
+		},
+		"discounts": {
+			"items": {
+				"coupon": {},
+				"promotion_code": {}
+			}
+		},
+		"excluded_payment_method_types": {},
+		"expand": {},
+		"expires_at": {},
+		"integration_identifier": {},
+		"invoice_creation": {
+			"properties": {
+				"enabled": {},
+				"invoice_data": {
+					"properties": {
+						"account_tax_ids": {},
+						"custom_fields": {},
+						"description": {},
+						"footer": {},
+						"issuer": {
+							"properties": {
+								"account": {},
+								"type": {
+									"enum": [
+										"account",
+										"self"
+									]
+								}
+							},
+							"required": [
+								"type"
+							]
+						},
+						"metadata": {},
+						"rendering_options": {}
+					}
+				}
+			},
+			"required": [
+				"enabled"
+			]
+		},
+		"line_items": {
+			"items": {
+				"adjustable_quantity": {
+					"properties": {
+						"enabled": {},
+						"maximum": {},
+						"minimum": {}
+					},
+					"required": [
+						"enabled"
+					]
+				},
+				"metadata": {},
+				"price": {},
+				"price_data": {
+					"properties": {
+						"currency": {},
+						"product": {},
+						"product_data": {
+							"properties": {
+								"description": {},
+								"images": {},
+								"metadata": {},
+								"name": {},
+								"tax_code": {},
+								"tax_details": {
+									"properties": {
+										"performance_location": {},
+										"tax_code": {}
+									}
+								},
+								"unit_label": {}
+							},
+							"required": [
+								"name"
+							]
+						},
+						"recurring": {
+							"properties": {
+								"interval": {
+									"enum": [
+										"day",
+										"month",
+										"week",
+										"year"
+									]
+								},
+								"interval_count": {}
+							},
+							"required": [
+								"interval"
+							]
+						},
+						"tax_behavior": {
+							"enum": [
+								"exclusive",
+								"inclusive",
+								"unspecified"
+							]
+						},
+						"unit_amount": {},
+						"unit_amount_decimal": {}
+					},
+					"required": [
+						"currency"
+					]
+				},
+				"quantity": {},
+				"tax_rates": {}
+			}
+		},
+		"locale": {
+			"enum": [
+				"auto",
+				"bg",
+				"cs",
+				"da",
+				"de",
+				"el",
+				"en",
+				"en-GB",
+				"es",
+				"es-419",
+				"et",
+				"fi",
+				"fil",
+				"fr",
+				"fr-CA",
+				"hr",
+				"hu",
+				"id",
+				"it",
+				"ja",
+				"ko",
+				"lt",
+				"lv",
+				"ms",
+				"mt",
+				"nb",
+				"nl",
+				"pl",
+				"pt",
+				"pt-BR",
+				"ro",
+				"ru",
+				"sk",
+				"sl",
+				"sv",
+				"th",
+				"tr",
+				"vi",
+				"zh",
+				"zh-HK",
+				"zh-TW"
+			]
+		},
+		"managed_payments": {
+			"properties": {
+				"enabled": {}
+			}
+		},
+		"metadata": {},
+		"mode": {
+			"enum": [
+				"payment",
+				"setup",
+				"subscription"
+			]
+		},
+		"name_collection": {
+			"properties": {
+				"business": {
+					"properties": {
+						"enabled": {},
+						"optional": {}
+					},
+					"required": [
+						"enabled"
+					]
+				},
+				"individual": {
+					"properties": {
+						"enabled": {},
+						"optional": {}
+					},
+					"required": [
+						"enabled"
+					]
+				}
+			}
+		},
+		"optional_items": {
+			"items": {
+				"adjustable_quantity": {
+					"properties": {
+						"enabled": {},
+						"maximum": {},
+						"minimum": {}
+					},
+					"required": [
+						"enabled"
+					]
+				},
+				"price": {},
+				"quantity": {}
+			}
+		},
+		"origin_context": {
+			"enum": [
+				"mobile_app",
+				"web"
+			]
+		},
+		"payment_intent_data": {
+			"properties": {
+				"application_fee_amount": {},
+				"capture_method": {
+					"enum": [
+						"automatic",
+						"automatic_async",
+						"manual"
+					]
+				},
+				"description": {},
+				"metadata": {},
+				"on_behalf_of": {},
+				"receipt_email": {},
+				"setup_future_usage": {
+					"enum": [
+						"off_session",
+						"on_session"
+					]
+				},
+				"shipping": {
+					"properties": {
+						"address": {
+							"properties": {
+								"city": {},
+								"country": {},
+								"line1": {},
+								"line2": {},
+								"postal_code": {},
+								"state": {}
+							},
+							"required": [
+								"line1"
+							]
+						},
+						"carrier": {},
+						"name": {},
+						"phone": {},
+						"tracking_number": {}
+					},
+					"required": [
+						"address",
+						"name"
+					]
+				},
+				"statement_descriptor": {},
+				"statement_descriptor_suffix": {},
+				"transfer_data": {
+					"properties": {
+						"amount": {},
+						"destination": {}
+					},
+					"required": [
+						"destination"
+					]
+				},
+				"transfer_group": {}
+			}
+		},
+		"payment_method_collection": {
+			"enum": [
+				"always",
+				"if_required"
+			]
+		},
+		"payment_method_configuration": {},
+		"payment_method_data": {
+			"properties": {
+				"allow_redisplay": {
+					"enum": [
+						"always",
+						"limited",
+						"unspecified"
+					]
+				}
+			}
+		},
+		"payment_method_options": {
+			"properties": {
+				"acss_debit": {
+					"properties": {
+						"currency": {
+							"enum": [
+								"cad",
+								"usd"
+							]
+						},
+						"mandate_options": {
+							"properties": {
+								"custom_mandate_url": {},
+								"default_for": {},
+								"interval_description": {},
+								"payment_schedule": {
+									"enum": [
+										"combined",
+										"interval",
+										"sporadic"
+									]
+								},
+								"transaction_type": {
+									"enum": [
+										"business",
+										"personal"
+									]
+								}
+							}
+						},
+						"setup_future_usage": {
+							"enum": [
+								"none",
+								"off_session",
+								"on_session"
+							]
+						},
+						"target_date": {},
+						"verification_method": {
+							"enum": [
+								"automatic",
+								"instant",
+								"microdeposits"
+							]
+						}
+					}
+				},
+				"affirm": {
+					"properties": {
+						"capture_method": {
+							"enum": [
+								"manual"
+							]
+						},
+						"setup_future_usage": {
+							"enum": [
+								"none"
+							]
+						}
+					}
+				},
+				"afterpay_clearpay": {
+					"properties": {
+						"capture_method": {
+							"enum": [
+								"manual"
+							]
+						},
+						"setup_future_usage": {
+							"enum": [
+								"none"
+							]
+						}
+					}
+				},
+				"alipay": {
+					"properties": {
+						"setup_future_usage": {
+							"enum": [
+								"none"
+							]
+						}
+					}
+				},
+				"alma": {
+					"properties": {
+						"capture_method": {
+							"enum": [
+								"manual"
+							]
+						}
+					}
+				},
+				"amazon_pay": {
+					"properties": {
+						"capture_method": {
+							"enum": [
+								"manual"
+							]
+						},
+						"setup_future_usage": {
+							"enum": [
+								"none",
+								"off_session"
+							]
+						}
+					}
+				},
+				"au_becs_debit": {
+					"properties": {
+						"setup_future_usage": {
+							"enum": [
+								"none"
+							]
+						},
+						"target_date": {}
+					}
+				},
+				"bacs_debit": {
+					"properties": {
+						"mandate_options": {
+							"properties": {
+								"reference_prefix": {}
+							}
+						},
+						"setup_future_usage": {
+							"enum": [
+								"none",
+								"off_session",
+								"on_session"
+							]
+						},
+						"target_date": {}
+					}
+				},
+				"bancontact": {
+					"properties": {
+						"setup_future_usage": {
+							"enum": [
+								"none",
+								"off_session"
+							]
+						}
+					}
+				},
+				"billie": {
+					"properties": {
+						"capture_method": {
+							"enum": [
+								"manual"
+							]
+						}
+					}
+				},
+				"blik": {
+					"properties": {
+						"mandate_options": {
+							"properties": {
+								"expires_at": {}
+							}
+						},
+						"setup_future_usage": {
+							"enum": [
+								"",
+								"none",
+								"off_session"
+							]
+						}
+					}
+				},
+				"boleto": {
+					"properties": {
+						"expires_after_days": {},
+						"setup_future_usage": {
+							"enum": [
+								"none",
+								"off_session",
+								"on_session"
+							]
+						}
+					}
+				},
+				"card": {
+					"properties": {
+						"capture_method": {
+							"enum": [
+								"manual"
+							]
+						},
+						"installments": {
+							"properties": {
+								"enabled": {}
+							}
+						},
+						"request_extended_authorization": {
+							"enum": [
+								"if_available",
+								"never"
+							]
+						},
+						"request_incremental_authorization": {
+							"enum": [
+								"if_available",
+								"never"
+							]
+						},
+						"request_multicapture": {
+							"enum": [
+								"if_available",
+								"never"
+							]
+						},
+						"request_overcapture": {
+							"enum": [
+								"if_available",
+								"never"
+							]
+						},
+						"request_three_d_secure": {
+							"enum": [
+								"any",
+								"automatic",
+								"challenge"
+							]
+						},
+						"restrictions": {
+							"properties": {
+								"brands_blocked": {},
+								"funding_types_blocked": {}
+							}
+						},
+						"setup_future_usage": {
+							"enum": [
+								"off_session",
+								"on_session"
+							]
+						},
+						"statement_descriptor_suffix_kana": {},
+						"statement_descriptor_suffix_kanji": {}
+					}
+				},
+				"cashapp": {
+					"properties": {
+						"capture_method": {
+							"enum": [
+								"manual"
+							]
+						},
+						"setup_future_usage": {
+							"enum": [
+								"none",
+								"off_session",
+								"on_session"
+							]
+						}
+					}
+				},
+				"crypto": {
+					"properties": {
+						"setup_future_usage": {
+							"enum": [
+								"none"
+							]
+						}
+					}
+				},
+				"customer_balance": {
+					"properties": {
+						"bank_transfer": {
+							"properties": {
+								"eu_bank_transfer": {
+									"properties": {
+										"country": {}
+									},
+									"required": [
+										"country"
+									]
+								},
+								"requested_address_types": {},
+								"type": {
+									"enum": [
+										"eu_bank_transfer",
+										"gb_bank_transfer",
+										"jp_bank_transfer",
+										"mx_bank_transfer",
+										"us_bank_transfer"
+									]
+								}
+							},
+							"required": [
+								"type"
+							]
+						},
+						"funding_type": {
+							"enum": [
+								"bank_transfer"
+							]
+						},
+						"setup_future_usage": {
+							"enum": [
+								"none"
+							]
+						}
+					}
+				},
+				"demo_pay": {
+					"properties": {
+						"setup_future_usage": {
+							"enum": [
+								"none",
+								"off_session"
+							]
+						}
+					}
+				},
+				"eps": {
+					"properties": {
+						"setup_future_usage": {
+							"enum": [
+								"none"
+							]
+						}
+					}
+				},
+				"fpx": {
+					"properties": {
+						"setup_future_usage": {
+							"enum": [
+								"none"
+							]
+						}
+					}
+				},
+				"giropay": {
+					"properties": {
+						"setup_future_usage": {
+							"enum": [
+								"none"
+							]
+						}
+					}
+				},
+				"grabpay": {
+					"properties": {
+						"setup_future_usage": {
+							"enum": [
+								"none"
+							]
+						}
+					}
+				},
+				"ideal": {
+					"properties": {
+						"setup_future_usage": {
+							"enum": [
+								"none"
+							]
+						}
+					}
+				},
+				"kakao_pay": {
+					"properties": {
+						"capture_method": {
+							"enum": [
+								"manual"
+							]
+						},
+						"setup_future_usage": {
+							"enum": [
+								"none",
+								"off_session"
+							]
+						}
+					}
+				},
+				"klarna": {
+					"properties": {
+						"capture_method": {
+							"enum": [
+								"manual"
+							]
+						},
+						"setup_future_usage": {
+							"enum": [
+								"none"
+							]
+						},
+						"subscriptions": {}
+					}
+				},
+				"konbini": {
+					"properties": {
+						"expires_after_days": {},
+						"setup_future_usage": {
+							"enum": [
+								"none"
+							]
+						}
+					}
+				},
+				"kr_card": {
+					"properties": {
+						"capture_method": {
+							"enum": [
+								"manual"
+							]
+						},
+						"setup_future_usage": {
+							"enum": [
+								"none",
+								"off_session"
+							]
+						}
+					}
+				},
+				"link": {
+					"properties": {
+						"capture_method": {
+							"enum": [
+								"manual"
+							]
+						},
+						"setup_future_usage": {
+							"enum": [
+								"none",
+								"off_session"
+							]
+						}
+					}
+				},
+				"mobilepay": {
+					"properties": {
+						"capture_method": {
+							"enum": [
+								"manual"
+							]
+						},
+						"setup_future_usage": {
+							"enum": [
+								"none"
+							]
+						}
+					}
+				},
+				"multibanco": {
+					"properties": {
+						"setup_future_usage": {
+							"enum": [
+								"none"
+							]
+						}
+					}
+				},
+				"naver_pay": {
+					"properties": {
+						"capture_method": {
+							"enum": [
+								"manual"
+							]
+						},
+						"setup_future_usage": {
+							"enum": [
+								"none",
+								"off_session"
+							]
+						}
+					}
+				},
+				"oxxo": {
+					"properties": {
+						"expires_after_days": {},
+						"setup_future_usage": {
+							"enum": [
+								"none"
+							]
+						}
+					}
+				},
+				"p24": {
+					"properties": {
+						"setup_future_usage": {
+							"enum": [
+								"none"
+							]
+						},
+						"tos_shown_and_accepted": {}
+					}
+				},
+				"pay_by_bank": {},
+				"payco": {
+					"properties": {
+						"capture_method": {
+							"enum": [
+								"manual"
+							]
+						},
+						"setup_future_usage": {
+							"enum": [
+								"none"
+							]
+						}
+					}
+				},
+				"paynow": {
+					"properties": {
+						"setup_future_usage": {
+							"enum": [
+								"none"
+							]
+						}
+					}
+				},
+				"paypal": {
+					"properties": {
+						"capture_method": {
+							"enum": [
+								"",
+								"manual"
+							]
+						},
+						"preferred_locale": {
+							"enum": [
+								"cs-CZ",
+								"da-DK",
+								"de-AT",
+								"de-DE",
+								"de-LU",
+								"el-GR",
+								"en-GB",
+								"en-US",
+								"es-ES",
+								"fi-FI",
+								"fr-BE",
+								"fr-FR",
+								"fr-LU",
+								"hu-HU",
+								"it-IT",
+								"nl-BE",
+								"nl-NL",
+								"pl-PL",
+								"pt-PT",
+								"sk-SK",
+								"sv-SE"
+							]
+						},
+						"reference": {},
+						"risk_correlation_id": {},
+						"setup_future_usage": {
+							"enum": [
+								"",
+								"none",
+								"off_session"
+							]
+						}
+					}
+				},
+				"payto": {
+					"properties": {
+						"mandate_options": {
+							"properties": {
+								"amount": {},
+								"amount_type": {
+									"enum": [
+										"",
+										"fixed",
+										"maximum"
+									]
+								},
+								"end_date": {},
+								"payment_schedule": {
+									"enum": [
+										"",
+										"adhoc",
+										"annual",
+										"daily",
+										"fortnightly",
+										"monthly",
+										"quarterly",
+										"semi_annual",
+										"weekly"
+									]
+								},
+								"payments_per_period": {},
+								"purpose": {
+									"enum": [
+										"",
+										"dependant_support",
+										"government",
+										"loan",
+										"mortgage",
+										"other",
+										"pension",
+										"personal",
+										"retail",
+										"salary",
+										"tax",
+										"utility"
+									]
+								},
+								"start_date": {}
+							}
+						},
+						"setup_future_usage": {
+							"enum": [
+								"none",
+								"off_session"
+							]
+						}
+					}
+				},
+				"pix": {
+					"properties": {
+						"amount_includes_iof": {
+							"enum": [
+								"always",
+								"never"
+							]
+						},
+						"expires_after_seconds": {},
+						"mandate_options": {
+							"properties": {
+								"amount": {},
+								"amount_includes_iof": {
+									"enum": [
+										"always",
+										"never"
+									]
+								},
+								"amount_type": {
+									"enum": [
+										"fixed",
+										"maximum"
+									]
+								},
+								"currency": {},
+								"end_date": {},
+								"payment_schedule": {
+									"enum": [
+										"halfyearly",
+										"monthly",
+										"quarterly",
+										"weekly",
+										"yearly"
+									]
+								},
+								"reference": {},
+								"start_date": {}
+							}
+						},
+						"setup_future_usage": {
+							"enum": [
+								"none",
+								"off_session"
+							]
+						}
+					}
+				},
+				"revolut_pay": {
+					"properties": {
+						"capture_method": {
+							"enum": [
+								"manual"
+							]
+						},
+						"setup_future_usage": {
+							"enum": [
+								"none",
+								"off_session"
+							]
+						}
+					}
+				},
+				"samsung_pay": {
+					"properties": {
+						"capture_method": {
+							"enum": [
+								"manual"
+							]
+						},
+						"setup_future_usage": {
+							"enum": [
+								"none"
+							]
+						}
+					}
+				},
+				"satispay": {
+					"properties": {
+						"capture_method": {
+							"enum": [
+								"manual"
+							]
+						}
+					}
+				},
+				"scalapay": {
+					"properties": {
+						"capture_method": {
+							"enum": [
+								"manual"
+							]
+						}
+					}
+				},
+				"sepa_debit": {
+					"properties": {
+						"mandate_options": {
+							"properties": {
+								"reference_prefix": {}
+							}
+						},
+						"setup_future_usage": {
+							"enum": [
+								"none",
+								"off_session",
+								"on_session"
+							]
+						},
+						"target_date": {}
+					}
+				},
+				"sequra": {
+					"properties": {
+						"capture_method": {
+							"enum": [
+								"manual"
+							]
+						}
+					}
+				},
+				"sofort": {
+					"properties": {
+						"setup_future_usage": {
+							"enum": [
+								"none"
+							]
+						}
+					}
+				},
+				"sunbit": {
+					"properties": {
+						"capture_method": {
+							"enum": [
+								"manual"
+							]
+						},
+						"setup_future_usage": {
+							"enum": [
+								"none"
+							]
+						}
+					}
+				},
+				"swish": {
+					"properties": {
+						"reference": {}
+					}
+				},
+				"twint": {
+					"properties": {
+						"setup_future_usage": {
+							"enum": [
+								"none",
+								"off_session"
+							]
+						}
+					}
+				},
+				"upi": {
+					"properties": {
+						"mandate_options": {
+							"properties": {
+								"amount": {},
+								"amount_type": {
+									"enum": [
+										"fixed",
+										"maximum"
+									]
+								},
+								"description": {},
+								"end_date": {}
+							}
+						},
+						"setup_future_usage": {
+							"enum": [
+								"",
+								"none",
+								"off_session",
+								"on_session"
+							]
+						}
+					}
+				},
+				"us_bank_account": {
+					"properties": {
+						"financial_connections": {
+							"properties": {
+								"permissions": {},
+								"prefetch": {}
+							}
+						},
+						"setup_future_usage": {
+							"enum": [
+								"none",
+								"off_session",
+								"on_session"
+							]
+						},
+						"target_date": {},
+						"verification_method": {
+							"enum": [
+								"automatic",
+								"instant"
+							]
+						}
+					}
+				},
+				"wechat_pay": {
+					"properties": {
+						"app_id": {},
+						"client": {
+							"enum": [
+								"android",
+								"ios",
+								"web"
+							]
+						},
+						"setup_future_usage": {
+							"enum": [
+								"none"
+							]
+						}
+					},
+					"required": [
+						"client"
+					]
+				}
+			}
+		},
+		"permissions": {
+			"properties": {
+				"update_shipping_details": {
+					"enum": [
+						"client_only",
+						"server_only"
+					]
+				}
+			}
+		},
+		"phone_number_collection": {
+			"properties": {
+				"enabled": {}
+			},
+			"required": [
+				"enabled"
+			]
+		},
+		"redirect_on_completion": {
+			"enum": [
+				"always",
+				"if_required",
+				"never"
+			]
+		},
+		"return_url": {},
+		"saved_payment_method_options": {
+			"properties": {
+				"allow_redisplay_filters": {},
+				"payment_method_remove": {
+					"enum": [
+						"disabled",
+						"enabled"
+					]
+				},
+				"payment_method_save": {
+					"enum": [
+						"disabled",
+						"enabled"
+					]
+				}
+			}
+		},
+		"setup_intent_data": {
+			"properties": {
+				"description": {},
+				"metadata": {},
+				"on_behalf_of": {}
+			}
+		},
+		"shipping_address_collection": {
+			"properties": {
+				"allowed_countries": {}
+			},
+			"required": [
+				"allowed_countries"
+			]
+		},
+		"shipping_options": {
+			"items": {
+				"shipping_rate": {},
+				"shipping_rate_data": {
+					"properties": {
+						"delivery_estimate": {
+							"properties": {
+								"maximum": {
+									"properties": {
+										"unit": {
+											"enum": [
+												"business_day",
+												"day",
+												"hour",
+												"month",
+												"week"
+											]
+										},
+										"value": {}
+									},
+									"required": [
+										"unit",
+										"value"
+									]
+								},
+								"minimum": {
+									"properties": {
+										"unit": {
+											"enum": [
+												"business_day",
+												"day",
+												"hour",
+												"month",
+												"week"
+											]
+										},
+										"value": {}
+									},
+									"required": [
+										"unit",
+										"value"
+									]
+								}
+							}
+						},
+						"display_name": {},
+						"fixed_amount": {
+							"properties": {
+								"amount": {},
+								"currency": {},
+								"currency_options": {}
+							},
+							"required": [
+								"amount",
+								"currency"
+							]
+						},
+						"metadata": {},
+						"tax_behavior": {
+							"enum": [
+								"exclusive",
+								"inclusive",
+								"unspecified"
+							]
+						},
+						"tax_code": {},
+						"type": {
+							"enum": [
+								"fixed_amount"
+							]
+						}
+					},
+					"required": [
+						"display_name"
+					]
+				}
+			}
+		},
+		"submit_type": {
+			"enum": [
+				"auto",
+				"book",
+				"donate",
+				"pay",
+				"subscribe"
+			]
+		},
+		"subscription_data": {
+			"properties": {
+				"application_fee_percent": {},
+				"billing_cycle_anchor": {},
+				"billing_cycle_anchor_config": {
+					"properties": {
+						"day_of_month": {},
+						"hour": {},
+						"minute": {},
+						"month": {},
+						"second": {}
+					},
+					"required": [
+						"day_of_month"
+					]
+				},
+				"billing_mode": {
+					"properties": {
+						"flexible": {
+							"properties": {
+								"proration_discounts": {
+									"enum": [
+										"included",
+										"itemized"
+									]
+								}
+							}
+						},
+						"type": {
+							"enum": [
+								"classic",
+								"flexible"
+							]
+						}
+					},
+					"required": [
+						"type"
+					]
+				},
+				"default_tax_rates": {},
+				"description": {},
+				"invoice_settings": {
+					"properties": {
+						"issuer": {
+							"properties": {
+								"account": {},
+								"type": {
+									"enum": [
+										"account",
+										"self"
+									]
+								}
+							},
+							"required": [
+								"type"
+							]
+						}
+					}
+				},
+				"metadata": {},
+				"on_behalf_of": {},
+				"pending_invoice_item_interval": {
+					"properties": {
+						"interval": {
+							"enum": [
+								"day",
+								"month",
+								"week",
+								"year"
+							]
+						},
+						"interval_count": {}
+					},
+					"required": [
+						"interval"
+					]
+				},
+				"proration_behavior": {
+					"enum": [
+						"create_prorations",
+						"none"
+					]
+				},
+				"transfer_data": {
+					"properties": {
+						"amount_percent": {},
+						"destination": {}
+					},
+					"required": [
+						"destination"
+					]
+				},
+				"trial_end": {},
+				"trial_period_days": {},
+				"trial_settings": {
+					"properties": {
+						"end_behavior": {
+							"properties": {
+								"missing_payment_method": {
+									"enum": [
+										"cancel",
+										"create_invoice",
+										"pause"
+									]
+								}
+							},
+							"required": [
+								"missing_payment_method"
+							]
+						}
+					},
+					"required": [
+						"end_behavior"
+					]
+				}
+			}
+		},
+		"success_url": {},
+		"tax_id_collection": {
+			"properties": {
+				"enabled": {},
+				"required": {
+					"enum": [
+						"if_supported",
+						"never"
+					]
+				}
+			},
+			"required": [
+				"enabled"
+			]
+		},
+		"ui_mode": {
+			"enum": [
+				"elements",
+				"embedded_page",
+				"form",
+				"hosted_page"
+			]
+		},
+		"wallet_options": {
+			"properties": {
+				"link": {
+					"properties": {
+						"display": {
+							"enum": [
+								"auto",
+								"never"
+							]
+						}
+					}
+				}
+			}
+		}
+	},
+	"required": null,
+	"source": "https://raw.githubusercontent.com/stripe/openapi/master/openapi/spec3.json",
+	"spec_version": "2026-09-30.endive"
+}
