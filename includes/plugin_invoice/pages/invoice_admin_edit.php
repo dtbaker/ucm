@@ -1458,7 +1458,9 @@ module_form::print_form_open_tag( array(
 							<a href="#"
 							   onclick="editinvoice_item('<?php echo $invoice_item_id; ?>',0); return false;"><?php echo ( ! trim( $desc ) ) ? 'N/A' : $desc; ?></a>
 						<?php }
-						$long_description = trim( $invoice_item_data['custom_long_description'] ? $invoice_item_data['custom_long_description'] : $invoice_item_data['long_description'] );
+						// Both are null on a line that has never had a long description -
+						// a line billed straight off a job task, for one.
+						$long_description = trim( (string) ( $invoice_item_data['custom_long_description'] ? $invoice_item_data['custom_long_description'] : $invoice_item_data['long_description'] ) );
 						if ( $long_description != '' ) { ?>
 							<a href="#" class="task_toggle_long_description">&raquo;</a>
 							<div

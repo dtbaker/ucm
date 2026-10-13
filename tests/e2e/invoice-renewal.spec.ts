@@ -101,6 +101,13 @@ test.describe('Invoice renewal', () => {
     // --- the copy bills the same thing
     await page.goto('/?m[]=invoice&p[]=invoice_admin&invoice_id=' + renewedId);
     await page.waitForLoadState('load');
+    // Its lines have no long description, which both the admin screen and the public
+    // template used to read without saying it might be null.
+    const adminProblems = describeDiagnostics(await page.content());
+    expect(
+      adminProblems,
+      'the renewed invoice screen printed PHP diagnostics:\n' + adminProblems.join('\n'),
+    ).toEqual([]);
     await expect(page.locator('body'), 'the lines should come across').toContainText('Hosting');
     await expect(page.locator('body')).toContainText('Support');
     expect(
