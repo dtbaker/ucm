@@ -100,15 +100,41 @@ test.describe( 'Content lifecycles', () => {
     expect( selected, 'the status should come back as it was set' ).toContain( chosen );
   } );
 
+
+  test( 'the calendar feed answers for any date it is given', async ( { page } ) => {
+    await login( page );
+
+    // The calendar screen is drawn by a script that fetches its own data, so this is the
+    // calendar's real data path - there is no form to fill in.
+    await page.goto( '/?m[]=calendar&p[]=calendar_admin' );
+    const feedUrl = await page.evaluate( () => {
+      const m = document.documentElement.innerHTML.match( /DATA_FEED_URL\s*=\s*"([^"]+)"/ );
+      return m ? m[ 1 ] : null;
+    } );
+    expect( feedUrl, 'the calendar page should publish a data feed url' ).toBeTruthy();
+
+    // The feed used to die on anything other than m/d/Y: the date helper returned an empty
+    // string for what it did not recognise, and the callers hand that to date(), which is
+    // a fatal on PHP 8. One unexpected date took the whole calendar out, and because the
+    // response is still 200 with the error in the body, a status check does not see it.
+    for ( const showdate of [ '2026-10-13', '10/13/2026', 'not-a-date', '' ] ) {
+      const response = await page.request.post( `${ feedUrl }_process=ajax_calendar&method=list`, {
+        form: { showdate, viewtype: 'month' },
+      } );
+      const body = await response.text();
+
+      expect( body, `the feed should not die on "${ showdate }"` ).not.toContain( 'Fatal error' );
+      expect( body, `the feed should not warn on "${ showdate }"` ).not.toContain( 'Uncaught' );
+      expect( () => JSON.parse( body ), `the feed should return json for "${ showdate }"` ).not.toThrow();
+    }
+  } );
+
   /**
-   * Calendar entries and custom data groups are not covered here.
+   * Custom data groups are not covered here.
    *
    * Each was attempted and each needs more than a save and a read-back, so guessing at it
    * was costing more than it was proving:
    *
-   *  - save_calendar_entry does not redirect to the new entry, so there is no id to follow.
-   *    The calendar screen is drawn by a script that fetches its data separately, so a
-   *    useful test has to go through that feed rather than a form.
    *  - save_data_type creates a group and returns its id, but admin_data_list_type answers
    *    "No $data_type" for it, so either the page wants a different parameter or the group
    *    needs a field group before it will render.
