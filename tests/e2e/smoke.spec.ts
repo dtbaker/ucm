@@ -52,6 +52,7 @@ const PAGES: Array<[string, string]> = [
   ['paymethod_other', 'other_settings'],
   ['paymethod_paynl', 'paynl_settings'],
   ['paymethod_paypal', 'paypal_settings'],
+  ['paymethod_square', 'square_settings'],
   ['paymethod_stripe', 'stripe_settings'],
   ['pdf', 'pdf_settings'],
   ['product', 'product_admin'],
