@@ -903,6 +903,57 @@ public static function js_combine($version, $reinit=false){
 
 	}
 
+	/**
+	 * May updates be fetched from this URL?
+	 *
+	 * The update response is written into the installation as PHP and run, so the one
+	 * thing this setting must never be is "whatever is in the database". It used to be
+	 * compared against four literal strings, which also meant nobody could point a
+	 * development copy or a self-hosted mirror anywhere else.
+	 *
+	 * So: the official host, or a loopback address. Everything else is refused. Anyone who
+	 * can edit the configuration table to put a loopback address here can already run code
+	 * on the box, so that is not a way in - it is how the test suite and a local demo work.
+	 *
+	 * @param string $url
+	 *
+	 * @return bool
+	 */
+	public static function upgrade_url_is_allowed( $url ) {
+		if ( ! is_string( $url ) || ! strlen( $url ) ) {
+			return false;
+		}
+		$parts = parse_url( $url );
+		if ( ! is_array( $parts ) || empty( $parts['host'] ) || empty( $parts['scheme'] ) ) {
+			return false;
+		}
+		$scheme = strtolower( $parts['scheme'] );
+		if ( 'http' !== $scheme && 'https' !== $scheme ) {
+			return false;
+		}
+		$host = strtolower( $parts['host'] );
+
+		$official = array(
+			'ultimateclientmanager.com',
+			'api.ultimateclientmanager.com',
+			'www.ultimateclientmanager.com',
+			'demo.ultimateclientmanager.com',
+		);
+		if ( in_array( $host, $official, true ) ) {
+			return true;
+		}
+
+		if ( 'localhost' === $host || substr( $host, - 10 ) === '.localhost' ) {
+			return true;
+		}
+		$host = trim( $host, '[]' );
+		if ( filter_var( $host, FILTER_VALIDATE_IP ) ) {
+			return ! filter_var( $host, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE );
+		}
+
+		return false;
+	}
+
 	public static function check_for_upgrades( $requested_plugin = '', $get_file_contents = 0 ) {
 
 		// compile a list of current plugins
@@ -970,21 +1021,20 @@ public static function js_combine($version, $reinit=false){
 			'current_version'       => module_config::c( '_admin_system_version', 2.1 ),
 			'current_plugins'       => json_encode( $current_plugins ),
 			'current_files'         => json_encode( $current_files ),
-			'client_ip'             => $_SERVER['REMOTE_ADDR'],
+			'client_ip'             => isset( $_SERVER['REMOTE_ADDR'] ) ? $_SERVER['REMOTE_ADDR'] : '',
 			'installation_location' => full_link( '/' ),
 			'requested_plugin'      => $requested_plugin,
 			'get_file_contents'     => $get_file_contents,
+			// Asks a server that understands it to send a checksum with every file.
+			// An old server ignores the field, which is how an install still on the
+			// old protocol receives the update that teaches it this one.
+			'client_protocol'       => 2,
 		);
 		$url         = module_config::c( 'ucm_upgrade_url', 'https://api.ultimateclientmanager.com/upgrade.php' );
 		if ( $url == 'http://ultimateclientmanager.com/api/upgrade.php' ) {
 			$url = 'https://api.ultimateclientmanager.com/upgrade.php'; // hack to use new update subdomain
 		}
-		if (
-			$url != 'http://ultimateclientmanager.com/api/upgrade.php' &&
-	     $url != 'http://api.ultimateclientmanager.com/upgrade.php' &&
-	     $url != 'https://ultimateclientmanager.com/api/upgrade.php' &&
-	     $url != 'https://api.ultimateclientmanager.com/upgrade.php'
-		) {
+		if ( ! self::upgrade_url_is_allowed( $url ) ) {
 			set_error( 'Incorrect API url' );
 			redirect_browser( _BASE_HREF );
 		}
@@ -994,6 +1044,7 @@ public static function js_combine($version, $reinit=false){
 				'data'  => 'Posting to API',
 			) );
 		}
+		$user_agent = 'UCM/' . module_config::c( '_admin_system_version', 2.1 ) . ' (+' . full_link( '/' ) . ')';
 		if ( ! function_exists( 'curl_init' ) ) {
 			$postdata = http_build_query(
 				$post_fields
@@ -1001,22 +1052,40 @@ public static function js_combine($version, $reinit=false){
 			$opts     = array(
 				'http' =>
 					array(
-						'method'  => 'POST',
-						'header'  => 'Content-type: application/x-www-form-urlencoded',
-						'content' => $postdata
-					)
+						'method'        => 'POST',
+						'header'        => "Content-type: application/x-www-form-urlencoded\r\n"
+						                   . 'User-Agent: ' . $user_agent . "\r\n",
+						'content'       => $postdata,
+						'timeout'       => 120,
+						// An update response is written to disk as PHP. Following a
+						// redirect would let the server hand that off to anywhere.
+						'max_redirects' => 0,
+					),
+				// The defaults are already these in supported PHP versions. Say so out
+				// loud: a silent downgrade here is a silent downgrade of the only thing
+				// standing between this install and somebody else's code.
+				'ssl'  => array(
+					'verify_peer'      => true,
+					'verify_peer_name' => true,
+				),
 			);
 			$context  = stream_context_create( $opts );
-			$result   = file_get_contents( $url, false, $context );
+			$result   = @file_get_contents( $url, false, $context );
 		} else {
-			//$url = 'http://localhost/ucm/web/api/upgrade.php';
 			$ch = curl_init( $url );
 			curl_setopt( $ch, CURLOPT_RETURNTRANSFER, true );
 			curl_setopt( $ch, CURLOPT_HEADER, false );
 			curl_setopt( $ch, CURLOPT_POST, true );
 			curl_setopt( $ch, CURLOPT_POSTFIELDS, $post_fields );
 			curl_setopt( $ch, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_1_0 ); // fixes netregistr, may break others?
+			curl_setopt( $ch, CURLOPT_SSL_VERIFYPEER, true );
+			curl_setopt( $ch, CURLOPT_SSL_VERIFYHOST, 2 );
+			curl_setopt( $ch, CURLOPT_FOLLOWLOCATION, false );
+			curl_setopt( $ch, CURLOPT_CONNECTTIMEOUT, 30 );
+			curl_setopt( $ch, CURLOPT_TIMEOUT, 120 );
+			curl_setopt( $ch, CURLOPT_USERAGENT, $user_agent );
 			$result = curl_exec( $ch );
+			curl_close( $ch );
 		}
 		$data = json_decode( $result, true );
 		if ( _DEBUG_MODE ) {
@@ -1028,6 +1097,10 @@ public static function js_combine($version, $reinit=false){
 
 		if ( $data && isset( $data['available_updates'] ) && is_array( $data['available_updates'] ) ) {
 			$available_updates = $data['available_updates'];
+			// The protocol level belongs to the response, not to the update list, but the
+			// update list is all this function returns. ucm_upgrade_manager reads it from
+			// here to decide whether a missing checksum is fatal.
+			$available_updates['protocol'] = isset( $data['protocol'] ) ? (int) $data['protocol'] : 1;
 		}
 		if ( $data && isset( $data['licence_codes'] ) && is_array( $data['licence_codes'] ) ) {
 			// find out what the licence codes  are (url / name) so we can dispaly this under each code nicely.
@@ -1039,7 +1112,9 @@ public static function js_combine($version, $reinit=false){
 		}
 
 		if ( ! $data ) {
-			echo $result;
+			// Whatever came back was not the JSON we asked for - a PHP warning, an error
+			// page, a captive portal. It used to be printed into the page as HTML.
+			echo '<pre class="error_text">' . htmlspecialchars( substr( (string) $result, 0, 2000 ) ) . '</pre>';
 		}
 
 		//echo '<pre>';print_r($current_plugins);print_r($result);echo '</pre>';

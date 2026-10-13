@@ -6,11 +6,42 @@ if ( ! module_config::can_i( 'view', 'Upgrade System' ) || defined( '_UCM_HIDE_U
 	exit;
 }
 
-module_config::register_css( 'config', 'upgrade.css', 11 );
-module_config::register_js( 'config', 'upgrade.js', 11 );
+module_config::register_css( 'config', 'upgrade.css', 12 );
+// The number is the asset cache token, not a version: module_config::js_combine()
+// keys its combined file on it. Bump it whenever js/upgrade.js changes.
+module_config::register_js( 'config', 'upgrade.js', 12 );
 
 require_once 'includes/plugin_config/class.upgrade.php';
 $ucm_upgrade_manager = new ucm_upgrade_manager();
+
+/**
+ * Everything on this page writes: it saves licence codes, overwrites PHP files on disk and
+ * runs database migrations, and it dispatches on $_REQUEST, so all of it was reachable by
+ * sending an administrator to a URL. The installer reaches the same code through
+ * $setup_upgrade_hack, where there is no form to carry a token and setup3.php has already
+ * established the session.
+ */
+$ucm_upgrade_writes = isset( $_REQUEST['save_license_codes'] )
+                      || isset( $_REQUEST['install_upgrade'] )
+                      || isset( $_REQUEST['process_upgrade'] )
+                      || isset( $_REQUEST['run_upgrade'] )
+                      || isset( $_REQUEST['download_upgrade'] );
+if ( $ucm_upgrade_writes && ! isset( $setup_upgrade_hack ) && ! module_form::check_secure_key() ) {
+	if ( isset( $_REQUEST['via_ajax'] ) ) {
+		// The javascript shows `message` to the user. A 403 here would come out as a
+		// bare "failed" alert, and this is the one case where that is likely to be an
+		// honest stale page rather than an attack: the update that first required a
+		// token also shipped the javascript that sends one.
+		ob_end_clean();
+		header( 'Content-type: text/javascript' );
+		echo json_encode( array(
+			'message' => 'This page is out of date. Please reload it and start the upgrade again.',
+			'errors'  => array( 'missing form auth key' ),
+		) );
+		exit;
+	}
+	module_form::reject_invalid_form_auth();
+}
 
 if ( ! isset( $setup_upgrade_hack ) ) {
 	print_heading( array(
@@ -69,7 +100,7 @@ if ( isset( $_REQUEST['process_upgrade'] ) && isset( $_REQUEST['via_ajax'] ) ) {
 	$available_updates = module_config::check_for_upgrades();
 
 	if ( isset( $setup_upgrade_hack ) && $available_updates && isset( $available_updates['message'] ) && strlen( trim( $available_updates['message'] ) ) > 2 ) {
-		echo $available_updates['message'];
+		echo htmlspecialchars( (string) $available_updates['message'] );
 		?>
 		<input type="button" name="go" value="<?php _e( 'Try Installation Again' ); ?>" class="submit_button save_button"
 		       onclick="window.location.href='?m=setup&step=3'">
@@ -113,8 +144,8 @@ if ( isset( $_REQUEST['process_upgrade'] ) && isset( $_REQUEST['via_ajax'] ) ) {
 			if ( $update = module_config::download_update( $this_update['key'] ) ) {
 				?>
 				<span class="success_text">complete!</span>
-				<a href="#" onclick="$('#update_<?php echo $this_update['key']; ?>').toggle();">[view details]</a>
-				<div style="font-weight: 0.9em; padding:9px; display: none;" id="update_<?php echo $this_update['key']; ?>">
+				<a href="#" onclick="$('#update_<?php echo htmlspecialchars( preg_replace( '#[^a-zA-Z0-9_-]#', '', (string) $this_update['key'] ) ); ?>').toggle();">[view details]</a>
+				<div style="font-weight: 0.9em; padding:9px; display: none;" id="update_<?php echo htmlspecialchars( preg_replace( '#[^a-zA-Z0-9_-]#', '', (string) $this_update['key'] ) ); ?>">
 					<?php
 					//echo '<pre>';print_r($update);exit;
 					foreach ( $update['plugins'] as $available_update ) {
@@ -133,8 +164,17 @@ if ( isset( $_REQUEST['process_upgrade'] ) && isset( $_REQUEST['via_ajax'] ) ) {
 						}
 						$completed_updates[ $available_update['key'] ] = true;
 
-						foreach ( $available_update['folders'] as $file ) { ?>
-							Folder: <?php echo $file; ?>
+						$checksums = isset( $available_update['file_checksums'] ) && is_array( $available_update['file_checksums'] )
+							? $available_update['file_checksums'] : array();
+						$require_checksums = ucm_upgrade_manager::checksums_required( $update );
+						foreach ( $available_update['folders'] as $file ) {
+							if ( ! ucm_upgrade_manager::is_safe_relative_path( $file ) ) {
+								$error    = '<strong>REFUSED:</strong> the server asked for a folder outside this installation: ' . htmlspecialchars( (string) $file );
+								$errors[] = $error;
+								echo $error . '<br>';
+								continue;
+							} ?>
+							Folder: <?php echo htmlspecialchars( $file ); ?>
 							<span class="small">
                             <?php
                             if ( is_dir( _UCM_FOLDER . $file ) ) {
@@ -144,7 +184,7 @@ if ( isset( $_REQUEST['process_upgrade'] ) && isset( $_REQUEST['via_ajax'] ) ) {
 	                            if ( mkdir( _UCM_FOLDER . $file, 0777, true ) ) {
 		                            echo 'this new folder has been <strong>created</strong>';
 	                            } else {
-		                            $error    = '<strong>WARNING:</strong> failed to create new folder: ' . $file;
+		                            $error    = '<strong>WARNING:</strong> failed to create new folder: ' . htmlspecialchars( $file );
 		                            $errors[] = $error;
 		                            echo $error;
 	                            }
@@ -152,19 +192,29 @@ if ( isset( $_REQUEST['process_upgrade'] ) && isset( $_REQUEST['via_ajax'] ) ) {
                             ?>
                         </span><br>
 						<?php } ?>
-						<?php foreach ( $available_update['files'] as $file ) { ?>
-							File: <?php echo $file; ?>
+						<?php foreach ( $available_update['files'] as $file ) {
+							if ( ! ucm_upgrade_manager::is_safe_relative_path( $file ) ) {
+								$error    = '<strong>REFUSED:</strong> the server asked to write outside this installation: ' . htmlspecialchars( (string) $file );
+								$errors[] = $error;
+								echo $error . '<br>';
+								continue;
+							}
+							$verified = isset( $available_update['file_contents'][ $file ] )
+								? ucm_upgrade_manager::verify_file_contents( $file, $available_update['file_contents'][ $file ], $checksums, $require_checksums )
+								: 'the server sent no contents for this file';
+							?>
+							File: <?php echo htmlspecialchars( $file ); ?>
 							<span class="small">
                             <?php
                             if ( in_array( $file, $ucm_upgrade_manager->held_files ) ) {
-	                            $error    = '<strong>Custom:</strong> file not upgraded: ' . $file;
+	                            $error    = '<strong>Custom:</strong> file not upgraded: ' . htmlspecialchars( $file );
 	                            $errors[] = $error;
-                            } elseif ( ! isset( $available_update['file_contents'][ $file ] ) ) {
-	                            $error    = '<strong>WARNING:</strong> failed to get file contents from server: ' . $file;
+                            } elseif ( true !== $verified ) {
+	                            $error    = '<strong>REFUSED:</strong> ' . htmlspecialchars( (string) $verified ) . ': ' . htmlspecialchars( $file );
 	                            $errors[] = $error;
 	                            echo $error;
-                            } elseif ( ! file_put_contents( _UCM_FOLDER . $file, base64_decode( $available_update['file_contents'][ $file ] ) ) ) {
-	                            $error    = '<strong>WARNING:</strong> failed to install the file: ' . $file;
+                            } elseif ( ! ucm_upgrade_manager::write_file( _UCM_FOLDER . $file, (string) base64_decode( $available_update['file_contents'][ $file ] ) ) ) {
+	                            $error    = '<strong>WARNING:</strong> failed to install the file: ' . htmlspecialchars( $file );
 	                            $errors[] = $error;
 	                            echo $error;
                             } else {
@@ -202,6 +252,7 @@ if ( isset( $_REQUEST['process_upgrade'] ) && isset( $_REQUEST['via_ajax'] ) ) {
 		</div>
 
 		<form action="" method="post">
+			<?php module_form::print_form_auth(); ?>
 			<input type="hidden" name="install_upgrade" value="true">
 			<?php if ( ! isset( $setup_upgrade_hack ) ) {
 				foreach ( $upgrade_plugins as $key => $val ) {
@@ -219,6 +270,7 @@ if ( isset( $_REQUEST['process_upgrade'] ) && isset( $_REQUEST['via_ajax'] ) ) {
 	Update has completed! Please click the button below to finish installation:
 
 	<form action="" method="post">
+		<?php module_form::print_form_auth(); ?>
 		<input type="hidden" name="run_upgrade" value="true">
 		<input type="submit" name="go" value="<?php _e( 'Complete Upgrade Process' ); ?>" class="submit_button">
 	</form>
@@ -319,6 +371,7 @@ if ( isset( $_REQUEST['process_upgrade'] ) && isset( $_REQUEST['via_ajax'] ) ) {
 		<script type="text/javascript">
         if (typeof ucm.upgrade != 'undefined') {
             ucm.upgrade.upgrade_url = '<?php echo _BASE_HREF . '?m=config&p=config_upgrade';?>';
+            ucm.upgrade.form_auth_key = '<?php echo htmlspecialchars( module_form::get_secure_key(), ENT_QUOTES, 'UTF-8' );?>';
             ucm.upgrade.lang.processing = '<?php _e( 'Processing, please wait...' );?>';
             ucm.upgrade.lang.start_upgrade = '<?php _e( 'Start the Upgrade' );?>';
             $(function () {
@@ -338,7 +391,8 @@ if ( isset( $_REQUEST['process_upgrade'] ) && isset( $_REQUEST['via_ajax'] ) ) {
 		$available_updates = module_config::check_for_upgrades();
 
 		if ( isset( $available_updates['message'] ) ) {
-			echo $available_updates['message'];
+			// Written by the update server, printed into an administrator's page.
+			echo htmlspecialchars( (string) $available_updates['message'] );
 		}
 
 		if ( $available_updates && isset( $available_updates['plugins'] ) && count( $available_updates['plugins'] ) ) {
@@ -377,16 +431,16 @@ if ( isset( $_REQUEST['process_upgrade'] ) && isset( $_REQUEST['via_ajax'] ) ) {
 						}
 
 						?>
-						<tr class="<?php echo $x++ % 2 ? 'odd' : 'even'; ?>" data-plugin="<?php echo $available_update['key']; ?>">
+						<tr class="<?php echo $x++ % 2 ? 'odd' : 'even'; ?>" data-plugin="<?php echo htmlspecialchars( (string) $available_update['key'] ); ?>">
 							<td class="update_checkbox">
-								<input type="checkbox" name="doupdate[<?php echo $available_update['key']; ?>]"
+								<input type="checkbox" name="doupdate[<?php echo htmlspecialchars( (string) $available_update['key'] ); ?>]"
 								       value="1" <?php echo isset( $available_update['recommended'] ) && $available_update['recommended'] ? 'checked="checked"' : ''; ?>>
 							</td>
 							<td>
-								<?php echo $available_update['installed_version']; ?>
+								<?php echo htmlspecialchars( (string) $available_update['installed_version'] ); ?>
 							</td>
 							<td>
-								<?php echo $available_update['available_version']; ?>
+								<?php echo htmlspecialchars( (string) $available_update['available_version'] ); ?>
 							</td>
 							<td>
 								<?php echo htmlspecialchars( $available_update['description'] ); ?>
@@ -395,12 +449,16 @@ if ( isset( $_REQUEST['process_upgrade'] ) && isset( $_REQUEST['via_ajax'] ) ) {
 							<td>
 								<?php echo count( $available_update['files'] ); ?> files,
 								<?php echo count( $available_update['folders'] ); ?> folders:
+								<?php $update_dom_id = htmlspecialchars( preg_replace( '#[^a-zA-Z0-9_-]#', '', (string) $available_update['key'] ) ); ?>
 								<a href="#"
-								   onclick="$('#update_<?php echo $available_update['key']; ?>').toggle(); return false;">view</a>
+								   onclick="$('#update_<?php echo $update_dom_id; ?>').toggle(); return false;">view</a>
 
-								<div id="update_<?php echo $available_update['key']; ?>" style="display:none;">
-									<?php foreach ( $available_update['folders'] as $file ) { ?>
-										Folder: <?php echo $file; ?><br>
+								<div id="update_<?php echo $update_dom_id; ?>" style="display:none;">
+									<?php foreach ( $available_update['folders'] as $file ) {
+										if ( ! ucm_upgrade_manager::is_safe_relative_path( $file ) ) {
+											continue;
+										} ?>
+										Folder: <?php echo htmlspecialchars( $file ); ?><br>
 										<span class="small">
 	                                <?php if ( is_dir( _UCM_FOLDER . $file ) ) {
 		                                echo 'this folder exists, nothing will change.';
@@ -410,7 +468,7 @@ if ( isset( $_REQUEST['process_upgrade'] ) && isset( $_REQUEST['via_ajax'] ) ) {
 		                                if ( mkdir( _UCM_FOLDER . $file ) ) {
 			                                echo 'this new folder will be <strong>created</strong>';
 		                                } else {
-			                                $error    = '<strong>WARNING:</strong> no permissions to create folder: ' . $file;
+			                                $error    = '<strong>WARNING:</strong> no permissions to create folder: ' . htmlspecialchars( $file );
 			                                $errors[] = $error;
 			                                echo $error;
 		                                }
@@ -418,17 +476,22 @@ if ( isset( $_REQUEST['process_upgrade'] ) && isset( $_REQUEST['via_ajax'] ) ) {
 	                                ?>
 	                            </span><br>
 									<?php } ?>
-									<?php foreach ( $available_update['files'] as $file ) { ?>
-										File: <?php echo $file; ?><br>
+									<?php foreach ( $available_update['files'] as $file ) {
+										if ( ! ucm_upgrade_manager::is_safe_relative_path( $file ) ) {
+											$error    = '<strong>REFUSED:</strong> the server listed a file outside this installation: ' . htmlspecialchars( (string) $file );
+											$errors[] = $error;
+											continue;
+										} ?>
+										File: <?php echo htmlspecialchars( $file ); ?><br>
 										<span class="small">
 	                            <?php if ( is_file( _UCM_FOLDER . $file ) ) {
 		                            if ( in_array( $file, $ucm_upgrade_manager->held_files ) ) {
-			                            $error    = '<strong>Custom:</strong> this custom file will not be automatically upgraded: ' . $file;
+			                            $error    = '<strong>Custom:</strong> this custom file will not be automatically upgraded: ' . htmlspecialchars( $file );
 			                            $errors[] = $error;
 		                            } elseif ( is_writable( _UCM_FOLDER . $file ) ) {
 			                            echo 'this file exists and will be <strong>upgraded</strong>.';
 		                            } else {
-			                            $error    = '<strong>WARNING:</strong> no permissions to update file: ' . $file;
+			                            $error    = '<strong>WARNING:</strong> no permissions to update file: ' . htmlspecialchars( $file );
 			                            $errors[] = $error;
 			                            echo $error;
 		                            }
@@ -440,7 +503,7 @@ if ( isset( $_REQUEST['process_upgrade'] ) && isset( $_REQUEST['via_ajax'] ) ) {
 			                            if ( is_writable( $dir ) ) {
 				                            echo 'this new file will be <strong>created</strong>';
 			                            } else {
-				                            $error    = '<strong>WARNING:</strong> no permissions to create file: ' . $file;
+				                            $error    = '<strong>WARNING:</strong> no permissions to create file: ' . htmlspecialchars( $file );
 				                            $errors[] = $error;
 				                            echo $error;
 			                            }
@@ -471,6 +534,7 @@ if ( isset( $_REQUEST['process_upgrade'] ) && isset( $_REQUEST['via_ajax'] ) ) {
 					<script type="text/javascript">
               if (typeof ucm.upgrade != 'undefined') {
                   ucm.upgrade.upgrade_url = '<?php echo _BASE_HREF . '?m=config&p=config_upgrade';?>';
+                  ucm.upgrade.form_auth_key = '<?php echo htmlspecialchars( module_form::get_secure_key(), ENT_QUOTES, 'UTF-8' );?>';
                   ucm.upgrade.lang.processing = '<?php _e( 'Processing, please wait...' );?>';
                   $(function () {
                       ucm.upgrade.init();

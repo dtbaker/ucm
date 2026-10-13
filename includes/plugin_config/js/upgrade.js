@@ -1,10 +1,17 @@
 ucm.upgrade = {
     upgrade_url: '',
+    // The upgrade endpoints write files and run database migrations, so they check the
+    // form auth key like every other write. config_upgrade.php sets this; ucm.form_auth_key
+    // is the fallback for a theme that renders the page its own way.
+    form_auth_key: '',
     complete_callback: false,
     upgrade_plugins: [],
     upgrade_post_data: {
         install_upgrade: 'yes',
         via_ajax: 'yes'
+    },
+    auth_key: function () {
+        return ucm.upgrade.form_auth_key || ucm.form_auth_key || '';
     },
     lang:{
         processing:'Processing, please wait...',
@@ -77,6 +84,7 @@ ucm.upgrade = {
                 }
             }
             post_data.plugin_name = ucm.upgrade.upgrade_plugins[ucm.upgrade.current_upgrade].plugin_name;
+            post_data.form_auth_key = ucm.upgrade.auth_key();
             //post_data.doupdate = [ucm.upgrade.upgrade_plugins[ucm.upgrade.current_upgrade].plugin_name];
             $.ajax({
                 url: ucm.upgrade.upgrade_url,
@@ -100,7 +108,8 @@ ucm.upgrade = {
                             data: {
                                 process_upgrade: 'yes',
                                 plugin_name: d.plugin_name,
-                                via_ajax: 1
+                                via_ajax: 1,
+                                form_auth_key: ucm.upgrade.auth_key()
                             },
                             success: function (d) {
                                 // did it work? update the status..
