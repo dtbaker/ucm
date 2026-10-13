@@ -1,0 +1,17 @@
+---
+/**
+ * A fact that could not be established from the repository.
+ *
+ * Every one of these is listed in docs/proposals/owner-todo.md. They render as a loud
+ * marked box on purpose: a placeholder that reads like ordinary copy is a placeholder
+ * that gets published, and a plausible invented number is worse than an obvious gap.
+ */
+interface Props {
+	/** What is missing, in a few words. */
+	what: string;
+}
+
+const { what } = Astro.props;
+---
+
+<span class="placeholder" title="Needs a real value before this page is published">[ { what } ]</span>

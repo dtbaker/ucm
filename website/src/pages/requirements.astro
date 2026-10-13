@@ -1,0 +1,118 @@
+---
+/**
+ * Will it run on my hosting.
+ *
+ * This is the page that prevents refunds, so it is deliberately blunt about PHP 8.4
+ * rather than burying it. The figures come from docs-site install/requirements.
+ */
+import Base from '../layouts/Base.astro';
+---
+
+<Base
+	title="Requirements — Ultimate Client Manager"
+	description="What your hosting account needs before you buy: PHP 8.4, MySQL or MariaDB, Apache with mod_rewrite, and about 120 MB of disk."
+	current="/requirements/"
+>
+	<section class="hero">
+		<div class="wrap narrow">
+			<p class="kicker">Before you buy</p>
+			<h1>Will it run on your hosting?</h1>
+			<p class="lead">
+				Almost certainly, with one thing to check first. Most shared hosting accounts sold
+				today meet all of this — the PHP version is the one that catches people out.
+			</p>
+		</div>
+	</section>
+
+	<section>
+		<div class="wrap">
+			<div class="scroller">
+				<table class="compare">
+					<thead>
+						<tr>
+							<th scope="col">You need</th>
+							<th scope="col">Version</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr>
+							<th scope="row">PHP</th>
+							<td><strong>8.4 or newer.</strong> 8.4 and 8.5 are both tested on every change.</td>
+						</tr>
+						<tr>
+							<th scope="row">MySQL or MariaDB</th>
+							<td>MySQL 8.0, or MariaDB 10.5 or newer.</td>
+						</tr>
+						<tr>
+							<th scope="row">Web server</th>
+							<td>Apache with <code>mod_rewrite</code>. nginx works with caveats.</td>
+						</tr>
+						<tr>
+							<th scope="row">Disk space</th>
+							<td>About 120 MB, plus whatever your uploaded files come to.</td>
+						</tr>
+						<tr>
+							<th scope="row">PHP extensions</th>
+							<td>
+								<code>mysqli</code>, <code>simplexml</code> and <code>curl</code> are
+								required. <code>gd</code>, <code>zip</code>, <code>imap</code>,
+								<code>openssl</code>, <code>mbstring</code> and <code>fileinfo</code>
+								each switch on a particular feature.
+							</td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
+
+			<div class="note narrow">
+				<p>
+					<strong>PHP 8.4 is a hard requirement.</strong> The application checks the version
+					before it does anything else and stops with a message if it is too old. There is
+					no way to override it. If your host still offers only PHP 7.x or 8.0 to 8.3, ask
+					them to move your account — most control panels have a PHP version selector that
+					does it in a few seconds.
+				</p>
+			</div>
+
+			<div class="narrow">
+				<h2>How to check</h2>
+				<p>
+					Your hosting control panel will have a PHP version selector, usually called
+					<em>PHP Selector</em>, <em>MultiPHP Manager</em> or <em>Select PHP Version</em>.
+					The same screen normally lists the extensions, which is where to confirm
+					<code>curl</code> and <code>simplexml</code>.
+				</p>
+				<p>
+					You also need an empty MySQL database and a user with full rights on it. The
+					installer creates the tables, indexes and foreign keys, so granting all
+					privileges on that one database is the usual way to do it.
+				</p>
+
+				<h2>If you are on nginx</h2>
+				<p>
+					It works, with caveats that matter: the rules that deny direct web access to
+					uploaded files are written as Apache <code>.htaccess</code> files, and nginx does
+					not read those. The
+					<a href="/docs/install/requirements/">full requirements page</a> gives the
+					configuration you need instead. Do not skip it — without it, anything a user
+					uploads can be fetched off your server by anyone who guesses the address.
+				</p>
+
+				<h2>Upgrading an existing installation</h2>
+				<p>
+					This release raises the minimum PHP version and changes where database settings
+					are stored, so it is not a files-over-the-top upgrade from 2.x. Read
+					<a href="/docs/install/upgrading/">the upgrade guide</a> before you copy anything
+					over a working site.
+				</p>
+
+				<div class="actions">
+					<a class="button quiet" href="/docs/install/requirements/">The full requirements page</a>
+					<a class="button" href="https://codecanyon.net/item/freelance-project-invoice-crm/2621629">
+						Buy on CodeCanyon
+					</a>
+				</div>
+			</div>
+		</div>
+	</section>
+</Base>

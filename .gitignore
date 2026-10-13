@@ -48,3 +48,8 @@ docs/proposals/
 /docs-site/.astro/
 /docs-site/public/api/
 /docs-site/public/video-posters/
+
+# Marketing website build output (website/ is a proposal-stage proof - see
+# docs/proposals/website.md).
+/website/dist/
+/website/.astro/

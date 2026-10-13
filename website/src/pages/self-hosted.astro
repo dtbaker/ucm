@@ -1,0 +1,132 @@
+---
+/**
+ * The differentiator page.
+ *
+ * This is the one argument the product has that a hosted CRM cannot answer, so it gets a
+ * page of its own - and it includes the case against, because a page that only argues one
+ * way is read as marketing and discounted.
+ */
+import Base from '../layouts/Base.astro';
+---
+
+<Base
+	title="Why self hosted — Ultimate Client Manager"
+	description="What you get by running your CRM on your own hosting, what it costs you in effort, and who should not do it."
+	current="/self-hosted/"
+>
+	<section class="hero">
+		<div class="wrap narrow">
+			<p class="kicker">The honest version</p>
+			<h1>Why run it yourself</h1>
+			<p class="lead">
+				Self hosting is a trade, not a free lunch. Here is what you get for it and what
+				it costs you, including the cases where you should pick a subscription instead.
+			</p>
+		</div>
+	</section>
+
+	<section>
+		<div class="wrap narrow">
+			<h2>What you get</h2>
+
+			<h3>The data is in your database</h3>
+			<p>
+				Everything the application stores is in MySQL tables on your own hosting. You can
+				back it up on your own schedule, query it with anything that speaks SQL, and move
+				it elsewhere without asking permission or waiting for an export queue.
+			</p>
+
+			<h3>The price does not grow with the team</h3>
+			<p>
+				There is no per seat charge, because there is nobody to charge it. Add as many
+				staff accounts as you need. The cost of the software was the cost of the software.
+			</p>
+
+			<h3>You have the source</h3>
+			<p>
+				The whole application is PHP you can read. Each feature is a plugin, and the
+				<a href="/docs/developers/customising/">custom folder</a> lets you override almost
+				any screen, template or query without editing the files you were shipped — so your
+				changes survive the next update instead of being lost to it.
+			</p>
+
+			<h3>It does not phone home</h3>
+			<p>
+				The application contacts no outside service to function. The update check and the
+				help panel are the only outbound requests it makes, both can be turned off, and the
+				<a href="/docs/using/help-system/">help system page</a> sets out exactly what the
+				help request carries and what it does not. There is no analytics, no telemetry and
+				no licence check.
+			</p>
+
+			<h3>It keeps working</h3>
+			<p>
+				A subscription ending is a deadline. An installed application that is already
+				running on your server is not. If this project stopped tomorrow your installation
+				would carry on doing what it does.
+			</p>
+		</div>
+	</section>
+
+	<section class="tint">
+		<div class="wrap narrow">
+			<h2>What it costs you</h2>
+			<p>
+				All of this is real work that somebody has to do, and if nobody does it you end up
+				with an out of date installation holding your customer list. Worth being clear
+				about before you buy.
+			</p>
+			<ul>
+				<li>
+					<strong>Hosting.</strong> You need an account that meets the
+					<a href="/requirements/">requirements</a> — in particular PHP 8.4, which not
+					every host offers by default yet.
+				</li>
+				<li>
+					<strong>Updates.</strong> They are not automatic in the sense a hosted service
+					is automatic. The application checks for them and installs them when you say so,
+					and somebody has to say so.
+				</li>
+				<li>
+					<strong>Backups.</strong> There is a backup feature, but it is your job to run
+					it, and to check that what it produced can actually be restored.
+				</li>
+				<li>
+					<strong>Email deliverability.</strong> Invoices and newsletters go out from your
+					server or your SMTP provider. Getting that reliably into inboxes is your
+					problem, not the software's.
+				</li>
+				<li>
+					<strong>Security patches.</strong> You apply them. The project publishes them;
+					an installation nobody updates does not benefit from that.
+				</li>
+			</ul>
+
+			<div class="note">
+				<p>
+					<strong>Pick a hosted CRM instead if</strong> nobody at your firm is comfortable
+					with a hosting control panel, or if you would rather pay monthly than be
+					responsible for backups and updates. That is a reasonable choice and this is the
+					wrong product for it.
+				</p>
+			</div>
+		</div>
+	</section>
+
+	<section>
+		<div class="wrap narrow">
+			<h2>Still interested?</h2>
+			<p>
+				The <a href="/docs/install/requirements/">requirements page</a> is the one to read
+				before spending anything — it is specific about PHP versions and extensions, and it
+				is the thing that catches people out.
+			</p>
+			<div class="actions">
+				<a class="button" href="https://codecanyon.net/item/freelance-project-invoice-crm/2621629">
+					Buy on CodeCanyon
+				</a>
+				<a class="button quiet" href="/docs/">Read the documentation</a>
+			</div>
+		</div>
+	</section>
+</Base>

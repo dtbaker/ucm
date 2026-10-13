@@ -1,0 +1,86 @@
+---
+/**
+ * Where to get help.
+ *
+ * The channel comes from SECURITY.md and the documentation, both of which say the item's
+ * CodeCanyon comments page. If that changes it changes here and in several documentation
+ * pages at once - flagged in owner-todo.
+ */
+import Base from '../layouts/Base.astro';
+import Placeholder from '../components/Placeholder.astro';
+---
+
+<Base
+	title="Support — Ultimate Client Manager"
+	description="Where to get help with Ultimate Client Manager, what to check first, and how to report a security problem."
+	current="/support/"
+>
+	<section class="hero">
+		<div class="wrap narrow">
+			<p class="kicker">Support</p>
+			<h1>Getting help</h1>
+			<p class="lead">
+				Most problems people hit are covered in the documentation, and the troubleshooting
+				page usually names the exact setting or file permission at fault.
+			</p>
+			<div class="actions">
+				<a class="button quiet" href="/docs/reference/troubleshooting/">Troubleshooting</a>
+				<a class="button quiet" href="/docs/install/installing/">Installation guide</a>
+			</div>
+		</div>
+	</section>
+
+	<section class="tint">
+		<div class="wrap narrow">
+			<h2>Before you ask</h2>
+			<p>Three things resolve most reports immediately, so include them:</p>
+			<ol>
+				<li>Which PHP version your host runs.</li>
+				<li>Whether the site is on Apache or nginx.</li>
+				<li>
+					What the page actually did — a blank screen, an error message, or the wrong
+					result. These have different causes and
+					<a href="/docs/reference/troubleshooting/">troubleshooting</a> treats them
+					separately.
+				</li>
+			</ol>
+		</div>
+	</section>
+
+	<section>
+		<div class="wrap narrow">
+			<h2>Where to ask</h2>
+			<p>
+				Support is through the item's comments page on CodeCanyon:
+				<a href="https://codecanyon.net/item/freelance-project-invoice-crm/2621629">
+					the Freelance Project Invoice CRM item
+				</a>.
+			</p>
+			<p>
+				<Placeholder what="confirm the support channel and any response time you want to promise" />
+			</p>
+
+			<h2>Reporting a security problem</h2>
+			<p>
+				<strong>Not in the public comments.</strong> Open a security advisory on the
+				<a href="https://github.com/dtbaker/ucm">GitHub repository</a>, or contact the
+				vendor privately through CodeCanyon. Include the version, the steps to reproduce,
+				and what an attacker gets out of it.
+			</p>
+			<p>
+				Confirmed issues are fixed and flagged as security fixes in the changelog that
+				ships with the release.
+			</p>
+
+			<h2>Help inside the application</h2>
+			<p>
+				The help button on any screen opens the documentation article for that screen.
+				It reads a copy of the documentation that ships inside your download, so it works
+				with no internet connection at all, and fetches a newer version only when you open
+				an article and only if you have left that switched on.
+				<a href="/docs/using/help-system/">What that request contains</a> is written down
+				in full, because it used to contain far more than it should have.
+			</p>
+		</div>
+	</section>
+</Base>
