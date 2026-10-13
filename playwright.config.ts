@@ -2,6 +2,10 @@ import { defineConfig, devices } from '@playwright/test';
 
 export default defineConfig({
   testDir: './tests/e2e',
+  // Screenshot capture is a documentation chore, not a check - it is slow and it proves
+  // nothing about whether the software works. Run it deliberately:
+  //   npx playwright test tests/e2e/screenshots.spec.ts --grep @screenshots
+  grepInvert: process.env.UCM_SCREENSHOTS ? undefined : /@screenshots/,
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
