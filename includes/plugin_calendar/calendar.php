@@ -384,17 +384,46 @@ class module_calendar extends module_base
 }
 
 if ( ! function_exists( 'js2PhpTime' ) ) {
+	/**
+	 * Turn the date the calendar sends into a timestamp.
+	 *
+	 * This used to return an empty string for anything it did not recognise, and the
+	 * callers hand the result straight to date(), which on PHP 8 is a TypeError rather
+	 * than a quiet zero - so one unexpected date killed the whole feed and the calendar
+	 * came up blank with a fatal error in the response body.
+	 *
+	 * It also only understood m/d/Y. A plain Y-m-d is the obvious thing for anything other
+	 * than the bundled script to send, so it is accepted too, and anything still
+	 * unrecognised falls back to today rather than to a value date() cannot use.
+	 *
+	 * @param string $jsdate
+	 *
+	 * @return int
+	 */
 	function js2PhpTime( $jsdate ) {
-		$ret = '';
-		if ( preg_match( '@(\d+)/(\d+)/(\d+)\s+(\d+):(\d+)@', $jsdate, $matches ) == 1 ) {
-			$ret = mktime( $matches[4], $matches[5], 0, $matches[1], $matches[2], $matches[3] );
-			//echo $matches[4] ."-". $matches[5] ."-". 0  ."-". $matches[1] ."-". $matches[2] ."-". $matches[3];
-		} elseif ( preg_match( '@(\d+)/(\d+)/(\d+)@', $jsdate, $matches ) == 1 ) {
-			$ret = mktime( 0, 0, 0, $matches[1], $matches[2], $matches[3] );
-			//echo 0 ."-". 0 ."-". 0 ."-". $matches[1] ."-". $matches[2] ."-". $matches[3];
+		$jsdate = is_string( $jsdate ) ? $jsdate : '';
+
+		// m/d/Y with a time.
+		if ( preg_match( '@^(\d+)/(\d+)/(\d+)\s+(\d+):(\d+)@', $jsdate, $matches ) == 1 ) {
+			return (int) mktime( (int) $matches[4], (int) $matches[5], 0, (int) $matches[1], (int) $matches[2], (int) $matches[3] );
+		}
+		// Y-m-d, with or without a time.
+		if ( preg_match( '@^(\d{4})-(\d{1,2})-(\d{1,2})(?:[\sT](\d{1,2}):(\d{2}))?@', $jsdate, $matches ) == 1 ) {
+			return (int) mktime(
+				isset( $matches[4] ) ? (int) $matches[4] : 0,
+				isset( $matches[5] ) ? (int) $matches[5] : 0,
+				0,
+				(int) $matches[2],
+				(int) $matches[3],
+				(int) $matches[1]
+			);
+		}
+		// m/d/Y.
+		if ( preg_match( '@^(\d+)/(\d+)/(\d+)@', $jsdate, $matches ) == 1 ) {
+			return (int) mktime( 0, 0, 0, (int) $matches[1], (int) $matches[2], (int) $matches[3] );
 		}
 
-		return $ret;
+		return time();
 	}
 }
 
