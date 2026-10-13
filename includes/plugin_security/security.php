@@ -881,7 +881,7 @@ class module_security extends module_base
 				// Fetch user by email only (password verified in PHP for security)
 				$sql = "SELECT u.*, sr.security_role_id FROM `" . _DB_PREFIX . "user` u LEFT JOIN `" . _DB_PREFIX . "user_role` sr ON u.user_id = sr.user_id WHERE `email` LIKE '" . db_escape( $email ) . "' LIMIT 1";
 				$res = qa1( $sql );
-				if ( $res && strlen( trim( $res['email'] ) ) > 0 && strtolower( $res['email'] ) == strtolower( $email ) && ucm_password_verify( $password, $res['password'] ) ) {
+				if ( $res && strlen( trim( $res['email'] ) ) > 0 && strtolower( $res['email'] ) == strtolower( $email ) && ucm_password_verify( $password, $res['password'], $res['user_id'] ) ) {
 					// Migrate legacy MD5 to bcrypt on successful login
 					if ( ucm_password_needs_rehash( $res['password'] ) ) {
 						$new_hash = ucm_password_hash( $password );

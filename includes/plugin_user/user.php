@@ -948,7 +948,7 @@ class module_user extends module_base
 			// the user is trying to change their password.
 			// only do this if the user has edit password permissions and their password matches.
 			if ( module_user::can_i( 'edit', 'Users Passwords', 'Config' ) || $user_id == module_security::get_loggedin_id() ) {
-				if ( isset( $data['password_old'] ) && ucm_password_verify( $data['password_old'], $temp_user['password'] ) ) {
+				if ( isset( $data['password_old'] ) && ucm_password_verify( $data['password_old'], $temp_user['password'], $user_id ) ) {
 					// correct old password
 					// verify new password.
 					if ( $data['password_new1'] == $data['password_new2'] ) {
@@ -1743,10 +1743,10 @@ CREATE TABLE IF NOT EXISTS `<?php echo _DB_PREFIX; ?>user_type` (
 
 
 		INSERT INTO `<?php echo _DB_PREFIX; ?>user` VALUES (1, 0, 0, 0, 1, -1, 0, 0, 'admin@example.com', 'password', 'Administrator', '',  '+61 7 55 123 456', '+61 7 56 321 654', '+61419789789', 'en', NOW(), NOW());
-		INSERT INTO `<?php echo _DB_PREFIX; ?>user` VALUES (2, 0, 0, 0, 1, -1, 0, 0, 'user@example.com', 'password', 'User', '', '+61 7 55 123 456', '+61 7 56 321 654', '+61419789789', 'en', NOW(), NOW());
-		INSERT INTO `<?php echo _DB_PREFIX; ?>user` VALUES (3, 1, 0, 0, 1, -1, 0, 0, 'user1@example.com', 'password', 'Contact 1', '',  '+61 7 55 123 456', '+61 7 56 321 654', '+61419789789', 'en', NOW(), NOW());
-		INSERT INTO `<?php echo _DB_PREFIX; ?>user` VALUES (4, 2, 0, 0, 1, -1, 0, 0, 'user2@example.com', 'password', 'Contact 2', '', '+61 7 55 123 456', '+61 7 56 321 654', '+61419789789', 'en', NOW(), NOW());
-		INSERT INTO `<?php echo _DB_PREFIX; ?>user` VALUES (5, 0, 1, 0, 1, 1, 1, 50, 'staff@example.com', 'password', 'Staff Member', '', '+61 7 55 123 456', '+61 7 56 321 654', '+61419789789', 'en', NOW(), NOW());
+		INSERT INTO `<?php echo _DB_PREFIX; ?>user` VALUES (2, 0, 0, 0, 1, -1, 0, 0, 'user@example.com', '', 'User', '', '+61 7 55 123 456', '+61 7 56 321 654', '+61419789789', 'en', NOW(), NOW());
+		INSERT INTO `<?php echo _DB_PREFIX; ?>user` VALUES (3, 1, 0, 0, 1, -1, 0, 0, 'user1@example.com', '', 'Contact 1', '',  '+61 7 55 123 456', '+61 7 56 321 654', '+61419789789', 'en', NOW(), NOW());
+		INSERT INTO `<?php echo _DB_PREFIX; ?>user` VALUES (4, 2, 0, 0, 1, -1, 0, 0, 'user2@example.com', '', 'Contact 2', '', '+61 7 55 123 456', '+61 7 56 321 654', '+61419789789', 'en', NOW(), NOW());
+		INSERT INTO `<?php echo _DB_PREFIX; ?>user` VALUES (5, 0, 1, 0, 1, 1, 1, 50, 'staff@example.com', '', 'Staff Member', '', '+61 7 55 123 456', '+61 7 56 321 654', '+61419789789', 'en', NOW(), NOW());
 
 		CREATE TABLE IF NOT EXISTS `<?php echo _DB_PREFIX; ?>user_perm` (
 		`user_id` int(11) NOT NULL,

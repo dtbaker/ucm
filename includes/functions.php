@@ -10,10 +10,21 @@ function ucm_password_hash( $password ) {
 
 /**
  * Verify a password against a stored hash.
+ *
  * Supports both password_hash (bcrypt/argon2) and legacy MD5 for backwards compatibility.
  * Returns true if password matches. When MD5 matches, consider rehashing on next save.
+ *
+ * $user_id is needed for the shipped default password, which is only honoured for the
+ * administrator - see the branch at the end. A caller that cannot say which account it is
+ * checking gets no default-password path at all, which is the safe way round.
+ *
+ * @param string   $password what was typed
+ * @param string   $hash     what is stored
+ * @param int|null $user_id  the account the hash belongs to
+ *
+ * @return bool
  */
-function ucm_password_verify( $password, $hash ) {
+function ucm_password_verify( $password, $hash, $user_id = null ) {
 	if ( empty( $hash ) ) {
 		return false;
 	}
@@ -29,12 +40,30 @@ function ucm_password_verify( $password, $hash ) {
 		return hash_equals( $hash, md5( $password ) );
 	}
 
-	// Support for the default hard coded password (we prompt the user to change these)
-	if ( $password === 'password' && $hash === 'password' ) {
+	// The shipped install data stores the literal string 'password' rather than a hash,
+	// so a brand new install can be logged into before anybody has set one. That is only
+	// ever meant to be the administrator: the sample contact, user and staff accounts are
+	// demonstration data and nobody should be signing in as them. Restricting it here
+	// closes those accounts on existing installs too, without touching their database.
+	if ( $password === 'password' && $hash === 'password' && 1 === (int) $user_id ) {
 		return true;
 	}
 
 	return false;
+}
+
+/**
+ * Is this stored value the password the install shipped with, rather than a real one?
+ *
+ * Any password that has actually been set is stored as a hash, so the literal string is
+ * itself the "never been changed" flag - there is nothing else to record.
+ *
+ * @param string $hash
+ *
+ * @return bool
+ */
+function ucm_password_is_default( $hash ) {
+	return is_string( $hash ) && 'password' === $hash;
 }
 
 /**
