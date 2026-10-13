@@ -92,7 +92,9 @@ $search = isset( $_REQUEST['search'] ) && is_array( $_REQUEST['search'] ) ? $_RE
     function initializeMaps() {
         geocoder = new google.maps.Geocoder();
 			<?php if (! empty( $search['location'] )) { ?>
-        geocoder.geocode({'address': '<?php echo addcslashes( preg_replace( "#\s+#", " ", $search['location'] ), "'" );?>'}, function (results, status) {
+        <?php // addcslashes() only escaped the single quote this used to sit inside, which leaves
+        // a backslash or a literal </script> free to end the string or the block. ?>
+        geocoder.geocode({'address': <?php echo ucm_json_for_script( preg_replace( "#\s+#", " ", $search['location'] ) );?>}, function (results, status) {
             if (status == google.maps.GeocoderStatus.OK) {
                 var mapOptions = {
                     zoom: 10,

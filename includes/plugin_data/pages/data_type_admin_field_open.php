@@ -4,9 +4,12 @@ if ( ! module_data::can_i( 'edit', _MODULE_DATA_NAME ) ) {
 }
 
 
-$data_type_id        = (int) $_REQUEST['data_type_id'];
-$data_field_group_id = (int) $_REQUEST['data_field_group_id'];
-$data_field_id       = $_REQUEST['data_field_id'];
+// Reaching this page without all three is normal - the menu links here with only the
+// type - and reading them unguarded was a warning on every one of those visits.
+$data_type_id        = isset( $_REQUEST['data_type_id'] ) ? (int) $_REQUEST['data_type_id'] : 0;
+$data_field_group_id = isset( $_REQUEST['data_field_group_id'] ) ? (int) $_REQUEST['data_field_group_id'] : 0;
+// Not cast: "new" opens the create form.
+$data_field_id       = isset( $_REQUEST['data_field_id'] ) ? $_REQUEST['data_field_id'] : '';
 
 if ( $data_type_id ) {
 	$data_type = $module->get_data_type( $data_type_id );
@@ -45,9 +48,9 @@ print_heading( array(
 	<?php module_form::print_form_auth(); ?>
 	<input type="hidden" name="_process" value="save_data_field"/>
 	<input type="hidden" name="_redirect" value=""/>
-	<input type="hidden" name="data_field_id" value="<?php echo $data_field_id; ?>"/>
-	<input type="hidden" name="data_field_group_id" value="<?php echo $data_field_group_id; ?>"/>
-	<input type="hidden" name="data_type_id" value="<?php echo $data_type_id; ?>"/>
+	<input type="hidden" name="data_field_id" value="<?php echo htmlspecialchars( (string) $data_field_id, ENT_QUOTES, 'UTF-8' ); ?>"/>
+	<input type="hidden" name="data_field_group_id" value="<?php echo (int) $data_field_group_id; ?>"/>
+	<input type="hidden" name="data_type_id" value="<?php echo (int) $data_type_id; ?>"/>
 	<table border="0" cellspacing="0" cellpadding="5" class="tableclass tableclass_full tableclass_form">
 		<tr>
 			<th class="width2">

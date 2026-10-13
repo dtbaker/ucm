@@ -1010,8 +1010,10 @@ Thanks,
 						}
 
 						if ( ! $from_user_id ) {
+							// This is the public ticket form, so $email is whatever an anonymous
+							// visitor typed - it only has to contain an "@" to get this far.
 							echo 'Failed - cannot find the from user id';
-							echo $email . ' to support<hr>';
+							echo htmlspecialchars( (string) $email, ENT_QUOTES, 'UTF-8' ) . ' to support<hr>';
 
 							return;
 						}

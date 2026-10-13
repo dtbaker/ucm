@@ -339,7 +339,11 @@ if ( isset( $_REQUEST['print'] ) ) {
 						if ( strpos( $val, 'encrypt_popup' ) ) {
 							continue;
 						} ?>
-						<li><strong>{<?php echo strtoupper( htmlspecialchars( $key ) ); ?>}</strong> = <?= $val; ?></li>
+						<?php // get_replace_fields() escapes what it returns, but this list is the one place
+						// those values are printed as markup rather than substituted into a template, so
+						// it does not rely on that holding: a value that arrives unescaped is escaped
+						// here instead of running. ?>
+						<li><strong>{<?php echo strtoupper( htmlspecialchars( $key ) ); ?>}</strong> = <?php echo htmlspecialchars( html_entity_decode( (string) $val, ENT_QUOTES, 'UTF-8' ), ENT_QUOTES, 'UTF-8' ); ?></li>
 					<?php } ?>
 				</ul>
 				<?php

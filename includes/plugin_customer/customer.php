@@ -2740,15 +2740,21 @@ Invoice: <strong>{INVOICE_LINK}</strong>
 			'customer_name'           => isset( $customer_data['customer_name'] ) ? htmlspecialchars( $customer_data['customer_name'] ) : _l( 'N/A' ),
 			'customer_address'        => htmlspecialchars( implode( ', ', $address_combined ) ),
 			'contact_name'            => ( $contact_data['name'] != $contact_data['email'] ) ? htmlspecialchars( $contact_data['name'] . ' ' . $contact_data['last_name'] ) : '',
-			'contact_first_name'      => $contact_data['name'],
-			'contact_last_name'       => $contact_data['last_name'],
+			// Escaped like every other value in this array. These four were not, and the name
+			// is one of the few fields an anonymous visitor can set: the public signup form
+			// and the public ticket form both write contact name and last name verbatim. The
+			// template key list on the data record screen prints these values as markup, so a
+			// name of "<script>..." ran in the browser of whichever staff member opened that
+			// customer next.
+			'contact_first_name'      => htmlspecialchars( (string) $contact_data['name'] ),
+			'contact_last_name'       => htmlspecialchars( (string) $contact_data['last_name'] ),
 			// these two may be overridden when sending an email and selecting a different contact from the drop down menu.
-			'first_name'              => $contact_data['name'],
-			'last_name'               => $contact_data['last_name'],
+			'first_name'              => htmlspecialchars( (string) $contact_data['name'] ),
+			'last_name'               => htmlspecialchars( (string) $contact_data['last_name'] ),
 			'contact_email'           => htmlspecialchars( $contact_data['email'] ),
 			'contact_phone'           => htmlspecialchars( $contact_data['phone'] ),
 			'contact_mobile'          => htmlspecialchars( $contact_data['mobile'] ),
-			'customer_invoice_prefix' => isset( $customer_data['default_invoice_prefix'] ) ? $customer_data['default_invoice_prefix'] : '',
+			'customer_invoice_prefix' => isset( $customer_data['default_invoice_prefix'] ) ? htmlspecialchars( (string) $customer_data['default_invoice_prefix'] ) : '',
 		);
 
 		$data = array_merge( $customer_data, $data );

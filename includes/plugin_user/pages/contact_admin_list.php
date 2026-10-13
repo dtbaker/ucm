@@ -129,7 +129,8 @@ print_heading( $heading );
 
 <form action="" method="<?php echo _DEFAULT_FORM_METHOD; ?>">
 	<?php if ( $use_master_key && isset( $search[ $use_master_key ] ) ) { ?>
-		<input type="hidden" name="<?php echo $use_master_key; ?>" value="<?php echo $search[ $use_master_key ]; ?>">
+		<input type="hidden" name="<?php echo htmlspecialchars( (string) $use_master_key, ENT_QUOTES, 'UTF-8' ); ?>"
+		       value="<?php echo htmlspecialchars( (string) $search[ $use_master_key ], ENT_QUOTES, 'UTF-8' ); ?>">
 	<?php } ?>
 
 

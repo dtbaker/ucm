@@ -21,7 +21,7 @@ if ( (int)$data_type_id > 0 ) {
 <?php module_form::print_form_auth(); ?>
 <input type="hidden" name="_process" value="save_data_type" />
 <input type="hidden" name="_redirect" value="<?php echo $module->link("",array("saved" => true,"data_type_id" => ((int)$data_type_id) ? $data_type_id : '')); ?>" />
-<input type="hidden" name="data_type_id" value="<?php echo $data_type_id; ?>" />
+<input type="hidden" name="data_type_id" value="<?php echo htmlspecialchars( (string) $data_type_id, ENT_QUOTES, 'UTF-8' ); ?>" />
 
     <?php
 

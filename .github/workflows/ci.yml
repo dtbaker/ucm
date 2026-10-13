@@ -130,6 +130,16 @@ jobs:
     # results go to the Security tab, where they can be worked through and then promoted
     # to blocking one rule at a time.
     #
+    # Do not gate anything on the NUMBER of findings here. Five local runs of this exact
+    # command against one unchanged tree returned 937, 905, 912, 901 and 906, and this
+    # job's own history shows 959-1050 across near-identical commits. The variance is all
+    # in one rule, echoed-request, on a handful of large PHP files: scan
+    # includes/plugin_invoice/pages/invoice_admin_credit.php on its own and it reports 86
+    # every time, scan it as part of the tree and it reports between 26 and 46. --timeout 0
+    # does not change that, so it is the taint engine under parallelism rather than a rule
+    # timing out. tainted-sql-string and tainted-filename were identical in every run.
+    # Named rules are stable, which is what the blocking job below relies on.
+    #
     # One rule is excluded rather than triaged. request-host-used is an nginx rule written
     # in generic mode, so it matches the five characters "$host" in any file at all. Its
     # eight hits are a PHP local variable in module_config::upgrade_url_is_allowed(), which

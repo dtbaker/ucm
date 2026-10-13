@@ -325,7 +325,8 @@ print_heading( array(
 				<?php echo htmlspecialchars( $finance['account_name'] ); ?>
 			</td>
 			<td>
-				<?php echo $finance['categories']; ?>
+				<?php // GROUP_CONCAT of finance_category.name - plain text typed by staff, not markup. ?>
+				<?php echo htmlspecialchars( (string) $finance['categories'], ENT_QUOTES, 'UTF-8' ); ?>
 			</td>
 		</tr>
 	<?php } ?>

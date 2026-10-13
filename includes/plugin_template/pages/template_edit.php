@@ -55,7 +55,7 @@ if ( ! $template ) {
 
 	<?php module_form::print_form_auth(); ?>
 	<input type="hidden" name="_process" value="save_template"/>
-	<input type="hidden" name="template_id" value="<?php echo $template_id; ?>"/>
+	<input type="hidden" name="template_id" value="<?php echo htmlspecialchars( (string) $template_id, ENT_QUOTES, 'UTF-8' ); ?>"/>
 	<input type="hidden" name="return"
 	       value="<?php echo isset( $_REQUEST['return'] ) ? htmlspecialchars( urldecode( $_REQUEST['return'] ) ) : ''; ?>"/>
 

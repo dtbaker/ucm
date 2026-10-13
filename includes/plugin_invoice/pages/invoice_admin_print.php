@@ -80,7 +80,7 @@ if ( isset( $_REQUEST['go'] ) ) {
 				$invoice = module_invoice::get_invoice( $invoice_id );
 				// todo: confirm invoice pemrissions, possible data slip
 				?>
-				<li><a href="#" onclick="return generate(<?php echo $invoice_id; ?>,this);"><?php echo $invoice['name']; ?></a>
+				<li><a href="#" onclick="return generate(<?php echo (int) $invoice_id; ?>,this);"><?php echo htmlspecialchars( (string) $invoice['name'], ENT_QUOTES, 'UTF-8' ); ?></a>
 				</li>
 				<?php
 			}
