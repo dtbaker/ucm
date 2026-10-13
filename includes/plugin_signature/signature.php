@@ -56,7 +56,11 @@ class module_signature extends module_base
 	public static function signature_job_task_link( $job_id, $task_id ) {
 		// check if staff or customer signature is required.
 		$job_task = module_job::get_task( $job_id, $task_id );
-		if ( $job_task && ! $job_task['fully_completed'] ) {
+		if ( ! $job_task || ! $job_task['fully_completed'] ) {
+			// No task row at all is the case a job being built from a quote hits: the
+			// tasks are previewed with task_id 0, so there is nothing to look up and
+			// nothing to sign yet. Reading $job_task['user_id'] on that printed a
+			// warning into the task list.
 			echo _l( 'Pending Completion' );
 
 			return;

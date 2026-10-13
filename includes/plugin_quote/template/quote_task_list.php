@@ -293,9 +293,14 @@ foreach ( $quote_tasks as $quote_item_id => $quote_item_data ) {
 		$this_taxes_amounts = array();
 		$this_taxes_rates   = array();
 		if ( ! count( $this_taxes ) ) {
+			// A list holding one zero rate. Not a bare amount and percent: the loop
+			// below reads every entry as a tax row, so a flat array made it read
+			// 0['amount'] twice and print a warning for each.
 			$this_taxes = array(
-				'amount'  => 0,
-				'percent' => 0,
+				array(
+					'amount'  => 0,
+					'percent' => 0,
+				),
 			);
 		}
 		foreach ( $this_taxes as $this_tax ) {

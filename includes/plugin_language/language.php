@@ -317,7 +317,7 @@ class module_language extends module_base
 	}
 
 	public static function missing_word( $text, $url = '', $translation = false ) {
-		if ( ! strlen( trim( $text ) ) || self::ignore_word( $text ) ) {
+		if ( ! strlen( trim( (string) $text ) ) || self::ignore_word( $text ) ) {
 			return;
 		}
 		// word not found in the current translation $labels
@@ -466,6 +466,14 @@ class module_language extends module_base
 		//return 'L';
 		global $labels;
 		$argv = func_get_args();
+		// A record field that has never been set arrives here as null - a new job built
+		// from a quote has no discount_description, for one. Every string function below
+		// deprecates null under PHP 8.4, so it becomes an empty label here instead, which
+		// is what the caller wanted anyway.
+		if ( $text === null ) {
+			$text    = '';
+			$argv[0] = '';
+		}
 		// see if the first one is a lang label
 		if ( isset( $labels[ $text ] ) && strlen( trim( $labels[ $text ] ) ) ) {
 			$argv[0] = $labels[ $text ];

@@ -809,23 +809,23 @@ module_form::print_form_open_tag( array(
 				) );
 				?>
 				<input type="hidden" name="job_task[new<?php echo $task_number; ?>][description]"
-				       value="<?php echo htmlspecialchars( $task_data['description'] ); ?>">
+				       value="<?php echo htmlspecialchars( (string) ( $task_data['description'] ?? '' ) ); ?>">
 				<input type="hidden" name="job_task[new<?php echo $task_number; ?>][long_description]"
-				       value="<?php echo htmlspecialchars( $task_data['long_description'] ); ?>">
+				       value="<?php echo htmlspecialchars( (string) ( $task_data['long_description'] ?? '' ) ); ?>">
 				<input type="hidden" name="job_task[new<?php echo $task_number; ?>][hours]"
-				       value="<?php echo htmlspecialchars( $task_data['hours'] ); ?>">
+				       value="<?php echo htmlspecialchars( (string) ( $task_data['hours'] ?? '' ) ); ?>">
 				<input type="hidden" name="job_task[new<?php echo $task_number; ?>][amount]"
-				       value="<?php echo htmlspecialchars( $task_data['amount'] ); ?>">
+				       value="<?php echo htmlspecialchars( (string) ( $task_data['amount'] ?? '' ) ); ?>">
 				<input type="hidden" name="job_task[new<?php echo $task_number; ?>][date_due]"
-				       value="<?php echo htmlspecialchars( $task_data['date_due'] ); ?>">
+				       value="<?php echo htmlspecialchars( (string) ( $task_data['date_due'] ?? '' ) ); ?>">
 				<input type="hidden" name="job_task[new<?php echo $task_number; ?>][manual_task_type]"
-				       value="<?php echo htmlspecialchars( $task_data['manual_task_type'] ); ?>">
+				       value="<?php echo htmlspecialchars( (string) ( $task_data['manual_task_type'] ?? '' ) ); ?>">
 				<input type="hidden" name="job_task[new<?php echo $task_number; ?>][billable_t]" value="1">
 				<input type="hidden" name="job_task[new<?php echo $task_number; ?>][taxable_t]" value="1">
 				<input type="hidden" name="job_task[new<?php echo $task_number; ?>][billable]"
-				       value="<?php echo htmlspecialchars( $task_data['billable'] ); ?>">
+				       value="<?php echo htmlspecialchars( (string) ( $task_data['billable'] ?? '' ) ); ?>">
 				<input type="hidden" name="job_task[new<?php echo $task_number; ?>][taxable]"
-				       value="<?php echo htmlspecialchars( $task_data['taxable'] ); ?>">
+				       value="<?php echo htmlspecialchars( (string) ( $task_data['taxable'] ?? '' ) ); ?>">
 				<input type="hidden" name="job_task[new<?php echo $task_number; ?>][user_id]"
 				       value="<?php echo (int) $task_data['user_id']; ?>">
 				<input type="hidden" name="job_task[new<?php echo $task_number; ?>][product_id]"
