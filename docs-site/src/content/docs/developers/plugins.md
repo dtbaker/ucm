@@ -46,7 +46,7 @@ A plugin that stores data returns the SQL to create its tables from `get_install
 
 This is what _Settings → Upgrade → Run Manual Upgrades_ does, one plugin at a time. It is safe to run repeatedly: a plugin already at the current version does nothing.
 
-Of the 65 plugins that ship, 41 own tables. The rest are behaviour only — the payment methods mostly store their settings in the shared configuration table rather than a table of their own.
+Of the 66 plugins that ship, 41 own tables. The rest are behaviour only — the payment methods mostly store their settings in the shared configuration table rather than a table of their own.
 
 ## Switching a plugin off
 
@@ -60,7 +60,7 @@ Disabling a plugin stops it setting itself up on each request, which removes its
 
 ## Everything that ships
 
-Sixty five plugins, with the version of each in this release.
+Sixty six plugins, with the version of each in this release.
 
 ### Core and infrastructure
 
@@ -76,7 +76,7 @@ Sixty five plugins, with the version of each in this release.
 
 ### Payment methods
 
-<table><thead><tr><th>Plugin</th><th>Version</th><th>What it does</th></tr></thead><tbody><tr><td><code>paymethod_stripe</code></td><td>2.245</td><td>Card payments through Stripe.</td></tr><tr><td><code>paymethod_paypal</code></td><td>2.261</td><td>PayPal.</td></tr><tr><td><code>paymethod_banktransfer</code></td><td>2.241</td><td>Offline bank transfer instructions.</td></tr><tr><td><code>paymethod_check</code></td><td>2.11</td><td>Offline cheque instructions. Shown in the interface as <em>Check</em>.</td></tr><tr><td><code>paymethod_other</code></td><td>2.12</td><td>Any other offline arrangement, with wording of your own.</td></tr><tr><td><code>paymethod_authorize</code></td><td>2.23</td><td>Authorize.Net. Retired in this release and no longer offered for new setup, so it does not appear under <em>Settings → Payments</em>. Existing payment records are untouched — see <a href="/running/payment-methods/">Payment methods</a>.</td></tr><tr><td><code>paymethod_coinbase</code>, <code>paymethod_multisafepay</code>, <code>paymethod_paynl</code></td><td>2.11, 2.222, 2.2</td><td>Also retired. The code remains so that historical payments still render correctly; none of the three can take a new payment.</td></tr></tbody></table>
+<table><thead><tr><th>Plugin</th><th>Version</th><th>What it does</th></tr></thead><tbody><tr><td><code>paymethod_stripe</code></td><td>2.245</td><td>Card payments through Stripe.</td></tr><tr><td><code>paymethod_paypal</code></td><td>2.261</td><td>PayPal.</td></tr><tr><td><code>paymethod_square</code></td><td>2.1</td><td>Card payments through Square.</td></tr><tr><td><code>paymethod_banktransfer</code></td><td>2.241</td><td>Offline bank transfer instructions.</td></tr><tr><td><code>paymethod_check</code></td><td>2.11</td><td>Offline cheque instructions. Shown in the interface as <em>Check</em>.</td></tr><tr><td><code>paymethod_other</code></td><td>2.12</td><td>Any other offline arrangement, with wording of your own.</td></tr><tr><td><code>paymethod_authorize</code></td><td>2.23</td><td>Authorize.Net. Retired in this release and no longer offered for new setup, so it does not appear under <em>Settings → Payments</em>. Existing payment records are untouched — see <a href="/running/payment-methods/">Payment methods</a>.</td></tr><tr><td><code>paymethod_coinbase</code>, <code>paymethod_multisafepay</code>, <code>paymethod_paynl</code></td><td>2.11, 2.222, 2.2</td><td>Also retired. The code remains so that historical payments still render correctly; none of the three can take a new payment.</td></tr></tbody></table>
 
 ### Work and communication
 
