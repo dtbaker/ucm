@@ -26,6 +26,14 @@ const differences = [];
 
 function emit( path, contents ) {
 	if ( check ) {
+		// Only the artifacts that are committed can be checked. public/api/v1 is the copy
+		// the CDN serves: it is gitignored and rebuilt by the deploy, so on a clean
+		// checkout it simply is not there, and comparing against it would fail every time
+		// for a reason nobody can act on. The shipped bundle under includes/ is the one
+		// that has to stay in step, because it goes out inside the product.
+		if ( path.includes( '/public/api/' ) ) {
+			return;
+		}
 		const current = existsSync( path ) ? readFileSync( path, 'utf8' ) : null;
 		if ( current !== contents ) {
 			differences.push( path );
