@@ -76,7 +76,18 @@ if ( isset( $_REQUEST['save'] ) ) {
 	<em>Please contact your hosting provider for assistance with creating a database.</em>
 </p>
 
-<?php module_form::print_form_open_tag( array( 'action' => '?m=setup&step=' . $step . '&save=true' ) ); ?>
+<?php
+// No token on the setup wizard. Minting one writes a secure_hash row through
+// module_config::save_config(), and this step is where the database credentials are
+// still being entered - the config table does not exist yet, so asking for a token
+// here replaces the form with "Table 'ucm_config' doesn't exist". There is nothing to
+// protect either: the installer refuses to run once _UCM_INSTALLED is set unless you
+// are logged in (see the guard at the top of each step).
+module_form::print_form_open_tag( array(
+	'action' => '?m=setup&step=' . $step . '&save=true',
+	'auth'   => false,
+) );
+?>
 	<?php
 	module_form::set_required( array(
 		'fields' => array(
