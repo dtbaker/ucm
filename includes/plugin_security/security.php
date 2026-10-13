@@ -725,31 +725,44 @@ class module_security extends module_base
 		//session_destroy();
 	}
 
+	/**
+	 * Sign in from an auto-login key.
+	 *
+	 * The key is derived from the stored password hash, so holding a valid one already
+	 * proves as much as a password does. It used to put the stored hash in
+	 * $_REQUEST['password'] and run the normal login, which only ever worked because
+	 * verification accepted a hash as its own password - the hole 31855c3 closed. Since
+	 * then the only accounts an auto-login link worked for were the ones still on the
+	 * shipped default password, which quietly broke password reset emails, customer
+	 * welcome emails and every public invoice, quote, job, ticket and contract link.
+	 */
 	public static function auto_login( $redirect = true ) {
-		if ( strlen( $_REQUEST['auto_login'] ) > 7 ) {
-			$foo     = explode( ":", $_REQUEST['auto_login'] );
-			$user_id = (int) $foo[0];
-			if ( $user_id > 0 ) {
-				// get the real key.
-				$real_key = self::get_auto_login_string( $user_id );
-				if ( $real_key == $_REQUEST['auto_login'] ) {
-					// log this security in !!
-					$sql = "SELECT * FROM " . _DB_PREFIX . "user WHERE user_id = '$user_id'";
-					$res = qa1( $sql );
-					if ( $res ) {
-						if ( getcred() ) {
-							set_message( _l( "You have been logged out." ) );
-						}
-						$_REQUEST['email']    = $res['email'];
-						$_REQUEST['password'] = $res['password'];
-
-						return self::process_login( $redirect, false );
-					}
-				}
-			}
+		if ( ! isset( $_REQUEST['auto_login'] ) || ! is_string( $_REQUEST['auto_login'] ) || strlen( $_REQUEST['auto_login'] ) <= 7 ) {
+			return false;
 		}
+		$foo     = explode( ":", $_REQUEST['auto_login'] );
+		$user_id = (int) $foo[0];
+		if ( $user_id <= 0 ) {
+			return false;
+		}
+		// get the real key.
+		$real_key = self::get_auto_login_string( $user_id );
+		if ( ! $real_key || ! hash_equals( (string) $real_key, $_REQUEST['auto_login'] ) ) {
+			return false;
+		}
+		// The same row shape process_login() works with, so the session is set up
+		// identically however somebody arrived.
+		$sql = "SELECT u.*, sr.security_role_id FROM `" . _DB_PREFIX . "user` u LEFT JOIN `" . _DB_PREFIX . "user_role` sr ON u.user_id = sr.user_id WHERE u.user_id = '" . (int) $user_id . "' LIMIT 1";
+		$res = qa1( $sql );
+		if ( ! $res ) {
+			return false;
+		}
+		if ( getcred() ) {
+			set_message( _l( "You have been logged out." ) );
+		}
+		hook_handle_callback( 'before_login' );
 
-		return false;
+		return self::establish_session( $res, $redirect );
 	}
 	/*public static function set_access_level($user_id,$access_level){
 			// move this back to the user module
@@ -874,78 +887,67 @@ class module_security extends module_base
 						$new_hash = ucm_password_hash( $password );
 						query( "UPDATE `" . _DB_PREFIX . "user` SET `password` = '" . db_escape( $new_hash ) . "' WHERE user_id = '" . (int) $res['user_id'] . "' LIMIT 1" );
 					}
-					// check the status of the user.
 
-					// not sure what this will do.
-					if ( isset( $res['linked_parent_user_id'] ) && $res['linked_parent_user_id'] > 0 ) {
-						// swap to this user
-						$parent_user = module_user::get_user( $res['linked_parent_user_id'], false, false );
-						if ( $parent_user && $res['linked_parent_user_id'] == $parent_user['user_id'] ) {
-							// login as this user instead.
-							$res = $parent_user;
-						}
-					}
-
-					//if(!$res['status_id'] && $res['user_id']!=1){ // 0 is inactive. 1 is active.
-					// check this user has permissions to login.
-					if ( $res['user_id'] != 1 && ! self::can_user_login( $res['user_id'] ) ) {
-						set_error( 'Account disabled' );
-						if ( $redirect ) {
-							$_SERVER['REQUEST_URI'] = preg_replace( '/auto_login=[^&]*&?/', '', $_SERVER['REQUEST_URI'] );
-							redirect_browser( $_SERVER['REQUEST_URI'] );
-						}
-
-						return false;
-					}
-					$_SESSION['_AVA_logged_in'] = true;
-					// todo - find out all their links.
-					/*if(isset($res['linked_parent_user_id']) && $res['linked_parent_user_id'] == $res['user_id']){
-						// this user is a primary user.
-						$_SESSION['_restrict_customer_id'] = array();
-						$_SESSION['_restrict_customer_id'][$res['customer_id']] = $res['customer_id'];
-						foreach(module_user::get_contact_customer_links($res['user_id']) as $linked){
-							$_SESSION['_restrict_customer_id'][$linked['customer_id']] = $linked['customer_id'];
-						}
-
-
-					}else{
-						// oldschool permissions.
-						$_SESSION['_restrict_customer_id'] = $res['customer_id'];
-					}*/
-					// find the access level from the security_access table.
-
-					/*$level = self::get_access_level($res['user_id']);
-					$_SESSION['_access_level'] = $level['access_level'];
-					$_SESSION['_data_access'] = $level['data_access'];*/
-
-					$sql = "INSERT INTO `" . _DB_PREFIX . "security_login` SET user_id = '" . (int) $res['user_id'] . "', `time` = '" . (int) time() . "', ip_address = '" . db_escape( $_SERVER['REMOTE_ADDR'] ?? '' ) . "'";
-					query( $sql );
-
-					$_SESSION['_user_name']    = $res['name'];
-					$_SESSION['_user_email']   = $res['email'];
-					$_SESSION['_user_id']      = $res['user_id'];
-					$_SESSION['_user_role_id'] = $res['security_role_id'];
-					/*if(!$res['user_type_id']){
-						$res['user_type_id'] = 2; // default to a 'contact' ..
-						module_user::set_user_type($res['user_id'],2);
-					}
-					$_SESSION['_user_type_id'] = $res['user_type_id'];*/
-					$_SESSION['_language'] = $res['language'];
-					hook_handle_callback( 'login_success' );
-					set_message( _l( "You have successfully logged in." ) );
-
-					if ( $redirect ) {
-						$_SERVER['REQUEST_URI'] = preg_replace( '/auto_login=[^&]*&?/', '', $_SERVER['REQUEST_URI'] );
-						redirect_browser( $_SERVER['REQUEST_URI'] );
-						exit;
-					}
-
-					return true;
+					return self::establish_session( $res, $redirect );
 				}
 			}
 		}
 		hook_handle_callback( 'login_failed' );
 		set_error( 'Invalid username or password, please try again.' );
+
+		return true;
+	}
+
+	/**
+	 * Put a verified user into the session.
+	 *
+	 * Everything after "this really is them", shared by the password login and the
+	 * auto-login link so the two cannot drift apart.
+	 *
+	 * @param array $res      the user row, already verified by the caller
+	 * @param bool  $redirect reload the current URL once the session is set up
+	 *
+	 * @return bool
+	 */
+	private static function establish_session( $res, $redirect = true ) {
+		$_SESSION['_AVA_logged_in'] = false;
+
+		// A contact can be linked to a parent login; sign that one in instead.
+		if ( isset( $res['linked_parent_user_id'] ) && $res['linked_parent_user_id'] > 0 ) {
+			$parent_user = module_user::get_user( $res['linked_parent_user_id'], false, false );
+			if ( $parent_user && $res['linked_parent_user_id'] == $parent_user['user_id'] ) {
+				$res = $parent_user;
+			}
+		}
+
+		// check this user has permissions to login.
+		if ( $res['user_id'] != 1 && ! self::can_user_login( $res['user_id'] ) ) {
+			set_error( 'Account disabled' );
+			if ( $redirect ) {
+				$_SERVER['REQUEST_URI'] = preg_replace( '/auto_login=[^&]*&?/', '', $_SERVER['REQUEST_URI'] );
+				redirect_browser( $_SERVER['REQUEST_URI'] );
+			}
+
+			return false;
+		}
+		$_SESSION['_AVA_logged_in'] = true;
+
+		$sql = "INSERT INTO `" . _DB_PREFIX . "security_login` SET user_id = '" . (int) $res['user_id'] . "', `time` = '" . (int) time() . "', ip_address = '" . db_escape( $_SERVER['REMOTE_ADDR'] ?? '' ) . "'";
+		query( $sql );
+
+		$_SESSION['_user_name']    = $res['name'];
+		$_SESSION['_user_email']   = $res['email'];
+		$_SESSION['_user_id']      = $res['user_id'];
+		$_SESSION['_user_role_id'] = isset( $res['security_role_id'] ) ? $res['security_role_id'] : false;
+		$_SESSION['_language']     = $res['language'];
+		hook_handle_callback( 'login_success' );
+		set_message( _l( "You have successfully logged in." ) );
+
+		if ( $redirect ) {
+			$_SERVER['REQUEST_URI'] = preg_replace( '/auto_login=[^&]*&?/', '', $_SERVER['REQUEST_URI'] );
+			redirect_browser( $_SERVER['REQUEST_URI'] );
+			exit;
+		}
 
 		return true;
 	}

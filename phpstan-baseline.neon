@@ -3589,6 +3589,12 @@ parameters:
 			path: includes/plugin_paymethod_paynl/paymethod_paynl.php
 
 		-
+			message: '#^Constant _DB_PREFIX not found\.$#'
+			identifier: constant.notFound
+			count: 1
+			path: includes/plugin_paymethod_square/paymethod_square.php
+
+		-
 			message: '#^Constant _ERROR_EMAIL not found\.$#'
 			identifier: constant.notFound
 			count: 1
@@ -4149,7 +4155,7 @@ parameters:
 		-
 			message: '#^Constant _DB_PREFIX not found\.$#'
 			identifier: constant.notFound
-			count: 35
+			count: 36
 			path: includes/plugin_security/security.php
 
 		-
