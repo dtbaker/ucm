@@ -1,14 +1,27 @@
 {
-  "title": "Finance",
-  "description": "The Finance area shows a summary of all your income and expenses. You can even set recurring upcoming payments for bill reminders. ",
-  "topics": [
-    {
-      "title": "Finance Documentation",
-      "url": "http://ultimateclientmanager.com/support/documentation-wiki/finance/",
-      "wordpress_post_id": 6272
-    }
-  ],
-  "config": {
-    "finance_date_type": "Default is 'payment' showing invoicse by payment date. Other option is 'invoice' which shows payments by invoice create date."
-  }
+	"_generated": "Written by docs-site/scripts/build-app-artifacts.mjs. Edit the article frontmatter, not this file.",
+	"title": "Finance",
+	"description": "The Finance area shows a summary of all your income and expenses. You can even set recurring upcoming payments for bill reminders. ",
+	"config": {
+		"finance_date_type": "Default is 'payment' showing invoicse by payment date. Other option is 'invoice' which shows payments by invoice create date."
+	},
+	"article": "using/finance",
+	"pages": {
+		"finance-dashboard_popup": "using/finance",
+		"finance-dashboard_popup_amount_paid": "using/finance",
+		"finance-dashboard_popup_amount_spent": "using/finance",
+		"finance-dashboard_popup_hours_logged": "using/finance",
+		"finance-dashboard_summary": "using/finance",
+		"finance-dashboard_summary_widgets": "using/finance",
+		"finance-finance": "using/finance",
+		"finance-finance_edit": "using/finance",
+		"finance-finance_invoice_edit": "using/finance",
+		"finance-finance_job_edit": "using/finance",
+		"finance-finance_list": "using/finance",
+		"finance-finance_quick": "using/finance",
+		"finance-finance_settings": "using/finance",
+		"finance-recurring": "using/finance",
+		"finance-recurring_edit": "using/finance",
+		"finance-recurring_list": "using/finance"
+	}
 }

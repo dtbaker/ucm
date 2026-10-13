@@ -1,0 +1,66 @@
+/* The help panel.
+   The old stylesheet sized an iframe that stopped being created years ago. Nothing here
+   frames anything: the panel holds text this server fetched and sanitised. */
+
+.help_popup_wrapper {
+    width: 100%;
+    max-height: 60vh;
+    overflow-y: auto;
+}
+
+.help_panel h3.help_panel_title {
+    margin-top: 0;
+}
+
+.help_panel .help_panel_summary {
+    font-size: 1.05em;
+    color: #555;
+}
+
+.help_panel .help_panel_stale {
+    color: #8a6d3b;
+    background: #fcf8e3;
+    border: 1px solid #faebcc;
+    border-radius: 3px;
+    padding: 6px 10px;
+}
+
+.help_panel .help_panel_video a {
+    font-weight: bold;
+}
+
+.help_panel .help_panel_video_note {
+    color: #777;
+    font-size: 0.9em;
+}
+
+.help_panel .help_panel_body img {
+    max-width: 100%;
+    height: auto;
+}
+
+.help_panel .help_panel_body table {
+    width: 100%;
+    margin-bottom: 1em;
+}
+
+.help_panel .help_panel_body pre {
+    white-space: pre-wrap;
+    word-wrap: break-word;
+}
+
+.help_panel .help_panel_more {
+    margin-top: 1.2em;
+}
+
+.help_panel ul.help_panel_related {
+    border-top: 1px solid #eee;
+    margin-top: 1em;
+    padding-top: 0.8em;
+    padding-left: 1.2em;
+}
+
+/* The inline question mark a screen prints next to its heading. */
+a.ucm_help_link {
+    text-decoration: none;
+}

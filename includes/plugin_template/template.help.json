@@ -1,11 +1,12 @@
 {
-  "title": "Templates",
-  "description": "The templates section holds all the editable templates within the system. Here you can easily edit some content of the system without any programming knowledge.",
-  "topics": [
-    {
-      "title": "Template Documentation",
-      "url": "http://ultimateclientmanager.com/support/documentation-wiki/templates/",
-      "wordpress_post_id": 2129
-    }
-  ]
+	"_generated": "Written by docs-site/scripts/build-app-artifacts.mjs. Edit the article frontmatter, not this file.",
+	"title": "Templates",
+	"description": "The templates section holds all the editable templates within the system. Here you can easily edit some content of the system without any programming knowledge.",
+	"article": "using/templates",
+	"pages": {
+		"template-template": "using/templates",
+		"template-template_edit": "using/templates",
+		"template-template_list": "using/templates",
+		"template-template_print": "using/templates"
+	}
 }

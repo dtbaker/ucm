@@ -1,13 +1,22 @@
 {
-  "title": "Custom Data",
-  "description": "The Custom Data area lets you build simple web forms for storing data in the UCM system in your own format. ",
-  "topics": [
-    {
-      "title": "Custom Data Documentation",
-      "url": "https://ultimateclientmanager.com/support/documentation-wiki/custom-data-forms/",
-      "wordpress_post_id": 2769
-    }
-  ],
-  "config": {
-  }
+	"_generated": "Written by docs-site/scripts/build-app-artifacts.mjs. Edit the article frontmatter, not this file.",
+	"title": "Custom Data",
+	"description": "The Custom Data area lets you build simple web forms for storing data in the UCM system in your own format. ",
+	"config": {},
+	"article": "using/custom-data",
+	"pages": {
+		"data-admin_data": "using/custom-data",
+		"data-admin_data_list": "using/custom-data",
+		"data-admin_data_list_embed": "using/custom-data",
+		"data-admin_data_list_output": "using/custom-data",
+		"data-admin_data_list_type": "using/custom-data",
+		"data-admin_data_new": "using/custom-data",
+		"data-admin_data_open": "using/custom-data",
+		"data-admin_data_search": "using/custom-data",
+		"data-data_type_admin": "using/custom-data",
+		"data-data_type_admin_field_open": "using/custom-data",
+		"data-data_type_admin_group_open": "using/custom-data",
+		"data-data_type_admin_list": "using/custom-data",
+		"data-data_type_admin_open": "using/custom-data"
+	}
 }

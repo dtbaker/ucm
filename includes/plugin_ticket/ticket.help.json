@@ -1,29 +1,27 @@
 {
-  "title": "Tickets",
-  "description": "Manage support tickets and inbound email",
-  "topics": [
-    {
-      "title": "Ticket Documentation",
-      "url": "http://ultimateclientmanager.com/support/documentation-wiki/support-tickets/",
-      "wordpress_post_id": 773
-    }
-  ],
-  "api_endpoints": [
-    {
-      "endpoint": "ticket",
-      "method": "list",
-      "description": "List available tickets"
-    },
-    {
-      "endpoint": "ticket",
-      "method": "message",
-      "description": "List available messages from specified tickets (ticket_ids url param, comma separated)"
-    }
-  ],
-  "config": {
-    "ticket_turn_around_days": "Number of days you expect to answer tickets in",
-    "ticket_type_id_default": "Default ticket type id",
-    "ticket_default_user_id": "Default ticket assigned staff member id",
-    "ticket_default_account_id": "Default ticket account id"
-  }
+	"_generated": "Written by docs-site/scripts/build-app-artifacts.mjs. Edit the article frontmatter, not this file.",
+	"title": "Tickets",
+	"description": "Manage support tickets and inbound email",
+	"config": {
+		"ticket_turn_around_days": "Number of days you expect to answer tickets in",
+		"ticket_type_id_default": "Default ticket type id",
+		"ticket_default_user_id": "Default ticket assigned staff member id",
+		"ticket_default_account_id": "Default ticket account id"
+	},
+	"article": "using/tickets",
+	"pages": {
+		"ticket-ticket_admin": "using/tickets",
+		"ticket-ticket_admin_edit": "using/tickets",
+		"ticket-ticket_admin_edit_messages": "using/tickets",
+		"ticket-ticket_admin_list": "using/tickets",
+		"ticket-ticket_admin_notify": "using/tickets",
+		"ticket-ticket_admin_open": "using/tickets",
+		"ticket-ticket_settings": "using/tickets",
+		"ticket-ticket_settings_accounts": "using/tickets",
+		"ticket-ticket_settings_basic": "using/tickets",
+		"ticket-ticket_settings_bulk": "using/tickets",
+		"ticket-ticket_settings_embed": "using/tickets",
+		"ticket-ticket_settings_fields": "using/tickets",
+		"ticket-ticket_settings_types": "using/tickets"
+	}
 }

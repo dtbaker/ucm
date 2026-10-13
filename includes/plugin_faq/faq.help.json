@@ -1,18 +1,13 @@
 {
-  "title": "FAQ",
-  "description": "This area allows you to manage Frequently Asked Questions for your customers. ",
-  "topics": [
-    {
-      "title": "FAQ Documentation",
-      "url": "http://ultimateclientmanager.com/support/documentation-wiki/faq/",
-      "wordpress_post_id": 6238
-    }
-  ],
-  "api_endpoints": [
-    {
-      "endpoint": "faq",
-      "method": "list_products",
-      "description": "List available FAQ products"
-    }
-  ]
+	"_generated": "Written by docs-site/scripts/build-app-artifacts.mjs. Edit the article frontmatter, not this file.",
+	"title": "FAQ",
+	"description": "This area allows you to manage Frequently Asked Questions for your customers. ",
+	"article": "using/faq",
+	"pages": {
+		"faq-faq_products": "using/faq",
+		"faq-faq_questions": "using/faq",
+		"faq-faq_settings": "using/faq",
+		"faq-faq_settings_basic": "using/faq",
+		"faq-faq_ticket": "using/faq"
+	}
 }

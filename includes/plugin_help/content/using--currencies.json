@@ -1,0 +1,8 @@
+{
+	"slug": "using/currencies",
+	"title": "Currencies",
+	"summary": "Billing a customer in their own currency, and what the system currency is for.",
+	"html": "<p>Invoices and quotes can be raised in a currency other than your own.</p>\n<h2>The system currency</h2>\n<p>One currency is the system currency. It is what the dashboard totals and the\n<a href=\"https://docs.ultimateclientmanager.com/using/finance/\">finance</a> figures are expressed in, because a total mixing three\ncurrencies means nothing.</p>\n<p>Set it before raising anything. Changing it later does not re-express existing records.</p>\n<h2>Adding a currency</h2>\n<p><em>Settings → Currency</em>. Each currency has a code, a symbol, how the symbol is placed, and a\nconversion rate against the system currency.</p>\n<h2>Rates</h2>\n<p>The rate is a number you maintain. Nothing fetches live rates, which is a deliberate\nsimplification rather than a missing feature: an invoice has to stay at the rate it was\nraised at, or a customer&#39;s balance would change overnight without anyone doing anything.</p>\n<p>So the rate is used at the moment a document is created and then stored on it. Updating\nthe rate affects new documents only.</p>\n<h2>Invoicing in a customer&#39;s currency</h2>\n<p>Set the currency on the customer and their quotes and invoices default to it. The document\nshows their currency; the finance figures show the converted amount in yours.</p>\n<p>Record the payment in the currency the invoice was raised in. If the amount that actually\nlanded in your bank differs because the rate moved, the difference is a separate finance\nentry rather than a change to the invoice.</p>",
+	"video": "",
+	"updated": ""
+}

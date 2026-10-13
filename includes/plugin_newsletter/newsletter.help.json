@@ -1,0 +1,26 @@
+{
+	"_generated": "Written by docs-site/scripts/build-app-artifacts.mjs. Edit the article frontmatter, not this file.",
+	"article": "using/newsletters",
+	"pages": {
+		"newsletter-newsletter_admin": "using/newsletters",
+		"newsletter-newsletter_create": "using/newsletters",
+		"newsletter-newsletter_dashboard": "using/newsletters",
+		"newsletter-newsletter_edit": "using/newsletters",
+		"newsletter-newsletter_list": "using/newsletters",
+		"newsletter-newsletter_list_draft": "using/newsletters",
+		"newsletter-newsletter_list_pending": "using/newsletters",
+		"newsletter-newsletter_member": "using/newsletters",
+		"newsletter-newsletter_preview": "using/newsletters",
+		"newsletter-newsletter_queue": "using/newsletters",
+		"newsletter-newsletter_queue_manual": "using/newsletters",
+		"newsletter-newsletter_queue_watch": "using/newsletters",
+		"newsletter-newsletter_send": "using/newsletters",
+		"newsletter-newsletter_settings": "using/newsletters",
+		"newsletter-newsletter_settings_bounces": "using/newsletters",
+		"newsletter-newsletter_statistics": "using/newsletters",
+		"newsletter-newsletter_statistics_link_clicks": "using/newsletters",
+		"newsletter-newsletter_template": "using/newsletters",
+		"newsletter-newsletter_template_edit": "using/newsletters",
+		"newsletter-newsletter_template_list": "using/newsletters"
+	}
+}
