@@ -45,3 +45,13 @@
 /scripts/**             export-ignore
 /tests                  export-ignore
 /tests/**               export-ignore
+
+# The documentation and website sources. What they build does ship - the help content
+# under includes/plugin_help/content/ and the Documentation/ folder - but the Astro
+# projects that produce it are developer tooling and have no business in a buyer's
+# download. Without these lines git archive puts seventy odd files of node configuration
+# and Markdown into Main Files/.
+/docs-site              export-ignore
+/docs-site/**           export-ignore
+/website                export-ignore
+/website/**             export-ignore

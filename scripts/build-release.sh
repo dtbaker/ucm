@@ -159,6 +159,7 @@ fi
 for dir in \
 	'Main Files/.github/' 'Main Files/.git/' 'Main Files/tests/' 'Main Files/docker/' \
 	'Main Files/docs/' 'Main Files/scripts/' 'Main Files/node_modules/' \
+	'Main Files/docs-site/' 'Main Files/website/' \
 	'Main Files/build/' 'Main Files/playwright-report/' 'Main Files/test-results/'
 do
 	if grep -qF "$dir" <<<"$listing"; then
