@@ -236,7 +236,8 @@ switch ( $display_mode ) {
 									</ul>
 								<?php } else { ?>
 									<a id="<?php echo $header_button['id']; ?>" data-placement="bottom"
-									   data-original-title="<?php echo $header_button['title']; ?>" href="#" data-toggle="tooltip"
+									   data-original-title="<?php echo $header_button['title']; ?>"
+									   <?php echo header_button_link_attributes( $header_button ); ?> data-toggle="tooltip"
 									   class="btn btn-default btn-sm">
 										<i class="fa fa-<?php echo $header_button['fa-icon']; ?>"></i>
 									</a>

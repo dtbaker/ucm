@@ -645,6 +645,13 @@ class module_help extends module_base
 			'fa-icon' => 'question',
 			'title'   => 'Help',
 			'id'      => 'header_help',
+			// A real address, so the button is a link in the markup rather than one the
+			// JavaScript has to fix up. help_panel.js still turns an ordinary click into
+			// the panel; a middle click, or a click before the script has loaded, opens
+			// the article instead of doing nothing.
+			'href'    => self::docs_url( self::slug_for_current_page() ),
+			'target'  => '_blank',
+			'rel'     => 'noopener noreferrer',
 		);
 
 		return $header_buttons;

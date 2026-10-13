@@ -935,6 +935,47 @@ function _h( $text ) {
 	<?php
 }
 
+/**
+ * A question mark that opens the documentation article for a screen.
+ *
+ * _h() above takes the help text itself and shows it in a popup. This one takes the
+ * slug of an article on the documentation site, so the text lives in one place rather
+ * than being written out again next to every field.
+ *
+ * @param string $slug  article slug, or '' for whichever article covers this screen
+ * @param string $label optional text beside the icon
+ */
+function _help( $slug = '', $label = '' ) {
+	if ( ! class_exists( 'module_help', false ) || ! module_help::is_plugin_enabled() ) {
+		return;
+	}
+	print module_help::help_link( $slug, $label );
+}
+
+/**
+ * The href, target and rel of a header button, as attributes.
+ *
+ * A header button is an id and an icon that JavaScript binds a handler to, so every
+ * theme wrote it out as <a href="#">. A button that knows where it goes - the help
+ * button does - can say so here instead, and then it is a real link: it survives a
+ * middle click, a click before the JavaScript has loaded, and no JavaScript at all.
+ *
+ * @param array $header_button one entry from the header_buttons filter
+ *
+ * @return string
+ */
+function header_button_link_attributes( $header_button ) {
+	$href = ( isset( $header_button['href'] ) && strlen( $header_button['href'] ) ) ? $header_button['href'] : '#';
+	$out  = ' href="' . htmlspecialchars( $href ) . '"';
+	foreach ( array( 'target', 'rel' ) as $attribute ) {
+		if ( ! empty( $header_button[ $attribute ] ) ) {
+			$out .= ' ' . $attribute . '="' . htmlspecialchars( $header_button[ $attribute ] ) . '"';
+		}
+	}
+
+	return $out;
+}
+
 function _e( $text ) {
 	$argv = func_get_args();
 	print call_user_func_array( '_l', $argv );

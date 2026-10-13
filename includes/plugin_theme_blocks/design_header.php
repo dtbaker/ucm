@@ -182,7 +182,8 @@ switch ( $display_mode ) {
 									</ul>
 								</div>
 							<?php } else { ?>
-								<a href="#" class="options" id="<?php echo $header_button['id']; ?>">
+								<a<?php echo header_button_link_attributes( $header_button ); ?>
+									class="options" id="<?php echo $header_button['id']; ?>">
 									<!-- <?php echo $header_button['title']; ?> -->
 									<i class="fa fa-<?php echo $header_button['fa-icon']; ?>"></i>
 								</a>

@@ -78,7 +78,7 @@ switch ( $display_mode ) {
 				foreach ($header_buttons as $header_button) {
 					?>
 					<li>
-						<a href="#" id="<?php echo $header_button['id'];?>">
+						<a<?php echo header_button_link_attributes( $header_button ); ?> id="<?php echo $header_button['id'];?>">
 								<i class="fa fa-<?php echo $header_button['fa-icon'];?>"></i>
 								<?php echo $header_button['title'];?>
 						</a>
