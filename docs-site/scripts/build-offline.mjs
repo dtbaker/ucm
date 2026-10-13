@@ -22,6 +22,7 @@
 import { cpSync, mkdirSync, writeFileSync, existsSync, rmSync } from 'node:fs';
 import { join } from 'node:path';
 import { readArticles, renderMarkdown, siteDir, repoDir } from './lib/content.mjs';
+import { absolute } from '../site.mjs';
 
 const out = join( siteDir, 'dist', 'offline' );
 
@@ -55,7 +56,7 @@ function rewrite( href ) {
 	if ( article && article.offline ) {
 		return fileFor( slug ) + ( fragment ? `#${ fragment }` : '' );
 	}
-	return `https://docs.ultimateclientmanager.com${ href }`;
+	return absolute( href );
 }
 
 function escape( text ) {

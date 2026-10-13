@@ -20,6 +20,7 @@
 import { mkdirSync, readFileSync, writeFileSync, existsSync, readdirSync, rmSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { readArticles, renderMarkdown, stripMarkdown, siteDir, repoDir } from './lib/content.mjs';
+import { absolute } from '../site.mjs';
 
 const check = process.argv.includes( '--check' );
 const differences = [];
@@ -48,20 +49,14 @@ const articles = readArticles();
 
 // ---------------------------------------------------------------- the article payloads
 
-/**
- * Links inside an article body point at the documentation site. In the panel they open in
- * a new tab, so make them absolute and leave the rest alone.
- */
-function absoluteLinks( href ) {
-	return href.startsWith( '/' ) ? `https://docs.ultimateclientmanager.com${ href }` : href;
-}
-
 function payload( article ) {
 	return {
 		slug: article.slug,
 		title: article.title,
 		summary: article.summary,
-		html: renderMarkdown( article.body, absoluteLinks ),
+		// Links in the panel open the website in a new tab, so they carry the whole
+		// address rather than a path that means nothing inside an application.
+		html: renderMarkdown( article.body, absolute ),
 		video: article.video,
 		updated: '',
 	};

@@ -11,8 +11,9 @@
 		"dev": "astro dev",
 		"build": "npm run build:app && npm run build:web && npm run build:offline",
 		"build:app": "node scripts/build-app-artifacts.mjs",
-		"build:web": "astro build",
+		"build:web": "astro build && node scripts/base-links.mjs",
 		"build:offline": "node scripts/build-offline.mjs",
+		"upload": "npm run build && node scripts/build-upload.mjs",
 		"check": "node scripts/build-app-artifacts.mjs --check && node scripts/check-content.mjs",
 		"posters": "node scripts/fetch-posters.mjs",
 		"preview": "astro preview"

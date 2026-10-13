@@ -15,7 +15,7 @@ src/content/docs/          the only place to write
 
 | Output | Where | Built by | Goes to |
 |---|---|---|---|
-| The website | `dist/web/` | `npm run build:web` | `docs.ultimateclientmanager.com` |
+| The website | `dist/web/` | `npm run build:web` | `ultimateclientmanager.com/docs/` |
 | The app's API | `dist/web/api/v1/` | `npm run build:app` | same deploy; the help panel reads it |
 | The shipped copy | `../includes/plugin_help/content/` | `npm run build:app` | inside the download |
 | The screen map | `../includes/plugin_NAME/NAME.help.json` | `npm run build:app` | inside the download |
@@ -24,6 +24,7 @@ src/content/docs/          the only place to write
 ```
 npm install
 npm run build        # all of it
+npm run upload       # build, then lay out one folder to put on the web server
 npm run dev          # the website, with live reload
 npm run check        # what CI runs: nothing has drifted, nothing points at nothing
 ```
@@ -94,9 +95,46 @@ import Video from '../../../components/Video.astro';
 
 ## Deploying
 
-Not done from here. See `docs/proposals/owner-todo.md` — the Cloudflare Pages project, the
-DNS record and the redirects from the old wiki are the owner's, and nothing in this repo
-has credentials for any of them.
+The site is static — HTML, CSS, JavaScript and JSON, with nothing to run. It needs no
+Node, no database and no build step on the server, so ordinary Apache and PHP hosting
+serves it as well as anything else would.
+
+```
+npm run upload
+```
+
+writes `dist/upload/`, which contains one folder to copy onto the web server and a
+`UPLOAD-THIS.txt` saying where it goes. By default it goes to `public_html/docs/` and the
+site is at `https://ultimateclientmanager.com/docs/`.
+
+Replace the folder wholesale each time rather than merging into the old one, or files
+deleted since the last build stay behind. Make sure the upload includes `.htaccess`: it
+stops the site above the folder from rewriting these addresses, and points 404s at this
+site's own 404 page. Many FTP clients hide dotfiles by default.
+
+### Where the site lives
+
+`site.mjs` is the only place that answers that, and everything reads it from there — the
+Astro config, the JSON the application fetches, the offline archive and the deploy
+script. To build for somewhere else, set the environment rather than editing anything:
+
+```
+UCM_DOCS_ORIGIN=https://docs.ultimateclientmanager.com UCM_DOCS_BASE= npm run upload
+```
+
+**The address has to agree with the application.** `DOCS_WEB` and `DOCS_API` in
+`includes/plugin_help/docs_api.php` are where the help panel looks, and
+`tests/unit/HelpDocsTest.php` pins them. Move one without the other and five thousand
+installations quietly fall back to the copy inside their own download — which is the
+designed behaviour, so nothing breaks loudly enough to notice.
+
+### Why links get a second pass
+
+Astro's `base` is applied to the addresses its own components build and to nothing
+written inside an article, which is documented behaviour rather than a bug. So
+`scripts/base-links.mjs` prefixes the base onto the ninety or so article links in the
+built HTML, straight after `astro build`. The alternative was typing `/docs` into every
+link in the content, which would make moving the site a ninety file change.
 
 ## Why the archive is built by a script rather than by Starlight
 

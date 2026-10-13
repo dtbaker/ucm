@@ -1,9 +1,14 @@
 // @ts-check
 import { defineConfig } from 'astro/config';
 import starlight from '@astrojs/starlight';
+import { origin, base } from './site.mjs';
 
 /**
- * The documentation site: docs.ultimateclientmanager.com.
+ * The documentation site. Where it is published is decided in site.mjs.
+ *
+ * The output is plain static files - HTML, CSS, JavaScript and JSON - with nothing to
+ * run on the server. It is uploaded into a folder on ordinary Apache and PHP hosting,
+ * by default public_html/docs/, and that is the whole deployment.
  *
  * This is one of several things built from src/content/docs. The others are the offline
  * archive that goes in the CodeCanyon zip, the JSON the application's help panel reads,
@@ -14,8 +19,12 @@ import starlight from '@astrojs/starlight';
  * source tree without the website filling up with chmod advice.
  */
 export default defineConfig( {
-	site: 'https://docs.ultimateclientmanager.com',
+	site: origin,
+	base,
 	outDir: './dist/web',
+	// Astro prefixes `base` onto the links its own components build and onto nothing
+	// else, so links typed into an article need the same treatment afterwards. That is
+	// scripts/base-links.mjs, which npm run build:web runs straight after this.
 	integrations: [
 		starlight( {
 			title: 'Ultimate Client Manager',

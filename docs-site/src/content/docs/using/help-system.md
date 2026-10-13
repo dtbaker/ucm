@@ -30,7 +30,7 @@ When an article is opened — and only then, never when a page loads — your se
 request:
 
 ```
-GET https://docs.ultimateclientmanager.com/api/v1/<article>.json?v=3.5&lang=en
+GET https://ultimateclientmanager.com/docs/api/v1/<article>.json?v=3.5&lang=en
 ```
 
 That is the whole of it. Three things: which article, which major version of this
