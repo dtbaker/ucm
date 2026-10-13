@@ -141,6 +141,7 @@ class module_security extends module_base
 			);
 		}
 
+		error_log( 'UCMPROBE init uri=' . ( $_SERVER['REQUEST_URI'] ?? '' ) );
 		if ( class_exists( 'module_template', false ) ) {
 			module_template::init_template( 'password_reset', 'Dear {NAME},<br>
     <br>
@@ -942,6 +943,23 @@ class module_security extends module_base
 		$_SESSION['_language']     = $res['language'];
 		hook_handle_callback( 'login_success' );
 		set_message( _l( "You have successfully logged in." ) );
+
+		// The install ships the literal string 'password' rather than a hash, so the
+		// stored value is itself the record of "nobody has ever set one". The code has
+		// always claimed it prompts for a change and never did. Land them on their own
+		// login settings, every time, until they do.
+		if ( $redirect && ucm_password_is_default( isset( $res['password'] ) ? $res['password'] : '' ) ) {
+			set_error( _l( 'Please set a password for this account. It is still the one the system was installed with.' ) );
+			// Built rather than taken from module_user::link_open(), which bubbles the
+			// user page under whichever module the link came from.
+			redirect_browser( link_generate( array(
+				array(
+					'module'    => 'user',
+					'page'      => 'user_admin',
+					'arguments' => array( 'user_id' => (int) $res['user_id'] ),
+				),
+			) ) );
+		}
 
 		if ( $redirect ) {
 			$_SERVER['REQUEST_URI'] = preg_replace( '/auto_login=[^&]*&?/', '', $_SERVER['REQUEST_URI'] );
