@@ -303,7 +303,7 @@ if ( isset( $_REQUEST['f'] ) && is_array( $_REQUEST['f'] ) ) {
 							. '</span>',
 						),
 					);
-					$x ++;
+					$x++;
 				}
 				ob_start();
 				?>

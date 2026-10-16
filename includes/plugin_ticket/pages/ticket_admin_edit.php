@@ -506,7 +506,7 @@ $action_buttons = module_form::generate_form_actions( $form_actions );
 					if ( ! isset( $other_status[ $status_name ] ) ) {
 						$other_status[ $status_name ] = 0;
 					}
-					$other_status[ $status_name ] ++;
+					$other_status[ $status_name ]++;
 
 					$other_elements[ 'ticket_' . (int) $other_ticket['ticket_id'] ] = array(
 						'title'  => ( $other_ticket['ticket_id'] == $ticket_id ? '&raquo; ' : '' )
