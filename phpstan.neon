@@ -10,6 +10,14 @@ parameters:
         - ext.php
         - index.php
         - init.php
+    # These two are defined as literals so PHPStan can see they exist, but their real
+    # value comes from the environment - the demo deployment sets UCM_DEMO_MODE. Without
+    # this, PHPStan takes the literal fallback as the truth, decides every demo-only
+    # branch is dead code, and stops checking the paths the demo is the only user of.
+    dynamicConstantNames:
+        - _DEMO_MODE
+        - _BLOCK_EMAILS
+
     # Third-party code bundled into the repo. Same list as phpcs.xml.dist.
     excludePaths:
         - includes/plugin_pdf/dompdf/*

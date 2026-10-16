@@ -46,3 +46,9 @@
 /tests                  export-ignore
 /tests/**               export-ignore
 
+# The public demo's chrome - banner, theme switcher, demo login. Committed so that
+# deploying this repository to demo.ultimateclientmanager.com carries it, and kept out of
+# the item archive so buyers do not receive a header advertising the demo. It only renders
+# when UCM_DEMO_MODE is on.
+/custom                 export-ignore
+/custom/**              export-ignore

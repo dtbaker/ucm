@@ -15,6 +15,18 @@ function ucm_env( $name, $default ) {
 	return ( $value === false || $value === '' ) ? $default : $value;
 }
 
+/**
+ * An environment variable read as a switch.
+ *
+ * "0", "false", "off" and "no" are off, because a variable set to the string "0" reads as
+ * true to a bare cast and that is the shape a docker-compose default takes.
+ */
+function ucm_truthy_env( $name ) {
+	$value = strtolower( trim( (string) ucm_env( $name, '' ) ) );
+
+	return ! in_array( $value, array( '', '0', 'false', 'off', 'no' ), true );
+}
+
 // Local overrides first (config.local can define DB etc.)
 if ( ! defined( '_UCM_CONFIG_LOCAL' ) ) {
 	define( '_UCM_CONFIG_LOCAL', ucm_env( 'UCM_CONFIG_LOCAL', __DIR__ . '/config.local.php' ) );
@@ -33,7 +45,11 @@ if ( ! defined( '_DB_SERVER' ) ) {
 }
 
 define( '_UCM_VERSION', 2 );
-define( '_UCM_FOLDER', dirname( dirname( __FILE__ ) ) . '/' );
+// Guarded so this file can be included more than once, and so a test can load it for the
+// helpers above without warning about a constant the bootstrap already set.
+if ( ! defined( '_UCM_FOLDER' ) ) {
+	define( '_UCM_FOLDER', dirname( dirname( __FILE__ ) ) . '/' );
+}
 // The installer writes a random secret into config.local.php, so a normal install never
 // reaches either branch below. They are here for containers and CI, which point at a
 // database through the environment and may have no local config file at all.
@@ -55,8 +71,36 @@ if ( ! defined( '_UCM_SECRET' ) ) {
 define( "_EXTERNAL_TUNNEL", 'ext.php' );
 define( "_EXTERNAL_TUNNEL_REWRITE", 'external/' );
 define( "_ENABLE_CACHE", true );
-define( "_DEMO_MODE", false );
-define( "_BLOCK_EMAILS", false );
+// Demo mode. Off everywhere except the public demo, which sets UCM_DEMO_MODE=1.
+//
+// It is read from the environment rather than edited into this file because this file
+// ships to buyers: a demo that needs a code change to turn on is a demo that eventually
+// gets turned on in somebody's install. config.local.php can still define it first, which
+// is how a host that cannot set environment variables does it.
+// Defined as a literal either way, which is the same shape _UCM_SECRET uses above and for
+// the same reason: PHPStan works a constant out by evaluating its define(), so a value it
+// cannot evaluate - anything reading the environment - leaves it reporting "Constant
+// _DEMO_MODE not found" at all 44 places the application tests it.
+if ( ! defined( '_DEMO_MODE' ) && ucm_truthy_env( 'UCM_DEMO_MODE' ) ) {
+	define( '_DEMO_MODE', true );
+}
+if ( ! defined( '_DEMO_MODE' ) ) {
+	define( '_DEMO_MODE', false );
+}
+// Outbound email. A public demo must not send any: anyone can put any address on a
+// customer and press "Email Invoice", which makes the demo a relay. So demo mode turns
+// this on by default, and UCM_BLOCK_EMAILS can set it either way for anything else.
+$ucm_block_emails = strtolower( trim( (string) ucm_env( 'UCM_BLOCK_EMAILS', '' ) ) );
+$ucm_block_emails = $ucm_block_emails === ''
+	? _DEMO_MODE
+	: ! in_array( $ucm_block_emails, array( '0', 'false', 'off', 'no' ), true );
+if ( ! defined( '_BLOCK_EMAILS' ) && $ucm_block_emails ) {
+	define( '_BLOCK_EMAILS', true );
+}
+unset( $ucm_block_emails );
+if ( ! defined( '_BLOCK_EMAILS' ) ) {
+	define( '_BLOCK_EMAILS', false );
+}
 if ( ! defined( '_REWRITE_LINKS' ) ) {
 	define( "_REWRITE_LINKS", true );
 }

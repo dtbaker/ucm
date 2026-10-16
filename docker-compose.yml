@@ -10,6 +10,8 @@ services:
     environment:
       - APACHE_DOCUMENT_ROOT=/var/www/html
       - UCM_DEBUG=1
+      # Demo chrome off unless asked for. ./scripts/demo-mode.sh on flips it.
+      - UCM_DEMO_MODE=${UCM_DEMO_MODE:-0}
       # Local dev only. A real install gets a random secret written to
       # config.local.php by the installer.
       - UCM_SECRET=local-dev-not-a-real-secret
