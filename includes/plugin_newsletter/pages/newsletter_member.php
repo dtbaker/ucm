@@ -7,7 +7,14 @@ $newsletter_member_id = isset( $_REQUEST['newsletter_member_id'] ) ? (int) $_REQ
 if ( $member_id ) {
 	$member_data = module_newsletter::get_member( $member_id );
 } elseif ( $newsletter_member_id ) {
+	// get_newsletter_member() answers with one row where get_member() answers with a list,
+	// and everything below iterates. Without this, opening a member by its
+	// newsletter_member_id - which is the link the newsletter screens hand out - died with
+	// "Cannot access offset of type string on string" part way through the page.
 	$member_data = module_newsletter::get_newsletter_member( $newsletter_member_id );
+	$member_data = ( $member_data && isset( $member_data['newsletter_member_id'] ) )
+		? array( $member_data['newsletter_member_id'] => $member_data )
+		: array();
 } else {
 	set_error( 'Sorry no member id specified' );
 	// module_member has no link_list() - link_open( false ) is the member list.
@@ -113,60 +120,59 @@ print_heading( 'Member Newsletter History/Statistics' );
 					'type'  => 'h3',
 					'title' => 'Member Statistics',
 				) ); ?>
-				<table class="tableclass tableclass_form tableclass_full">
-					<tbody>
-					<tr>
-						<th class="width1"><?php _e( 'Email' ); ?></th>
-						<td>
-							<?php echo htmlspecialchars( $member['email'] ); ?>
-						</td>
-					</tr>
-					<tr>
-						<th><?php _e( 'Receive Email' ); ?></th>
-						<td>
-							<?php echo print_select_box( get_yes_no(), 'receive_email[' . $member['newsletter_member_id'] . ']', isset( $member['receive_email'] ) ? $member['receive_email'] : 1, '', false ); ?>
-							<input type="submit" name="save" value="<?php _e( 'Save' ); ?>" class="submit_button">
-						</td>
-					</tr>
-					<tr>
-						<th class="width1"><?php _e( 'Member Subscribed' ); ?></th>
-						<td>
-							<?php echo print_date( $member['join_date'] ); ?>
-						</td>
-					</tr>
-					<tr>
-						<th><?php _e( 'Member Unsubscribed' ); ?></th>
-						<td>
-							<?php
-							$newsletter_member_id = module_newsletter::member_from_email( $member, false );
-							if ( $newsletter_member_id ) {
-								if ( $res = module_newsletter::is_member_unsubscribed( $newsletter_member_id, $member ) ) {
-									if ( isset( $res['unsubscribe_send_id'] ) && $res['unsubscribe_send_id'] ) {
-										// they unsubscribed from a send.
-										$send_data = module_newsletter::get_send( $res['unsubscribe_send_id'] );
-										_e( 'Unsubscribed on %s from newsletter %s', print_date( $res['time'] ), module_newsletter::link_statistics( $send_data['newsletter_id'], $send_data['send_id'], true ) );
-									} elseif ( isset( $res['reason'] ) && $res['reason'] == 'no_email' ) {
-										_e( 'Manually marked as no receive email' );
-									} elseif ( isset( $res['reason'] ) && $res['reason'] == 'doubleoptin' ) {
-										_e( 'Waiting for double opt in confirmation, sent at %s', print_date( $res['time'] ) );
-									} else {
-										_e( 'Unsubscribed on %s', print_date( $res['time'] ) );
-									}
-								}
-							}
-							/*$unsub = module_newsletter::email_blacklisted($member['email']); echo print_date($unsub['time']);
-							echo $unsub['reason'];*/
-							?>
-						</td>
-					</tr>
-					<tr>
-						<th><?php _e( 'Total opened' ); ?></th>
-						<td>
-							<?php echo _l( '%s of %s', $open_count, $send_members_count ); ?>
-						</td>
-					</tr>
-					</tbody>
-				</table>
+				<?php
+				ob_start();
+				echo print_select_box( get_yes_no(), 'receive_email[' . $member['newsletter_member_id'] . ']', isset( $member['receive_email'] ) ? $member['receive_email'] : 1, '', false );
+				?>
+				<input type="submit" name="save" value="<?php _e( 'Save' ); ?>" class="submit_button">
+				<?php
+				$receive_email_cell = ob_get_clean();
+
+				ob_start();
+				$newsletter_member_id = module_newsletter::member_from_email( $member, false );
+				if ( $newsletter_member_id ) {
+					if ( $res = module_newsletter::is_member_unsubscribed( $newsletter_member_id, $member ) ) {
+						if ( isset( $res['unsubscribe_send_id'] ) && $res['unsubscribe_send_id'] ) {
+							// they unsubscribed from a send.
+							$send_data = module_newsletter::get_send( $res['unsubscribe_send_id'] );
+							_e( 'Unsubscribed on %s from newsletter %s', print_date( $res['time'] ), module_newsletter::link_statistics( $send_data['newsletter_id'], $send_data['send_id'], true ) );
+						} elseif ( isset( $res['reason'] ) && $res['reason'] == 'no_email' ) {
+							_e( 'Manually marked as no receive email' );
+						} elseif ( isset( $res['reason'] ) && $res['reason'] == 'doubleoptin' ) {
+							_e( 'Waiting for double opt in confirmation, sent at %s', print_date( $res['time'] ) );
+						} else {
+							_e( 'Unsubscribed on %s', print_date( $res['time'] ) );
+						}
+					}
+				}
+				$unsubscribed_cell = ob_get_clean();
+
+				echo module_form::generate_fieldset( array(
+					'class'    => 'tableclass tableclass_form tableclass_full',
+					'elements' => array(
+						'email'         => array(
+							'title'  => _l( 'Email' ),
+							'fields' => array( htmlspecialchars( $member['email'] ) ),
+						),
+						'receive_email' => array(
+							'title'  => _l( 'Receive Email' ),
+							'fields' => array( $receive_email_cell ),
+						),
+						'join_date'     => array(
+							'title'  => _l( 'Member Subscribed' ),
+							'fields' => array( print_date( $member['join_date'] ) ),
+						),
+						'unsubscribed'  => array(
+							'title'  => _l( 'Member Unsubscribed' ),
+							'fields' => array( $unsubscribed_cell ),
+						),
+						'total_opened'  => array(
+							'title'  => _l( 'Total opened' ),
+							'fields' => array( _l( '%s of %s', $open_count, $send_members_count ) ),
+						),
+					),
+				) );
+				?>
 			<?php module_form::print_form_close_tag(); ?>
 			<?php } ?>
 		</td>

@@ -99,40 +99,29 @@ module_form::print_form_open_tag( array(
 	) );
 	?>
 
-	<table class="tableclass tableclass_form">
-		<tbody>
-		<tr>
-			<th class="width2"><?php echo _l( 'Database Host:' ); ?></th>
-			<td>
-				<input type="text" name="db_host" value="<?php echo h( $db_host ); ?>">
-			</td>
-		</tr>
-		<tr>
-			<th><?php echo _l( 'Database Prefix:' ); ?></th>
-			<td>
-				<input type="text" name="db_prefix" value="<?php echo h( $db_prefix ); ?>">
-			</td>
-		</tr>
-		<tr>
-			<th><?php echo _l( 'Database Name:' ); ?></th>
-			<td>
-				<input type="text" name="db_name" value="<?php echo h( $db_name ); ?>">
-			</td>
-		</tr>
-		<tr>
-			<th><?php echo _l( 'Database Username:' ); ?></th>
-			<td>
-				<input type="text" name="db_user" value="<?php echo h( $db_user ); ?>">
-			</td>
-		</tr>
-		<tr>
-			<th><?php echo _l( 'Database Password:' ); ?></th>
-			<td>
-				<input type="text" name="db_pass" value="<?php echo h( $db_pass ); ?>">
-			</td>
-		</tr>
-		</tbody>
-	</table>
+	<?php
+	$db_elements = array();
+	foreach ( array(
+		'db_host'   => _l( 'Database Host:' ),
+		'db_prefix' => _l( 'Database Prefix:' ),
+		'db_name'   => _l( 'Database Name:' ),
+		'db_user'   => _l( 'Database Username:' ),
+		'db_pass'   => _l( 'Database Password:' ),
+	) as $db_field => $db_label ) {
+		$db_elements[ $db_field ] = array(
+			'title' => $db_label,
+			'field' => array(
+				'type'  => 'text',
+				'name'  => $db_field,
+				'value' => $$db_field,
+			),
+		);
+	}
+	echo module_form::generate_fieldset( array(
+		'class'    => 'tableclass tableclass_form',
+		'elements' => $db_elements,
+	) );
+	?>
 	<input type="submit" name="next" value="Next Step &raquo;" class="submit_button btn btn-success">
 
 <?php module_form::print_form_close_tag();

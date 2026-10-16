@@ -1355,6 +1355,10 @@ class module_form extends module_base
 
 
 	public static function save_fieldset_settings( $fieldset_id, $settings ) {
+		// Same as the read side: nothing to write to before the install has run.
+		if ( defined( '_UCM_INSTALLED' ) && ! _UCM_INSTALLED ) {
+			return;
+		}
 		if ( class_exists( 'UCMDatabase' ) ) {
 			$db = UCMDatabase::singleton();
 			$db->prepare( 'REPLACE INTO `' . _DB_PREFIX . 'form` SET `fieldset_id` = :id, `settings` = :settings' );
@@ -1366,6 +1370,14 @@ class module_form extends module_base
 	}
 
 	public static function get_fieldset_settings( $fieldset_id ) {
+
+		// Before the install has run there is no `form` table to read, and no per-user
+		// display settings to read out of it either. Without this, any fieldset on the
+		// setup wizard replaces itself with "Table 'ucm_form' doesn't exist", which is what
+		// kept step 1 of the wizard on hand-written markup.
+		if ( defined( '_UCM_INSTALLED' ) && ! _UCM_INSTALLED ) {
+			return array();
+		}
 
 		if ( class_exists( 'UCMDatabase' ) ) {
 			$db = UCMDatabase::singleton();
@@ -1545,13 +1557,7 @@ class module_form extends module_base
 		<?php if ( $options['elements'] ) { ?>
 			<table class="<?php echo $options['class']; ?>"
 			       data-fieldset-settings="<?php echo htmlspecialchars( json_encode( $fieldset_settings ), ENT_QUOTES, 'UTF-8' ); ?>"
-			       data-fieldset-id="<?php echo $fieldset_id; ?>" id="<?php echo $fieldset_id; ?>"<?php
-			// A fieldset that starts hidden and is shown by script needs to say so on the
-			// table itself, because that is the element carrying the id the script finds.
-			if ( ! empty( $options['style'] ) ) {
-				echo ' style="' . htmlspecialchars( $options['style'], ENT_QUOTES, 'UTF-8' ) . '"';
-			}
-			?>>
+			       data-fieldset-id="<?php echo $fieldset_id; ?>" id="<?php echo $fieldset_id; ?>">
 				<tbody>
 				<?php
 				foreach ( $options['elements'] as $element_id => $element ) {

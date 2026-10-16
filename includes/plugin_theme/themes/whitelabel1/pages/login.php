@@ -96,54 +96,67 @@
 
 		<?php module_form::print_form_open_tag( array( 'action' => '' ) ); ?>
 			<input type="hidden" name="_process_login" value="true">
-			<table width="100%" class="tableclass tableclass_form">
-				<tr>
-					<th class="width1">
-						<label for="email"><?php echo _l( 'Username' ); ?></label>
-					</th>
-					<td>
-						<input type="text" id="email" name="email"
-						       value="<?php echo ( defined( '_DEMO_MODE' ) && _DEMO_MODE ) ? 'admin@example.com' : ''; ?>"
-						       style="width:185px;"/>
-					</td>
-				</tr>
-				<tr>
-					<th>
-						<label for="password"><?php echo _l( 'Password' ); ?></label>
-					</th>
-					<td>
-						<input type="password" name="password" id="password"
-						       value="<?php echo ( defined( '_DEMO_MODE' ) && _DEMO_MODE ) ? 'password' : ''; ?>"
-						       style="width:185px;"/>
-					</td>
-				</tr>
-				<?php if ( module_config::c( 'login_recaptcha', 0 ) ) { ?>
-					<tr>
-						<td colspan="2">
-							<?php echo module_captcha::display_captcha_form(); ?>
-						</td>
-					</tr>
-				<?php } ?>
-				<tr>
-					<td colspan="2" align="center" style="text-align: center;">
-						<p>
-							<input type="submit" class="submit_button" name="login"
-							       value="<?php echo _l( 'Login' ); ?><?php echo ( defined( '_DEMO_MODE' ) && _DEMO_MODE ) ? ' to demo' : ''; ?>">
-						</p>
-						<p>
-							<a href="?reset"><?php _e( 'Forgot Password?' ); ?></a>
-							<?php
-							if ( module_config::c( 'customer_signup_on_login', 0 ) ) {
-								?>
-								| <a
-									href="<?php echo module_config::c( 'customer_signup_on_login_url', '' ) ?: '?signup'; ?>"><?php _e( 'Sign Up' ); ?></a>
-								<?php
-							}
-							?>
-						</p>
-					</td>
-				</tr>
-			</table>
+			<?php
+			$demo = defined( '_DEMO_MODE' ) && _DEMO_MODE;
+
+			$login_elements = array(
+				'email'    => array(
+					'title' => _l( 'Username' ),
+					'field' => array(
+						'type'  => 'text',
+						'name'  => 'email',
+						'id'    => 'email',
+						'style' => 'width:185px;',
+						'value' => $demo ? 'admin@example.com' : '',
+					),
+				),
+				'password' => array(
+					'title' => _l( 'Password' ),
+					'field' => array(
+						'type'  => 'password',
+						'name'  => 'password',
+						'id'    => 'password',
+						'style' => 'width:185px;',
+						'value' => $demo ? 'password' : '',
+					),
+				),
+			);
+
+			if ( module_config::c( 'login_recaptcha', 0 ) ) {
+				$login_elements['captcha'] = array(
+					'message' => module_captcha::display_captcha_form(),
+				);
+			}
+
+			ob_start();
+			?>
+			<p>
+				<input type="submit" class="submit_button" name="login"
+				       value="<?php echo _l( 'Login' ); ?><?php echo $demo ? ' to demo' : ''; ?>">
+			</p>
+			<p>
+				<a href="?reset"><?php _e( 'Forgot Password?' ); ?></a>
+				<?php
+				if ( module_config::c( 'customer_signup_on_login', 0 ) ) {
+					?>
+					| <a
+						href="<?php echo module_config::c( 'customer_signup_on_login_url', '' ) ?: '?signup'; ?>"><?php _e( 'Sign Up' ); ?></a>
+					<?php
+				}
+				?>
+			</p>
+			<?php
+			$login_elements['actions'] = array(
+				'message' => ob_get_clean(),
+			);
+
+			// No id and no heading, so generate_fieldset neither reads nor writes the
+			// per-user display settings - this page is reached before anybody is a user.
+			echo module_form::generate_fieldset( array(
+				'class'    => 'tableclass tableclass_form',
+				'elements' => $login_elements,
+			) );
+			?>
 			<?php hook_handle_callback( 'login_screen' ); ?>
 		<?php module_form::print_form_close_tag(); ?>
 

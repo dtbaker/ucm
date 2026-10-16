@@ -1,5 +1,6 @@
 import { test, expect, Page } from '@playwright/test';
-import { aFile, createRecord, login } from './seed';
+import { describeDiagnostics } from './diagnostics';
+import { aCustomer, aFile, createRecord, login } from './seed';
 import { byProcess, expectFields, expectFieldsIn, fieldsIn } from './form-fields';
 
 /**
@@ -65,6 +66,61 @@ async function aDataFieldGroup( page: Page ): Promise<{ typeId: string; groupId:
  *      are where bespoke markup belongs - generate_fieldset has a theme override hook, so
  *      having a theme call the shared helper points that relationship the wrong way.
  */
+
+/**
+ * A queued newsletter send, which is what the queue and statistics screens need before
+ * they render anything at all.
+ *
+ * Two parameters are needed to put a customer in a group, not one: the group plugin reads
+ * group_module[table][group_id] for the owner id and used_group_module[table][group_id]
+ * for the tick. Sending with only the second writes no membership row, enqueuing then
+ * refuses with "Please select at least 1 person", and the screens below stay empty - which
+ * is what made these three look unreachable on a first pass.
+ */
+async function aQueuedSend( page: Page ): Promise<{ newsletterId: string; sendId: string }> {
+  const stamp = Date.now() + '-' + Math.floor( Math.random() * 10000 );
+  const groupId = await createRecord( page, '/?m[]=group', {
+    _process: 'save_group',
+    group_id: 'new',
+    name: 'Send Group ' + stamp,
+    owner_table: 'customer',
+    _redirect: '/',
+  }, 'group_id' );
+
+  const customerId = await aCustomer( page );
+  await page.goto( '/' );
+  const key = await page.locator( 'input[name="form_auth_key"]' ).first().inputValue();
+  await page.request.post( '/', {
+    form: {
+      [ `group_module[customer][${ groupId }]` ]: customerId,
+      [ `used_group_module[customer][${ groupId }]` ]: '1',
+      form_auth_key: key,
+    },
+    failOnStatusCode: false,
+  } );
+
+  const newsletterId = await createRecord( page, '/?m[]=newsletter', {
+    _process: 'save_newsletter',
+    newsletter_id: 'new',
+    subject: 'Queued Newsletter ' + stamp,
+    from_name: 'Fieldset Sender',
+    from_email: 'sender@example.com',
+    content: 'Body text.',
+  }, 'newsletter_id' );
+
+  await page.goto( `/?m[]=newsletter&p[]=newsletter_send&newsletter_id=${ newsletterId }` );
+  await page.locator( `input[name="group[${ groupId }]"]` ).check();
+  await Promise.all( [
+    page.waitForNavigation( { waitUntil: 'load' } ),
+    page.locator( 'input[name="send"]' ).first().click(),
+  ] );
+
+  const sendId = new URL( page.url() ).searchParams.get( 'send_id' );
+  expect( sendId, 'the send should have been queued' ).toBeTruthy();
+
+  return { newsletterId, sendId: sendId as string };
+}
+
 test.describe( 'Forms moved to generate_fieldset', () => {
   test( 'the data field screen keeps its controls and saves what is typed', async ( { page } ) => {
     await login( page );
@@ -217,6 +273,98 @@ test.describe( 'Forms moved to generate_fieldset', () => {
       'subject|input|text',
       'ticket_extra[*]|input|text',
       'ticket_type_id|select|',
+    ] );
+  } );
+
+  test( 'the encrypt popup keeps its controls', async ( { page } ) => {
+    await login( page );
+
+    // encrypt_field_id is cast to int, so a non-numeric one makes the page take the create
+    // branch - which is the branch with the hand-written table in it.
+    const url = '/?m[]=encrypt&p[]=encrypt_popup&encrypt_field_id=0'
+      + '&encrypt_field_name=fieldset_probe&page_name=test'
+      + '&callback_id=encrypt_hidden_fieldset_probe&editable=1';
+    await page.goto( url );
+
+    await expectFieldsIn( page, 'form:has(#enc_create_new)', [
+      'encrypt_key_name|input|text',
+      'new_passphrase|input|password',
+      'save|input|button',
+    ] );
+
+    // The script on that page shows and hides this block by id, so the id and the hidden
+    // state have to survive. They live on a wrapper, not on the fieldset: the metis theme
+    // renders fieldsets itself through the generate_fieldset hook and its version carries
+    // neither, so anything the script needs to find must sit outside the helper's output.
+    await expect( page.locator( '#enc_create_new' ), 'the create block should keep its id' )
+      .toBeAttached();
+    await expect( page.locator( '#enc_create_new' ), 'and start hidden' ).toBeHidden();
+    await expect( page.locator( '#enc_create_new input[name="encrypt_key_name"]' ),
+      'with the fieldset inside it' ).toBeAttached();
+  } );
+
+  test( 'the newsletter queue keeps its send options', async ( { page } ) => {
+    await login( page );
+    const { newsletterId, sendId } = await aQueuedSend( page );
+    const body = await ( await page.request.get(
+      `/?m[]=newsletter&p[]=newsletter_queue&newsletter_id=${ newsletterId }&send_id=${ sendId }` ) ).text();
+
+    // Read-only rows, so the invariant is the labels rather than a set of controls: a row
+    // dropped by a layout change takes its label off the page with it.
+    // Duplicates is deliberately not here: that row only appears once the newsletter has
+    // been sent before, and this one is new.
+    for ( const label of [ 'Shedule send' ] ) {
+      expect( body, `the send options should still list "${ label }"` ).toContain( label );
+    }
+    expect( describeDiagnostics( body ).join( '\n' ), 'the queue printed a PHP diagnostic' ).toBe( '' );
+  } );
+
+  test( 'the newsletter queue watcher keeps its statistics', async ( { page } ) => {
+    await login( page );
+    const { newsletterId, sendId } = await aQueuedSend( page );
+    const body = await ( await page.request.get(
+      `/?m[]=newsletter&p[]=newsletter_queue_watch&newsletter_id=${ newsletterId }&send_id=${ sendId }` ) ).text();
+
+    for ( const label of [ 'Start sending', 'Sent To', 'Viewed By', 'Clicks By', 'Bounces', 'Failures' ] ) {
+      expect( body, `the statistics should still list "${ label }"` ).toContain( label );
+    }
+
+    // These ids are what the page's own polling writes into - newsletter_queue_manual
+    // answers with { '#sent_to': '...' } and the script does $(x).html(d[x]). Lose one and
+    // the figure silently stops updating while the page still looks right.
+    for ( const id of [
+      'sent_to', 'open_rate', 'total_link_clicks', 'bounces', 'failures',
+      'unsubscribed', 'current_status', 'change_status_buttons', 'status',
+    ] ) {
+      expect( body, `the live statistics need #${ id } to exist` ).toContain( `id="${ id }"` );
+    }
+
+    expect( describeDiagnostics( body ).join( '\n' ), 'the watcher printed a PHP diagnostic' ).toBe( '' );
+  } );
+
+  test( 'the newsletter member statistics keep their controls', async ( { page } ) => {
+    await login( page );
+    const { newsletterId, sendId } = await aQueuedSend( page );
+
+    // Queuing the send is what creates newsletter members. Find one the way the screens
+    // link to it, by newsletter_member_id - which is the path that used to die with
+    // "Cannot access offset of type string on string" before reaching the form.
+    const watch = await ( await page.request.get(
+      `/?m[]=newsletter&p[]=newsletter_queue_watch&newsletter_id=${ newsletterId }&send_id=${ sendId }` ) ).text();
+    // The rows are id="newsletter_member_<n>" - that is what the page's own polling
+    // updates, and the only place the ids appear.
+    const ids = [ ...new Set( [ ...watch.matchAll( /newsletter_member_(\d+)/g ) ].map( ( m ) => m[ 1 ] ) ) ];
+    expect( ids.length, 'the queued send should have members' ).toBeGreaterThan( 0 );
+
+    const url = `/?m[]=newsletter&p[]=newsletter_member&newsletter_member_id=${ ids[ 0 ] }`;
+    const body = await ( await page.request.get( url, { failOnStatusCode: false } ) ).text();
+    expect( body, 'the member screen should not be dying' ).not.toContain( 'Fatal error' );
+    expect( body, 'and should be the member statistics' ).toContain( 'Member Statistics' );
+
+    await page.goto( url );
+    await expectFieldsIn( page, 'form:has(select[name^="receive_email"])', [
+      'receive_email[*]|select|',
+      'save|input|submit',
     ] );
   } );
 } );

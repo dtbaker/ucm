@@ -1,5 +1,6 @@
 import { test, expect, Page } from '@playwright/test';
 import { DIAGNOSTIC, describeDiagnostics } from './diagnostics';
+import { expectFieldsIn } from './form-fields';
 import { login } from './seed';
 
 /**
@@ -145,5 +146,32 @@ test.describe( 'The public demo @demo', () => {
       const body = await ( await page.request.get( url, { failOnStatusCode: false } ) ).text();
       expect( describeDiagnostics( body ).join( '\n' ), `${ url } printed a PHP diagnostic` ).toBe( '' );
     }
+  } );
+
+  test( 'the whitelabel theme login keeps its controls', async ( { page } ) => {
+    // That theme's login page only renders when the theme is active, which demo mode is
+    // what makes reachable - picking it stores the choice in this session.
+    await page.goto( '/?demo_theme=whitelabel1' );
+    await page.goto( '/' );
+    await expect( page.locator( 'body' ), 'the whitelabel theme should be the active one' )
+      .toHaveClass( /theme-whitelabel1/ );
+
+    await expectFieldsIn( page, 'form:has(input[name="_process_login"])', [
+      '_process_login|input|hidden',
+      'email|input|text',
+      'login|input|submit',
+      'password|input|password',
+    ] );
+
+    // And it still signs somebody in. The controls being present is not the same as the
+    // form still working, which is the thing a layout change can quietly take away.
+    await page.locator( 'input[name="email"]' ).first().fill( 'admin@example.com' );
+    await page.locator( 'input[name="password"]' ).first().fill( 'password' );
+    await Promise.all( [
+      page.waitForNavigation( { waitUntil: 'load' } ),
+      page.locator( 'input[name="login"]' ).first().click(),
+    ] );
+    expect( await page.content(), 'the login form should be gone after signing in' )
+      .not.toContain( '_process_login' );
   } );
 } );

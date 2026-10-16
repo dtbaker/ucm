@@ -241,30 +241,31 @@ if ( isset( $_REQUEST['f'] ) && is_array( $_REQUEST['f'] ) ) {
 					'type'  => 'h3',
 					'title' => 'Send Options',
 				) ); ?>
-				<table class="tableclass tableclass_form tableclass_full">
-					<tbody>
-					<tr>
-						<th class="width1"><?php _e( 'Shedule send' ); ?></th>
-						<td>
-							<?php if ( $start_time <= time() ) {
-								_e( 'Now' );
-							} else {
-								echo print_date( $start_time, true );
-							} ?>
-						</td>
-					</tr>
-					<?php // has this been sent before?
-					if ( $past_sends ) {
-						?>
-						<tr>
-							<th><?php _e( 'Duplicates' ); ?></th>
-							<td>
-								<?php echo $send['allow_duplicates'] ? _l( 'Yes, send duplicate emails' ) : _l( 'No, do not send duplicate emails' ); ?>
-							</td>
-						</tr>
-					<?php } ?>
-					</tbody>
-				</table>
+				<?php
+				$send_elements = array(
+					'start_time' => array(
+						'title'  => _l( 'Shedule send' ),
+						'fields' => array(
+							$start_time <= time() ? _l( 'Now' ) : print_date( $start_time, true ),
+						),
+					),
+				);
+				// has this been sent before?
+				if ( $past_sends ) {
+					$send_elements['allow_duplicates'] = array(
+						'title'  => _l( 'Duplicates' ),
+						'fields' => array(
+							$send['allow_duplicates']
+								? _l( 'Yes, send duplicate emails' )
+								: _l( 'No, do not send duplicate emails' ),
+						),
+					);
+				}
+				echo module_form::generate_fieldset( array(
+					'class'    => 'tableclass tableclass_form tableclass_full',
+					'elements' => $send_elements,
+				) );
+				?>
 
 				<?php
 				print_heading( array(
@@ -296,7 +297,10 @@ if ( isset( $_REQUEST['f'] ) && is_array( $_REQUEST['f'] ) ) {
 								<?php echo '{' . htmlspecialchars( $key ) . '}'; ?>
 							</td>
 							<td style="word-wrap: break-word;">
-								<?php echo htmlspecialchars( ( trim( $val ) ? $val : '' ) ); ?>
+								<?php // A replace value for a column that is not set arrives as null, which
+								// PHP 8 deprecates passing to trim(). The cast changes nothing about what
+								// is printed - null was already going to come out as the empty string. ?>
+								<?php echo htmlspecialchars( trim( (string) $val ) !== '' ? (string) $val : '' ); ?>
 							</td>
 						</tr>
 						<?php

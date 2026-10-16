@@ -396,34 +396,47 @@ if ( $encrypt_id ) {
 	</table>
 <?php if ( module_encrypt::can_i( 'create', 'Encrypts' ) ) { ?>
 	<?php module_form::print_form_open_tag( array( 'action' => '' ) ); ?>
-		<table class="tableclass tableclass_form tableclass_full" id="enc_create_new" style="display:none;">
-			<tbody>
-			<tr>
-				<th class="width2">
-					<?php _e( 'Encryption Vault:' ); ?>
-				</th>
-				<td>
-					<input type="text" name="encrypt_key_name" id="encrypt_key_name">
-				</td>
-			</tr>
-			<tr>
-				<th>
-					<?php _e( 'Choose Passphrase:' ); ?>
-				</th>
-				<td>
-					<input type="password" name="new_passphrase" id="new_passphrase" value="">
-				</td>
-			</tr>
-			<tr>
-				<th>
-				</th>
-				<td>
-					<?php _e( '(this may take a few moments)' ); ?> <br/>
-					<input type="button" name="save" value="<?php _e( 'Create New' ); ?>" onclick="create_new();"
-					       class="submit_button save_button">
-				</td>
-			</tr>
-			</tbody>
-		</table>
+		<?php
+		ob_start();
+		?>
+		<?php _e( '(this may take a few moments)' ); ?> <br/>
+		<input type="button" name="save" value="<?php _e( 'Create New' ); ?>" onclick="create_new();"
+		       class="submit_button save_button">
+		<?php
+		$create_actions = ob_get_clean();
+
+		// The id and the hidden state go on a wrapper rather than on the fieldset. A theme
+		// may render fieldsets itself - metis does, through the generate_fieldset hook -
+		// and its version does not carry an id or a style, so anything the script on this
+		// page needs to find has to sit outside the helper's output.
+		echo '<div id="enc_create_new" style="display:none;">';
+		echo module_form::generate_fieldset( array(
+			'class'    => 'tableclass tableclass_form tableclass_full',
+			'elements' => array(
+				'encrypt_key_name' => array(
+					'title' => _l( 'Encryption Vault:' ),
+					'field' => array(
+						'type' => 'text',
+						'name' => 'encrypt_key_name',
+						'id'   => 'encrypt_key_name',
+					),
+				),
+				'new_passphrase'   => array(
+					'title' => _l( 'Choose Passphrase:' ),
+					'field' => array(
+						'type'  => 'password',
+						'name'  => 'new_passphrase',
+						'id'    => 'new_passphrase',
+						'value' => '',
+					),
+				),
+				'actions'          => array(
+					'title'  => '',
+					'fields' => array( $create_actions ),
+				),
+			),
+		) );
+		echo '</div>';
+		?>
 	<?php module_form::print_form_close_tag(); ?>
 <?php } ?>
