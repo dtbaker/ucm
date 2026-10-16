@@ -1045,9 +1045,16 @@ if ( class_exists( 'UCMBaseSingle' ) ) {
 			// hack - we do this loop twice because some replace keys may have replace keys in them.
 			for ( $x = 0; $x < 2; $x++ ) {
 				foreach ( $this->replace_values as $key => $val ) {
-					if ( is_array( $val ) ) {
+					if ( is_array( $val ) || is_object( $val ) ) {
 						continue;
 					}
+					// A replace field for a column that is not set arrives as null, and PHP 8
+					// deprecates passing that to str_replace(). The cast is what str_replace
+					// was already doing, so nothing about the output changes - but on an
+					// install with display_errors on, four deprecations per replace value get
+					// printed, and anything printed before redirect_browser() stops the
+					// redirect happening at all. That is what broke accepting a contract.
+					$val = (string) $val;
 					//$val = str_replace(array('\\', '$'), array('\\\\', '\$'), $val);
 					$key = '{' . strtoupper( $key ) . '}';
 					// reply to name

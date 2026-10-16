@@ -30,6 +30,9 @@ case "${1:-status}" in
 		# checks the page - otherwise the first request can answer from stale bytecode.
 		sleep 3
 		echo "Demo mode is now: $([ "$want" = "1" ] && echo on || echo off)  ->  http://localhost:8090/"
+		if [ "$want" = "1" ]; then
+			echo "Check it with: UCM_DEMO=1 npx playwright test tests/e2e/demo-mode.spec.ts"
+		fi
 		;;
 	status)
 		echo "Demo mode is currently: $([ "$(current)" = "0" ] && echo off || echo on)"

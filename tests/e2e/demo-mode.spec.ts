@@ -22,12 +22,35 @@ import { login } from './seed';
 
 const BANNER = 'start theme demo code';
 
-/** The theme a page was rendered with, read off the asset paths it asks for. */
-async function renderedTheme( page: Page, url = '/' ): Promise<string> {
-  const body = await ( await page.request.get( url, { failOnStatusCode: false } ) ).text();
-  const match = body.match( /themes\/([a-z0-9_]+)\// );
+/**
+ * The theme a page was rendered with, as the marker the theme puts on <body>.
+ *
+ * Asset paths are no good for this: looking for themes/<name>/ misses the themes that are
+ * plugins rather than folders, and looking for plugin_<name> matches every time, because
+ * each theme plugin's own CSS loads whatever the active theme is. An earlier version of
+ * this file used both and reported that every theme applied, including when none had.
+ *
+ * The body carries class="theme-metis", "theme-adminlte" and so on. The default theme,
+ * pro, carries no theme class at all, which is why the empty string is a valid answer.
+ */
+async function activeTheme( page: Page ): Promise<string> {
+  const body = await ( await page.request.get( '/', { failOnStatusCode: false } ) ).text();
+  const tag = body.match( /<body[^>]*>/ );
+  const marker = tag ? tag[ 0 ].match( /\btheme-([a-z0-9_]+)/ ) : null;
 
-  return match ? match[ 1 ] : 'none';
+  return marker ? marker[ 1 ] : '';
+}
+
+/** What activeTheme() should say once `theme` has been picked. */
+function markerFor( theme: string ): string {
+  return theme === 'pro' ? '' : theme.replace( /^theme_/, '' );
+}
+
+/** The themes the banner actually offers a visitor. */
+async function offeredThemes( page: Page ): Promise<string[]> {
+  const body = await ( await page.request.get( '/', { failOnStatusCode: false } ) ).text();
+
+  return [ ...new Set( [ ...body.matchAll( /demo_theme=([a-z0-9_]+)/g ) ].map( ( m ) => m[ 1 ] ) ) ];
 }
 
 async function demoModeIsOn( page: Page ): Promise<boolean> {
@@ -36,7 +59,7 @@ async function demoModeIsOn( page: Page ): Promise<boolean> {
   return body.includes( BANNER );
 }
 
-test.describe( 'The public demo', () => {
+test.describe( 'The public demo @demo', () => {
   test.beforeEach( async ( { page } ) => {
     test.skip( ! await demoModeIsOn( page ), 'demo mode is off - ./scripts/demo-mode.sh on' );
   } );
@@ -50,40 +73,59 @@ test.describe( 'The public demo', () => {
     expect( loggedIn, 'so should a page behind the login' ).toContain( BANNER );
   } );
 
-  test( 'switches theme for the visitor who asked', async ( { page } ) => {
+  test( 'applies every theme its banner offers', async ( { page } ) => {
     await login( page );
-    const before = await renderedTheme( page );
+    const themes = await offeredThemes( page );
+    expect( themes.length, 'the banner should offer some themes to switch between' )
+      .toBeGreaterThan( 1 );
 
-    // Pick a theme that is installed and is not the one already showing.
-    const options = [ 'pro', 'metis', 'blue', 'left' ].filter( ( t ) => t !== before );
-    let switched = '';
-    for ( const theme of options ) {
+    // Each one, not just one of them: the switcher is the main thing the demo is for, and
+    // a theme that is advertised and does not apply is the visible kind of broken.
+    for ( const theme of themes ) {
       await page.request.get( `/?demo_theme=${ theme }` );
-      if ( await renderedTheme( page ) === theme ) {
-        switched = theme;
-        break;
-      }
+      // Polled rather than read once: with the whole suite running in parallel the app is
+      // slow enough that a single read raced the switch and this flaked.
+      await expect.poll( () => activeTheme( page ), {
+        message: `picking "${ theme }" did not apply it`,
+        timeout: 10000,
+      } ).toBe( markerFor( theme ) );
     }
-
-    expect( switched, `the theme switcher did nothing - still rendering "${ before }"` ).not.toBe( '' );
   } );
 
   test( 'keeps what a visitor changes out of the database', async ( { browser, page } ) => {
     await login( page );
-    const original = await renderedTheme( page );
-    const other = [ 'pro', 'metis', 'blue', 'left' ].find( ( t ) => t !== original )!;
+    const themes = await offeredThemes( page );
 
-    await page.request.get( `/?demo_theme=${ other }` );
-    expect( await renderedTheme( page ), 'this visitor should see the theme they picked' ).toBe( other );
+    // Which theme is the stored one? Ask a session that has not picked anything.
+    const stored = await browser.newContext();
+    let storedMarker = '';
+    try {
+      const probe = await stored.newPage();
+      await login( probe );
+      storedMarker = await activeTheme( probe );
+    } finally {
+      await stored.close();
+    }
+
+    const picked = themes.find( ( t ) => markerFor( t ) !== storedMarker );
+    expect( picked, 'every offered theme is the one already stored - nothing to switch to' )
+      .toBeTruthy();
+
+    await page.request.get( `/?demo_theme=${ picked }` );
+    await expect.poll( () => activeTheme( page ), {
+      message: 'this visitor should see the theme they picked',
+      timeout: 10000,
+    } ).toBe( markerFor( picked! ) );
 
     // A different browser context is a different session, so it reads the stored value.
-    // If the switch had been written to the config table, this would see it too.
+    // If the pick had been written to the config table, this would see it too.
     const fresh = await browser.newContext();
     try {
       const other_page = await fresh.newPage();
       await login( other_page );
-      expect( await renderedTheme( other_page ), 'another visitor should still get the stored theme' )
-        .toBe( original );
+      expect( await activeTheme( other_page ),
+        'another visitor picked up this one\'s choice - it reached the config table' )
+        .toBe( storedMarker );
     } finally {
       await fresh.close();
     }
