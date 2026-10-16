@@ -280,11 +280,21 @@ function metris_generate_fieldset( $callback, $options ) {
 	if ( function_exists( 'hook_filter_var' ) ) {
 		$options = hook_filter_var( 'generate_fieldset_options', $options );
 	}
-	$fieldset_id = $options['id'] ? $options['id'] : 'fieldset_' . substr( md5( serialize( $options['heading'] ) ), 0, 5 );
+	// Must match module_form::generate_fieldset. Without the heading guard every fieldset
+	// that deliberately carries neither an id nor a heading - the read-only blocks and the
+	// public pages, which must not touch the `form` table - got the same id back,
+	// 'fieldset_' . substr( md5( serialize( false ) ), 0, 5 ). Nothing was ever written
+	// under it (the write still runs in module_form, where the id is correctly false), but
+	// every such fieldset read the `form` table under that shared id, emitted it as its own
+	// HTML id, repeated it in every <tr> id on the page, and - because the id looked real -
+	// came out editable, offering field-customisation controls with nowhere to save them.
+	$fieldset_id = ! empty( $options['id'] )
+		? $options['id']
+		: ( ! empty( $options['heading'] ) ? 'fieldset_' . substr( md5( serialize( $options['heading'] ) ), 0, 5 ) : false );
 	// read out the custom field display options for this form (e.g. hidden fields)
 	$user_display_settings = module_form::get_fieldset_settings( $fieldset_id );
 	$fieldset_settings     = array();
-	if ( isset( $options['editable'] ) && ! $options['editable'] ) {
+	if ( ! $fieldset_id || ( isset( $options['editable'] ) && ! $options['editable'] ) ) {
 		$fieldset_settings['editable'] = 0;
 	}
 	$fieldset_settings['fields'] = count( $options['elements'] );

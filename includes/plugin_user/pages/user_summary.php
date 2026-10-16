@@ -1,53 +1,44 @@
-<table width="100%" border="0" cellspacing="0" cellpadding="2" class="tableclass tableclass_form">
-	<tbody>
-	<tr>
-		<th>
-			<?php echo _l( 'Contact Name' ); ?>
-		</th>
-		<td>
-			<?php echo $user_data['name']; ?>
-			<a href="<?php echo $plugins['user']->link_open( $user_id ); ?>">&raquo;</a>
-		</td>
-	</tr>
-	<tr>
-		<th>
-			<?php echo _l( 'Phone' ); ?>
-		</th>
-		<td>
-			<?php echo $user_data['phone']; ?>
-		</td>
-	</tr>
-	<tr>
-		<th>
-			<?php echo _l( 'Mobile' ); ?>
-		</th>
-		<td>
-			<?php echo $user_data['mobile']; ?>
-		</td>
-	</tr>
-	<tr>
-		<th>
-			<?php echo _l( 'Fax' ); ?>
-		</th>
-		<td>
-			<?php echo $user_data['fax']; ?>
-		</td>
-	</tr>
-	<tr>
-		<th>
-			<?php echo _l( 'Email' ); ?>
-		</th>
-		<td>
-			<a href="mailto:<?php echo $user_data['email']; ?>"><?php echo $user_data['email']; ?></a>
-		</td>
-	</tr>
-	<tr>
-		<th>
+<?php
 
-		</th>
-		<td>
-			<a href="<?php echo $plugins['user']->login_link( $user_id ); ?>">Login as this Administrator &raquo;</a>
-		</td>
-	</tr>
-	</tbody>
-</table>
+// Rendered by module_user::print_user_summary( $user_id, 'full' ).
+//
+// No fieldset id or heading: this is a read-only block embedded inside other pages, so
+// it must not read or write per-user field display settings in the form table.
+
+echo module_form::generate_fieldset( array(
+	'elements' => array(
+		array(
+			'title'  => 'Contact Name',
+			'fields' => array(
+				htmlspecialchars( (string) $user_data['name'] )
+				. ' <a href="' . htmlspecialchars( $plugins['user']->link_open( $user_id ) ) . '">&raquo;</a>',
+			),
+		),
+		array(
+			'title'  => 'Phone',
+			'fields' => array( htmlspecialchars( (string) $user_data['phone'] ) ),
+		),
+		array(
+			'title'  => 'Mobile',
+			'fields' => array( htmlspecialchars( (string) $user_data['mobile'] ) ),
+		),
+		array(
+			'title'  => 'Fax',
+			'fields' => array( htmlspecialchars( (string) $user_data['fax'] ) ),
+		),
+		array(
+			'title'  => 'Email',
+			'fields' => array(
+				'<a href="mailto:' . htmlspecialchars( (string) $user_data['email'] ) . '">'
+				. htmlspecialchars( (string) $user_data['email'] ) . '</a>',
+			),
+		),
+		array(
+			'title'  => '',
+			'fields' => array(
+				'<a href="' . htmlspecialchars( $plugins['user']->login_link( $user_id ) ) . '">'
+				. htmlspecialchars( _l( 'Login as this Administrator' ) ) . ' &raquo;</a>',
+			),
+		),
+	),
+) );

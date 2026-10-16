@@ -5230,15 +5230,9 @@ parameters:
 			path: includes/plugin_user/pages/contact_admin_list.php
 
 		-
-			message: '#^Variable \$this might not be defined\.$#'
-			identifier: variable.undefined
-			count: 1
-			path: includes/plugin_user/pages/contact_summary.php
-
-		-
 			message: '#^Variable \$user_data might not be defined\.$#'
 			identifier: variable.undefined
-			count: 7
+			count: 6
 			path: includes/plugin_user/pages/contact_summary.php
 
 		-

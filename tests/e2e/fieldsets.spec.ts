@@ -47,7 +47,7 @@ async function aDataFieldGroup( page: Page ): Promise<{ typeId: string; groupId:
  * switches on, which the old <tbody id> markup had no equivalent of, or a PHP 8 bug fixed
  * alongside - and the script knows which, so anything else is reported as a difference.
  *
- * Seventeen tables are left, and each has a checked reason rather than a judgement:
+ * Fifteen tables are left, and each has a checked reason rather than a judgement:
  *
  *  UNREACHABLE FROM THE TEST ACCOUNT - no passing spec can be written, so no conversion
  *    customer_admin_edit (2), vendor_admin_edit (2)   render only for a user WITHOUT
@@ -67,8 +67,19 @@ async function aDataFieldGroup( page: Page ): Promise<{ typeId: string; groupId:
  *
  *  NOT A FORM LAYOUT - one cell, no <th>, a styled container around a message or summary.
  *  Several are already handed to a fieldset as its elements_before:
- *    customer_summary, contact_summary, user_summary, newsletter_statistics,
- *    invoice_sidebar, member_edit, ticket_create, ticket_priority_sidebar, ticket.php
+ *    customer_summary, newsletter_statistics, invoice_sidebar, member_edit, ticket_create,
+ *    ticket_priority_sidebar, ticket.php
+ *
+ * contact_summary and user_summary were in that last group and should not have been: each
+ * is a five or six row label/value table with a <th> per row, which is exactly the shape a
+ * fieldset produces. Both are now converted. Neither is reachable through the UI -
+ * print_user_summary() has no callers at all and print_contact_summary() has no 'full'
+ * branch to include contact_summary with - so they are covered by a render harness rather
+ * than a spec: boot UCM the way cron.php does, render each partial, and diff the text and
+ * the hrefs against the same render before the change. user_summary came out identical.
+ * contact_summary could not be rendered at all beforehand: it opens with a $this call and
+ * only static callers can reach it, so it fataled with "Using $this when not in object
+ * context" every time, which is why nothing noticed it was broken.
  */
 
 /**
