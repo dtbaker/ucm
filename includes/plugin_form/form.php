@@ -1577,8 +1577,21 @@ class module_form extends module_base
 					?> data-dependency="<?php echo htmlspecialchars( json_encode( $element['dependency'] ), ENT_QUOTES, 'UTF-8' ); ?>" <?php
 				}
 				echo ' data-element-id="' . $element_id . '"';
+				// row_class lets a caller put a class on the row itself. Several pages kept
+				// hand-written tables purely because their progressive disclosure hides rows
+				// by class or by a <tbody> id, and a fieldset had no way to say that.
+				$row_classes = array();
+				if ( ! empty( $element['row_class'] ) ) {
+					$row_classes[] = $element['row_class'];
+				}
 				if ( ! empty( $user_display_settings['hidden'][ $element_id ] ) ) {
-					echo ' class="fieldset_element_hidden"';
+					$row_classes[] = 'fieldset_element_hidden';
+				}
+				if ( $row_classes ) {
+					echo ' class="' . htmlspecialchars( implode( ' ', $row_classes ), ENT_QUOTES, 'UTF-8' ) . '"';
+				}
+				if ( ! empty( $element['row_style'] ) ) {
+					echo ' style="' . htmlspecialchars( $element['row_style'], ENT_QUOTES, 'UTF-8' ) . '"';
 				}
 				?>>
 					<?php if ( ( isset( $element['message'] ) && $element['message'] ) || ( isset( $element['warning'] ) && isset( $element['warning'] ) ) ) { ?>

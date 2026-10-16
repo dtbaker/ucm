@@ -1,5 +1,5 @@
 import { test, expect, Page } from '@playwright/test';
-import { login, createRecord, aCustomer } from './seed';
+import { login, createRecord, formAuthKey, aCustomer } from './seed';
 
 /**
  * Lifecycle cover for the last four record types that had none: newsletter, calendar
@@ -133,9 +133,41 @@ test.describe( 'Content lifecycles', () => {
   test( 'a custom data record keeps what was typed into it', async ( { page } ) => {
     await login( page );
 
-    // A data type that already carries fields. A type with none renders a form with
-    // nothing in it, which would make this test pass while proving nothing.
-    const typeId = '3';
+    // A data type of this test's own, carrying one text field. It used to use the seeded
+    // type 3, which has fields - but every run added another record to it, and once that
+    // list passed twenty rows the new record was on page two and this stopped finding it.
+    // A type with no fields would render an empty form and pass while proving nothing,
+    // so the field is created too.
+    const stamp = Date.now() + '-' + Math.floor( Math.random() * 10000 );
+    const typeId = await createRecord( page, '/?m[]=data', {
+      _process: 'save_data_type',
+      data_type_id: 'new',
+      data_type_name: 'Record Type ' + stamp,
+    }, 'data_type_id' );
+    const groupId = await createRecord( page, '/?m[]=data', {
+      _process: 'save_data_field_group',
+      data_field_group_id: 'new',
+      data_type_id: typeId,
+      name: 'Record Fieldset ' + stamp,
+      _redirect: '/',
+    }, 'data_field_group_id' );
+    const fieldKey = await formAuthKey( page );
+    await page.request.post( '/?m[]=data', {
+      form: {
+        _process: 'save_data_field',
+        data_field_id: 'new',
+        data_type_id: typeId,
+        data_field_group_id: groupId,
+        title: 'Notes',
+        order: '1',
+        field_type: 'text',
+        // save_field() sets any checkbox it was not sent to 0, so without this the field
+        // is not shown in the main listing and the record has no link to find it by.
+        show_list: '1',
+        form_auth_key: fieldKey,
+      },
+      failOnStatusCode: false,
+    } );
     await page.goto( `/?m[]=data&p[]=admin_data_open&data_type_id=${ typeId }&data_record_id=new` );
 
     const form = page.locator( 'form:has(input[name="_process"][value="save_data_record"])' ).first();

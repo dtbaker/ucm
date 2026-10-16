@@ -1,6 +1,6 @@
 import { test, expect, Page } from '@playwright/test';
 import { describeDiagnostics } from './diagnostics';
-import { aCustomer, aFile, createRecord, formAuthKey, login } from './seed';
+import { aCustomer, aFile, anInvoice, createRecord, formAuthKey, login } from './seed';
 import { byProcess, expectFields, expectFieldsIn, fieldsIn } from './form-fields';
 
 /**
@@ -450,5 +450,32 @@ test.describe( 'Forms moved to generate_fieldset', () => {
       expect( body, `the customer should still see "${ label }"` ).toContain( label );
     }
     expect( body, 'the customer view should not be dying' ).not.toContain( 'Fatal error' );
+  } );
+
+  test( 'the invoice payment block keeps its controls and its row hooks', async ( { page } ) => {
+    await login( page );
+    const invoiceId = await anInvoice( page );
+    await page.goto( `/?m[]=invoice&p[]=invoice_admin&invoice_id=${ invoiceId }` );
+
+    // The whole invoice screen is one form, so rather than list sixty controls this checks
+    // the four the payment block owns, plus the hooks invoice.js needs.
+    const form = page.locator( 'form:has(input[name="payment_amount"])' ).first();
+    for ( const name of [ 'payment_amount', 'payment_method', 'butt_makepayment', 'buttpay' ] ) {
+      await expect( form.locator( `[name="${ name }"]` ).first(),
+        `the payment block should still have ${ name }` ).toBeAttached();
+    }
+
+    const body = await page.content();
+    // invoice.js does $('.payment_type_online').show() / .hide() and writes the offline
+    // instructions into #payment_type_offline_info. Both have to survive the layout change.
+    // Matched on the row itself. Checking for the bare class name passes on the script
+    // that references it, which is how an earlier version of this passed with the row
+    // class removed.
+    expect( ( body.match( /<tr[^>]*\bpayment_type_online\b/g ) ?? [] ).length,
+      'the online payment rows need their class on the row' ).toBeGreaterThan( 1 );
+    expect( body, 'the offline row needs its class on the row' )
+      .toMatch( /<tr[^>]*\bpayment_type_offline\b/ );
+    expect( body, 'and the offline instructions need somewhere to be written' )
+      .toContain( 'id="payment_type_offline_info"' );
   } );
 } );

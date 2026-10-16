@@ -404,13 +404,7 @@ module_form::print_form_open_tag( array(
 		/* MAKE PAYMENT */
 		ob_start();
 		?>
-		<table class="tableclass tableclass_form tableclass_full" cellpadding="0" cellspacing="0">
-			<tbody>
-			<tr>
-				<th class="width1">
-					<?php _e( 'Payment Method' ); ?>
-				</th>
-				<td>
+		<?php ob_start(); ?>
 					<?php
 
 					$default_payment_method_text = '';
@@ -449,13 +443,10 @@ module_form::print_form_open_tag( array(
 						}
 					}
 					?>
-				</td>
-			</tr>
-			<tr class="payment_type_online">
-				<th>
-					<?php _e( 'Payment Amount' ); ?>
-				</th>
-				<td>
+		<?php
+		$payment_method_cell = ob_get_clean();
+		ob_start();
+		?>
 					<?php
 					if ( module_config::c( 'invoice_allow_payment_amount_adjustment', 1 ) ) {
 						echo currency( '<input type="text" name="payment_amount" value="' . number_out( $invoice['total_amount_due'] ) . '" class="currency no_permissions">', true, $invoice['currency_id'] );
@@ -464,22 +455,40 @@ module_form::print_form_open_tag( array(
 						echo '<input type="hidden" name="payment_amount" value="' . number_out( $invoice['total_amount_due'] ) . '" class="no_permissions">';
 					}
 					?>
-				</td>
-			</tr>
-			<tr class="payment_type_online">
-				<td align="center" colspan="2">
-					<input type="hidden" name="butt_makepayment" id="butt_makepayment" value="" class="no_permissions">
-					<button type="button" name="buttpay" class="submit_button no_permissions btn btn-primary"
-					        onclick="$('#butt_makepayment').val('yes'); this.form.submit();"><?php _e( 'Make Payment' ); ?></button>
-				</td>
-			</tr>
-			<tr class="payment_type_offline">
-				<td align="left" colspan="2" id="payment_type_offline_info">
+		<?php
+		$payment_amount_cell = ob_get_clean();
 
-				</td>
-			</tr>
-			</tbody>
-		</table>
+		// invoice.js hides and shows these rows by class - $('.payment_type_offline').hide()
+		// and so on - and writes the offline instructions into #payment_type_offline_info
+		// with .html(). row_class puts the class on the row under both the default renderer
+		// and the one metis substitutes for it; the id moves to a div inside the cell, which
+		// .html() takes exactly as it took the cell.
+		echo module_form::generate_fieldset( array(
+			'class'    => 'tableclass tableclass_form tableclass_full',
+			'elements' => array(
+				'payment_method' => array(
+					'title'  => _l( 'Payment Method' ),
+					'fields' => array( $payment_method_cell ),
+				),
+				'payment_amount' => array(
+					'title'     => _l( 'Payment Amount' ),
+					'row_class' => 'payment_type_online',
+					'fields'    => array( $payment_amount_cell ),
+				),
+				'make_payment'   => array(
+					'row_class' => 'payment_type_online',
+					'message'   => '<input type="hidden" name="butt_makepayment" id="butt_makepayment" value="" class="no_permissions">'
+					               . '<button type="button" name="buttpay" class="submit_button no_permissions btn btn-primary"'
+					               . ' onclick="$(\'#butt_makepayment\').val(\'yes\'); this.form.submit();">'
+					               . _l( 'Make Payment' ) . '</button>',
+				),
+				'offline_info'   => array(
+					'row_class' => 'payment_type_offline',
+					'message'   => '<div id="payment_type_offline_info"></div>',
+				),
+			),
+		) );
+		?>
 		<?php
 
 
