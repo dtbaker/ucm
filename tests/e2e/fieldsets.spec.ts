@@ -47,9 +47,9 @@ async function aDataFieldGroup( page: Page ): Promise<{ typeId: string; groupId:
  * switches on, which the old <tbody id> markup had no equivalent of, or a PHP 8 bug fixed
  * alongside - and the script knows which, so anything else is reported as a difference.
  *
- * Nine tables are left, and each has a checked reason rather than a judgement. The reasons
- * are checked because twice now a reason here turned out to be wrong, both times in the
- * direction of leaving convertible markup alone:
+ * Eight tables are left, and each has a checked reason rather than a judgement. The reasons
+ * are checked because three times now a reason here turned out to be wrong, every time in
+ * the direction of leaving convertible markup alone:
  *
  *  UNREACHABLE FROM THE TEST ACCOUNT - no passing spec can be written, so no conversion
  *    customer_admin_edit (2), vendor_admin_edit (2)   render only for a user WITHOUT
@@ -60,9 +60,6 @@ async function aDataFieldGroup( page: Page ): Promise<{ typeId: string; groupId:
  *    render_group   opens its <table> in one branch of a switch and closes it in another,
  *      streaming rows between - there is no block to replace. It also carries an id and a
  *      rel that its own script reads.
- *    group.php   puts the checkbox in the <th> with a data-settings-url that
- *      plugin_config/js/settings.js scans for, and a fieldset offers no way to put an
- *      attribute on the title cell. Worth revisiting if that option is ever added.
  *    ticket_create (faq hook)   has a SECOND <tbody id="faq_product_area"> inside the same
  *      table, which includes/plugin_faq/faq.php fills with rows over ajax
  *      ($('#faq_product_area').html(...)). generate_fieldset emits one tbody and has no
@@ -97,6 +94,15 @@ async function aDataFieldGroup( page: Page ): Promise<{ typeId: string; groupId:
  *      summaries. The first is three label/value rows; the second is one; the third is a
  *      genuine single cell, which an element with 'fields' and no 'title' renders exactly -
  *      both renderers emit a <th> only when an element has a title. All converted.
+ *    group.php was "puts the checkbox in the <th> with a data-settings-url that settings.js
+ *      scans for, and a fieldset offers no way to put an attribute on the title cell".
+ *      Half right. Nothing reads the <tr id="group_N"> it also carried (the only #group_
+ *      in the tree is #group_popdown, unrelated), and settings.js matches the attribute
+ *      wherever it sits rather than requiring a <th>. The real blocker was that 'title' is
+ *      escaped plain text and that cell holds a checkbox. generate_fieldset now takes
+ *      title_fields and title_attributes, added to both renderers; the picker is
+ *      converted, and the customer and member screens render the same field names, the
+ *      same groupchk ids and the same number of data-settings-url attributes as before.
  *    invoice_sidebar (subscription hook) was the same single-cell shape, one row per
  *      subscription. Converted. It no longer renders an empty box when every subscription
  *      in the list has no owner record; before, the heading appeared above an empty table.
@@ -937,6 +943,51 @@ test.describe( 'Forms moved to generate_fieldset (priority support)', () => {
       } );
       expect( shape, 'no fieldset row found under the Priority Support heading' ).not.toBeNull();
       expect( shape ).toEqual( { tds: 1, ths: 0 } );
+    } );
+  } );
+} );
+
+test.describe( 'Forms moved to generate_fieldset (group picker)', () => {
+  test( 'the customer screen keeps its group picker', async ( { page } ) => {
+    await login( page );
+    const groupId = await aCustomerGroup( page );
+    const customerId = await aCustomer( page );
+
+    await page.goto( `/?m[]=customer&p[]=customer_admin_edit&customer_id=${ customerId }` );
+    const body = await page.content();
+
+    // The three controls one group row posts. group_module carries the owner id and is
+    // what tells save_groups the row was on the form; without it an unticked box is
+    // indistinguishable from a box that was never rendered.
+    expect( body ).toContain( `name="group_module[customer][${ groupId }]"` );
+    expect( body ).toContain( `name="used_group_module[customer][${ groupId }]"` );
+    expect( body ).toContain( `id="groupchkcustomer${ groupId }"` );
+    expect( body ).toContain( `for="groupchkcustomer${ groupId }"` );
+
+    // The shape: the checkbox sits in the header cell and the label in the data cell, and
+    // the header cell carries the data-settings-url that plugin_config/js/settings.js
+    // prepends its settings icon into. settings.js matches the attribute wherever it is,
+    // but it has to be on an element that wraps something.
+    const shape = await page.evaluate( ( id: string ) => {
+      const box = document.querySelector( `#groupchkcustomer${ id }` );
+      const row = box?.closest( 'tr' );
+      if ( ! row ) {
+        return null;
+      }
+      const head = row.querySelector( 'th' );
+
+      return {
+        checkboxInHeader: !! head?.contains( box as Node ),
+        labelInData: !! row.querySelector( `td label[for="groupchkcustomer${ id }"]` ),
+        settingsUrlOnSomething: !! row.querySelector( '[data-settings-url]' ),
+      };
+    }, groupId );
+
+    expect( shape, 'no group row found for the seeded group' ).not.toBeNull();
+    expect( shape ).toEqual( {
+      checkboxInHeader: true,
+      labelInData: true,
+      settingsUrlOnSomething: true,
     } );
   } );
 } );

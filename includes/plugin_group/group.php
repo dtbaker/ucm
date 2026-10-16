@@ -235,68 +235,67 @@ class module_group extends module_base
 					),
 				);
 			}
-			ob_start();
-			//<div class="content_box_wheader">
-			?>
-			<table class="tableclass tableclass_full tableclass_form group_selection">
-				<tbody>
-				<?php
-				if ( isset( $options['description'] ) && $options['description'] ) { ?>
-					<tr>
-						<td colspan="2">
-							<?php echo $options['description']; ?>
-						</td>
-					</tr>
-				<?php }
-				foreach ( $group_items as $group_item ) {
-					$group_id = $group_item['group_id'];
-					?>
-					<tr id="group_<?php echo $group_id; ?>">
-						<th
-							class="width1"<?php if ( self::can_i( 'edit', 'Groups' ) ) { ?> data-settings-url="<?php echo module_group::link_open( $group_id, false ); ?>" <?php } ?>>
-							<?php if ( $can_edit ) { ?>
-								<input type="hidden" name="group_module[<?php echo $owner_table; ?>][<?php echo $group_id; ?>]"
-								       value="<?php echo htmlspecialchars( $owner_id ); ?>">
-								<input type="checkbox" name="used_group_module[<?php echo $owner_table; ?>][<?php echo $group_id; ?>]"
-								       id="groupchk<?php echo $owner_table . $group_id; ?>"
-								       value="<?php echo htmlspecialchars( $owner_id ); ?>" <?php echo isset( $group_item['checked'] ) && $group_item['checked'] ? ' checked' : ''; ?>>
-							<?php } else { ?>
-								<input type="checkbox" name="group"
-								       value="<?php echo htmlspecialchars( $owner_id ); ?>" <?php echo isset( $group_item['checked'] ) && $group_item['checked'] ? ' checked' : ''; ?>
-								       disabled="">
-							<?php } ?>
-						</th>
-						<td>
-							<label
-								for="groupchk<?php echo $owner_table . $group_id; ?>"><?php echo htmlspecialchars( $group_item['name'] ); ?></label>
-						</td>
-					</tr>
-					<?php
+			// The checkbox belongs in the header cell and the label in the data cell, which is
+			// why this table stayed hand written: 'title' is escaped plain text, so it cannot
+			// hold a control, and the header cell also carries the data-settings-url that
+			// includes/plugin_config/js/settings.js prepends its settings icon into.
+			// title_fields and title_attributes cover both.
+			$fieldset_data['class']    = 'tableclass tableclass_full tableclass_form group_selection';
+			$fieldset_data['elements'] = array();
+
+			if ( isset( $options['description'] ) && $options['description'] ) {
+				// Above the rows rather than as a centred row inside them. A fieldset's only
+				// full-width row is 'message', which module_form centres in a <td> and metis
+				// renders as a <th> - neither is right for a paragraph of explanation.
+				$fieldset_data['elements_before'] = $options['description'];
+			}
+
+			foreach ( $group_items as $group_item ) {
+				$group_id = $group_item['group_id'];
+				$checked  = isset( $group_item['checked'] ) && $group_item['checked'] ? ' checked' : '';
+
+				if ( $can_edit ) {
+					$control = '<input type="hidden" name="group_module[' . $owner_table . '][' . $group_id . ']"'
+					           . ' value="' . htmlspecialchars( $owner_id ) . '">'
+					           . '<input type="checkbox" name="used_group_module[' . $owner_table . '][' . $group_id . ']"'
+					           . ' id="groupchk' . $owner_table . $group_id . '"'
+					           . ' value="' . htmlspecialchars( $owner_id ) . '"' . $checked . '>';
+				} else {
+					$control = '<input type="checkbox" name="group"'
+					           . ' value="' . htmlspecialchars( $owner_id ) . '"' . $checked . ' disabled="">';
 				}
-				if ( $can_create && module_security::is_page_editable() && get_display_mode() != 'mobile' ) {
-					$group_id = 'new';
-					?>
-					<tr id="group_<?php echo $group_id; ?>">
-						<th class="width1">
-							<input type="hidden" name="group_module[<?php echo $owner_table; ?>][<?php echo $group_id; ?>]"
-							       value="<?php echo htmlspecialchars( $owner_id ); ?>">
-							<input type="checkbox" name="used_group_module[<?php echo $owner_table; ?>][<?php echo $group_id; ?>]"
-							       id="groupchk<?php echo $owner_table . $group_id; ?>"
-							       value="<?php echo htmlspecialchars( $owner_id ); ?>">
-						</th>
-						<td>
-							<label for="groupchk<?php echo $owner_table . $group_id; ?>"></label>
-							<input type="text" name="group_module_name[<?php echo $owner_table; ?>][<?php echo $group_id; ?>]"
-							       autocomplete="off" placeholder="<?php _e( 'New Group' ); ?>"
-							       onkeyup="$('#groupchk<?php echo $owner_table . $group_id; ?>').prop('checked',true);">
-						</td>
-					</tr>
-				<?php } ?>
-				</tbody>
-			</table>
-			<?php
-			//</div>
-			$fieldset_data['elements_before'] = ob_get_clean();
+
+				$fieldset_data['elements'][ 'group_' . $group_id ] = array(
+					'title_fields'     => array( $control ),
+					'title_attributes' => self::can_i( 'edit', 'Groups' )
+						? array( 'data-settings-url' => module_group::link_open( $group_id, false ) )
+						: array(),
+					'fields'           => array(
+						'<label for="groupchk' . $owner_table . $group_id . '">'
+						. htmlspecialchars( $group_item['name'] ) . '</label>',
+					),
+				);
+			}
+
+			if ( $can_create && module_security::is_page_editable() && get_display_mode() != 'mobile' ) {
+				$group_id = 'new';
+				$fieldset_data['elements'][ 'group_' . $group_id ] = array(
+					'title_fields' => array(
+						'<input type="hidden" name="group_module[' . $owner_table . '][' . $group_id . ']"'
+						. ' value="' . htmlspecialchars( $owner_id ) . '">'
+						. '<input type="checkbox" name="used_group_module[' . $owner_table . '][' . $group_id . ']"'
+						. ' id="groupchk' . $owner_table . $group_id . '"'
+						. ' value="' . htmlspecialchars( $owner_id ) . '">',
+					),
+					'fields'       => array(
+						'<label for="groupchk' . $owner_table . $group_id . '"></label>'
+						. '<input type="text" name="group_module_name[' . $owner_table . '][' . $group_id . ']"'
+						. ' autocomplete="off" placeholder="' . htmlspecialchars( _l( 'New Group' ) ) . '"'
+						. ' onkeyup="$(\'#groupchk' . $owner_table . $group_id . '\').prop(\'checked\',true);">',
+					),
+				);
+			}
+
 			echo module_form::generate_fieldset( $fieldset_data );
 		}
 		//print $html;

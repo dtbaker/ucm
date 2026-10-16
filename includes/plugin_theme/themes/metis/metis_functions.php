@@ -365,31 +365,23 @@ function metris_generate_fieldset( $callback, $options ) {
 
 							</th>
 						<?php } else { ?>
-							<?php if ( isset( $element['title'] ) ) { ?>
+							<?php if ( isset( $element['title'] ) || isset( $element['title_fields'] ) ) { ?>
 								<th
-									class="<?php echo isset( $element['row_title_class'] ) ? $element['row_title_class'] : $options['row_title_class']; ?>">
-									<?php echo htmlspecialchars( _l( $element['title'] ) ); ?>
+									class="<?php echo isset( $element['row_title_class'] ) ? $element['row_title_class'] : $options['row_title_class']; ?>"<?php module_form::render_cell_attributes( $element['title_attributes'] ?? array() ); ?>>
+									<?php
+									if ( isset( $element['title'] ) ) {
+										echo htmlspecialchars( _l( $element['title'] ) );
+									}
+									if ( isset( $element['title_fields'] ) ) {
+										module_form::render_fields( $element['title_fields'] );
+									}
+									?>
 								</th>
 							<?php }
 							if ( isset( $element['fields'] ) ) { ?>
 								<td
 									class="<?php echo isset( $element['row_data_class'] ) ? $element['row_data_class'] : $options['row_data_class']; ?>">
-									<?php if ( is_array( $element['fields'] ) ) {
-										foreach ( $element['fields'] as $dataid => $field ) {
-											if ( is_array( $field ) ) {
-												// treat this as a call to the form generate option
-												module_form::generate_form_element( $field );
-												echo ' ';
-											} elseif ( is_closure( $field ) ) {
-												$field();
-											} else {
-												echo $field . ' ';
-											}
-										}
-									} else {
-										echo $element['fields'];
-									}
-									?>
+									<?php module_form::render_fields( $element['fields'] ); ?>
 								</td>
 							<?php } ?>
 							</tr>

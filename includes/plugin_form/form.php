@@ -1449,6 +1449,48 @@ class module_form extends module_base
 		return $element_id;
 	}
 
+	/**
+	 * Renders one cell's worth of fields.
+	 *
+	 * Shared so the header cell and the data cell behave the same way, and so the metis
+	 * theme - which replaces generate_fieldset outright - renders them identically instead
+	 * of keeping a third copy of this loop.
+	 */
+	public static function render_fields( $fields ) {
+		if ( is_array( $fields ) ) {
+			foreach ( $fields as $dataid => $field ) {
+				if ( is_array( $field ) ) {
+					// treat this as a call to the form generate option
+					self::generate_form_element( $field );
+					echo ' ';
+				} elseif ( is_closure( $field ) ) {
+					$field();
+				} else {
+					echo $field . ' ';
+				}
+			}
+		} else {
+			echo $fields;
+		}
+	}
+
+	/**
+	 * Emits the attributes a caller asked to put on a cell.
+	 *
+	 * title_attributes exists because the group picker's header cell carries a
+	 * data-settings-url that includes/plugin_config/js/settings.js scans for, and a fieldset
+	 * had no way to say that - which is why that table stayed hand written.
+	 */
+	public static function render_cell_attributes( $attributes ) {
+		if ( empty( $attributes ) || ! is_array( $attributes ) ) {
+			return;
+		}
+		foreach ( $attributes as $attribute => $value ) {
+			echo ' ' . htmlspecialchars( (string) $attribute, ENT_QUOTES, 'UTF-8' )
+			     . '="' . htmlspecialchars( (string) $value, ENT_QUOTES, 'UTF-8' ) . '"';
+		}
+	}
+
 	public static function generate_fieldset( $options ) {
 
 		$fieldset_id = ! empty( $options['id'] ) ? $options['id'] : ( ! empty( $options['heading'] ) ? 'fieldset_' . substr( md5( serialize( $options['heading'] ) ), 0, 5 ) : false );
@@ -1604,31 +1646,23 @@ class module_form extends module_base
 
 						</td>
 					<?php } else { ?>
-						<?php if ( isset( $element['title'] ) ) { ?>
+						<?php if ( isset( $element['title'] ) || isset( $element['title_fields'] ) ) { ?>
 							<th
-								class="<?php echo isset( $element['row_title_class'] ) ? $element['row_title_class'] : $options['row_title_class']; ?>">
-								<?php echo htmlspecialchars( _l( $element['title'] ) ); ?>
+								class="<?php echo isset( $element['row_title_class'] ) ? $element['row_title_class'] : $options['row_title_class']; ?>"<?php self::render_cell_attributes( $element['title_attributes'] ?? array() ); ?>>
+								<?php
+								if ( isset( $element['title'] ) ) {
+									echo htmlspecialchars( _l( $element['title'] ) );
+								}
+								if ( isset( $element['title_fields'] ) ) {
+									self::render_fields( $element['title_fields'] );
+								}
+								?>
 							</th>
 						<?php }
 						if ( isset( $element['fields'] ) ) { ?>
 							<td
 								class="<?php echo isset( $element['row_data_class'] ) ? $element['row_data_class'] : $options['row_data_class']; ?>">
-								<?php if ( is_array( $element['fields'] ) ) {
-									foreach ( $element['fields'] as $dataid => $field ) {
-										if ( is_array( $field ) ) {
-											// treat this as a call to the form generate option
-											self::generate_form_element( $field );
-											echo ' ';
-										} elseif ( is_closure( $field ) ) {
-											$field();
-										} else {
-											echo $field . ' ';
-										}
-									}
-								} else {
-									echo $element['fields'];
-								}
-								?>
+								<?php self::render_fields( $element['fields'] ); ?>
 							</td>
 						<?php } ?>
 						</tr>
