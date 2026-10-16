@@ -160,7 +160,8 @@ for dir in \
 	'Main Files/.github/' 'Main Files/.git/' 'Main Files/tests/' 'Main Files/docker/' \
 	'Main Files/docs/' 'Main Files/scripts/' 'Main Files/node_modules/' \
 	'Main Files/docs-site/' 'Main Files/website/' \
-	'Main Files/build/' 'Main Files/playwright-report/' 'Main Files/test-results/'
+	'Main Files/build/' 'Main Files/playwright-report/' 'Main Files/test-results/' \
+	'Main Files/custom/'
 do
 	if grep -qF "$dir" <<<"$listing"; then
 		echo "FAIL: development directory in the archive: $dir"
@@ -176,7 +177,9 @@ for file in \
 	'Main Files/phpunit.xml' 'Main Files/rector.php' \
 	'Main Files/Dockerfile' 'Main Files/docker-compose.yml' 'Main Files/.dockerignore' \
 	'Main Files/.gitignore' 'Main Files/.gitattributes' \
-	'Main Files/includes/config.local.php' 'Main Files/README.md' 'Main Files/TESTING.md'
+	'Main Files/includes/config.local.php' 'Main Files/README.md' 'Main Files/TESTING.md' \
+	'Main Files/SECURITY.md' 'Main Files/UPGRADE.md' \
+	'Main Files/includes/config.local.php.example'
 do
 	if grep -qxF "$file" <<<"$listing"; then
 		echo "FAIL: development file in the archive: $file"

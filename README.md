@@ -106,8 +106,8 @@ leak in by accident.
 
 ## Upgrading
 
-See [UPGRADE.md](UPGRADE.md) for breaking changes and migration notes, and
-`Documentation/upgrading.html` for the version written for buyers.
+See [Documentation/upgrading.html](Documentation/upgrading.html) for breaking changes
+and migration notes.
 
 ## File Structure
 
