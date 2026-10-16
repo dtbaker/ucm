@@ -535,145 +535,125 @@ if ( empty( $ticket_safe ) ) {
 							'inline' => false
 						),
 					) ); ?>
-					<table class="tableclass tableclass_full tableclass_form">
-						<tbody>
+					<?php
+					$reply_elements = array();
 
-						<?php if ( module_config::c( 'ticket_allow_attachment', 1 ) ) { ?>
-							<tr>
-								<th>
-									<?php _e( 'Add Attachment' ); ?>
-								</th>
-								<td align="left">
-									<div id="file_attachment_holder">
-										<div class="dynamic_block">
-											<div style="float:left;">
-												<input type="file" name="attachment[]">
-											</div>
-											<div style="float:left; padding: 4px 0 0 10px;">
-												<a href="#" class="add_addit" onclick="return seladd(this);">+</a>
-												<a href="#" class="remove_addit" onclick="return selrem(this);">-</a>
-											</div>
-										</div>
-									</div>
-									<script type="text/javascript">
-                      set_add_del('file_attachment_holder');
-									</script>
-
-								</td>
-							</tr>
-						<?php } ?>
-
-						<?php if ( module_ticket::can_edit_tickets() ) { ?>
-
-							<tr>
-								<th>
-									<?php _e( 'Change status %s to:', friendly_key( module_ticket::get_statuses(), $ticket['status_id'] ) ); ?>
-								</th>
-								<td align="left">
-									<?php
-									$current_status = $ticket['status_id'];
-									//if ( count( $ticket_messages ) ) {
-									if ( $ticket_message_count ) {
-										if ( $current_status <= 2 ) {
-											//$current_status = 3; // change to replied
-											$current_status = module_config::c( 'ticket_reply_status_id', _TICKET_STATUS_RESOLVED_ID ); // resolved
-										} else {
-											//$current_status = 5; // change to in progress
-											$current_status = module_config::c( 'ticket_reply_status_id', _TICKET_STATUS_RESOLVED_ID ); // resolved
-										}
-									} else {
-										$current_status = _TICKET_STATUS_NEW_ID;
-									}
-									echo print_select_box( module_ticket::get_statuses(), 'change_status_id', $current_status );
-									?>
-									<span id="data_change_status_id" data-status="<?php echo (int) $current_status; ?>"></span>
-								</td>
-							</tr>
-							<?php if ( module_config::c( 'ticket_show_change_staff', 0 ) && $ticket['assigned_user_id'] != module_security::get_loggedin_id() && isset( $admins_rel[ module_security::get_loggedin_id() ] ) ) {
-								?>
-								<tr>
-									<td colspan="2">
-										<?php _e( 'This ticket is currently assigned to %s, you can change it below:', isset( $admins_rel[ $ticket['assigned_user_id'] ] ) ? $admins_rel[ $ticket['assigned_user_id'] ] : _l( 'Nobody' ) ); ?>
-									</td>
-								</tr>
-								<tr>
-									<th>
-										<?php _e( 'Change staff:' ); ?>
-									</th>
-									<td align="left">
-										<?php
-										echo print_select_box( $admins_rel, 'change_assigned_user_id', $ticket['assigned_user_id'] );
-										if ( module_security::get_loggedin_id() != $ticket['assigned_user_id'] ) {
-											?>
-											<span>
-							            <a href="#" id="change_to_me"
-							               data-user-id="<?php echo module_security::get_loggedin_id(); ?>"><?php _e( 'Change to Me' ); ?></a>
-						            </span>
-											<?php
-										}
-										?>
-									</td>
-								</tr>
-							<?php } ?>
-
-						<?php } ?>
-
-						</tbody>
-						<?php if ( module_ticket::can_edit_tickets() && module_config::c( 'ticket_allow_cc_bcc', 1 ) ) { ?>
-							<tbody id="ticket_cc_bcc" style="display:none;">
-							<tr>
-								<th>
-									<?php _e( 'Email Staff' ); ?>
-								</th>
-								<td align="left">
-									<?php _e( 'Send a copy of this message to other staff members:' ); ?>
-									<br/>
-									<?php foreach ( $admins_rel as $staff_id => $staff_name ) { ?>
-										<input type="checkbox" name="ticket_cc_staff[<?php echo $staff_id; ?>]" value="1"
-										       id="ticket_cc_staff_<?php echo $staff_id; ?>"> <label
-											for="ticket_cc_staff_<?php echo $staff_id; ?>"><?php echo htmlspecialchars( $staff_name ); ?></label>
-										<br/>
-									<?php } ?>
-								</td>
-							</tr>
-							<tr>
-								<th>
-									<?php _e( 'Email CC' ); ?>
-								</th>
-								<td align="left">
-									<input type="text" name="ticket_cc"
-									       class="email_input"> <?php _h( 'Enter a list of email addresses here (comma separated) and this ticket message will be carbon copied to these recipients.  These recipients can reply to the ticket and their reply will appeear here in the ticketing system if you have POP3/IMAP setup correctly.' ); ?>
-								</td>
-							</tr>
-							<tr>
-								<th>
-									<?php _e( 'Email BCC' ); ?>
-								</th>
-								<td align="left">
-									<input type="text" name="ticket_bcc"
-									       class="email_input"> <?php _h( 'Enter a list of email addresses here (comma separated) and this ticket message will be blind carbon copied to these recipients. These recipients can reply to the ticket and their reply will appeear here in the ticketing system if you have POP3/IMAP setup correctly.' ); ?>
-								</td>
-							</tr>
-							</tbody>
-						<?php } ?>
-						<tbody>
-						<?php /* <tr>
-                            <td align="right">
-                                 <?php _e('Send message as:');?>
-                            </td>
-                            <td align="left">
-                                <input type="hidden" name="creator_id" value="<?php echo module_security::get_loggedin_id();?>">
-                                <input type="hidden" name="creator_hash" value="<?php echo module_ticket::creator_hash(module_security::get_loggedin_id());?>">
-                                <strong>
-                                <?php echo htmlspecialchars($send_as_name);?>
-                                &lt;<?php echo htmlspecialchars($send_as_address);?>&gt;
-                                </strong>
-                                <?php _e('Reply To:');?> <strong><?php echo htmlspecialchars($to_user_a['email']);?></strong>
-                            </td>
-                        </tr> */
+					if ( module_config::c( 'ticket_allow_attachment', 1 ) ) {
+						ob_start();
 						?>
-						</tbody>
-					</table>
+						<div id="file_attachment_holder">
+							<div class="dynamic_block">
+								<div style="float:left;">
+									<input type="file" name="attachment[]">
+								</div>
+								<div style="float:left; padding: 4px 0 0 10px;">
+									<a href="#" class="add_addit" onclick="return seladd(this);">+</a>
+									<a href="#" class="remove_addit" onclick="return selrem(this);">-</a>
+								</div>
+							</div>
+						</div>
+						<script type="text/javascript">
+                set_add_del('file_attachment_holder');
+						</script>
+						<?php
+						$reply_elements['attachment'] = array(
+							'title'  => _l( 'Add Attachment' ),
+							'fields' => array( ob_get_clean() ),
+						);
+					}
+
+					if ( module_ticket::can_edit_tickets() ) {
+						$current_status = $ticket['status_id'];
+						//if ( count( $ticket_messages ) ) {
+						if ( $ticket_message_count ) {
+							// resolved, whichever way the ticket was sitting
+							$current_status = module_config::c( 'ticket_reply_status_id', _TICKET_STATUS_RESOLVED_ID );
+						} else {
+							$current_status = _TICKET_STATUS_NEW_ID;
+						}
+						ob_start();
+						echo print_select_box( module_ticket::get_statuses(), 'change_status_id', $current_status );
+						?>
+						<span id="data_change_status_id" data-status="<?php echo (int) $current_status; ?>"></span>
+						<?php
+						$reply_elements['change_status'] = array(
+							'title'  => _l( 'Change status %s to:', friendly_key( module_ticket::get_statuses(), $ticket['status_id'] ) ),
+							'fields' => array( ob_get_clean() ),
+						);
+
+						if ( module_config::c( 'ticket_show_change_staff', 0 ) && $ticket['assigned_user_id'] != module_security::get_loggedin_id() && isset( $admins_rel[ module_security::get_loggedin_id() ] ) ) {
+							$reply_elements['change_staff_note'] = array(
+								'message' => _l( 'This ticket is currently assigned to %s, you can change it below:', isset( $admins_rel[ $ticket['assigned_user_id'] ] ) ? $admins_rel[ $ticket['assigned_user_id'] ] : _l( 'Nobody' ) ),
+							);
+							ob_start();
+							echo print_select_box( $admins_rel, 'change_assigned_user_id', $ticket['assigned_user_id'] );
+							if ( module_security::get_loggedin_id() != $ticket['assigned_user_id'] ) {
+								?>
+								<span>
+									<a href="#" id="change_to_me"
+									   data-user-id="<?php echo module_security::get_loggedin_id(); ?>"><?php _e( 'Change to Me' ); ?></a>
+								</span>
+								<?php
+							}
+							$reply_elements['change_staff'] = array(
+								'title'  => _l( 'Change staff:' ),
+								'fields' => array( ob_get_clean() ),
+							);
+						}
+					}
+
+					if ( module_ticket::can_edit_tickets() && module_config::c( 'ticket_allow_cc_bcc', 1 ) ) {
+						// These three were a <tbody id="ticket_cc_bcc"> that the Show CC/BCC button
+						// reveals. A fieldset has no row groups, so they carry the class and the
+						// button switches on it.
+						ob_start();
+						_e( 'Send a copy of this message to other staff members:' );
+						?>
+						<br/>
+						<?php foreach ( $admins_rel as $staff_id => $staff_name ) { ?>
+							<input type="checkbox" name="ticket_cc_staff[<?php echo $staff_id; ?>]" value="1"
+							       id="ticket_cc_staff_<?php echo $staff_id; ?>"> <label
+								for="ticket_cc_staff_<?php echo $staff_id; ?>"><?php echo htmlspecialchars( $staff_name ); ?></label>
+							<br/>
+						<?php } ?>
+						<?php
+						$reply_elements['email_staff'] = array(
+							'title'     => _l( 'Email Staff' ),
+							'row_class' => 'ticket_cc_bcc',
+							'row_style' => 'display:none;',
+							'fields'    => array( ob_get_clean() ),
+						);
+
+						ob_start();
+						?>
+						<input type="text" name="ticket_cc" class="email_input">
+						<?php _h( 'Enter a list of email addresses here (comma separated) and this ticket message will be carbon copied to these recipients.  These recipients can reply to the ticket and their reply will appeear here in the ticketing system if you have POP3/IMAP setup correctly.' ); ?>
+						<?php
+						$reply_elements['email_cc'] = array(
+							'title'     => _l( 'Email CC' ),
+							'row_class' => 'ticket_cc_bcc',
+							'row_style' => 'display:none;',
+							'fields'    => array( ob_get_clean() ),
+						);
+
+						ob_start();
+						?>
+						<input type="text" name="ticket_bcc" class="email_input">
+						<?php _h( 'Enter a list of email addresses here (comma separated) and this ticket message will be blind carbon copied to these recipients. These recipients can reply to the ticket and their reply will appeear here in the ticketing system if you have POP3/IMAP setup correctly.' ); ?>
+						<?php
+						$reply_elements['email_bcc'] = array(
+							'title'     => _l( 'Email BCC' ),
+							'row_class' => 'ticket_cc_bcc',
+							'row_style' => 'display:none;',
+							'fields'    => array( ob_get_clean() ),
+						);
+					}
+
+					echo module_form::generate_fieldset( array(
+						'class'    => 'tableclass tableclass_full tableclass_form',
+						'elements' => $reply_elements,
+					) );
+					?>
 
 					<?php
 					$form_actions = array(
@@ -685,7 +665,7 @@ if ( empty( $ticket_safe ) ) {
 							'type'    => 'button',
 							'name'    => 'show_cc_bcc',
 							'value'   => _l( 'Add CC/BCC' ),
-							'onclick' => "$('#ticket_cc_bcc').show(); $(this).hide();",
+							'onclick' => "$('.ticket_cc_bcc').show(); $(this).hide();",
 						);
 					}
 					if ( $next_ticket ) {

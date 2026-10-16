@@ -672,4 +672,61 @@ test.describe( 'Forms moved to generate_fieldset', () => {
     expect( describeDiagnostics( body ).join( '\n' ), 'the ticket screen printed a PHP diagnostic' )
       .toBe( '' );
   } );
+
+  test( 'the note editor keeps its controls', async ( { page } ) => {
+    await login( page );
+    const customerId = await aCustomer( page );
+
+    // note_admin wants a signed options blob, so the link is taken from the customer screen
+    // that produces it. Note also that this form puts _process in its action URL rather
+    // than in a hidden field, which is why it is found by note_id instead.
+    const page_body = await ( await page.request.get(
+      `/?m[]=customer&p[]=customer_admin_edit&customer_id=${ customerId }` ) ).text();
+    const link = [ ...new Set( [ ...page_body.matchAll( /https?:\/\/[^"']*note\.note_admin[^"']*/g ) ]
+      .map( ( m ) => m[ 0 ].replace( /&amp;/g, '&' ) ) ) ][ 0 ];
+    expect( link, 'the customer screen should publish a notes link' ).toBeTruthy();
+
+    await page.goto( link );
+    await expectFieldsIn( page, 'form:has(input[name="note_id"])', [
+      'cancel|input|button',
+      'ignore|input|text',
+      'note_id|input|hidden',
+      'note_time|input|hidden',
+      'note|textarea|',
+      'options|input|hidden',
+      'rel_data|input|hidden',
+      'reminder|input|checkbox',
+      'save|input|submit',
+      'user_id|select|',
+    ] );
+  } );
+
+  test( 'the ticket reply form keeps its controls', async ( { page } ) => {
+    await login( page );
+    const list = await ( await page.request.get( '/?m[]=ticket&p[]=ticket_admin' ) ).text();
+    const ids = [ ...new Set( [ ...list.matchAll( /ticket_id=(\d+)/g ) ].map( ( m ) => m[ 1 ] ) ) ];
+    expect( ids.length, 'there should be a ticket to reply to' ).toBeGreaterThan( 0 );
+
+    await page.goto( `/?m[]=ticket&p[]=ticket_admin&ticket_id=${ ids[ 0 ] }` );
+
+    // The reply block is one table inside a much larger form, so rather than list forty
+    // controls this names the ones that table owns.
+    const form = page.locator( 'form:has(textarea[name="new_ticket_message"])' ).first();
+    for ( const name of [
+      'attachment[]', 'change_status_id', 'assigned_user_id', 'change_user_id',
+      'ticket_cc_staff[*]'.replace( '[*]', '' ), 'ticket_cc', 'ticket_bcc',
+      'private_message', 'canned_response_id',
+    ] ) {
+      await expect( form.locator( `[name^="${ name }"]` ).first(),
+        `the reply block should still have ${ name }` ).toBeAttached();
+    }
+
+    // The CC and BCC rows were a <tbody id="ticket_cc_bcc"> that the Show CC/BCC button
+    // reveals. They carry the class now and the button switches on it.
+    const body = await page.content();
+    expect( ( body.match( /<tr[^>]*\bticket_cc_bcc\b/g ) ?? [] ).length,
+      'the cc and bcc rows need the class the button reveals' ).toBe( 3 );
+    expect( body, 'and the button should reveal them by class' )
+      .toContain( "$('.ticket_cc_bcc')" );
+  } );
 } );
