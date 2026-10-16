@@ -72,7 +72,13 @@ async function aDataFieldGroup( page: Page ): Promise<{ typeId: string; groupId:
  *      What faq.php sends is still hand-built markup, and deliberately so: it is a
  *      fragment of <tr>s for a table that already exists, and generate_fieldset renders
  *      whole tables, not fragments. Converting it would need a rows-only mode on both
- *      renderers. Nothing in that fragment is a form control.
+ *      renderers, which is a lot of renderer for links and a line of guidance.
+ *
+ *      That exemption only holds while the fragment carries no form controls, so it is
+ *      checked rather than asserted: the last test in this file asks the ajax endpoint for
+ *      a real fragment and fails if it contains an input, select, textarea, button or a
+ *      name attribute. Checked by putting an input in it and watching the test fail. If it
+ *      ever does gain a control, the rows-only mode is the answer, not an exception.
  *
  *  NOT A FORM LAYOUT - one cell, no <th>, a styled container around a message or summary,
  *  already handed to a fieldset as its elements_before:
@@ -1370,6 +1376,74 @@ test.describe( 'Forms moved to generate_fieldset (faq product row)', () => {
       } );
       expect( injected, 'an injected row did not survive in the document' ).not.toBeNull();
       expect( injected ).toEqual( { parent: 'faq_product_area', inTable: true, cells: 2 } );
+    } finally {
+      await context.close();
+    }
+  } );
+} );
+
+/**
+ * The one piece of form markup that is still hand-built, and the check that it is not a
+ * form.
+ *
+ * includes/plugin_faq/faq.php answers a product change with a fragment of <tr>s that the
+ * page drops into the fieldset's second tbody. It is hand-built and stays that way:
+ * generate_fieldset renders whole tables, not fragments, so converting it would need a
+ * rows-only mode on both renderers. That is only defensible while the fragment carries no
+ * form controls - the moment somebody puts an input in it, it is form markup bypassing the
+ * helper, and the exemption stops being true. Asserted rather than assumed.
+ */
+test.describe( 'The faq ajax fragment', () => {
+  const AJAX = '/external/m.faq/h.ticket_list/';
+  const QUESTION = 'Fieldset FAQ probe question';
+
+  test( 'carries FAQ content and no form controls', async ( { page, browser } ) => {
+    await login( page );
+
+    const form = await ( await page.request.get( '/ext.php?m=ticket&h=public_new' ) ).text();
+    const select = form.slice( form.indexOf( 'name="faq_product_id"' ) );
+    const productId = ( select.match( /<option value="(\d+)"/ ) || [] )[ 1 ];
+    expect( productId, 'the public ticket form offers no faq product to ask about' ).toBeTruthy();
+
+    const fragmentFor = async ( context: import( '@playwright/test' ).APIRequestContext ) =>
+      ( await context.post( AJAX, { form: { faq_product_id: productId as string }, failOnStatusCode: false } ) ).text();
+
+    // Reuse: only create a FAQ for this product if the ajax has nothing to say about it
+    // yet, so repeated runs do not pile rows into ucm_faq.
+    if ( ! ( await fragmentFor( page.request ) ).includes( 'table_faq_class' ) ) {
+      await page.request.post( '/?m[]=faq', {
+        form: {
+          _process: 'save_faq',
+          faq_id: 'new',
+          question: QUESTION,
+          answer: 'So that the ajax fragment has something to return.',
+          'faq_product_ids[]': productId as string,
+          form_auth_key: await formAuthKey( page ),
+          _redirect: '/',
+        },
+        failOnStatusCode: false,
+      } );
+    }
+
+    // Public, with no session: this is what a visitor's browser receives.
+    const context = await browser.newContext();
+    try {
+      const body = await fragmentFor( context.request );
+
+      // Non-vacuous: a fragment that came back empty would pass the controls check below
+      // while proving nothing.
+      expect( body, 'the ajax returned no FAQ content to inspect' ).toContain( 'table_faq_class' );
+      expect( body ).toContain( '$(\'#faq_product_area\').html(' );
+
+      // The fragment is links and a line of guidance. Anything that posts a value belongs
+      // in the fieldset instead.
+      for ( const control of [ '<input', '<select', '<textarea', '<button', 'name=' ] ) {
+        expect(
+          body.toLowerCase(),
+          `the faq ajax fragment now contains ${ control } - it is form markup, so it has to go`
+          + ' through generate_fieldset rather than being built by hand',
+        ).not.toContain( control );
+      }
     } finally {
       await context.close();
     }
