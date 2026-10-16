@@ -9,69 +9,62 @@
 			<td valign="top" width="35%">
 
 				<?php ob_start(); ?>
-				<table border="0" cellspacing="0" cellpadding="2" class="tableclass tableclass_form tableclass_full">
-					<tbody>
-					<tr>
-						<th class="width1">
-							<?php echo _l( 'Ticket Number' ); ?>
-						</th>
-						<td>
-							<?php echo module_ticket::ticket_number( $ticket['ticket_id'] ); ?>
-						</td>
-					</tr>
-					<tr>
-						<th>
-							<?php _e( 'Subject' ); ?>
-						</th>
-						<td>
-							<?php if ( $ticket['subject'] ) {
-								echo htmlspecialchars( $ticket['subject'] );
-							} else { ?>
-								<input type="text" name="subject" id="subject"
-								       value="<?php echo htmlspecialchars( $ticket['subject'] ); ?>"/>
-							<?php } ?>
-						</td>
-					</tr>
-					<tr>
-						<th>
-							<?php echo _l( 'Assigned User' ); ?>
-						</th>
-						<td>
-							<?php
-							echo isset( $admins_rel[ $ticket['assigned_user_id'] ] ) ? $admins_rel[ $ticket['assigned_user_id'] ] : 'N/A';
-							?>
-						</td>
-					</tr>
-					<tr>
-						<th>
-							<?php echo _l( 'Type/Department' ); ?>
-						</th>
-						<td>
-							<?php
-							$types = module_ticket::get_types();
-							echo h( isset( $types[ $ticket['ticket_type_id'] ] ) ? $types[ $ticket['ticket_type_id'] ]['name'] : '' ); ?>
-						</td>
-					</tr>
-					<tr>
-						<th>
-							<?php echo _l( 'Status' ); ?>
-						</th>
-						<td>
-							<?php
-							//echo print_select_box(module_ticket::get_statuses(),'status_id',$ticket['status_id'],'',true,false,true);
-							$s = module_ticket::get_statuses();
-							echo $s[ $ticket['status_id'] ];
-							if ( $ticket['status_id'] == 2 || $ticket['status_id'] == 3 || $ticket['status_id'] == 5 ) {
-								if ( module_config::c( 'ticket_show_position', 1 ) ) {
-									echo ' ';
-									echo _l( '(%s out of %s tickets)', ordinal( $ticket['position'] ), module_ticket::ticket_count( 'pending' ) );
-								}
-							}
-							?>
-						</td>
-					</tr>
-					</tbody>
-				</table>
+				<?php
+				ob_start();
+				if ( $ticket['subject'] ) {
+					echo htmlspecialchars( $ticket['subject'] );
+				} else {
+					?>
+					<input type="text" name="subject" id="subject"
+					       value="<?php echo htmlspecialchars( $ticket['subject'] ); ?>"/>
+					<?php
+				}
+				$subject_cell = ob_get_clean();
+
+				ob_start();
+				//echo print_select_box(module_ticket::get_statuses(),'status_id',$ticket['status_id'],'',true,false,true);
+				$s = module_ticket::get_statuses();
+				echo $s[ $ticket['status_id'] ];
+				if ( $ticket['status_id'] == 2 || $ticket['status_id'] == 3 || $ticket['status_id'] == 5 ) {
+					if ( module_config::c( 'ticket_show_position', 1 ) ) {
+						echo ' ';
+						echo _l( '(%s out of %s tickets)', ordinal( $ticket['position'] ), module_ticket::ticket_count( 'pending' ) );
+					}
+				}
+				$status_cell = ob_get_clean();
+
+				$types = module_ticket::get_types();
+
+				echo module_form::generate_fieldset( array(
+					'class'    => 'tableclass tableclass_form tableclass_full',
+					'elements' => array(
+						'ticket_number' => array(
+							'title'  => _l( 'Ticket Number' ),
+							'fields' => array( module_ticket::ticket_number( $ticket['ticket_id'] ) ),
+						),
+						'subject'       => array(
+							'title'  => _l( 'Subject' ),
+							'fields' => array( $subject_cell ),
+						),
+						'assigned_user' => array(
+							'title'  => _l( 'Assigned User' ),
+							'fields' => array(
+								isset( $admins_rel[ $ticket['assigned_user_id'] ] ) ? $admins_rel[ $ticket['assigned_user_id'] ] : 'N/A',
+							),
+						),
+						'ticket_type'   => array(
+							'title'  => _l( 'Type/Department' ),
+							'fields' => array(
+								h( isset( $types[ $ticket['ticket_type_id'] ] ) ? $types[ $ticket['ticket_type_id'] ]['name'] : '' ),
+							),
+						),
+						'status'        => array(
+							'title'  => _l( 'Status' ),
+							'fields' => array( $status_cell ),
+						),
+					),
+				) );
+				?>
 
 				<?php
 
@@ -97,63 +90,51 @@
 				ob_start();
 				?>
 
-				<table border="0" cellspacing="0" cellpadding="2" class="tableclass tableclass_form tableclass_full">
-					<tbody>
+				<?php
+				$related_elements = array();
 
-					<tr>
-						<th class="width1">
-							<?php echo _l( 'Customer' ); ?>
-						</th>
-						<td>
-							<?php
-							$c   = array();
-							$res = module_customer::get_customers();
-							while ( $row = array_shift( $res ) ) {
-								$c[ $row['customer_id'] ] = $row['customer_name'];
-							}
-							//echo print_select_box($c,'customer_id',$ticket['customer_id']);
-							echo isset( $c[ $ticket['customer_id'] ] ) ? $c[ $ticket['customer_id'] ] : 'N/A';
-							?>
-						</td>
-					</tr>
-					<?php if ( $ticket['customer_id'] ) { ?>
-						<tr>
-							<th>
-								<?php echo _l( 'Contact' ); ?>
-							</th>
-							<td>
-								<?php
-								$c   = array();
-								$res = module_user::get_contacts( array( 'customer_id' => $ticket['customer_id'] ) );
-								while ( $row = array_shift( $res ) ) {
-									$c[ $row['user_id'] ] = $row['name'];
-								}
-								//echo print_select_box($c,'user_id',$ticket['user_id']);
-								echo isset( $c[ $ticket['user_id'] ] ) ? $c[ $ticket['user_id'] ] : 'N/A';
-								?>
-							</td>
-						</tr>
-						<?php if ( $ticket['website_id'] ) { ?>
-							<tr>
-								<th>
-									<?php echo _l( '' . module_config::c( 'project_name_single', 'Website' ) ); ?>
-								</th>
-								<td>
-									<?php
-									$c   = array();
-									$res = module_website::get_websites( array( 'customer_id' => $ticket['customer_id'] ) );
-									while ( $row = array_shift( $res ) ) {
-										$c[ $row['website_id'] ] = $row['name'];
-									}
-									//echo print_select_box($c,'website_id',$ticket['website_id']);
-									echo isset( $c[ $ticket['website_id'] ] ) ? $c[ $ticket['website_id'] ] : 'N/A';
-									?>
-								</td>
-							</tr>
-						<?php } ?>
-					<?php } ?>
-					</tbody>
-				</table>
+				$c   = array();
+				$res = module_customer::get_customers();
+				while ( $row = array_shift( $res ) ) {
+					$c[ $row['customer_id'] ] = $row['customer_name'];
+				}
+				//echo print_select_box($c,'customer_id',$ticket['customer_id']);
+				$related_elements['customer'] = array(
+					'title'  => _l( 'Customer' ),
+					'fields' => array( isset( $c[ $ticket['customer_id'] ] ) ? $c[ $ticket['customer_id'] ] : 'N/A' ),
+				);
+
+				if ( $ticket['customer_id'] ) {
+					$c   = array();
+					$res = module_user::get_contacts( array( 'customer_id' => $ticket['customer_id'] ) );
+					while ( $row = array_shift( $res ) ) {
+						$c[ $row['user_id'] ] = $row['name'];
+					}
+					//echo print_select_box($c,'user_id',$ticket['user_id']);
+					$related_elements['contact'] = array(
+						'title'  => _l( 'Contact' ),
+						'fields' => array( isset( $c[ $ticket['user_id'] ] ) ? $c[ $ticket['user_id'] ] : 'N/A' ),
+					);
+
+					if ( $ticket['website_id'] ) {
+						$c   = array();
+						$res = module_website::get_websites( array( 'customer_id' => $ticket['customer_id'] ) );
+						while ( $row = array_shift( $res ) ) {
+							$c[ $row['website_id'] ] = $row['name'];
+						}
+						//echo print_select_box($c,'website_id',$ticket['website_id']);
+						$related_elements['website'] = array(
+							'title'  => _l( '' . module_config::c( 'project_name_single', 'Website' ) ),
+							'fields' => array( isset( $c[ $ticket['website_id'] ] ) ? $c[ $ticket['website_id'] ] : 'N/A' ),
+						);
+					}
+				}
+
+				echo module_form::generate_fieldset( array(
+					'class'    => 'tableclass tableclass_form tableclass_full',
+					'elements' => $related_elements,
+				) );
+				?>
 				<?php $fieldset_data = array(
 					'heading'         => array(
 						'title' => _l( 'Related To' ),

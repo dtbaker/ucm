@@ -1,6 +1,6 @@
 import { test, expect, Page } from '@playwright/test';
 import { describeDiagnostics } from './diagnostics';
-import { aCustomer, aFile, createRecord, login } from './seed';
+import { aCustomer, aFile, createRecord, formAuthKey, login } from './seed';
 import { byProcess, expectFields, expectFieldsIn, fieldsIn } from './form-fields';
 
 /**
@@ -38,33 +38,15 @@ async function aDataFieldGroup( page: Page ): Promise<{ typeId: string; groupId:
 }
 
 /**
- * Still hand-written, and why. Each of these was looked at and left deliberately, rather
- * than converted without a spec to prove the fields survived.
+ * What is left, and where it is.
  *
- *  includes/plugin_setup/pages/setup1.php
- *      Cannot be converted. generate_fieldset reads its per-user display settings from
- *      the `form` table, and step 1 of the wizard is where the database credentials are
- *      still being typed in. Converting it replaced the form with "Table 'ucm_form'
- *      doesn't exist" - checked against an empty database with scripts/install-test.sh,
- *      then reverted. Same shape as the form token problem the wizard already opts out of.
+ * The eleven pages whose only layout was a hand-written <table class="tableclass_form">
+ * are all converted. Around thirty such tables remain across the tree, and they are a
+ * different population: tables inside forms that already use generate_fieldset for their
+ * main body, plus read-only summaries and sidebar panels that sit outside any form.
  *
- *  includes/plugin_newsletter/pages/newsletter_member.php
- *  includes/plugin_newsletter/pages/newsletter_queue.php
- *  includes/plugin_newsletter/pages/newsletter_queue_watch.php
- *      Read-only statistics tables that only render once a newsletter has been queued to
- *      a send. That needs a group with members in it, and enqueuing refuses with "Please
- *      select at least 1 person" until there is one. The fixture did not come together -
- *      saving a customer with used_group_module set writes no group_member row - so there
- *      is no passing spec to convert them against.
- *
- *  includes/plugin_encrypt/pages/encrypt_popup.php
- *      The encrypt plugin is not reachable in the development install: the popup answers
- *      with a 35 byte access denied, so there is nothing to record a baseline from.
- *
- *  includes/plugin_theme/themes/whitelabel1/pages/login.php
- *      A theme's own login form. It only renders when that theme is active, and themes
- *      are where bespoke markup belongs - generate_fieldset has a theme override hook, so
- *      having a theme call the shared helper points that relationship the wrong way.
+ * The in-form ones are being worked through here the same way - a spec that passes against
+ * the old markup first, so that it passing afterwards means the controls survived.
  */
 
 /**
@@ -366,5 +348,107 @@ test.describe( 'Forms moved to generate_fieldset', () => {
       'receive_email[*]|select|',
       'save|input|submit',
     ] );
+  } );
+
+  test( 'the recurring transaction screen keeps its controls', async ( { page } ) => {
+    await login( page );
+    const name = 'Recurring Fieldset ' + Date.now();
+
+    // save_recurring redirects to the list rather than the record, so the id comes from
+    // following the row's own link - looking for the newest id races a parallel run.
+    const key = await formAuthKey( page );
+    await page.request.post( '/?m[]=finance', {
+      form: {
+        _process: 'save_recurring',
+        finance_recurring_id: 'new',
+        name,
+        description: 'created for the fieldset conversion',
+        amount: '10.00',
+        currency_id: '1',
+        type: 'e',
+        recurringtype: 'recurring',
+        start_date: '2026-01-01',
+        end_date: '',
+        days: '0',
+        months: '1',
+        years: '0',
+        finance_account_id: '',
+        form_auth_key: key,
+      },
+      failOnStatusCode: false,
+    } );
+
+    // The recurring list projects every future occurrence before it renders, so it is slow
+    // enough that the default five seconds flaked when the suite runs in parallel.
+    await page.goto( '/?m[]=finance&p[]=recurring_list' );
+    const row = page.getByRole( 'link', { name } ).first();
+    await expect( row, 'the recurring transaction should be listed' ).toBeVisible( { timeout: 20000 } );
+
+    // Read the id off the row and open the edit screen directly. Clicking the row lands on
+    // the "record a transaction" screen instead, which is a different form.
+    const href = await row.getAttribute( 'href' );
+    const recurringId = ( href ?? '' ).match( /finance_recurring_id[=\/]\.?(\d+)/ );
+    expect( recurringId, `could not read an id out of "${ href }"` ).not.toBeNull();
+    await page.goto( `/?m[]=finance&p[]=recurring&finance_recurring_id=${ recurringId![ 1 ] }` );
+
+    await expectFieldsIn( page, byProcess( 'save_recurring' ), [
+      '_plugin_form_name|input|hidden',
+      'amount|input|text',
+      'butt_del|input|submit',
+      'butt_save|input|submit',
+      'cancel|input|button',
+      'currency_id|select|',
+      'days|input|text',
+      'description|textarea|',
+      'end_date|input|text',
+      'finance_account_id|select|',
+      'finance_category_new_checked|input|checkbox',
+      'finance_category_new|input|text',
+      'finance_recurring_id|input|hidden',
+      'months|input|text',
+      'name|input|text',
+      'prevent_exit_*|input|hidden',
+      'recurringtype|select|',
+      'set_next_due_date|input|text',
+      'start_date|input|text',
+      'type|input|radio',
+      'years|input|text',
+    ] );
+
+    expect( await page.locator( `${ byProcess( 'save_recurring' ) } [name="name"]` ).first().inputValue(),
+      'the name should come back as saved' ).toBe( name );
+  } );
+
+  test( 'the public ticket view keeps its controls', async ( { page } ) => {
+    await login( page );
+
+    // The customer's view of a ticket is reached with a hash the admin screen hands out.
+    // Taking the link from the page is the point: computing the hash here would test a
+    // URL the application never produces.
+    const list = await ( await page.request.get( '/?m[]=ticket&p[]=ticket_admin' ) ).text();
+    const ids = [ ...new Set( [ ...list.matchAll( /ticket_id=(\d+)/g ) ].map( ( m ) => m[ 1 ] ) ) ];
+    expect( ids.length, 'there should be a ticket to open' ).toBeGreaterThan( 0 );
+
+    const open = await ( await page.request.get( `/?m[]=ticket&p[]=ticket_admin&ticket_id=${ ids[ 0 ] }` ) ).text();
+    const link = open.match( /https?:\/\/[^"']*m\.ticket\/h\.public\/i\.\d+\/hash\.[a-f0-9]+/ );
+    expect( link, 'the ticket screen should publish a customer link' ).not.toBeNull();
+
+    await page.goto( link![ 0 ] );
+    await expectFieldsIn( page, byProcess( 'send_public_ticket' ), [
+      'attachment[]|input|file',
+      'creator_hash|input|hidden',
+      'creator_id|input|hidden',
+      'new_ticket_message|textarea|',
+      'newmsg|input|submit',
+      'ticket_extra[*]|input|text',
+    ] );
+
+    const body = await page.content();
+    // Both tables on this page: the ticket details on the left and the Related To block
+    // under it. Customer comes from the second one.
+    for ( const label of [ 'Ticket Number', 'Status', 'Related To', 'Customer' ] ) {
+      expect( body, `the customer should still see "${ label }"` ).toContain( label );
+    }
+    expect( body, 'the customer view should not be dying' ).not.toContain( 'Fatal error' );
   } );
 } );
