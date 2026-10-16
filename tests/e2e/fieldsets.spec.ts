@@ -88,6 +88,21 @@ async function aDataFieldGroup( page: Page ): Promise<{ typeId: string; groupId:
  *  already handed to a fieldset as its elements_before:
  *    (none left - see below)
  *
+ * Three pages were converted before a spec for them existed: ticket_priority_sidebar, the
+ * subscription invoice_sidebar, and ticket.php's invoice sidebar. Two of the three had no
+ * spec of their own at all - they were checked with a render harness - which is the part
+ * that actually mattered. They have specs now, under "invoice sidebars" and "priority
+ * support" below, and each was run against its own pre-conversion file: revert the page to
+ * de9404f, wait for the container to see it, run the spec, restore. All three pass that
+ * way, which is the property writing the spec first is for.
+ *
+ * Getting there caught a bad spec. The first version of the two invoice sidebar tests
+ * scoped to heading.closest('.box') - metis's fieldset wrapper, which only exists after
+ * the conversion - so it could not have been run against the markup it replaced, and it
+ * failed when it was. They find the block by its heading and take the first form table
+ * that follows instead, which works against either shape. A spec that only passes on the
+ * new markup is not a characterisation spec, whatever order it was written in.
+ *
  * What was removed from this list, and why it was wrong:
  *
  *    customer_admin_edit and vendor_admin_edit (two each) were "unreachable from the test
@@ -1472,5 +1487,265 @@ test.describe( 'The faq ajax fragment', () => {
     } finally {
       await context.close();
     }
+  } );
+} );
+
+/**
+ * The two invoice sidebar blocks.
+ *
+ * Both hang off the invoice_sidebar hook and both need a record that no other fixture in
+ * this suite makes: one needs an invoice a priority support request raised, the other an
+ * invoice a subscription payment raised. Without those the hooks render nothing and a spec
+ * over them asserts nothing, which is why these two blocks were originally checked with a
+ * render harness instead of a spec. They have specs now, and these are what the parity
+ * script runs against their pre-conversion markup.
+ */
+/**
+ * An invoice whose sidebar already shows `needle`, or one made by `create` if none does.
+ *
+ * Reuse, not creation, because both of these blocks need a whole record chain to exist -
+ * a priority support invoice, or a subscription with a payment against it - and making one
+ * per run is how this suite got into trouble. 208 leftover subscriptions from the CSRF
+ * spec took the quote-to-invoice test from 11 seconds to a 180 second timeout, because
+ * every customer and invoice screen renders a row per subscription. Purging them fixed it.
+ * These tests are not going to add to that pile.
+ */
+async function anInvoiceShowing(
+  page: Page,
+  needle: string,
+  create: () => Promise<string | null>,
+): Promise<string> {
+  const list = await ( await page.request.get( '/?m[]=invoice&p[]=invoice_admin' ) ).text();
+  const ids = Array.from( new Set( Array.from( list.matchAll( /invoice_id=(\d+)/g ) ).map( m => m[ 1 ] ) ) );
+  for ( const id of ids.slice( 0, 12 ) ) {
+    const body = await ( await page.request.get( `/?m[]=invoice&p[]=invoice_admin&invoice_id=${ id }` ) ).text();
+    if ( body.includes( needle ) ) {
+      return id;
+    }
+  }
+
+  const made = await create();
+  expect( made, `nothing raised an invoice showing "${ needle }"` ).toBeTruthy();
+
+  return made as string;
+}
+
+test.describe( 'Forms moved to generate_fieldset (invoice sidebars)', () => {
+  test( 'the priority support block names its ticket', async ( { page, browser } ) => {
+    await login( page );
+
+    // This block needs a ticket that asked for priority support, which nothing else in the
+    // suite makes, and the ticket cannot be found again afterwards: its own screen only
+    // links the invoice while ticket_allow_priority is on, and that setting is off here.
+    // So it is created and then deleted, the same way the restricted role and account are.
+    // Reuse was tried first and silently failed - it took the first ticket matching the
+    // subject, which had no invoice, and so created a fresh one on every run.
+    const customerId = await aCustomer( page );
+    const subject = 'Fieldset Priority Support ' + Date.now().toString( 36 );
+
+    await page.request.post( '/?m[]=ticket', {
+      form: {
+        _process: 'save_ticket',
+        _redirect: '',
+        ticket_id: 'new',
+        subject,
+        customer_id: customerId,
+        change_user_id: '1',
+        assigned_user_id: '1',
+        status_id: '2',
+        priority: '0',
+        form_auth_key: await formAuthKey( page ),
+      },
+      maxRedirects: 0,
+      failOnStatusCode: false,
+    } );
+
+    await page.goto( '/?m[]=ticket&p[]=ticket_admin_list&search[generic]=' + encodeURIComponent( subject ) );
+    const ticketId = ( ( await page.content() ).match( /ticket_id=(\d+)/ ) || [] )[ 1 ];
+    expect( ticketId, 'the new ticket should be findable' ).toBeTruthy();
+
+    let raisedInvoiceId: string | null = null;
+    try {
+      await page.goto( '/?m[]=ticket&p[]=ticket_admin&ticket_id=' + ticketId );
+      const publicPath = ( ( await page.content() ).match(
+        /external\/m\.ticket\/h\.public\/i\.\d+\/hash\.[a-f0-9]+/ ) || [] )[ 0 ];
+      expect( publicPath, 'the ticket should publish a public link' ).toBeTruthy();
+
+      // Asking for priority support is what raises the invoice this block renders on.
+      const customer = await browser.newContext();
+      let invoiceId: string | null = null;
+      try {
+        const response = await customer.request.post( '/' + String( publicPath ), {
+          form: { _process: 'send_public_ticket', generate_priority_invoice: '1' },
+          maxRedirects: 0,
+          failOnStatusCode: false,
+        } );
+        invoiceId = new URL( response.headers()[ 'location' ] || '', 'http://localhost' ).searchParams.get( 'i' );
+        raisedInvoiceId = invoiceId;
+      } finally {
+        await customer.close();
+      }
+      expect( invoiceId, 'nothing raised a priority support invoice' ).toBeTruthy();
+
+      await page.goto( `/?m[]=invoice&p[]=invoice_admin&invoice_id=${ invoiceId }` );
+      const block = await page.evaluate( () => {
+      // Find the block by its heading and then take the first form table that follows,
+      // walking siblings and then up. Deliberately NOT heading.closest('.box'): the box is
+      // metis's fieldset wrapper, so scoping to it would tie this spec to the converted
+      // shape and it could never have been run against the markup it replaced.
+      const heading = Array.from( document.querySelectorAll( 'h1, h2, h3, h4, h5, .title' ) )
+        .find( h => ( h.textContent || '' ).includes( 'Priority Support Ticket' ) );
+      if ( ! heading ) {
+        return null;
+      }
+      let scope: Element | null = heading;
+      let table: HTMLTableElement | null = null;
+      while ( scope && ! table ) {
+        let sibling: Element | null = scope;
+        while ( ( sibling = sibling.nextElementSibling ) ) {
+          table = sibling.matches( 'table.tableclass_form' )
+            ? sibling as HTMLTableElement
+            : sibling.querySelector( 'table.tableclass_form' );
+          if ( table ) {
+            break;
+          }
+        }
+        scope = scope.parentElement;
+      }
+      if ( ! table ) {
+        return null;
+      }
+      const rows = Array.from( table.querySelectorAll( 'tbody tr' ) );
+      const cell = ( index: number ) => ( rows[ index ]?.querySelector( 'td' )?.textContent || '' ).trim();
+
+      return {
+        titles: rows.map( r => ( r.querySelector( 'th' )?.textContent || '' ).trim() ),
+        subject: cell( 1 ),
+        status: cell( 2 ),
+        hasTicketLink: !! table.querySelector( 'a[href*="ticket_id="]' ),
+      };
+    } );
+
+      expect( block, 'no Priority Support Ticket block on this invoice' ).not.toBeNull();
+      expect( block!.titles, 'the priority block lost a row' ).toEqual( [ 'Ticket', 'Subject', 'Status' ] );
+      expect( block!.hasTicketLink, 'the block should link back to the ticket' ).toBe( true );
+      expect( block!.subject, 'the subject row should carry the ticket subject' ).not.toBe( '' );
+      expect( block!.status, 'the status row should carry a status' ).not.toBe( '' );
+    } finally {
+      // The invoice first: deleting the ticket does not take it with it, and asking for
+      // priority support raises a new one every time, so leaving them behind would grow
+      // the invoice table one row per run.
+      if ( raisedInvoiceId ) {
+        await deleteRecord( page, '/?m[]=invoice', 'save_invoice', 'invoice_id', raisedInvoiceId );
+      }
+      await deleteRecord( page, '/?m[]=ticket', 'save_ticket', 'ticket_id', ticketId as string );
+    }
+  } );
+
+  test( 'the subscription block names the subscription the invoice is for', async ( { page } ) => {
+    test.setTimeout( 120000 );
+    await login( page );
+
+    const invoiceId = await anInvoiceShowing( page, 'This is an invoice for', async () => {
+      const stamp = Date.now().toString( 36 );
+      const subscriptionName = 'Fieldset Sub ' + stamp;
+      const customerName = 'Fieldset SubCust ' + stamp;
+
+      const subscriptionId = await createRecord( page, '/?m[]=subscription', {
+        _process: 'save_subscription',
+        subscription_id: 'new',
+        name: subscriptionName,
+        amount: '120',
+        currency_id: '1',
+        days: '0',
+        months: '1',
+        years: '0',
+      }, 'subscription_id' );
+
+      const customerId = await createRecord( page, '/?m[]=customer', {
+        _process: 'save_customer',
+        customer_id: 'new',
+        customer_name: customerName,
+        name: customerName + ' Contact',
+        email: `fieldset-sub-${ stamp }@example.com`,
+      }, 'customer_id' );
+
+      const today = new Date().toISOString().slice( 0, 10 );
+      const key = await formAuthKey( page );
+      await page.request.post( '/?m[]=customer', {
+        form: {
+          _process: 'save_customer',
+          customer_id: customerId,
+          customer_name: customerName,
+          member_subscriptions_save: '1',
+          [ `subscription[${ subscriptionId }]` ]: '1',
+          [ `subscription_start_date[${ subscriptionId }]` ]: today,
+          form_auth_key: key,
+        },
+        maxRedirects: 0,
+        failOnStatusCode: false,
+      } );
+
+      // Adding a payment is what raises the invoice and writes the subscription_history
+      // row that module_subscription::hook_invoice_sidebar() looks for.
+      const generated = await page.request.post( '/?m[]=customer', {
+        form: {
+          _process: 'save_customer',
+          customer_id: customerId,
+          customer_name: customerName,
+          member_subscriptions_save: '1',
+          [ `subscription[${ subscriptionId }]` ]: '1',
+          subscription_add_payment: subscriptionId,
+          subscription_add_payment_date: today,
+          subscription_add_payment_amount: '120',
+          form_auth_key: key,
+        },
+        maxRedirects: 0,
+        failOnStatusCode: false,
+      } );
+
+      return new URL( generated.headers()[ 'location' ] || '', 'http://localhost' )
+        .searchParams.get( 'invoice_id' );
+    } );
+
+    await page.goto( `/?m[]=invoice&p[]=invoice_admin&invoice_id=${ invoiceId }` );
+    const block = await page.evaluate( () => {
+      // Same reasoning as the priority block above: found by heading and the first form
+      // table after it, not by metis's box, so it works against either shape.
+      const heading = Array.from( document.querySelectorAll( 'h1, h2, h3, h4, h5, .title' ) )
+        .find( h => ( h.textContent || '' ).trim() === 'Subscriptions' );
+      let scope: Element | null = heading ?? null;
+      let table: HTMLTableElement | null = null;
+      while ( scope && ! table ) {
+        let sibling: Element | null = scope;
+        while ( ( sibling = sibling.nextElementSibling ) ) {
+          table = sibling.matches( 'table.tableclass_form' )
+            ? sibling as HTMLTableElement
+            : sibling.querySelector( 'table.tableclass_form' );
+          if ( table ) {
+            break;
+          }
+        }
+        scope = scope.parentElement;
+      }
+      const row = table?.querySelector( 'tbody tr' );
+
+      return row
+        ? {
+          text: ( row.textContent || '' ).replace( /\s+/g, ' ' ).trim(),
+          hasSubscriptionLink: !! row.querySelector( 'a[href*="subscription_id="]' ),
+          // One cell, no header cell - the shape an element with 'fields' and no 'title'
+          // produces, and the shape the hand-written row had.
+          tds: row.querySelectorAll( 'td' ).length,
+          ths: row.querySelectorAll( 'th' ).length,
+        }
+        : null;
+    } );
+
+    expect( block, 'no subscription row under a Subscriptions heading on this invoice' ).not.toBeNull();
+    expect( block!.text ).toContain( 'This is an invoice for' );
+    expect( block!.text ).toContain( 'on the subscription:' );
+    expect( block!.hasSubscriptionLink, 'the row should link to the subscription' ).toBe( true );
+    expect( { tds: block!.tds, ths: block!.ths } ).toEqual( { tds: 1, ths: 0 } );
   } );
 } );
