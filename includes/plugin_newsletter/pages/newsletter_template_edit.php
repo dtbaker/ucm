@@ -147,48 +147,48 @@ $newsletter_template    = module_newsletter::get_newsletter_template( $newslette
 		),
 	);
 
-	ob_start();
-	?>
-	<table width="100%" border="0" cellspacing="0" cellpadding="2" class="tableclass tableclass_form tbl_fixed">
-		<tbody>
-		<tr>
-			<td class="width1">
-				<a href="#" onmousedown="$('#template_body').val($('#template_body').val() + '{BODY}'); return false;" onclick="return false;">{BODY}</a>
-			</td>
-			<td><?php _e( 'content from "create newsletter"' ); ?></td>
-		</tr>
-		<tr>
-			<td>
-				<a href="#" onmousedown="$('#template_body').val($('#template_body').val() + '&lt;?php ?&gt;'); return false;" onclick="return false;">&lt;?php ?&gt;</a>
-			</td>
-			<td><?php _e( 'code evaluated at send time' ); ?></td>
-		</tr>
-		<?php
-		$fields = module_newsletter::get_replace_fields();
-		foreach ( $fields as $key => $val ) {
-			?>
-			<tr>
-				<td>
-					<a href="#" onmousedown="$('#template_body').val($('#template_body').val() + <?php echo json_encode( '{' . $key . '}' ); ?>); return false;" onclick="return false;"><?php echo '{' . htmlspecialchars( $key ) . '}'; ?></a>
-				</td>
-				<td><?php echo htmlspecialchars( $val ); ?></td>
-			</tr>
-			<?php
-		}
-		?>
-		<tr>
-			<td colspan="2" align="center"><?php _e( 'You will have more custom fields here<br/> once you pick your recipients.' ); ?></td>
-		</tr>
-		</tbody>
-	</table>
-	<?php
-	$dynamic_table_html = ob_get_clean();
+	// Each placeholder appends itself to the template body when clicked. These were rows in
+	// a hand-written table handed to the fieldset as elements_before; they are elements now.
+	$append_to_body = static function ( $insert, $label ) {
+		return '<a href="#" onmousedown="$(\'#template_body\').val($(\'#template_body\').val() + '
+		       . $insert . '); return false;" onclick="return false;">' . $label . '</a>';
+	};
+
+	$template_elements = array(
+		'body' => array(
+			'title'  => '',
+			'fields' => array(
+				$append_to_body( "'{BODY}'", '{BODY}' ),
+				_l( 'content from "create newsletter"' ),
+			),
+		),
+		'php'  => array(
+			'title'  => '',
+			'fields' => array(
+				$append_to_body( "'&lt;?php ?&gt;'", '&lt;?php ?&gt;' ),
+				_l( 'code evaluated at send time' ),
+			),
+		),
+	);
+
+	foreach ( module_newsletter::get_replace_fields() as $key => $val ) {
+		$template_elements[ 'field_' . $key ] = array(
+			'title'  => '',
+			'fields' => array(
+				$append_to_body( json_encode( '{' . $key . '}' ), '{' . htmlspecialchars( $key ) . '}' ),
+				htmlspecialchars( (string) $val ),
+			),
+		);
+	}
+
+	$template_elements['more_once_chosen'] = array(
+		'message' => _l( 'You will have more custom fields here<br/> once you pick your recipients.' ),
+	);
 
 	$dynamic_fieldset = array(
-		'heading'         => array( 'type' => 'h3', 'title' => _l( 'Dynamic Fields:' ) ),
-		'class'           => 'tableclass tableclass_form tbl_fixed',
-		'elements_before' => $dynamic_table_html,
-		'elements'        => array(),
+		'heading'  => array( 'type' => 'h3', 'title' => _l( 'Dynamic Fields:' ) ),
+		'class'    => 'tableclass tableclass_form tbl_fixed',
+		'elements' => $template_elements,
 	);
 	?>
 	<table width="100%" cellpadding="5">

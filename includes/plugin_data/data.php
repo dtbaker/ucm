@@ -14,6 +14,15 @@ class module_data extends module_base
 	public $links;
 	public $user_types;
 
+	/**
+	 * Set while a form element is being rendered. Declared because PHP 8.2 deprecates
+	 * creating a property on the fly, and this one was assigned in get_form_element()
+	 * without ever being declared - a deprecation on every custom data screen.
+	 *
+	 * @var bool
+	 */
+	public $ajax_edit = false;
+
 	public function __construct() {
 		$this->module_name     = 'data';
 		$this->module_position = 150;
@@ -1227,7 +1236,10 @@ class module_data extends module_base
 			case 'checkbox_list':
 			case 'radio':
 				$element['attributes'] = array();
-				foreach ( explode( "\n", trim( $element['field_data'] ) ) as $line ) {
+				// field_data is null for a field that has never had type data set, and PHP 8
+		// deprecates passing that to trim(). The cast changes nothing: explode() on an
+		// empty string already yields one empty line, which the loop below ignores.
+		foreach ( explode( "\n", trim( (string) ( $element['field_data'] ?? '' ) ) ) as $line ) {
 					$line = trim( $line );
 					if ( preg_match( '/^attributes=/', $line ) ) {
 						$line                  = preg_replace( '/^attributes=/', '', $line );
@@ -1278,7 +1290,8 @@ class module_data extends module_base
 		}
 		// we have to apply some custom width/height styles if they exist.
 		$width = $height = false;
-		foreach ( explode( "\n", trim( $element['field_data'] ) ) as $line ) {
+		// Same null as above: a field with no type data set.
+		foreach ( explode( "\n", trim( (string) ( $element['field_data'] ?? '' ) ) ) as $line ) {
 			$line = trim( $line );
 			if ( preg_match( '/^width=/', $line ) ) {
 				$line  = preg_replace( '/^width=/', '', $line );
@@ -1382,7 +1395,9 @@ class module_data extends module_base
 		);
 
 		foreach ( $element as $key => $val ) {
-			if ( ! is_array( $val ) && ! trim( $val ) ) {
+			// A null column value reads as empty here, which is what the skip wants - but
+			// PHP 8 deprecates handing it to trim(), so it is cast rather than relied on.
+			if ( ! is_array( $val ) && ! trim( (string) $val ) ) {
 				continue;
 			}
 			if ( in_array( strtolower( $key ), $attribute_keys ) ) {

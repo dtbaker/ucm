@@ -498,48 +498,41 @@ $action_buttons = module_form::generate_form_actions( $form_actions );
 			}
 			if ( $other_tickets !== false && mysqli_num_rows( $other_tickets ) > 1 ) {
 				$other_status = array();
-				ob_start();
-				?>
-				<table border="0" cellspacing="0" cellpadding="2" class="tableclass tableclass_form tableclass_full tbl_fixed">
-					<tbody>
-					<?php while ( $other_ticket = mysqli_fetch_assoc( $other_tickets ) ) { ?>
-						<tr>
-							<td style="width:55px;">
-								<?php echo $other_ticket['ticket_id'] == $ticket_id ? '&raquo;' : ''; ?>
-								<?php echo module_ticket::link_open( $other_ticket['ticket_id'], true ); ?>
-							</td>
-							<td>
-								<?php if ( $other_ticket['priority'] == _TICKET_PRIORITY_STATUS_ID ) {
-									echo '$';
-								} ?>
-								<?php echo htmlspecialchars( $other_ticket['subject'] ); ?>
-							</td>
-							<td style="width:100px;">
-								<?php echo htmlspecialchars( module_ticket::$ticket_statuses[ $other_ticket['status_id'] ] );
-								if ( ! isset( $other_status[ module_ticket::$ticket_statuses[ $other_ticket['status_id'] ] ] ) ) {
-									$other_status[ module_ticket::$ticket_statuses[ $other_ticket['status_id'] ] ] = 0;
-								}
-								$other_status[ module_ticket::$ticket_statuses[ $other_ticket['status_id'] ] ]++;
-								?>
-							</td>
-						</tr>
-					<?php } ?>
-					</tbody>
-				</table>
-				<?php
+				// One element per sibling ticket. These were rows in a hand-written table handed
+				// to the fieldset as elements_before.
+				$other_elements = array();
+				while ( $other_ticket = mysqli_fetch_assoc( $other_tickets ) ) {
+					$status_name = module_ticket::$ticket_statuses[ $other_ticket['status_id'] ];
+					if ( ! isset( $other_status[ $status_name ] ) ) {
+						$other_status[ $status_name ] = 0;
+					}
+					$other_status[ $status_name ] ++;
+
+					$other_elements[ 'ticket_' . (int) $other_ticket['ticket_id'] ] = array(
+						'title'  => ( $other_ticket['ticket_id'] == $ticket_id ? '&raquo; ' : '' )
+						            . module_ticket::link_open( $other_ticket['ticket_id'], true ),
+						'fields' => array(
+							( $other_ticket['priority'] == _TICKET_PRIORITY_STATUS_ID ? '$' : '' )
+							. htmlspecialchars( $other_ticket['subject'] ),
+							'<span style="width:100px;">' . htmlspecialchars( $status_name ) . '</span>',
+						),
+					);
+				}
+
 				$responsive_summary = array();
 				foreach ( $other_status as $status => $count ) {
 					$responsive_summary[] = $count . ' ' . $status;
 				}
 				$fieldset_data = array(
-					'heading'         => array(
+					'heading'  => array(
 						'title'      => _l( '%s Other Support Tickets', mysqli_num_rows( $other_tickets ) ),
 						'type'       => 'h3',
 						'responsive' => array(
 							'summary' => htmlspecialchars( implode( ', ', $responsive_summary ) ),
 						)
 					),
-					'elements_before' => ob_get_clean(),
+					'class'    => 'tableclass tableclass_form tableclass_full tbl_fixed',
+					'elements' => $other_elements,
 				);
 				echo module_form::generate_fieldset( $fieldset_data );
 				unset( $fieldset_data );

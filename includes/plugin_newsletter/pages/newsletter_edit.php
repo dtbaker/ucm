@@ -498,55 +498,44 @@ if ( count( $sends_warning ) ) {
 						<?php } ?>
 
 						<?php
-						ob_start();
-						?>
-						<table width="100%" border="0" cellspacing="0" cellpadding="2" class="tableclass tableclass_form tbl_fixed">
-							<tbody>
-							<?php
-							$x      = 0;
-							$fields = module_newsletter::get_replace_fields( $newsletter_id );
-							foreach ( $fields as $key => $val ) {
-								if ( $x == 4 ) {
-									?>
-									</tbody>
-									<tbody id="dynamic_more" style="display:none;">
-									<?php
-								}
-								?>
-								<tr>
-									<td>
-										<a href="#" onmousedown="var ed=typeof tinymce!='undefined'?tinymce.get('newsletter_editor_content'):null;if(ed)ed.insertContent(<?php echo json_encode( '{' . $key . '}' ); ?>); return false;" onclick="return false;"><?php echo '{' . htmlspecialchars( $key ) . '}'; ?></a>
-									</td>
-									<td>
-										<?php echo htmlspecialchars( $val ); ?>
-									</td>
-								</tr>
-								<?php
-								$x++;
-							}
-							?>
-							<tr>
-								<td colspan="2" align="center">
-									<?php _e( 'You will have more fields available<br/> once recipients are chosen.' ); ?>
-								</td>
-							</tr>
-							</tbody>
-						</table>
-						<?php
-						$dynamic_table_html = ob_get_clean();
+						// Each placeholder is a link that inserts itself into the editor, and
+						// everything past the first four used to live in a <tbody id="dynamic_more">
+						// that View All reveals. A fieldset has no row groups, so those rows carry
+						// the class and the button switches on the class instead.
+						$dynamic_elements = array();
+						$x                = 0;
+						$fields           = module_newsletter::get_replace_fields( $newsletter_id );
+						foreach ( $fields as $key => $val ) {
+							$hidden = $x >= 4;
+							$dynamic_elements[ 'field_' . $key ] = array(
+								'title'     => '',
+								'row_class' => $hidden ? 'dynamic_more' : '',
+								'row_style' => $hidden ? 'display:none;' : '',
+								'fields'    => array(
+									'<a href="#" onmousedown="var ed=typeof tinymce!=\'undefined\'?tinymce.get(\'newsletter_editor_content\'):null;if(ed)ed.insertContent('
+									. htmlspecialchars( json_encode( '{' . $key . '}' ), ENT_QUOTES, 'UTF-8' )
+									. '); return false;" onclick="return false;">{' . htmlspecialchars( $key ) . '}</a>',
+									'&nbsp;' . htmlspecialchars( (string) $val ),
+								),
+							);
+							$x++;
+						}
+						$dynamic_elements['more_once_chosen'] = array(
+							'message' => _l( 'You will have more fields available<br/> once recipients are chosen.' ),
+						);
 
 						$dynamic_fields_fieldset = array(
-							'heading'      => array(
+							'heading'  => array(
 								'type'   => 'h3',
 								'title'  => _l( 'Dynamic Fields:' ),
 								'button' => array(
 									'url'     => '#',
-									'onclick' => "$('#dynamic_more').show(); return false;",
+									'onclick' => "$('.dynamic_more').show(); return false;",
 									'title'   => 'View All',
 								),
 							),
-							'elements_before' => $dynamic_table_html,
-							'elements'        => array(),
+							'class'    => 'tableclass tableclass_form tbl_fixed',
+							'elements' => $dynamic_elements,
 						);
 						echo module_form::generate_fieldset( $dynamic_fields_fieldset );
 						?>

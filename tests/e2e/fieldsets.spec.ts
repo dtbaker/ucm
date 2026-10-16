@@ -316,6 +316,12 @@ test.describe( 'Forms moved to generate_fieldset', () => {
     for ( const label of [ 'Shedule send' ] ) {
       expect( body, `the send options should still list "${ label }"` ).toContain( label );
     }
+
+    // The dynamic field preview below it: one row per placeholder, a checkbox on the ones
+    // past the first five that the extra fields offer, and a Preview button.
+    expect( ( body.match( /\{[A-Z_]+\}/g ) ?? [] ).length,
+      'the preview should list the placeholders' ).toBeGreaterThan( 4 );
+    expect( body, 'and still offer a preview' ).toContain( 'name="pp"' );
     expect( describeDiagnostics( body ).join( '\n' ), 'the queue printed a PHP diagnostic' ).toBe( '' );
   } );
 
@@ -504,5 +510,121 @@ test.describe( 'Forms moved to generate_fieldset', () => {
       .toMatch( /<tr[^>]*\bpayment_type_offline\b/ );
     expect( body, 'and the offline instructions need somewhere to be written' )
       .toContain( 'id="payment_type_offline_info"' );
+  } );
+
+  test( 'the newsletter editor keeps its dynamic field list', async ( { page } ) => {
+    await login( page );
+    const stamp = Date.now() + '-' + Math.floor( Math.random() * 10000 );
+    const newsletterId = await createRecord( page, '/?m[]=newsletter', {
+      _process: 'save_newsletter',
+      newsletter_id: 'new',
+      subject: 'Dynamic Fields ' + stamp,
+      from_name: 'Fieldset Sender',
+      from_email: 'sender@example.com',
+      content: 'Body text.',
+    }, 'newsletter_id' );
+
+    const body = await ( await page.request.get(
+      `/?m[]=newsletter&p[]=newsletter_edit&newsletter_id=${ newsletterId }` ) ).text();
+
+    // Every placeholder is an insert-into-the-editor link, and everything past the first
+    // four is hidden until View All. Both have to survive.
+    const inserters = ( body.match( /onmousedown="var ed=typeof tinymce/g ) ?? [] ).length;
+    expect( inserters, 'each dynamic field should still insert itself into the editor' )
+      .toBeGreaterThan( 4 );
+    expect( body, 'the overflow still needs somewhere to hide' ).toMatch( /dynamic_more/ );
+    expect( body, 'and a View All to reveal it' ).toContain( 'View All' );
+    expect( describeDiagnostics( body ).join( '\n' ), 'the editor printed a PHP diagnostic' ).toBe( '' );
+  } );
+
+  test( 'the custom data search keeps a row per searchable field', async ( { page } ) => {
+    await login( page );
+    const stamp = Date.now() + '-' + Math.floor( Math.random() * 10000 );
+    const typeId = await createRecord( page, '/?m[]=data', {
+      _process: 'save_data_type',
+      data_type_id: 'new',
+      data_type_name: 'Search Type ' + stamp,
+    }, 'data_type_id' );
+    const groupId = await createRecord( page, '/?m[]=data', {
+      _process: 'save_data_field_group',
+      data_field_group_id: 'new',
+      data_type_id: typeId,
+      name: 'Search Fieldset ' + stamp,
+      _redirect: '/',
+    }, 'data_field_group_id' );
+
+    const key = await formAuthKey( page );
+    await page.request.post( '/?m[]=data', {
+      form: {
+        _process: 'save_data_field',
+        data_field_id: 'new',
+        data_type_id: typeId,
+        data_field_group_id: groupId,
+        title: 'Searchable Note',
+        order: '1',
+        field_type: 'text',
+        // save_field() zeroes any checkbox it was not sent, and the search screen only
+        // lists fields marked searchable.
+        searchable: '1',
+        show_list: '1',
+        form_auth_key: key,
+      },
+      failOnStatusCode: false,
+    } );
+
+    const body = await ( await page.request.get(
+      `/?m[]=data&p[]=admin_data_search&data_type_id=${ typeId }`, { failOnStatusCode: false } ) ).text();
+
+    expect( ( body.match( /name="search_do\[/g ) ?? [] ).length,
+      'each searchable field needs its tick box' ).toBe( 1 );
+    expect( body, 'the field should be named on its row' ).toContain( 'Searchable Note' );
+    expect( body, 'and the field itself should be there to type into' )
+      .toMatch( /id="search_field_\d+"/ );
+    expect( describeDiagnostics( body ).join( '\n' ), 'the search screen printed a PHP diagnostic' )
+      .toBe( '' );
+  } );
+
+  test( 'the newsletter template editor keeps its placeholder list', async ( { page } ) => {
+    await login( page );
+    const body = await ( await page.request.get(
+      '/?m[]=newsletter&p[]=newsletter_template_edit&newsletter_template_id=new',
+      { failOnStatusCode: false } ) ).text();
+
+    // Each placeholder appends itself to the template body when clicked. {BODY} and the
+    // raw PHP tag are hand-written rows; the rest come from get_replace_fields().
+    expect( ( body.match( /onmousedown="\$\('#template_body'\)/g ) ?? [] ).length,
+      'every placeholder should still append itself to the template' ).toBeGreaterThan( 4 );
+    expect( body, '{BODY} should still be offered' ).toContain( '{BODY}' );
+    expect( body, 'and the note about picking recipients should survive' )
+      .toContain( 'once you pick your recipients' );
+    expect( describeDiagnostics( body ).join( '\n' ), 'the template editor printed a PHP diagnostic' )
+      .toBe( '' );
+  } );
+
+  test( 'the ticket screen keeps its other-tickets list', async ( { page } ) => {
+    await login( page );
+
+    // The block only renders when the same contact or customer has more than one ticket,
+    // so the ticket to open is found rather than assumed.
+    const list = await ( await page.request.get( '/?m[]=ticket&p[]=ticket_admin' ) ).text();
+    const ids = [ ...new Set( [ ...list.matchAll( /ticket_id=(\d+)/g ) ].map( ( m ) => m[ 1 ] ) ) ];
+
+    let body = '';
+    for ( const id of ids.slice( 0, 8 ) ) {
+      const candidate = await ( await page.request.get(
+        `/?m[]=ticket&p[]=ticket_admin&ticket_id=${ id }`, { failOnStatusCode: false } ) ).text();
+      if ( candidate.includes( 'Other Support Tickets' ) ) {
+        body = candidate;
+        break;
+      }
+    }
+    test.skip( body === '', 'no ticket here shares a contact with another' );
+
+    // One row per sibling ticket, each linking to it, and the current one marked.
+    expect( body, 'the current ticket should be marked in the list' ).toContain( '&raquo;' );
+    expect( ( body.match( /ticket_id=\d+/g ) ?? [] ).length,
+      'the siblings should still link to themselves' ).toBeGreaterThan( 1 );
+    expect( describeDiagnostics( body ).join( '\n' ), 'the ticket screen printed a PHP diagnostic' )
+      .toBe( '' );
   } );
 } );

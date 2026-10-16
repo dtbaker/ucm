@@ -273,46 +273,51 @@ if ( isset( $_REQUEST['f'] ) && is_array( $_REQUEST['f'] ) ) {
 					'title' => 'Preview Dynamic Fields:',
 				) );
 				?>
-				<table width="100%" border="0" cellspacing="0" cellpadding="2" class="tableclass tableclass_form tbl_fixed">
-					<tbody>
-					<?php
-					$x      = 0;
-					$fields = module_newsletter::get_replace_fields( $newsletter_id, $send_id, $first_newsletter_member_id );
-					foreach ( $fields as $key => $val ) {
-						?>
-						<tr>
-							<td width="30">
-								<?php
-								if ( $x > 4 ) {
-									foreach ( array_keys( $extra_fields ) as $extra_field ) {
-										if ( strtoupper( $extra_field ) == $key ) { ?>
-											<input type="checkbox" name="f[]"
-											       value="<?php echo htmlspecialchars( $key ); ?>" <?php echo isset( $display_extra_fields[ $key ] ) ? 'checked' : ''; ?>>
-										<?php }
-									}
-								}
-								?>
-							</td>
-							<td>
-								<?php echo '{' . htmlspecialchars( $key ) . '}'; ?>
-							</td>
-							<td style="word-wrap: break-word;">
-								<?php // A replace value for a column that is not set arrives as null, which
-								// PHP 8 deprecates passing to trim(). The cast changes nothing about what
-								// is printed - null was already going to come out as the empty string. ?>
-								<?php echo htmlspecialchars( trim( (string) $val ) !== '' ? (string) $val : '' ); ?>
-							</td>
-						</tr>
-						<?php
-						$x++;
-					} ?>
-					<tr>
-						<td colspan="3" align="center">
-							<input type="submit" name="pp" value="<?php _e( 'Preview' ); ?>">
-						</td>
-					</tr>
-					</tbody>
-				</table>
+				<?php
+				// One element per placeholder. The checkbox that was in its own first column
+				// sits beside the placeholder now - a fieldset is a title and a cell, and the
+				// column it used to have carried nothing else.
+				$preview_elements = array();
+				$x                = 0;
+				$fields           = module_newsletter::get_replace_fields( $newsletter_id, $send_id, $first_newsletter_member_id );
+				foreach ( $fields as $key => $val ) {
+					ob_start();
+					if ( $x > 4 ) {
+						foreach ( array_keys( $extra_fields ) as $extra_field ) {
+							if ( strtoupper( $extra_field ) == $key ) { ?>
+								<input type="checkbox" name="f[]"
+								       value="<?php echo htmlspecialchars( $key ); ?>" <?php echo isset( $display_extra_fields[ $key ] ) ? 'checked' : ''; ?>>
+							<?php }
+						}
+					}
+					echo '{' . htmlspecialchars( $key ) . '}';
+					$preview_elements[ 'field_' . $key ] = array(
+						'title'  => '',
+						'fields' => array(
+							ob_get_clean(),
+							// A replace value for a column that is not set arrives as null, which
+							// PHP 8 deprecates passing to trim(). The cast changes nothing about
+							// what is printed - null was already coming out as the empty string.
+							'<span style="word-wrap: break-word;">'
+							. htmlspecialchars( trim( (string) $val ) !== '' ? (string) $val : '' )
+							. '</span>',
+						),
+					);
+					$x ++;
+				}
+				ob_start();
+				?>
+				<input type="submit" name="pp" value="<?php _e( 'Preview' ); ?>">
+				<?php
+				$preview_elements['preview'] = array(
+					'message' => ob_get_clean(),
+				);
+
+				echo module_form::generate_fieldset( array(
+					'class'    => 'tableclass tableclass_form tbl_fixed',
+					'elements' => $preview_elements,
+				) );
+				?>
 			<?php module_form::print_form_close_tag(); ?>
 
 		</td>

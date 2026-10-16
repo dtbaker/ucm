@@ -257,11 +257,8 @@ if ( $data_type_id ) {
 				}
 				if ( $data_fields ) {
 
-					ob_start();
-					?>
-					<table class="tableclass tableclass_form">
-						<?php
-						foreach ( $data_fields as $data_field_id => $data_field ) {
+					$search_elements = array();
+					foreach ( $data_fields as $data_field_id => $data_field ) {
 							$data_field['multiple'] = false;
 							switch ( $data_field['field_type'] ) {
 								case 'auto_id':
@@ -303,35 +300,28 @@ if ( $data_type_id ) {
 									$data_field['attributes']    = $update_user_ids;
 									break;
 							}
-							?>
+						$search_elements[ 'field_' . $data_field['data_field_id'] ] = array(
+							'title'  => $data_field['title'],
+							'fields' => array(
+								'<div style="float:left; padding:0 10px 0 0">'
+								. '<input type="checkbox" name="search_do[' . htmlspecialchars( $data_field['data_field_id'] ) . ']" value="1"'
+								. ' rel="' . htmlspecialchars( $data_field['data_field_id'] ) . '" class="search_do">'
+								. '</div>'
+								. '<div style="float:left">'
+								. '<div id="search_field_' . htmlspecialchars( $data_field['data_field_id'] ) . '" style="display:none;">'
+								. $module->get_form_element( $data_field )
+								. '</div></div>',
+							),
+						);
+					}
 
-							<tr>
-								<th class="width2"><?php echo $data_field['title']; ?></th>
-								<td>
-									<div style="float:left; padding:0 10px 0 0">
-										<input type="checkbox" name="search_do[<?php echo $data_field['data_field_id']; ?>]" value="1"
-										       rel="<?php echo $data_field['data_field_id']; ?>" class="search_do">
-									</div>
-									<div style="float:left">
-										<div id="search_field_<?php echo $data_field['data_field_id']; ?>" style="display:none;">
-											<?php
-											echo $module->get_form_element( $data_field ); ?>
-										</div>
-									</div>
-								</td>
-							</tr>
-
-							<?php
-						}
-						?>
-					</table>
-					<?php
 					$fieldset_data = array(
-						'heading'         => array(
+						'heading'  => array(
 							'title' => htmlspecialchars( $data_field_group['title'] ),
 							'type'  => 'h3',
 						),
-						'elements_before' => ob_get_clean(),
+						'class'    => 'tableclass tableclass_form',
+						'elements' => $search_elements,
 					);
 					echo module_form::generate_fieldset( $fieldset_data );
 					unset( $fieldset_data );
