@@ -40,13 +40,18 @@ async function aDataFieldGroup( page: Page ): Promise<{ typeId: string; groupId:
 /**
  * What is left, and where it is.
  *
- * The eleven pages whose only layout was a hand-written <table class="tableclass_form">
- * are all converted. Around thirty such tables remain across the tree, and they are a
- * different population: tables inside forms that already use generate_fieldset for their
- * main body, plus read-only summaries and sidebar panels that sit outside any form.
+ * No hand-written label-and-field table remains inside a form. What is still in the tree
+ * is two other things, neither of which generate_fieldset is for:
  *
- * The in-form ones are being worked through here the same way - a spec that passes against
- * the old markup first, so that it passing afterwards means the controls survived.
+ *  Eighteen single-cell boxes and data grids. A box is one row, often with no <th> at
+ *  all - a styled container around a message or a summary, and several are already handed
+ *  to a fieldset as its elements_before. A grid is the newsletter editor's dynamic field
+ *  list and the queue's preview of the same: two or three columns of data wearing the form
+ *  table's class. A two-column label-and-field fieldset would make both worse.
+ *
+ *  Seven label-and-field layouts that are not in a form at all - summaries, sidebars and
+ *  hook output, in files with no print_form_open_tag anywhere. They are a reasonable
+ *  thing to convert one day; they are not form internals.
  */
 
 /**
@@ -283,6 +288,19 @@ test.describe( 'Forms moved to generate_fieldset', () => {
     await expect( page.locator( '#enc_create_new' ), 'and start hidden' ).toBeHidden();
     await expect( page.locator( '#enc_create_new input[name="encrypt_key_name"]' ),
       'with the fieldset inside it' ).toBeAttached();
+
+    // The existing-vault block switched three <tbody> groups by id as the passphrase is
+    // entered and the value decrypts. Those are row classes now, and the script switches
+    // on the class - so the classes have to be on the rows.
+    const body = await page.content();
+    for ( const group of [ 'password_box', 'unlocking_box', 'decrypt_box' ] ) {
+      expect( body, `the ${ group } rows need their class on the row` )
+        .toMatch( new RegExp( `<tr[^>]*\\b${ group }\\b` ) );
+      expect( body, `and the script should switch ${ group } by class` )
+        .toContain( `$('.${ group }')` );
+    }
+    await expect( page.locator( '#env_vault_name' ), 'the vault name still needs its id' )
+      .toBeAttached();
   } );
 
   test( 'the newsletter queue keeps its send options', async ( { page } ) => {
@@ -417,6 +435,15 @@ test.describe( 'Forms moved to generate_fieldset', () => {
 
     expect( await page.locator( `${ byProcess( 'save_recurring' ) } [name="name"]` ).first().inputValue(),
       'the name should come back as saved' ).toBe( name );
+
+    // The once-off toggle hid a <tbody id="recurring_bits">. A fieldset has no row groups,
+    // so those two rows carry the class instead and the script hides them by class - which
+    // only works if the class really is on the row.
+    const body = await page.content();
+    expect( ( body.match( /<tr[^>]*\brecurring_bits\b/g ) ?? [] ).length,
+      'the end date and repeat rows need the class the toggle hides' ).toBe( 2 );
+    expect( body, 'and the toggle should be hiding by class, not by the old id' )
+      .toContain( "$('.recurring_bits')" );
   } );
 
   test( 'the public ticket view keeps its controls', async ( { page } ) => {
