@@ -47,8 +47,8 @@ async function aDataFieldGroup( page: Page ): Promise<{ typeId: string; groupId:
  * switches on, which the old <tbody id> markup had no equivalent of, or a PHP 8 bug fixed
  * alongside - and the script knows which, so anything else is reported as a difference.
  *
- * No page prints its own form table any more. tests/unit/FieldsetMarkupTest.php scans
- * includes/ and allows none.
+ * No page prints its own form table any more, and no page builds its own form rows either.
+ * tests/unit/FieldsetMarkupTest.php scans includes/ and allows none.
  *
  * Every reason this list once held for leaving a form table alone turned out to be wrong,
  * every time in the direction of not converting - so what follows is the record of what
@@ -69,16 +69,20 @@ async function aDataFieldGroup( page: Page ): Promise<{ typeId: string; groupId:
  *      there - this install has no faq_product_rel rows, so a real product change injects
  *      nothing and the row has to be put in by hand. It fails with tbody_after removed.
  *
- *      What faq.php sends is still hand-built markup, and deliberately so: it is a
- *      fragment of <tr>s for a table that already exists, and generate_fieldset renders
- *      whole tables, not fragments. Converting it would need a rows-only mode on both
- *      renderers, which is a lot of renderer for links and a line of guidance.
+ *      What faq.php sends over the wire was the last hand-built form markup, and the
+ *      reason given for it - generate_fieldset renders whole tables, this is a fragment of
+ *      rows - was true and was not a reason to stop. The helper now takes 'type' => 'rows',
+ *      which emits the <tr>s with no table, heading or box around them, in both renderers.
+ *      The fragment goes through it, and 'cell_attributes' carries the colspan that puts
+ *      the FAQ list across both columns. Its text and its links are unchanged; it gained
+ *      one closing </td>, because the hand-written first row never had one.
  *
- *      That exemption only holds while the fragment carries no form controls, so it is
- *      checked rather than asserted: the last test in this file asks the ajax endpoint for
- *      a real fragment and fails if it contains an input, select, textarea, button or a
- *      name attribute. Checked by putting an input in it and watching the test fail. If it
- *      ever does gain a control, the rows-only mode is the answer, not an exception.
+ *      The last test in this file holds it there: the fragment must contain a real FAQ
+ *      link, a header cell, the colspan and data-element-id, and must NOT contain a box
+ *      wrapper or a tableclass_form table - rows that bring their own table would be a
+ *      table inside a tbody. Checked by removing 'type' => 'rows' and watching it fail,
+ *      and by putting an <input> in the fragment and watching the no-controls assertion
+ *      fail.
  *
  *  NOT A FORM LAYOUT - one cell, no <th>, a styled container around a message or summary,
  *  already handed to a fieldset as its elements_before:
@@ -1383,15 +1387,19 @@ test.describe( 'Forms moved to generate_fieldset (faq product row)', () => {
 } );
 
 /**
- * The one piece of form markup that is still hand-built, and the check that it is not a
- * form.
+ * The fragment includes/plugin_faq/faq.php sends over ajax.
  *
- * includes/plugin_faq/faq.php answers a product change with a fragment of <tr>s that the
- * page drops into the fieldset's second tbody. It is hand-built and stays that way:
- * generate_fieldset renders whole tables, not fragments, so converting it would need a
- * rows-only mode on both renderers. That is only defensible while the fragment carries no
- * form controls - the moment somebody puts an input in it, it is form markup bypassing the
- * helper, and the exemption stops being true. Asserted rather than assumed.
+ * It answers a product change with <tr>s that the page drops into the fieldset's second
+ * tbody, and it used to build them by hand - the one piece of form markup left outside the
+ * helper. The reason given was that generate_fieldset renders whole tables and this is a
+ * fragment, which was true and was not a reason to stop: the helper now takes
+ * 'type' => 'rows' and the fragment goes through it like every other form row.
+ *
+ * Two things are checked here. That the rows still carry what they carried - the guidance
+ * line, the FAQ link, and the colspan that puts the list across both columns. And that
+ * nothing in the fragment is a form control, which is what made it safe to leave alone for
+ * as long as it was: if an input ever appears here it belongs in the elements array, not
+ * in markup built beside it.
  */
 test.describe( 'The faq ajax fragment', () => {
   const AJAX = '/external/m.faq/h.ticket_list/';
@@ -1408,9 +1416,12 @@ test.describe( 'The faq ajax fragment', () => {
     const fragmentFor = async ( context: import( '@playwright/test' ).APIRequestContext ) =>
       ( await context.post( AJAX, { form: { faq_product_id: productId as string }, failOnStatusCode: false } ) ).text();
 
-    // Reuse: only create a FAQ for this product if the ajax has nothing to say about it
-    // yet, so repeated runs do not pile rows into ucm_faq.
-    if ( ! ( await fragmentFor( page.request ) ).includes( 'table_faq_class' ) ) {
+    // Reuse: only create a FAQ for this product if the ajax has none to offer yet, so
+    // repeated runs do not pile rows into ucm_faq. The test is for a LINK, not for the
+    // surrounding markup - the fragment renders its empty two-column list whether or not
+    // the product has any FAQs, so checking for the wrapper would leave this vacuous.
+    const hasFaqLink = ( body: string ) => /<li>\s*<a href="[^"]*m=faq[^"]*"/.test( body );
+    if ( ! hasFaqLink( await fragmentFor( page.request ) ) ) {
       await page.request.post( '/?m[]=faq', {
         form: {
           _process: 'save_faq',
@@ -1430,13 +1441,27 @@ test.describe( 'The faq ajax fragment', () => {
     try {
       const body = await fragmentFor( context.request );
 
-      // Non-vacuous: a fragment that came back empty would pass the controls check below
-      // while proving nothing.
-      expect( body, 'the ajax returned no FAQ content to inspect' ).toContain( 'table_faq_class' );
+      // Non-vacuous: a fragment with no FAQ in it would pass the controls check below while
+      // proving nothing, and the empty list renders either way.
+      expect( hasFaqLink( body ), 'the ajax returned no FAQ link to inspect' ).toBe( true );
       expect( body ).toContain( '$(\'#faq_product_area\').html(' );
 
+      // The row shape the hand-written markup had, now produced by the helper: a header
+      // cell for the FAQ label, and a full-width cell for the list.
+      expect( body, 'the guidance row lost its header cell' ).toContain( '<th' );
+      expect( body, 'the list row lost its colspan' ).toContain( 'colspan="2"' );
+      expect( body, 'the rows did not come from generate_fieldset' ).toContain( 'data-element-id' );
+
+      // And rows ONLY. These land inside a tbody of a table the ticket form already
+      // rendered, so a fragment carrying its own table - or metis's box wrapper around one
+      // - would be a table inside a tbody, which the browser throws out. This is the
+      // assertion that makes 'type' => 'rows' load-bearing: without it the helper returns
+      // the whole fieldset and the two below both appear.
+      expect( body, 'the fragment brought metis box chrome with it' ).not.toContain( 'class=\'box' );
+      expect( body, 'the fragment brought its own fieldset table with it' ).not.toContain( 'tableclass_form' );
+
       // The fragment is links and a line of guidance. Anything that posts a value belongs
-      // in the fieldset instead.
+      // in the elements array instead.
       for ( const control of [ '<input', '<select', '<textarea', '<button', 'name=' ] ) {
         expect(
           body.toLowerCase(),

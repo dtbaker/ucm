@@ -299,8 +299,13 @@ function metris_generate_fieldset( $callback, $options ) {
 		$fieldset_settings['editable'] = 0;
 	}
 	$fieldset_settings['fields'] = count( $options['elements'] );
+	// Must match module_form::generate_fieldset. 'rows' renders the <tr>s on their own -
+	// no box, no heading, no table - for a caller building a fragment to drop into a
+	// table that already exists.
+	$rows_only = $options['type'] === 'rows';
 	ob_start();
-	?>
+	if ( ! $rows_only ) {
+		?>
 
 	<div class="box <?php echo isset( $options['heading']['responsive'] ) ? ' box-responsive' : ''; ?>"
 	     data-fieldset-settings="<?php echo htmlspecialchars( json_encode( $fieldset_settings ), ENT_QUOTES, 'UTF-8' ); ?>"
@@ -317,10 +322,15 @@ function metris_generate_fieldset( $callback, $options ) {
 		</header>
 		<!-- .block -->
 		<div class="body">
-			<?php echo $options['elements_before']; ?>
+			<?php
+			echo $options['elements_before'];
+		}
+		?>
 			<?php if ( $options['elements'] ) { ?>
+				<?php if ( ! $rows_only ) { ?>
 				<table class="<?php echo $options['class']; ?>">
 					<tbody>
+				<?php } ?>
 					<?php
 					foreach ( $options['elements'] as $element_id => $element ) {
 						if ( isset( $element['ignore'] ) && $element['ignore'] ) {
@@ -391,7 +401,7 @@ function metris_generate_fieldset( $callback, $options ) {
 							<?php }
 							if ( isset( $element['fields'] ) ) { ?>
 								<td
-									class="<?php echo isset( $element['row_data_class'] ) ? $element['row_data_class'] : $options['row_data_class']; ?>">
+									class="<?php echo isset( $element['row_data_class'] ) ? $element['row_data_class'] : $options['row_data_class']; ?>"<?php module_form::render_cell_attributes( $element['cell_attributes'] ?? array() ); ?>>
 									<?php module_form::render_fields( $element['fields'] ); ?>
 								</td>
 							<?php } ?>
@@ -403,25 +413,28 @@ function metris_generate_fieldset( $callback, $options ) {
 						module_extra::display_extras( $options['extra_settings'] );
 					}
 					?>
+					<?php if ( ! $rows_only ) { ?>
 					</tbody>
 					<?php
 					// tbody_after is raw markup placed inside the table, after the fieldset's own
 					// tbody. It exists for a caller whose script replaces a block of rows: a table
 					// may carry several tbodies, so a second one can be swapped out without
-					// disturbing the rows this fieldset rendered. The faq hook's product form needs
-					// exactly that, and wrote its own <table> for years because a fieldset could not
-					// say it.
+					// disturbing the rows this fieldset rendered.
 					echo $options['tbody_after'] ?? '';
 					?>
 				</table>
+				<?php } ?>
 				<?php
 			}
-			echo $options['elements_after']; ?>
+			if ( ! $rows_only ) {
+				echo $options['elements_after'];
+				?>
 		</div>
 		<!-- /.block -->
 	</div>
-
-
+			<?php
+			}
+			?>
 	<?php
 
 	return ob_get_clean();

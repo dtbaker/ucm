@@ -67,6 +67,12 @@ class FieldsetRenderersTest extends TestCase
 			'emits caller supplied markup inside the table' => array(
 				'echo $options[\'tbody_after\'] ?? \'\';',
 			),
+			'emits caller supplied data cell attributes' => array(
+				'render_cell_attributes( $element[\'cell_attributes\']',
+			),
+			'can render the rows on their own, with no table around them' => array(
+				'$rows_only = $options[\'type\'] === \'rows\';',
+			),
 		);
 	}
 

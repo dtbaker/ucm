@@ -451,54 +451,69 @@ class module_faq extends module_base
 					// find the faq items that match this product id.
 					if ( $product && $product['faq_product_id'] == $faq_product_id ) {
 						$faqs = $this->get_faqs( array( 'faq_product_id' => $faq_product_id ) );
-						ob_start();
 						$x    = 0;
 						$half = ceil( count( $faqs ) / 2 );
-						?>
-						<tr>
-							<th>
-								<?php _e( 'FAQ' ); ?>
-							</th>
-							<td>
-								<?php _e( 'Please read through the below FAQ to see if the question has already been answered' ); ?>
-						</tr>
-						<tr>
-							<td colspan="2">
-								<table width="100%" class="tableclass tableclass_full table_faq_class">
-									<tbody>
-									<tr>
-										<td width="50%" valign="top">
-											<ul><?php
-												for ( true; $x < $half; $x++ ) {
-													$data = array_shift( $faqs );
-													$faq  = module_faq::get_faq( $data['faq_id'] );
-													?>
-													<li>
-														<a href="<?php echo module_faq::link_open_public( $data['faq_id'], false ); ?>"
-														   target="_blank"><?php echo htmlspecialchars( $faq['question'] ); ?></a>
-													</li>
-												<?php } ?>
-											</ul>
-										</td>
-										<td width="50%" valign="top">
-											<ul><?php
-												foreach ( $faqs as $data ) {
-													$faq = module_faq::get_faq( $data['faq_id'] );
-													?>
-													<li>
-														<a href="<?php echo module_faq::link_open_public( $data['faq_id'], false ); ?>"
-														   target="_blank"><?php echo htmlspecialchars( $faq['question'] ); ?></a>
-													</li>
-												<?php } ?>
-											</ul>
-										</td>
-									</tr>
-									</tbody>
-								</table>
 
-							</td>
-						</tr>
+						// The two column list of links. Not a form layout - a presentation grid -
+						// so it stays a plain table, and goes into a cell of the row below.
+						ob_start();
+						?>
+						<table width="100%" class="tableclass tableclass_full table_faq_class">
+							<tbody>
+							<tr>
+								<td width="50%" valign="top">
+									<ul><?php
+										for ( true; $x < $half; $x++ ) {
+											$data = array_shift( $faqs );
+											$faq  = module_faq::get_faq( $data['faq_id'] );
+											?>
+											<li>
+												<a href="<?php echo module_faq::link_open_public( $data['faq_id'], false ); ?>"
+												   target="_blank"><?php echo htmlspecialchars( $faq['question'] ); ?></a>
+											</li>
+										<?php } ?>
+									</ul>
+								</td>
+								<td width="50%" valign="top">
+									<ul><?php
+										foreach ( $faqs as $data ) {
+											$faq = module_faq::get_faq( $data['faq_id'] );
+											?>
+											<li>
+												<a href="<?php echo module_faq::link_open_public( $data['faq_id'], false ); ?>"
+												   target="_blank"><?php echo htmlspecialchars( $faq['question'] ); ?></a>
+											</li>
+										<?php } ?>
+									</ul>
+								</td>
+							</tr>
+							</tbody>
+						</table>
 						<?php
+						$faq_links = ob_get_clean();
+
+						// The rows themselves go through the form helper like every other form row
+						// in the system. 'rows' is the mode for a fragment: these drop into the
+						// second tbody of a table the ticket form has already rendered, so there is
+						// no table, heading or box to emit around them.
+						ob_start();
+						echo module_form::generate_fieldset( array(
+							'type'     => 'rows',
+							'elements' => array(
+								'faq'       => array(
+									'title'  => 'FAQ',
+									'fields' => array(
+										htmlspecialchars( _l( 'Please read through the below FAQ to see if the question has already been answered' ) ),
+									),
+								),
+								'faq_links' => array(
+									// No title, so no header cell; colspan puts the list across both
+									// columns, which is what the hand-written row did.
+									'cell_attributes' => array( 'colspan' => '2' ),
+									'fields'          => array( $faq_links ),
+								),
+							),
+						) );
 						$html = preg_replace( '#\s+#', ' ', ob_get_clean() );
 						?>
 						$('#faq_product_area').html('<?php echo addcslashes( $html, "'" ); ?>');
