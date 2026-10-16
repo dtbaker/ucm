@@ -1575,6 +1575,7 @@ class module_form extends module_base
 			'class'           => 'tableclass tableclass_form',
 			'extra_settings'  => array(),
 			'elements_before' => '',
+		'tbody_after'     => '',
 			'elements_after'  => '',
 		);
 		$options  = array_merge( $defaults, $options );
@@ -1684,6 +1685,15 @@ class module_form extends module_base
 				}
 				?>
 				</tbody>
+				<?php
+				// tbody_after is raw markup placed inside the table, after the fieldset's own
+				// tbody. It exists for a caller whose script replaces a block of rows: a table
+				// may carry several tbodies, so a second one can be swapped out without
+				// disturbing the rows this fieldset rendered. The faq hook's product form needs
+				// exactly that, and wrote its own <table> for years because a fieldset could not
+				// say it.
+				echo $options['tbody_after'] ?? '';
+				?>
 			</table>
 		<?php }
 		echo $options['elements_after']; ?>

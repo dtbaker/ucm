@@ -47,25 +47,32 @@ async function aDataFieldGroup( page: Page ): Promise<{ typeId: string; groupId:
  * switches on, which the old <tbody id> markup had no equivalent of, or a PHP 8 bug fixed
  * alongside - and the script knows which, so anything else is reported as a difference.
  *
- * One <table class="tableclass_form"> tag is left outside the two renderers, and it holds
- * no fields: it is the empty target the faq hook's ajax drops rows into, described below.
- * tests/unit/FieldsetMarkupTest.php keeps that list at exactly one.
+ * No page prints its own form table any more. tests/unit/FieldsetMarkupTest.php scans
+ * includes/ and allows none.
  *
- * Every reason this list once held for leaving a real form table alone turned out to be
- * wrong, every time in the direction of not converting - so what follows is the record of
- * what each reason actually was, kept because the pattern is the useful part.
+ * Every reason this list once held for leaving a form table alone turned out to be wrong,
+ * every time in the direction of not converting - so what follows is the record of what
+ * each reason actually was, kept because the pattern is the useful part.
  *
  *  WHAT THE LAST ONE NEEDED
  *    ticket_create (faq hook) had a SECOND <tbody id="faq_product_area"> inside the same
  *      table, which includes/plugin_faq/faq.php fills with rows over ajax
- *      ($('#faq_product_area').html(...)). generate_fieldset emits one tbody and has no
- *      option for another, and the injected content is table rows, which need a row parent
- *      or the browser hoists them out. The real row is now a fieldset element and the ajax
- *      target is a table of its own directly below it, in the same class. Nothing injected
- *      there is a form control - it is FAQ links and a line of guidance. The spec puts a
- *      row in the way faq.php does and checks it lands inside the table, because this
- *      install has no faq_product_rel rows and a real product change injects nothing; it
- *      fails with the target removed.
+ *      ($('#faq_product_area').html(...)). The injected content is table rows, which need
+ *      a row parent or the browser hoists them out, and generate_fieldset emitted one
+ *      tbody with no way to ask for another - so the first attempt at this gave the target
+ *      a second <table> of its own and left it in the allow-list as an exception. That was
+ *      the wrong answer. A table may carry several tbodies, so generate_fieldset now takes
+ *      tbody_after and the target is a second tbody inside the fieldset's own table, which
+ *      is what the hand-written one was imitating: one table, the product row above it
+ *      untouched when the script replaces the rows below. The spec checks the target is a
+ *      tbody in the same table as the product select, and that an injected row survives
+ *      there - this install has no faq_product_rel rows, so a real product change injects
+ *      nothing and the row has to be put in by hand. It fails with tbody_after removed.
+ *
+ *      What faq.php sends is still hand-built markup, and deliberately so: it is a
+ *      fragment of <tr>s for a table that already exists, and generate_fieldset renders
+ *      whole tables, not fragments. Converting it would need a rows-only mode on both
+ *      renderers. Nothing in that fragment is a form control.
  *
  *  NOT A FORM LAYOUT - one cell, no <th>, a styled container around a message or summary,
  *  already handed to a fieldset as its elements_before:
@@ -1332,11 +1339,21 @@ test.describe( 'Forms moved to generate_fieldset (faq product row)', () => {
       // table rows need a row parent or the browser throws them out of the table.
       const target = await page.evaluate( () => {
         const el = document.querySelector( '#faq_product_area' );
+        const select = document.querySelector( '#faq_product_id' );
 
-        return el ? { tag: el.tagName, inTable: !! el.closest( 'table' ) } : null;
+        return el
+          ? {
+            tag: el.tagName,
+            // A table may hold several tbodies. The target is a second one in the
+            // fieldset's own table, so the injected rows line up with the product row
+            // above them and replacing them leaves it alone - which is what the
+            // hand-written table used to do, and what tbody_after now does.
+            sameTableAsTheProductRow: !! ( select && el.closest( 'table' ) === select.closest( 'table' ) ),
+          }
+          : null;
       } );
       expect( target, 'the ajax target #faq_product_area is gone' ).not.toBeNull();
-      expect( target ).toEqual( { tag: 'TBODY', inTable: true } );
+      expect( target ).toEqual( { tag: 'TBODY', sameTableAsTheProductRow: true } );
 
       // And that it still accepts them. This install has no faq_product_rel rows, so a
       // real product change injects nothing; putting a row in the way faq.php does is what

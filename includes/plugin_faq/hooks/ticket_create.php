@@ -24,14 +24,12 @@ echo module_form::generate_fieldset( array(
 		),
 	),
 	// includes/plugin_faq/faq.php answers a product change with
-	// $('#faq_product_area').html('<tr>...</tr>'), so the target has to stay a tbody -
-	// table rows need a row parent or the browser hoists them out of the table. A fieldset
-	// emits one tbody and has no option for a second, so the target gets a table of its
-	// own, directly below and in the same class so the two read as one block. Nothing in
-	// the injected markup is a form control; it is FAQ links and a line of guidance.
-	'elements_after' => '<table border="0" cellspacing="0" cellpadding="2"'
-	                    . ' class="tableclass tableclass_form tableclass_full">'
-	                    . '<tbody id="faq_product_area"></tbody></table>',
+	// $('#faq_product_area').html('<tr>...</tr>'), so the target has to be a tbody - table
+	// rows need a row parent or the browser hoists them out. A second tbody in this same
+	// table is exactly that, and leaves the product row above it untouched when the script
+	// replaces it. Nothing injected there is a form control: it is FAQ links and a line of
+	// guidance.
+	'tbody_after'   => '<tbody id="faq_product_area"></tbody>',
 ) );
 ?>
 

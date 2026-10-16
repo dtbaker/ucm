@@ -33,17 +33,13 @@ class FieldsetMarkupTest extends TestCase
 	);
 
 	/**
-	 * The one <table> tag outside the renderers, with why.
-	 *
-	 * It holds no fields. module_form::generate_fieldset() emits a single <tbody> and has no
-	 * option for a second, and includes/plugin_faq/faq.php answers a product change with
-	 * $('#faq_product_area').html('<tr>...</tr>') - table rows, which need a row parent or
-	 * the browser hoists them out. So the fieldset renders the product row and this empty
-	 * table, directly below it and in the same class, is the target those rows land in.
+	 * Nothing is allowed. This was briefly one entry - the faq hook wrote an empty table to
+	 * give its ajax a tbody to replace - and the answer was to add the option rather than
+	 * keep the exception: generate_fieldset takes tbody_after, so the target is a second
+	 * tbody inside the fieldset's own table, which is what the hand-written one was
+	 * imitating. If you find yourself adding an entry here, add the option instead.
 	 */
-	private const ALLOWED = array(
-		'includes/plugin_faq/hooks/ticket_create.php' => 1,
-	);
+	private const ALLOWED = array();
 
 	public function testNoPagePrintsItsOwnFormTable(): void
 	{

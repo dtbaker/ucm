@@ -64,6 +64,9 @@ class FieldsetRenderersTest extends TestCase
 			'lets a caller replace the generated row id' => array(
 				'isset( $element[\'row_attributes\'][\'id\'] )',
 			),
+			'emits caller supplied markup inside the table' => array(
+				'echo $options[\'tbody_after\'] ?? \'\';',
+			),
 		);
 	}
 
