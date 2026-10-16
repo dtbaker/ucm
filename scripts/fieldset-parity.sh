@@ -10,7 +10,7 @@
 # a run that passes against BOTH the old markup and the new one is saying the two render
 # the same fields - which is the thing the conversion had to preserve.
 #
-# Four pages are expected to fail, and only on a named assertion:
+# Some pages are expected to fail, and only on a named assertion:
 #
 #   encrypt_popup, recurring_edit   the row class their scripts switch on. It does not
 #                                   exist in the old markup, which used a <tbody id>.
@@ -46,6 +46,9 @@ PAGES=(
 	includes/plugin_newsletter/pages/newsletter_template_edit.php
 	includes/plugin_data/pages/admin_data_search.php
 	includes/plugin_ticket/pages/ticket_admin_edit.php
+	includes/plugin_note/pages/note_edit.php
+	includes/plugin_ticket/pages/ticket_admin_edit_messages.php
+	includes/plugin_address/pages/address_block.php
 )
 
 # Pages whose specs cannot pass against the old markup, and the one assertion each is
@@ -58,6 +61,7 @@ expected_failure() {
 		recurring_edit.php) echo "the class the toggle hides" ;;
 		newsletter_queue.php) echo "printed a PHP diagnostic" ;;
 		newsletter_member.php) echo "should not be dying" ;;
+		ticket_admin_edit_messages.php) echo "the class the button reveals" ;;
 		*) echo "" ;;
 	esac
 }
@@ -75,8 +79,12 @@ for page in "${PAGES[@]}"; do
 	# writing the file can still be served from the old bytecode.
 	sleep 3
 
+	# One worker. Run in parallel this reported two pages as changed that had not: the
+	# fixtures here share records, and a race between them fails an assertion that has
+	# nothing to do with the page being tested. A verification script that cries wolf is
+	# worse than a slow one.
 	out=$(UCM_DEMO=1 npx playwright test tests/e2e/fieldsets.spec.ts tests/e2e/demo-mode.spec.ts \
-		--reporter=list 2>&1)
+		--workers=1 --reporter=list 2>&1)
 	status=$?
 	git checkout -- "$page"
 

@@ -38,28 +38,37 @@ async function aDataFieldGroup( page: Page ): Promise<{ typeId: string; groupId:
 }
 
 /**
- * What is left, and how the conversions were shown not to change anything.
+ * How the conversions were shown not to change anything, and what is left.
  *
- * Eighteen pages were converted. ./scripts/fieldset-parity.sh puts each one back to the
- * markup it had before its conversion and runs these specs against it: they assert an
- * exact list of controls, so a run that passes against the old markup and the new one is
- * saying both render the same fields. All eighteen pass. Four fail on one named assertion
- * each - the row class their script switches on, which the old <tbody id> markup had no
- * equivalent of, or a PHP 8 bug fixed alongside the conversion - and the script knows
- * which, so anything else is a real difference.
+ * Twenty-one pages were converted. ./scripts/fieldset-parity.sh puts each one back to the
+ * markup it had before, and runs these specs against it: they assert an exact list of
+ * controls, so a run that passes against the old markup and the new one is saying both
+ * render the same fields. Four fail on one named assertion each - a row class their script
+ * switches on, which the old <tbody id> markup had no equivalent of, or a PHP 8 bug fixed
+ * alongside - and the script knows which, so anything else is reported as a difference.
  *
- * Five hand-written tables remain inside forms, and each was checked rather than judged:
+ * Seventeen tables are left, and each has a checked reason rather than a judgement:
  *
- *  Four are the "Details hidden" and contact summary boxes on the customer and vendor
- *  screens. They only render for a user WITHOUT permission to view contacts, so an
- *  administrator never sees them - loading both screens confirms neither string appears.
- *  There is no way to write a spec that reaches them from the test account.
+ *  UNREACHABLE FROM THE TEST ACCOUNT - no passing spec can be written, so no conversion
+ *    customer_admin_edit (2), vendor_admin_edit (2)   render only for a user WITHOUT
+ *      permission to view contacts. An administrator never sees them; both screens were
+ *      loaded and neither string appears.
+ *    user_admin_edit_company   the company module is off in this install, so the block
+ *      never renders. Checked across three user screens.
+ *    newsletter_edit:460   sits inside a commented-out block, so it renders nowhere.
  *
- *  The fifth sits inside a commented-out block in the newsletter editor, so it renders
- *  nowhere at all.
+ *  COUPLED TO MARKUP A FIELDSET CANNOT PRODUCE
+ *    render_group   opens its <table> in one branch of a switch and closes it in another,
+ *      streaming rows between - there is no block to replace. It also carries an id and a
+ *      rel that its own script reads.
+ *    group.php   puts the checkbox in the <th> with a data-settings-url that
+ *      plugin_config/js/settings.js scans for, and a fieldset offers no way to put an
+ *      attribute on the title cell. Worth revisiting if that option is ever added.
  *
- * Outside forms there are summaries, sidebars and hook output still using the form table
- * class. They are a reasonable thing to convert one day; they are not form internals.
+ *  NOT A FORM LAYOUT - one cell, no <th>, a styled container around a message or summary.
+ *  Several are already handed to a fieldset as its elements_before:
+ *    customer_summary, contact_summary, user_summary, newsletter_statistics,
+ *    invoice_sidebar, member_edit, ticket_create, ticket_priority_sidebar, ticket.php
  */
 
 /**
@@ -728,5 +737,30 @@ test.describe( 'Forms moved to generate_fieldset', () => {
       'the cc and bcc rows need the class the button reveals' ).toBe( 3 );
     expect( body, 'and the button should reveal them by class' )
       .toContain( "$('.ticket_cc_bcc')" );
+  } );
+
+  test( 'the address block keeps its fields', async ( { page } ) => {
+    await login( page );
+    const customerId = await aCustomer( page );
+    const body = await ( await page.request.get(
+      `/?m[]=customer&p[]=customer_admin_edit&customer_id=${ customerId }` ) ).text();
+
+    // The address hash differs per owner, so the names are compared with it taken out.
+    const names = [ ...new Set( [ ...body.matchAll( /name="(address\[[^\]]+\]\[[a-z_0-9]+\])"/g ) ]
+      .map( ( m ) => m[ 1 ].replace( /\[[^\]]{6,}\]/, '[hash]' ) ) ) ].sort();
+
+    expect( names, 'the address block should render the same fields' ).toEqual( [
+      'address[hash][address_id]',
+      'address[hash][address_type]',
+      'address[hash][country]',
+      'address[hash][line_1]',
+      'address[hash][line_2]',
+      'address[hash][owner_id]',
+      'address[hash][owner_table]',
+      'address[hash][post_code]',
+      'address[hash][region]',
+      'address[hash][state]',
+      'address[hash][suburb]',
+    ] );
   } );
 } );

@@ -45,37 +45,34 @@ if ( isset( $display_pretty ) && $display_pretty ) {
 } else {
 	// oldschool table layout:
 
-	?>
-	<table width="100%" border="0" cellspacing="0" cellpadding="2" class="tableclass tableclass_form">
-		<tbody>
-		<?php
-		foreach ( $fields as $key => $val ) {
-			if ( ! empty( $val[0] ) || ! empty( $address[ $key ] ) ) {
-				?>
-				<tr>
-					<th class="width1">
-						<?php echo _l( $val[0] ); ?>
-					</th>
-					<td>
-						<?php
-						// quick added hack for 'region' to display as a drop down
-						if ( $key == 'region_id' || $key == 'state_id' || $key == 'country_id' ) {
-							echo print_select_box( get_col_vals( 'address', $key ), 'address[' . $address_hash . '][' . $key . ']', ( isset( $address[ $key ] ) ? $address[ $key ] : '' ), '', false, false, true );
-						} else {
-							?>
-							<input type="text" name="address[<?php echo $address_hash; ?>][<?php echo $key; ?>]"
-							       value="<?php echo isset( $address[ $key ] ) ? htmlspecialchars( $address[ $key ] ) : ''; ?>"
-							       size="<?php echo $val[1]; ?>"/>
-						<?php } ?>
-					</td>
-				</tr>
-			<?php }
+	$address_elements = array();
+	foreach ( $fields as $key => $val ) {
+		if ( ! empty( $val[0] ) || ! empty( $address[ $key ] ) ) {
+			// quick added hack for 'region' to display as a drop down
+			if ( $key == 'region_id' || $key == 'state_id' || $key == 'country_id' ) {
+				ob_start();
+				echo print_select_box( get_col_vals( 'address', $key ), 'address[' . $address_hash . '][' . $key . ']', ( isset( $address[ $key ] ) ? $address[ $key ] : '' ), '', false, false, true );
+				$address_elements[ $key ] = array(
+					'title'  => _l( $val[0] ),
+					'fields' => array( ob_get_clean() ),
+				);
+			} else {
+				$address_elements[ $key ] = array(
+					'title' => _l( $val[0] ),
+					'field' => array(
+						'type'  => 'text',
+						'name'  => 'address[' . $address_hash . '][' . $key . ']',
+						'value' => isset( $address[ $key ] ) ? $address[ $key ] : '',
+						'size'  => $val[1],
+					),
+				);
+			}
 		}
-		?>
-		</tbody>
-	</table>
-
-	<?php
+	}
+	echo module_form::generate_fieldset( array(
+		'class'    => 'tableclass tableclass_form',
+		'elements' => $address_elements,
+	) );
 }
 ?>
 <input type="hidden" name="address[<?php echo $address_hash; ?>][address_id]" value="<?php echo $address_id; ?>">
