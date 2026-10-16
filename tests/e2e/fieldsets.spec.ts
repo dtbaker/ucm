@@ -1080,31 +1080,32 @@ test.describe( 'Forms moved to generate_fieldset (data field group)', () => {
 } );
 
 /**
- * A security role that grants view on everything except the permissions named in `deny`.
+ * A security role granting view on exactly the permissions listed, and nothing else.
  *
  * The two primary contact blocks on the customer and vendor screens only render for a
  * staff member who cannot see, or cannot edit, that record's contacts - which is why they
  * were written off as unreachable. An administrator cannot reach them at all:
  * module_security::has_feature_access() returns true unconditionally for user id 1.
  *
- * `deny` lists security_permission_ids. 105 is "All Customer Contacts" and 179 is "All
- * Vendor Contacts" (category Customer/Vendor, module customer/vendor). 82 is "Can User
- * Login" and must never be denied - without it establish_session() answers "Account
- * disabled" and the account cannot be used at all.
+ * An explicit grant list rather than "everything except X", because the permission table
+ * grows: has_feature_access() inserts a row the first time any page asks for a permission
+ * it has not seen, so the count climbs as the suite covers more screens - 951 rows at the
+ * start of this work, 1133 a few hours later. PHP's max_input_vars is 1000, and the role
+ * form posts one checkbox per permission per action, so "tick everything" silently
+ * truncates and lands back on the login screen. Granting a fixed handful is both stable
+ * and well under the limit. (That the form is unsaveable at all past ~1000 permissions is
+ * a real bug, raised separately; the assertion below is here so this fixture cannot drift
+ * back into it unnoticed.)
  *
- * Only the view action is granted, which is what these blocks turn on and, more to the
- * point, all that fits: the role form carries 1649 permission checkboxes and PHP's
- * max_input_vars is 1000, so a post that ticks every box is silently truncated and lands
- * back on the login screen. View alone is 923 fields. That limit is not a test artefact -
- * it is the same form a person uses.
- *
- * The caller is responsible for not making one of these per run - see signedInAs(), which
- * reuses the role already on its staff account. A role per run would pile up the way the
- * CSRF spec's have (188 of them when this was written), and the role list cannot be used
- * to find one again: it shows twenty at a time with no paging parameter to follow, so a
- * newly created role is simply not on it.
+ * The ids: 82 Can User Login - never omit it, or establish_session() answers "Account
+ * disabled" and the account is unusable. 33 Customers and 199 Customer, 180 Vendors, and
+ * 15/16 Contacts are what the two screens check before rendering at all. 105 All Customer
+ * Contacts and 179 All Vendor Contacts are the ones these blocks turn on.
  */
-async function aRoleWithout( page: Page, roleName: string, deny: string[] ): Promise<string> {
+const CAN_LOG_IN_AND_OPEN_RECORDS = [ '82', '33', '199', '180', '15', '16' ];
+const ALL_CONTACTS = [ '105', '179' ];
+
+async function aRoleGranting( page: Page, roleName: string, grant: string[] ): Promise<string> {
   const form = await ( await page.request.get( '/?m[]=security&p[]=security_role&security_role_id=new' ) ).text();
   const token = ( form.match( /name="form_auth_key" value="([^"]+)"/ ) || [] )[ 1 ];
   expect( token, 'the role form published no token' ).toBeTruthy();
@@ -1116,13 +1117,13 @@ async function aRoleWithout( page: Page, roleName: string, deny: string[] ): Pro
     form_auth_key: token,
     _redirect: '/',
   };
-  for ( const match of form.matchAll( /name="permission\[(\d+)\]\[view\]"/g ) ) {
-    if ( deny.includes( match[ 1 ] ) ) {
-      continue;
-    }
-    body[ `permission[${ match[ 1 ] }][view]` ] = '1';
+  for ( const permissionId of grant ) {
+    expect(
+      form,
+      `the role form has no view checkbox for permission ${ permissionId }`,
+    ).toContain( `name="permission[${ permissionId }][view]"` );
+    body[ `permission[${ permissionId }][view]` ] = '1';
   }
-  expect( Object.keys( body ).length, 'the role form offered no permissions' ).toBeGreaterThan( 100 );
   expect(
     Object.keys( body ).length,
     'this post exceeds max_input_vars (1000) and will be silently truncated',
@@ -1138,7 +1139,6 @@ async function aRoleWithout( page: Page, roleName: string, deny: string[] ): Pro
   return created;
 }
 
-
 /**
  * A staff account with a restricted role, and a browser signed in as it.
  *
@@ -1153,9 +1153,9 @@ async function signedInAs(
   page: Page,
   browser: Browser,
   label: string,
-  deny: string[],
+  grant: string[],
 ): Promise<{ visitor: Page; cleanup: () => Promise<void> }> {
-  const roleId = await aRoleWithout( page, `Fieldset Role ${ label } ${ Date.now() }`, deny );
+  const roleId = await aRoleGranting( page, `Fieldset Role ${ label } ${ Date.now() }`, grant );
   const userId = await createRecord( page, '/?m[]=user', {
     _process: 'save_user',
     user_id: 'new',
@@ -1242,13 +1242,13 @@ test.describe( 'Forms moved to generate_fieldset (restricted contact blocks)', (
     const asAdmin = await ( await page.request.get( url ) ).text();
     expect( asAdmin, 'the admin should never see the hidden-details block' ).not.toContain( 'Details hidden' );
 
-    // The vendor screen carries the same two blocks behind permission 179, All Vendor
-    // Contacts, so one account covers both.
+    // Granting neither 105 nor 179 is what puts this account in the first branch, on both
+    // screens, so one account covers the customer and the vendor one.
     const vendorList = await ( await page.request.get( '/?m[]=vendor&p[]=vendor_admin' ) ).text();
     const vendorId = ( vendorList.match( /vendor_id=(\d+)/ ) || [] )[ 1 ];
     const vendorUrl = vendorId ? `/?m[]=vendor&p[]=vendor_admin_edit&vendor_id=${ vendorId }` : '';
 
-    const { visitor, cleanup } = await signedInAs( page, browser, 'No Contact View', [ '105', '179' ] );
+    const { visitor, cleanup } = await signedInAs( page, browser, 'No Contact View', CAN_LOG_IN_AND_OPEN_RECORDS );
     try {
       const body = await ( await visitor.request.get( url ) ).text();
       expect( body, 'the restricted account could not open the customer screen' )
@@ -1283,9 +1283,9 @@ test.describe( 'Forms moved to generate_fieldset (read-only contact block)', () 
     } );
     expect( contactName, 'the seeded customer has no primary contact name' ).not.toBe( '' );
 
-    // No denials: a view-only role has view on All Customer Contacts and no edit, which is
-    // the second branch - the read-only summary rather than "Details hidden".
-    const { visitor, cleanup } = await signedInAs( page, browser, 'View Not Edit', [] );
+    // Granted view on All Customer Contacts but never edit - no role here grants edit - so
+    // this is the second branch: the read-only summary rather than "Details hidden".
+    const { visitor, cleanup } = await signedInAs( page, browser, 'View Not Edit', [ ...CAN_LOG_IN_AND_OPEN_RECORDS, ...ALL_CONTACTS ] );
     try {
       const body = await ( await visitor.request.get( url ) ).text();
       expect( body, 'the restricted account could not open the customer screen' )
