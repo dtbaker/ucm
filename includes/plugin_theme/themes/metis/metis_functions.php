@@ -330,7 +330,9 @@ function metris_generate_fieldset( $callback, $options ) {
 							unset( $element['field'] );
 						}
 						?>
-					<tr id="<?php echo $fieldset_id . '_' . $element_id; ?>" <?php
+					<tr id="<?php echo isset( $element['row_attributes']['id'] )
+						? htmlspecialchars( (string) $element['row_attributes']['id'], ENT_QUOTES, 'UTF-8' )
+						: $fieldset_id . '_' . $element_id; ?>" <?php
 					if ( ! empty( $element['dependency'] ) && is_array( $element['dependency'] ) ) {
 						if ( empty( $element['dependency']['fieldset_id'] ) ) {
 							$element['dependency']['fieldset_id'] = $fieldset_id;
@@ -354,6 +356,14 @@ function metris_generate_fieldset( $callback, $options ) {
 					if ( ! empty( $element['row_style'] ) ) {
 						echo ' style="' . htmlspecialchars( $element['row_style'], ENT_QUOTES, 'UTF-8' ) . '"';
 					}
+					// row_attributes puts arbitrary attributes on the row. id, class and style are
+					// left out: the id is emitted above (a caller supplied one replaces the generated
+					// one), and class and style have their own options, so emitting them here too
+					// would put the attribute on the tag twice.
+					module_form::render_cell_attributes( array_diff_key(
+						$element['row_attributes'] ?? array(),
+						array( 'id' => 1, 'class' => 1, 'style' => 1 )
+					) );
 					?>>
 						<?php if ( ( isset( $element['message'] ) && $element['message'] ) || ( isset( $element['warning'] ) && isset( $element['warning'] ) ) ) { ?>
 							<th colspan="2" style="text-align:center">

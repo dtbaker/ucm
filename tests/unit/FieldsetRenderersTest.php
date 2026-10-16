@@ -58,6 +58,12 @@ class FieldsetRenderersTest extends TestCase
 			'puts a caller supplied style on the row' => array(
 				'$element[\'row_style\']',
 			),
+			'emits caller supplied row attributes' => array(
+				'$element[\'row_attributes\'] ?? array(),',
+			),
+			'lets a caller replace the generated row id' => array(
+				'isset( $element[\'row_attributes\'][\'id\'] )',
+			),
 		);
 	}
 

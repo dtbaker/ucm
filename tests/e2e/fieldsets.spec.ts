@@ -47,8 +47,8 @@ async function aDataFieldGroup( page: Page ): Promise<{ typeId: string; groupId:
  * switches on, which the old <tbody id> markup had no equivalent of, or a PHP 8 bug fixed
  * alongside - and the script knows which, so anything else is reported as a difference.
  *
- * Eight tables are left, and each has a checked reason rather than a judgement. The reasons
- * are checked because three times now a reason here turned out to be wrong, every time in
+ * Five tables are left, and each has a checked reason rather than a judgement. The reasons
+ * are checked because four times now a reason here turned out to be wrong, every time in
  * the direction of leaving convertible markup alone:
  *
  *  UNREACHABLE FROM THE TEST ACCOUNT - no passing spec can be written, so no conversion
@@ -57,9 +57,6 @@ async function aDataFieldGroup( page: Page ): Promise<{ typeId: string; groupId:
  *      loaded and neither string appears.
  *
  *  COUPLED TO MARKUP A FIELDSET CANNOT PRODUCE
- *    render_group   opens its <table> in one branch of a switch and closes it in another,
- *      streaming rows between - there is no block to replace. It also carries an id and a
- *      rel that its own script reads.
  *    ticket_create (faq hook)   has a SECOND <tbody id="faq_product_area"> inside the same
  *      table, which includes/plugin_faq/faq.php fills with rows over ajax
  *      ($('#faq_product_area').html(...)). generate_fieldset emits one tbody and has no
@@ -94,6 +91,15 @@ async function aDataFieldGroup( page: Page ): Promise<{ typeId: string; groupId:
  *      summaries. The first is three label/value rows; the second is one; the third is a
  *      genuine single cell, which an element with 'fields' and no 'title' renders exactly -
  *      both renderers emit a <th> only when an element has a title. All converted.
+ *    render_group was "opens its <table> in one branch of a switch and closes it in another,
+ *      streaming rows between - there is no block to replace". It did, in six places, but
+ *      every one of those switches had exactly one reachable branch: the file opened by
+ *      setting layout to 'table' unconditionally and nothing anywhere sets 'float'. With
+ *      the dead half gone the rows are a plain list. The id and rel are real - jQuery UI's
+ *      sortable('serialize') builds container_data_field[] from the row id and module_data
+ *      reads it to save the field order - and row_attributes carries them now. The data
+ *      record form renders the same 22 field names, the same three rows with matching
+ *      id and rel, and the same row classes as before.
  *    group.php was "puts the checkbox in the <th> with a data-settings-url that settings.js
  *      scans for, and a fieldset offers no way to put an attribute on the title cell".
  *      Half right. Nothing reads the <tr id="group_N"> it also carried (the only #group_
@@ -989,5 +995,69 @@ test.describe( 'Forms moved to generate_fieldset (group picker)', () => {
       labelInData: true,
       settingsUrlOnSomething: true,
     } );
+  } );
+} );
+
+/** A data type with one field group and one field in it, reused across runs. */
+async function aDataFieldWithGroup( page: Page ): Promise<{ typeId: string; groupId: string; fieldId: string }> {
+  const { typeId, groupId } = await aDataFieldGroup( page );
+  const key = await formAuthKey( page );
+  await page.request.post( '/?m[]=data', {
+    form: {
+      _process: 'save_data_field',
+      data_field_id: 'new',
+      data_type_id: typeId,
+      data_field_group_id: groupId,
+      title: 'Fieldset Probe Field',
+      order: '1',
+      field_type: 'text',
+      // save_field() zeroes any checkbox it was not sent, so without this the field is
+      // hidden from the listing.
+      show_list: '1',
+      form_auth_key: key,
+    },
+    failOnStatusCode: false,
+  } );
+
+  // admin_data_open is where render_group.php actually renders the rows; the group admin
+  // route answers without them.
+  const body = await ( await page.request.get(
+    `/?m[]=data&p[]=admin_data_open&data_type_id=${ typeId }&data_record_id=new` ) ).text();
+  const found = body.match( /id="container_data_field_(\d+)"/ );
+  expect( found, 'the field group rendered no data field row' ).not.toBeNull();
+
+  return { typeId, groupId, fieldId: ( found as RegExpMatchArray )[ 1 ] };
+}
+
+test.describe( 'Forms moved to generate_fieldset (data field group)', () => {
+  test( 'a data field row keeps the id and rel its own scripts read', async ( { page } ) => {
+    await login( page );
+    const { typeId, fieldId } = await aDataFieldWithGroup( page );
+
+    await page.goto( `/?m[]=data&p[]=admin_data_open&data_type_id=${ typeId }&data_record_id=new` );
+
+    const row = await page.evaluate( ( id: string ) => {
+      const tr = document.querySelector( `tr#container_data_field_${ id }` );
+      if ( ! tr ) {
+        return null;
+      }
+
+      return {
+        rel: tr.getAttribute( 'rel' ),
+        classes: ( tr.getAttribute( 'class' ) || '' ).split( /\s+/ ).filter( Boolean ).sort(),
+        inSortableTbody: !! tr.closest( 'table.data_group_fields > tbody' ),
+      };
+    }, fieldId );
+
+    expect( row, 'no row with the id the sortable serialises' ).not.toBeNull();
+    // jQuery UI's sortable('serialize') builds container_data_field[] from the row id, and
+    // includes/plugin_data/data.php reads $_REQUEST['container_data_field'] to save the new
+    // order - so the id is the reorder feature, not decoration. The resize handlers read
+    // rel off the same row ( data_type_admin_group_open.php reads
+    // .parents('tr').first().attr('rel') ).
+    expect( row!.rel, 'rel must carry the data field id' ).toBe( fieldId );
+    expect( row!.classes ).toContain( 'data_field' );
+    expect( row!.classes ).toContain( 'data_field_text' );
+    expect( row!.inSortableTbody, 'the row must sit in the tbody the sortable binds to' ).toBe( true );
   } );
 } );
