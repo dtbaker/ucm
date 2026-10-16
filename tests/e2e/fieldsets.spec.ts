@@ -1,4 +1,4 @@
-import { test, expect, Page } from '@playwright/test';
+import { test, expect, Browser, Page } from '@playwright/test';
 import { describeDiagnostics } from './diagnostics';
 import { aCustomer, aFile, anInvoice, createRecord, formAuthKey, login } from './seed';
 import { byProcess, expectFields, expectFieldsIn, fieldsIn } from './form-fields';
@@ -47,14 +47,8 @@ async function aDataFieldGroup( page: Page ): Promise<{ typeId: string; groupId:
  * switches on, which the old <tbody id> markup had no equivalent of, or a PHP 8 bug fixed
  * alongside - and the script knows which, so anything else is reported as a difference.
  *
- * Five tables are left, and each has a checked reason rather than a judgement. The reasons
- * are checked because four times now a reason here turned out to be wrong, every time in
- * the direction of leaving convertible markup alone:
- *
- *  UNREACHABLE FROM THE TEST ACCOUNT - no passing spec can be written, so no conversion
- *    customer_admin_edit (2), vendor_admin_edit (2)   render only for a user WITHOUT
- *      permission to view contacts. An administrator never sees them; both screens were
- *      loaded and neither string appears.
+ * One table is left. Every other reason recorded here turned out to be wrong, every time
+ * in the direction of leaving convertible markup alone, so this one says what was checked:
  *
  *  COUPLED TO MARKUP A FIELDSET CANNOT PRODUCE
  *    ticket_create (faq hook)   has a SECOND <tbody id="faq_product_area"> inside the same
@@ -68,6 +62,19 @@ async function aDataFieldGroup( page: Page ): Promise<{ typeId: string; groupId:
  *    (none left - see below)
  *
  * What was removed from this list, and why it was wrong:
+ *
+ *    customer_admin_edit and vendor_admin_edit (two each) were "unreachable from the test
+ *      account - no passing spec can be written". They are reachable. They render for a
+ *      staff member who cannot view, or cannot edit, that record's contacts, and an
+ *      administrator genuinely cannot see them, because has_feature_access() returns true
+ *      unconditionally for user id 1 - so the way to reach them is to stop being user 1.
+ *      The tests at the bottom of this file build a restricted role, put a staff account
+ *      on it, sign in through the account's own auto-login link and assert both branches,
+ *      on both screens, then delete the role and the account again. Converting them turned
+ *      up a bug: the customer screen's read-only branch captured the contact summary into
+ *      an inner ob_start() that only fed the responsive heading, so a staff member who may
+ *      view but not edit contacts got a "Primary Contact Details" box with an empty cell.
+ *      The spec for it failed before that was fixed. The vendor copy never had the bug.
  *
  *    contact_summary, user_summary, customer_summary were filed under "one cell, no <th>".
  *      Each is a label/value table with a <th> per row - five, six and one respectively.
@@ -1059,5 +1066,240 @@ test.describe( 'Forms moved to generate_fieldset (data field group)', () => {
     expect( row!.classes ).toContain( 'data_field' );
     expect( row!.classes ).toContain( 'data_field_text' );
     expect( row!.inSortableTbody, 'the row must sit in the tbody the sortable binds to' ).toBe( true );
+  } );
+} );
+
+/**
+ * A security role that grants view on everything except the permissions named in `deny`.
+ *
+ * The two primary contact blocks on the customer and vendor screens only render for a
+ * staff member who cannot see, or cannot edit, that record's contacts - which is why they
+ * were written off as unreachable. An administrator cannot reach them at all:
+ * module_security::has_feature_access() returns true unconditionally for user id 1.
+ *
+ * `deny` lists security_permission_ids. 105 is "All Customer Contacts" and 179 is "All
+ * Vendor Contacts" (category Customer/Vendor, module customer/vendor). 82 is "Can User
+ * Login" and must never be denied - without it establish_session() answers "Account
+ * disabled" and the account cannot be used at all.
+ *
+ * Only the view action is granted, which is what these blocks turn on and, more to the
+ * point, all that fits: the role form carries 1649 permission checkboxes and PHP's
+ * max_input_vars is 1000, so a post that ticks every box is silently truncated and lands
+ * back on the login screen. View alone is 923 fields. That limit is not a test artefact -
+ * it is the same form a person uses.
+ *
+ * The caller is responsible for not making one of these per run - see signedInAs(), which
+ * reuses the role already on its staff account. A role per run would pile up the way the
+ * CSRF spec's have (188 of them when this was written), and the role list cannot be used
+ * to find one again: it shows twenty at a time with no paging parameter to follow, so a
+ * newly created role is simply not on it.
+ */
+async function aRoleWithout( page: Page, roleName: string, deny: string[] ): Promise<string> {
+  const form = await ( await page.request.get( '/?m[]=security&p[]=security_role&security_role_id=new' ) ).text();
+  const token = ( form.match( /name="form_auth_key" value="([^"]+)"/ ) || [] )[ 1 ];
+  expect( token, 'the role form published no token' ).toBeTruthy();
+
+  const body: Record<string, string> = {
+    _process: 'save_security_role',
+    security_role_id: 'new',
+    name: roleName,
+    form_auth_key: token,
+    _redirect: '/',
+  };
+  for ( const match of form.matchAll( /name="permission\[(\d+)\]\[view\]"/g ) ) {
+    if ( deny.includes( match[ 1 ] ) ) {
+      continue;
+    }
+    body[ `permission[${ match[ 1 ] }][view]` ] = '1';
+  }
+  expect( Object.keys( body ).length, 'the role form offered no permissions' ).toBeGreaterThan( 100 );
+  expect(
+    Object.keys( body ).length,
+    'this post exceeds max_input_vars (1000) and will be silently truncated',
+  ).toBeLessThan( 1000 );
+
+  // The save redirects to the new role, which is the only reliable way to learn its id:
+  // the role list shows twenty at a time and offers no paging parameter to follow.
+  const saved = await page.request.post( '/?m[]=security',
+    { form: body, failOnStatusCode: false, maxRedirects: 0 } );
+  const created = ( ( saved.headers()[ 'location' ] ?? '' ).match( /security_role_id=(\d+)/ ) || [] )[ 1 ];
+  expect( created, `the role ${ roleName } was not created` ).toBeTruthy();
+
+  return created;
+}
+
+
+/**
+ * A staff account with a restricted role, and a browser signed in as it.
+ *
+ * Both the account and the role are created per run and removed again by the returned
+ * cleanup, because neither can be found a second time: the user list and the role list
+ * each show about twenty rows with no paging parameter to follow, and a record created by
+ * a test is not on either of them. Leaving them behind is how the CSRF spec ended up with
+ * 188 roles. module_form::confirm_delete() takes a hash of the key and its value, so a
+ * test can go through the app's own delete rather than reaching into the database.
+ */
+async function signedInAs(
+  page: Page,
+  browser: Browser,
+  label: string,
+  deny: string[],
+): Promise<{ visitor: Page; cleanup: () => Promise<void> }> {
+  const roleId = await aRoleWithout( page, `Fieldset Role ${ label } ${ Date.now() }`, deny );
+  const userId = await createRecord( page, '/?m[]=user', {
+    _process: 'save_user',
+    user_id: 'new',
+    name: `Fieldset ${ label }`,
+    email: `fieldset-${ label.toLowerCase().replace( /\W+/g, '-' ) }-${ Date.now() }@example.com`,
+    // An admin setting somebody else's password uses password_new. Without a real stored
+    // hash, get_auto_login_string() has nothing to derive a key from.
+    password_new: 'Fieldset-' + label.replace( /\W+/g, '' ) + '-9142!',
+    role_id: roleId,
+    _redirect: '/',
+  }, 'user_id' );
+
+  const cleanup = async () => {
+    await deleteRecord( page, '/?m[]=user', 'save_user', 'user_id', userId );
+    await deleteRecord( page, '/?m[]=security', 'save_security_role', 'security_role_id', roleId );
+  };
+
+  try {
+    await page.goto( '/?m[]=user&p[]=user_admin&user_id=' + userId );
+    const link = await page.evaluate( () => {
+      const a = Array.from( document.querySelectorAll( 'a[href*="auto_login="]' ) )[ 0 ] as HTMLAnchorElement | undefined;
+
+      return a ? a.href : '';
+    } );
+    expect( link, 'the user screen should offer an auto-login link' ).toContain( 'auto_login=' + userId );
+
+    const context = await browser.newContext();
+    const visitor = await context.newPage();
+    await visitor.goto( link );
+    await visitor.waitForLoadState( 'load' );
+    await expect(
+      visitor.locator( 'input[name="password"]' ),
+      'the restricted account did not sign in - check it still has the Can User Login permission (82)',
+    ).toHaveCount( 0 );
+
+    return {
+      visitor,
+      cleanup: async () => {
+        await context.close();
+        await cleanup();
+      },
+    };
+  } catch ( error ) {
+    await cleanup();
+    throw error;
+  }
+}
+
+/** Deletes a record through the app's own confirm-delete, hash and all. */
+async function deleteRecord(
+  page: Page,
+  postUrl: string,
+  process: string,
+  key: string,
+  id: string,
+): Promise<void> {
+  const { createHash } = await import( 'node:crypto' );
+  await page.request.post( postUrl, {
+    form: {
+      _process: process,
+      [ key ]: id,
+      butt_del: '1',
+      // module_form::confirm_delete() accepts md5( 'delete <key> <value>' ) plus the
+      // literal 'yep', which is how the confirmation screen posts back.
+      _confirm_delete: createHash( 'md5' ).update( `delete ${ key } ${ id }` ).digest( 'hex' ),
+      really_confirm_delete: 'yep',
+      form_auth_key: await formAuthKey( page ),
+      _redirect: '/',
+    },
+    failOnStatusCode: false,
+  } );
+}
+
+
+test.describe( 'Forms moved to generate_fieldset (restricted contact blocks)', () => {
+  test( 'a staff member who cannot view contacts is told the details are hidden', async ( { page, browser } ) => {
+    await login( page );
+    const customerId = await aCustomer( page );
+    const url = `/?m[]=customer&p[]=customer_admin_edit&customer_id=${ customerId }`;
+
+    // The premise: an administrator cannot reach this branch at all, because
+    // has_feature_access() returns true unconditionally for user id 1. If this ever shows
+    // up for the admin then the test below is not proving what it says.
+    const asAdmin = await ( await page.request.get( url ) ).text();
+    expect( asAdmin, 'the admin should never see the hidden-details block' ).not.toContain( 'Details hidden' );
+
+    // The vendor screen carries the same two blocks behind permission 179, All Vendor
+    // Contacts, so one account covers both.
+    const vendorList = await ( await page.request.get( '/?m[]=vendor&p[]=vendor_admin' ) ).text();
+    const vendorId = ( vendorList.match( /vendor_id=(\d+)/ ) || [] )[ 1 ];
+    const vendorUrl = vendorId ? `/?m[]=vendor&p[]=vendor_admin_edit&vendor_id=${ vendorId }` : '';
+
+    const { visitor, cleanup } = await signedInAs( page, browser, 'No Contact View', [ '105', '179' ] );
+    try {
+      const body = await ( await visitor.request.get( url ) ).text();
+      expect( body, 'the restricted account could not open the customer screen' )
+        .toContain( 'Primary Contact Details' );
+      expect( body, 'the hidden-details block did not render' ).toContain( 'Details hidden' );
+
+      if ( vendorUrl ) {
+        const vendorBody = await ( await visitor.request.get( vendorUrl ) ).text();
+        expect( vendorBody, 'the restricted account could not open the vendor screen' )
+          .toContain( 'Primary Contact Details' );
+        expect( vendorBody, 'the vendor hidden-details block did not render' ).toContain( 'Details hidden' );
+      }
+    } finally {
+      await cleanup();
+    }
+  } );
+} );
+
+test.describe( 'Forms moved to generate_fieldset (read-only contact block)', () => {
+  test( 'a staff member who can view but not edit contacts still sees them', async ( { page, browser } ) => {
+    await login( page );
+    const customerId = await aCustomer( page );
+    const url = `/?m[]=customer&p[]=customer_admin_edit&customer_id=${ customerId }`;
+
+    // The contact this customer was seeded with, read as the administrator so the test
+    // knows what the restricted view is supposed to show.
+    await page.goto( url );
+    const contactName = await page.evaluate( () => {
+      const input = document.querySelector( 'input[name="name"]' ) as HTMLInputElement | null;
+
+      return input ? input.value : '';
+    } );
+    expect( contactName, 'the seeded customer has no primary contact name' ).not.toBe( '' );
+
+    // No denials: a view-only role has view on All Customer Contacts and no edit, which is
+    // the second branch - the read-only summary rather than "Details hidden".
+    const { visitor, cleanup } = await signedInAs( page, browser, 'View Not Edit', [] );
+    try {
+      const body = await ( await visitor.request.get( url ) ).text();
+      expect( body, 'the restricted account could not open the customer screen' )
+        .toContain( 'Primary Contact Details' );
+      expect( body, 'this is the read-only branch, not the hidden one' ).not.toContain( 'Details hidden' );
+
+      // Scoped to the block's own cell, not the page. The name also appears in the
+      // heading's responsive summary attribute, so a page-wide contains() passes even when
+      // the cell is empty - which is exactly the state this is meant to catch.
+      await visitor.goto( url );
+      const cellText = await visitor.evaluate( () => {
+        const heading = Array.from( document.querySelectorAll( 'h3, h5, .title' ) )
+          .find( h => ( h.textContent || '' ).includes( 'Primary Contact Details' ) );
+        const box = heading?.closest( '.box' ) ?? heading?.parentElement?.parentElement;
+        const cell = box?.querySelector( 'table.tableclass_form td' );
+
+        return cell ? ( cell.textContent || '' ).trim() : null;
+      } );
+      expect( cellText, 'no cell found under the Primary Contact Details heading' ).not.toBeNull();
+      // The block exists to show the contact to somebody who may not edit them. An inner
+      // ob_start() used to swallow exactly that, leaving the cell empty.
+      expect( cellText, 'the read-only contact block rendered an empty cell' ).toContain( contactName );
+    } finally {
+      await cleanup();
+    }
   } );
 } );
