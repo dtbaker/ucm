@@ -38,21 +38,56 @@ async function aDataFieldGroup( page: Page ): Promise<{ typeId: string; groupId:
 }
 
 /**
- * What is left, and where it is.
+ * What is left, and how the conversions were shown not to change anything.
  *
- * No hand-written label-and-field table remains inside a form. What is still in the tree
- * is two other things, neither of which generate_fieldset is for:
+ * Eighteen pages were converted. ./scripts/fieldset-parity.sh puts each one back to the
+ * markup it had before its conversion and runs these specs against it: they assert an
+ * exact list of controls, so a run that passes against the old markup and the new one is
+ * saying both render the same fields. All eighteen pass. Four fail on one named assertion
+ * each - the row class their script switches on, which the old <tbody id> markup had no
+ * equivalent of, or a PHP 8 bug fixed alongside the conversion - and the script knows
+ * which, so anything else is a real difference.
  *
- *  Eighteen single-cell boxes and data grids. A box is one row, often with no <th> at
- *  all - a styled container around a message or a summary, and several are already handed
- *  to a fieldset as its elements_before. A grid is the newsletter editor's dynamic field
- *  list and the queue's preview of the same: two or three columns of data wearing the form
- *  table's class. A two-column label-and-field fieldset would make both worse.
+ * Five hand-written tables remain inside forms, and each was checked rather than judged:
  *
- *  Seven label-and-field layouts that are not in a form at all - summaries, sidebars and
- *  hook output, in files with no print_form_open_tag anywhere. They are a reasonable
- *  thing to convert one day; they are not form internals.
+ *  Four are the "Details hidden" and contact summary boxes on the customer and vendor
+ *  screens. They only render for a user WITHOUT permission to view contacts, so an
+ *  administrator never sees them - loading both screens confirms neither string appears.
+ *  There is no way to write a spec that reaches them from the test account.
+ *
+ *  The fifth sits inside a commented-out block in the newsletter editor, so it renders
+ *  nowhere at all.
+ *
+ * Outside forms there are summaries, sidebars and hook output still using the form table
+ * class. They are a reasonable thing to convert one day; they are not form internals.
  */
+
+/**
+ * One customer group, reused across runs.
+ *
+ * The customer edit screen renders a checkbox per customer group, so a fixture that
+ * creates a new one every run grows that form until Playwright can no longer drive it.
+ * That is not hypothetical: several hundred leftover groups had pushed the customer edit
+ * page past 1.8MB and the customer lifecycle spec started failing on a save that had
+ * worked for months.
+ */
+async function aCustomerGroup( page: Page ): Promise<string> {
+  const GROUP_NAME = 'Fieldset Send Group';
+  await page.goto( '/?m[]=group&p[]=group_settings' );
+  const existing = ( await page.content() ).match(
+    new RegExp( `group_id=(\\d+)[^>]*>\\s*${ GROUP_NAME }` ) );
+  if ( existing ) {
+    return existing[ 1 ];
+  }
+
+  return createRecord( page, '/?m[]=group', {
+    _process: 'save_group',
+    group_id: 'new',
+    name: GROUP_NAME,
+    owner_table: 'customer',
+    _redirect: '/',
+  }, 'group_id' );
+}
 
 /**
  * A queued newsletter send, which is what the queue and statistics screens need before
@@ -66,13 +101,8 @@ async function aDataFieldGroup( page: Page ): Promise<{ typeId: string; groupId:
  */
 async function aQueuedSend( page: Page ): Promise<{ newsletterId: string; sendId: string }> {
   const stamp = Date.now() + '-' + Math.floor( Math.random() * 10000 );
-  const groupId = await createRecord( page, '/?m[]=group', {
-    _process: 'save_group',
-    group_id: 'new',
-    name: 'Send Group ' + stamp,
-    owner_table: 'customer',
-    _redirect: '/',
-  }, 'group_id' );
+
+  const groupId = await aCustomerGroup( page );
 
   const customerId = await aCustomer( page );
   await page.goto( '/' );
@@ -202,6 +232,8 @@ test.describe( 'Forms moved to generate_fieldset', () => {
 
   test( 'the newsletter send screen keeps its controls', async ( { page } ) => {
     await login( page );
+    // The screen lists a checkbox per group, so one has to exist for group[*] to appear.
+    await aCustomerGroup( page );
     const stamp = Date.now();
     const newsletterId = await createRecord( page, '/?m[]=newsletter', {
       _process: 'save_newsletter',
@@ -450,6 +482,19 @@ test.describe( 'Forms moved to generate_fieldset', () => {
       'the end date and repeat rows need the class the toggle hides' ).toBe( 2 );
     expect( body, 'and the toggle should be hiding by class, not by the old id' )
       .toContain( "$('.recurring_bits')" );
+
+    // Clean up. The recurring list projects every future occurrence of every schedule, so
+    // a test that leaves one behind on each run eventually buries other tests' rows under
+    // its own - which is exactly what happened while this was being written.
+    await page.request.post( '/?m[]=finance', {
+      form: {
+        _process: 'save_recurring',
+        finance_recurring_id: recurringId![ 1 ],
+        butt_del: 'Delete',
+        form_auth_key: await formAuthKey( page ),
+      },
+      failOnStatusCode: false,
+    } );
   } );
 
   test( 'the public ticket view keeps its controls', async ( { page } ) => {
