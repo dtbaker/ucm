@@ -47,15 +47,25 @@ async function aDataFieldGroup( page: Page ): Promise<{ typeId: string; groupId:
  * switches on, which the old <tbody id> markup had no equivalent of, or a PHP 8 bug fixed
  * alongside - and the script knows which, so anything else is reported as a difference.
  *
- * One table is left. Every other reason recorded here turned out to be wrong, every time
- * in the direction of leaving convertible markup alone, so this one says what was checked:
+ * One <table class="tableclass_form"> tag is left outside the two renderers, and it holds
+ * no fields: it is the empty target the faq hook's ajax drops rows into, described below.
+ * tests/unit/FieldsetMarkupTest.php keeps that list at exactly one.
  *
- *  COUPLED TO MARKUP A FIELDSET CANNOT PRODUCE
- *    ticket_create (faq hook)   has a SECOND <tbody id="faq_product_area"> inside the same
+ * Every reason this list once held for leaving a real form table alone turned out to be
+ * wrong, every time in the direction of not converting - so what follows is the record of
+ * what each reason actually was, kept because the pattern is the useful part.
+ *
+ *  WHAT THE LAST ONE NEEDED
+ *    ticket_create (faq hook) had a SECOND <tbody id="faq_product_area"> inside the same
  *      table, which includes/plugin_faq/faq.php fills with rows over ajax
  *      ($('#faq_product_area').html(...)). generate_fieldset emits one tbody and has no
- *      option for another, and the injected content is table rows, so it needs a row
- *      parent in that table.
+ *      option for another, and the injected content is table rows, which need a row parent
+ *      or the browser hoists them out. The real row is now a fieldset element and the ajax
+ *      target is a table of its own directly below it, in the same class. Nothing injected
+ *      there is a form control - it is FAQ links and a line of guidance. The spec puts a
+ *      row in the way faq.php does and checks it lands inside the table, because this
+ *      install has no faq_product_rel rows and a real product change injects nothing; it
+ *      fails with the target removed.
  *
  *  NOT A FORM LAYOUT - one cell, no <th>, a styled container around a message or summary,
  *  already handed to a fieldset as its elements_before:
@@ -1300,6 +1310,51 @@ test.describe( 'Forms moved to generate_fieldset (read-only contact block)', () 
       expect( cellText, 'the read-only contact block rendered an empty cell' ).toContain( contactName );
     } finally {
       await cleanup();
+    }
+  } );
+} );
+
+test.describe( 'Forms moved to generate_fieldset (faq product row)', () => {
+  test( 'the public ticket form keeps its product selector and its ajax target', async ( { browser } ) => {
+    // A context with no session: this is a public form.
+    const context = await browser.newContext();
+    const page = await context.newPage();
+    try {
+      await page.goto( '/ext.php?m=ticket&h=public_new' );
+      const body = await page.content();
+
+      expect( body, 'the faq product block did not render' ).toContain( 'Product Details' );
+      expect( body ).toContain( 'name="faq_product_id"' );
+      expect( body ).toContain( 'id="faq_product_id"' );
+
+      // includes/plugin_faq/faq.php answers the product change over ajax with
+      // $('#faq_product_area').html('<tr>...</tr>'), so the target has to stay a tbody -
+      // table rows need a row parent or the browser throws them out of the table.
+      const target = await page.evaluate( () => {
+        const el = document.querySelector( '#faq_product_area' );
+
+        return el ? { tag: el.tagName, inTable: !! el.closest( 'table' ) } : null;
+      } );
+      expect( target, 'the ajax target #faq_product_area is gone' ).not.toBeNull();
+      expect( target ).toEqual( { tag: 'TBODY', inTable: true } );
+
+      // And that it still accepts them. This install has no faq_product_rel rows, so a
+      // real product change injects nothing; putting a row in the way faq.php does is what
+      // actually exercises the risk, which is the browser hoisting rows out of a parent
+      // that is no longer part of a table.
+      const injected = await page.evaluate( () => {
+        const target = document.querySelector( '#faq_product_area' ) as HTMLElement;
+        target.innerHTML = '<tr id="injected_probe"><th>FAQ</th><td>probe</td></tr>';
+        const row = document.querySelector( '#injected_probe' );
+
+        return row
+          ? { parent: row.parentElement?.id, inTable: !! row.closest( 'table' ), cells: row.children.length }
+          : null;
+      } );
+      expect( injected, 'an injected row did not survive in the document' ).not.toBeNull();
+      expect( injected ).toEqual( { parent: 'faq_product_area', inTable: true, cells: 2 } );
+    } finally {
+      await context.close();
     }
   } );
 } );
