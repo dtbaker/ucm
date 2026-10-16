@@ -47,15 +47,14 @@ async function aDataFieldGroup( page: Page ): Promise<{ typeId: string; groupId:
  * switches on, which the old <tbody id> markup had no equivalent of, or a PHP 8 bug fixed
  * alongside - and the script knows which, so anything else is reported as a difference.
  *
- * Fifteen tables are left, and each has a checked reason rather than a judgement:
+ * Nine tables are left, and each has a checked reason rather than a judgement. The reasons
+ * are checked because twice now a reason here turned out to be wrong, both times in the
+ * direction of leaving convertible markup alone:
  *
  *  UNREACHABLE FROM THE TEST ACCOUNT - no passing spec can be written, so no conversion
  *    customer_admin_edit (2), vendor_admin_edit (2)   render only for a user WITHOUT
  *      permission to view contacts. An administrator never sees them; both screens were
  *      loaded and neither string appears.
- *    user_admin_edit_company   the company module is off in this install, so the block
- *      never renders. Checked across three user screens.
- *    newsletter_edit:460   sits inside a commented-out block, so it renders nowhere.
  *
  *  COUPLED TO MARKUP A FIELDSET CANNOT PRODUCE
  *    render_group   opens its <table> in one branch of a switch and closes it in another,
@@ -64,22 +63,43 @@ async function aDataFieldGroup( page: Page ): Promise<{ typeId: string; groupId:
  *    group.php   puts the checkbox in the <th> with a data-settings-url that
  *      plugin_config/js/settings.js scans for, and a fieldset offers no way to put an
  *      attribute on the title cell. Worth revisiting if that option is ever added.
+ *    ticket_create (faq hook)   has a SECOND <tbody id="faq_product_area"> inside the same
+ *      table, which includes/plugin_faq/faq.php fills with rows over ajax
+ *      ($('#faq_product_area').html(...)). generate_fieldset emits one tbody and has no
+ *      option for another, and the injected content is table rows, so it needs a row
+ *      parent in that table.
  *
- *  NOT A FORM LAYOUT - one cell, no <th>, a styled container around a message or summary.
- *  Several are already handed to a fieldset as its elements_before:
- *    customer_summary, newsletter_statistics, invoice_sidebar, member_edit, ticket_create,
- *    ticket_priority_sidebar, ticket.php
+ *  NOT A FORM LAYOUT - one cell, no <th>, a styled container around a message or summary,
+ *  already handed to a fieldset as its elements_before:
+ *    (none left - see below)
  *
- * contact_summary and user_summary were in that last group and should not have been: each
- * is a five or six row label/value table with a <th> per row, which is exactly the shape a
- * fieldset produces. Both are now converted. Neither is reachable through the UI -
- * print_user_summary() has no callers at all and print_contact_summary() has no 'full'
- * branch to include contact_summary with - so they are covered by a render harness rather
- * than a spec: boot UCM the way cron.php does, render each partial, and diff the text and
- * the hrefs against the same render before the change. user_summary came out identical.
- * contact_summary could not be rendered at all beforehand: it opens with a $this call and
- * only static callers can reach it, so it fataled with "Using $this when not in object
- * context" every time, which is why nothing noticed it was broken.
+ * What was removed from this list, and why it was wrong:
+ *
+ *    contact_summary, user_summary, customer_summary were filed under "one cell, no <th>".
+ *      Each is a label/value table with a <th> per row - five, six and one respectively.
+ *      All three are converted. None is reachable through the UI (print_user_summary and
+ *      print_customer_summary have no callers, print_contact_summary has no 'full' branch),
+ *      so scripts/render-partials.php renders them instead of a spec and the text and
+ *      hrefs are diffed across the change.
+ *    newsletter_statistics and two blocks in newsletter_edit were "inside a commented-out
+ *      block, so it renders nowhere". True, and commenting markup out is not converting
+ *      it: all three are deleted. newsletter_statistics.php was 145 lines of which 139 sat
+ *      after an unconditional `return;` AND inside a block comment; its live replacement is
+ *      the fieldset in newsletter_queue_watch.php. Both pages were captured before and
+ *      after - the only lines that differ are the footer's render time and the debug
+ *      timing table.
+ *    user_admin_edit_company was "the company module is off in this install, checked
+ *      across three user screens". It is not off. Those screens were requested as
+ *      p[]=user_admin_edit, which is a partial and not a route, so they came back as four
+ *      byte pages and an empty page was read as an absent block. module_company::is_enabled()
+ *      wants one company row, not a config change. Converted, with a test below.
+ *    ticket.php's invoice sidebar, member_edit and ticket_priority_sidebar were counted as
+ *      summaries. The first is three label/value rows; the second is one; the third is a
+ *      genuine single cell, which an element with 'fields' and no 'title' renders exactly -
+ *      both renderers emit a <th> only when an element has a title. All converted.
+ *    invoice_sidebar (subscription hook) was the same single-cell shape, one row per
+ *      subscription. Converted. It no longer renders an empty box when every subscription
+ *      in the list has no owner record; before, the heading appeared above an empty table.
  */
 
 /**
@@ -773,5 +793,150 @@ test.describe( 'Forms moved to generate_fieldset', () => {
       'address[hash][state]',
       'address[hash][suburb]',
     ] );
+  } );
+} );
+
+/**
+ * One company, reused across runs.
+ *
+ * module_company::is_enabled() is false until a company row exists, and the assigned
+ * company block on the user edit screen is behind that check - which is why the block was
+ * first written off as unreachable. It only needs a record, not a config change. Reused
+ * rather than recreated for the same reason as the customer group above: the user edit
+ * screen renders a checkbox per company.
+ */
+async function aCompany( page: Page ): Promise<string> {
+  const COMPANY_NAME = 'Fieldset Company';
+  await page.goto( '/?m[]=company&p[]=company_admin' );
+  const existing = ( await page.content() ).match(
+    new RegExp( `company_id=(\\d+)[^>]*>\\s*${ COMPANY_NAME }` ) );
+  if ( existing ) {
+    return existing[ 1 ];
+  }
+
+  return createRecord( page, '/?m[]=company', {
+    _process: 'save_company',
+    company_id: 'new',
+    name: COMPANY_NAME,
+    _redirect: '/',
+  }, 'company_id' );
+}
+
+test.describe( 'Forms moved to generate_fieldset (assigned company)', () => {
+  test( 'the staff edit screen keeps its company checkboxes', async ( { page } ) => {
+    await login( page );
+    const companyId = await aCompany( page );
+
+    // user_admin is the route; user_admin_edit.php is a partial it includes. Asking for
+    // p[]=user_admin_edit returns a four byte page, which is what made this block look
+    // unreachable the first time round.
+    const list = await ( await page.request.get( '/?m[]=user&p[]=user_admin' ) ).text();
+    const ids = Array.from( list.matchAll( /user_id=(\d+)/g ) ).map( m => m[ 1 ] );
+    expect( ids.length, 'no staff users to open' ).toBeGreaterThan( 0 );
+
+    const body = await ( await page.request.get( `/?m[]=user&p[]=user_admin&user_id=${ ids[ 0 ] }` ) ).text();
+
+    // The premise: with no company row this block does not render at all, and a spec that
+    // passed either way would be saying nothing about the conversion.
+    expect( body, 'the assigned company block did not render' ).toContain( 'Assigned Company' );
+
+    // The two controls the block exists to post: a checkbox per company, and the hidden
+    // companion that tells save_user the checkbox was on the form at all. Dropping the
+    // hidden one makes unticking a company silently do nothing.
+    expect( body ).toContain( `name="user_company[${ companyId }]"` );
+    expect( body ).toContain( `name="available_user_company[${ companyId }]"` );
+    expect( body ).toContain( `id="customer_company_${ companyId }"` );
+  } );
+} );
+
+test.describe( 'Forms moved to generate_fieldset (subscriptions block)', () => {
+  test( 'the member edit screen keeps its subscription controls', async ( { page } ) => {
+    await login( page );
+
+    const list = await ( await page.request.get( '/?m[]=member&p[]=member_admin' ) ).text();
+    const ids = Array.from( list.matchAll( /member_id=(\d+)/g ) ).map( m => m[ 1 ] );
+    expect( ids.length, 'no members to open' ).toBeGreaterThan( 0 );
+
+    const body = await ( await page.request.get(
+      `/?m[]=member&p[]=member_admin_edit&member_id=${ ids[ 0 ] }` ) ).text();
+
+    expect( body, 'the subscriptions block did not render' ).toContain( 'Subscriptions' );
+
+    // The hidden inputs are the whole contract with save_member: without
+    // member_subscriptions_save the handler does not look at the subscription fields at
+    // all, so losing it makes every change on this block silently do nothing.
+    for ( const name of [
+      'member_subscriptions_save',
+      'subscription_add_payment',
+      'subscription_add_payment_date',
+      'subscription_add_payment_amount',
+    ] ) {
+      expect( body, `missing control ${ name }` ).toContain( `name="${ name }"` );
+    }
+  } );
+} );
+
+/**
+ * Turns the priority support setting on for one test and puts it back afterwards.
+ *
+ * The priority block is behind module_config::c( 'ticket_allow_priority', 0 ), which is off
+ * in this install and has no priority tickets to satisfy the other half of the condition,
+ * so without this the block renders nowhere and a spec over it would assert nothing. Set
+ * through the real settings form so the save goes through save_config with its CSRF token,
+ * the way a person would do it.
+ */
+async function withTicketPriority( page: Page, body: () => Promise<void> ): Promise<void> {
+  const set = async ( on: boolean ) => {
+    await page.goto( '/?m[]=ticket&p[]=ticket_settings_basic' );
+    const box = page.locator( 'input[name="config[ticket_allow_priority]"]' );
+    await box.setChecked( on );
+    // Target the named save button: this page carries two other submit controls, the
+    // first of which is hidden, so .first() is not clickable.
+    await page.locator( 'input[type="submit"][name="save"]' ).click();
+    await page.waitForLoadState();
+  };
+  await set( true );
+  try {
+    await body();
+  } finally {
+    await set( false );
+  }
+}
+
+test.describe( 'Forms moved to generate_fieldset (priority support)', () => {
+  test( 'the ticket screen keeps its priority support block', async ( { page } ) => {
+    await login( page );
+
+    const list = await ( await page.request.get( '/?m[]=ticket&p[]=ticket_admin' ) ).text();
+    const ids = Array.from( list.matchAll( /ticket_id=(\d+)/g ) ).map( m => m[ 1 ] );
+    expect( ids.length, 'no tickets to open' ).toBeGreaterThan( 0 );
+
+    await withTicketPriority( page, async () => {
+      await page.goto( `/?m[]=ticket&p[]=ticket_admin&ticket_id=${ ids[ 0 ] }` );
+      const body = await page.content();
+      expect( body, 'the priority support block did not render' ).toContain( 'Priority Support' );
+
+      // Which message the block shows depends on whether the ticket already has an
+      // invoice, so assert that it said one of the three things rather than picking one.
+      expect(
+        [ 'Priority Support costs', 'Please pay', 'Thank you for purchasing', 'Current ticket position' ]
+          .some( t => body.includes( t ) ),
+        'the block rendered but said none of the things it can say',
+      ).toBe( true );
+
+      // The shape the conversion had to preserve: one cell, no header cell. An element
+      // passed to generate_fieldset with 'fields' and no 'title' renders exactly that,
+      // and getting it wrong would put an empty <th> in front of the text.
+      const shape = await page.evaluate( () => {
+        const header = Array.from( document.querySelectorAll( 'h3, h5, .title' ) )
+          .find( h => ( h.textContent || '' ).includes( 'Priority Support' ) );
+        const box = header?.closest( '.box, div' );
+        const row = box?.querySelector( 'table.tableclass_form tbody tr' );
+
+        return row ? { tds: row.querySelectorAll( 'td' ).length, ths: row.querySelectorAll( 'th' ).length } : null;
+      } );
+      expect( shape, 'no fieldset row found under the Priority Support heading' ).not.toBeNull();
+      expect( shape ).toEqual( { tds: 1, ths: 0 } );
+    } );
   } );
 } );

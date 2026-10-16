@@ -399,75 +399,7 @@ if ( count( $sends_warning ) ) {
 								);
 								echo module_form::generate_fieldset( $image_insert_fieldset );
 								?>
-								<?php
-								/* <tr>
-                                            <th>
-                                                <?php echo _l('Image:');?>
-                                            </th>
-                                            <td>
-                                               <select name="image_url" id="image_url" style="width:150px;">
-                                                <option value=""><?php echo _l('- Select -');?></option>
-                                                <?php
-                                                foreach(module_newsletter::get_images($newsletter_id) as $attachment){
-                                                ?>
-                                                <option value="<?php echo $attachment['link'];?>"><?php echo $attachment['name'];?></option>
-                                                <?php } ?>
-                                                </select>
-                                            </td>
-                                        </tr>
-                                        <tr>
-                                            <th>
-                                                <?php echo _l('Size:');?>
-                                            </th>
-                                            <td>
-                                               <select name="image_size" id="image_size" onchange="$('#image_alt')[0].focus().select();">
-                                                <option value=""><?php echo _l('- Select -');?></option>
-                                                <option value="replace"><?php echo _l('Replace Existing');?></option>
-                                                <option value="100x100"><?php echo _l('Thumbnail #1 - 100x100');?></option>
-                                                </select>
-                                            </td>
-                                        </tr>
-                                        <tr>
-                                            <th>
-                                                <?php echo _l('Description:');?>
-                                            </th>
-                                            <td>
-                                               <input type="text" name="image_alt" id="image_alt" value=""">
-                                            </td>
-                                        </tr>
-                                        <tr>
-                                            <th>
-
-                                            </th>
-                                            <td>
-                                                <input type="button" name="image_insert" onclick="insert_image();" value="<?php echo _l('Insert Image');?>">
-                                            </td>
-                                        </tr> */ ?>
 							</div>
-
-							<?php /* <div id="image_upload" style="display:none;">
-                                    <?php
-                                    print_heading(array(
-                                          'type' => 'h3',
-                                          'title' => 'Upload:',
-                                          'button' => array(
-                                              'url' => '#',
-                                              'onclick' => "$('#image_upload').hide(); $('#image_insert').show(); return false;",
-                                              'title' => 'Insert Existing Image',
-                                          )
-                                      ));
-                                    ?>
-                                    <table width="100%" border="0" cellspacing="0" cellpadding="2" class="tableclass tableclass_form">
-                                    <tbody>
-                                        <tr>
-                                            <td align="center">
-                                                <input type="file" name="image" value="" size="6"> <br/>
-                                                <input type="submit" name="attach" value="<?php echo _l('Upload Image');?>">
-                                            </td>
-                                        </tr>
-                                    </tbody>
-                                    </table>
-                                </div> */ ?>
 
 							<?php
 							ob_start();

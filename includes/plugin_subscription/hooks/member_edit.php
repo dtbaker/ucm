@@ -8,13 +8,6 @@ $responsive_summary = array();
 ob_start();
 ?>
 
-	<table width="100%" border="0" cellspacing="0" cellpadding="2" class="tableclass tableclass_form">
-		<tbody>
-		<tr>
-			<th class="width1">
-				<?php echo _l( 'Subscriptions' ); ?>
-			</th>
-			<td>
 				<?php if ( module_subscription::can_i( 'edit', 'Subscriptions' ) ) { ?>
 					<input type="hidden" name="member_subscriptions_save" value="1">
 					<input type="hidden" name="subscription_add_payment" value="" id="subscription_add_payment">
@@ -275,15 +268,11 @@ ob_start();
 					</div>
 
 				<?php } ?>
-			</td>
-		</tr>
-		</tbody>
-	</table>
 
 <?php
 
 $fieldset_data = array(
-	'heading'         => array(
+	'heading'  => array(
 		'title'      => _l( 'Subscriptions &amp; Payments' ),
 		'type'       => 'h3',
 		'responsive' => array(
@@ -291,6 +280,11 @@ $fieldset_data = array(
 			'summary' => htmlspecialchars( implode( ', ', $responsive_summary ) ),
 		)
 	),
-	'elements_before' => ob_get_clean(),
+	'elements' => array(
+		'subscriptions' => array(
+			'title'  => 'Subscriptions',
+			'fields' => array( ob_get_clean() ),
+		),
+	),
 );
 echo module_form::generate_fieldset( $fieldset_data );

@@ -3,10 +3,11 @@
 // Renders the user summary partials outside a page request, so a change to them can be
 // diffed even though nothing in the tree renders them.
 //
-// module_user::print_user_summary() has no callers, and print_contact_summary() has no
-// 'full' branch to include contact_summary.php with, so neither partial can be reached by
-// a Playwright spec. This boots UCM the way cron.php does and renders each one against
-// real rows, which is enough to compare the text and the links across a refactor:
+// module_user::print_user_summary() and module_customer::print_customer_summary() have no
+// callers, and print_contact_summary() has no 'full' branch to include contact_summary.php
+// with, so none of these partials can be reached by a Playwright spec. This boots UCM the
+// way cron.php does and renders each one against real rows, which is enough to compare the
+// text and the links across a refactor:
 //
 //     docker exec -w /var/www/html ucm-app php scripts/render-partials.php > after.html
 //
@@ -41,6 +42,31 @@ if ( $contact ) {
 	$user_id   = $contact['user_id'];
 	$user_data = module_user::get_user( $user_id );
 	include( 'includes/plugin_user/pages/contact_summary.php' );
+}
+
+$customer = qa1( "SELECT customer_id FROM `" . _DB_PREFIX . "customer` ORDER BY customer_id LIMIT 1" );
+
+echo "\n" . '===== customer_summary customer_id=' . ( $customer ? $customer['customer_id'] : 'none' ) . " =====\n";
+if ( $customer ) {
+	module_customer::print_customer_summary( $customer['customer_id'], 'full' );
+}
+
+// module_ticket::hook_invoice_sidebar() renders only for an invoice that a priority
+// support ticket generated, which no spec in the suite sets up.
+$ticket = qa1( "SELECT ticket_id, invoice_id FROM `" . _DB_PREFIX . "ticket` WHERE invoice_id > 0 ORDER BY ticket_id LIMIT 1" );
+
+echo "\n" . '===== ticket_invoice_sidebar invoice_id=' . ( $ticket ? $ticket['invoice_id'] : 'none' ) . " =====\n";
+if ( $ticket ) {
+	module_ticket::hook_invoice_sidebar( false, $ticket['invoice_id'] );
+}
+
+// module_subscription::hook_invoice_sidebar() needs an invoice that a subscription payment
+// created, which no spec in the suite sets up either.
+$sub_invoice = qa1( "SELECT invoice_id FROM `" . _DB_PREFIX . "subscription_history` WHERE invoice_id > 0 ORDER BY subscription_history_id LIMIT 1" );
+
+echo "\n" . '===== subscription_invoice_sidebar invoice_id=' . ( $sub_invoice ? $sub_invoice['invoice_id'] : 'none' ) . " =====\n";
+if ( $sub_invoice ) {
+	module_subscription::hook_invoice_sidebar( false, $sub_invoice['invoice_id'] );
 }
 
 echo "\n===== done =====\n";

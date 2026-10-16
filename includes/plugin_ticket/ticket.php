@@ -4277,40 +4277,34 @@ Thanks,
 		$tickets = get_multiple( 'ticket', array( 'invoice_id' => $invoice_id ) );
 		if ( $tickets ) {
 			foreach ( $tickets as $ticket ) {
-				?>
-				<h3><?php _e( 'Priority Support Ticket' ); ?></h3>
-				<table border="0" cellspacing="0" cellpadding="2" class="tableclass tableclass_form tableclass_full">
-					<tbody>
-					<tr>
-						<th class="width1">
-							<?php _e( 'Ticket' ); ?>
-						</th>
-						<td>
-							<?php echo module_ticket::link_open( $ticket['ticket_id'], true, $ticket ); ?>
-						</td>
-					</tr>
-					<tr>
-						<th>
-							<?php _e( 'Subject' ); ?>
-						</th>
-						<td>
-							<?php echo htmlspecialchars( $ticket['subject'] ); ?>
-						</td>
-					</tr>
-					<tr>
-						<th>
-							<?php _e( 'Status' ); ?>
-						</th>
-						<td>
-							<?php
-							$s = module_ticket::get_statuses();
-							echo $s[ $ticket['status_id'] ];
-							?>
-						</td>
-					</tr>
-					</tbody>
-				</table>
-				<?php
+				$statuses = module_ticket::get_statuses();
+				echo module_form::generate_fieldset( array(
+					// heading, not title, to match the subscription block that renders
+					// beside this one in the same sidebar - metis forces a heading to h5
+					// inside the box header either way, so a bare h3 here was the odd one out.
+					'heading'  => array(
+						'title' => _l( 'Priority Support Ticket' ),
+						'type'  => 'h3',
+					),
+					'class'    => 'tableclass tableclass_form tableclass_full',
+					'elements' => array(
+						array(
+							'title'  => 'Ticket',
+							'fields' => array( module_ticket::link_open( $ticket['ticket_id'], true, $ticket ) ),
+						),
+						array(
+							'title'  => 'Subject',
+							'fields' => array( htmlspecialchars( $ticket['subject'] ) ),
+						),
+						array(
+							'title'  => 'Status',
+							'fields' => array(
+								isset( $statuses[ $ticket['status_id'] ] )
+									? htmlspecialchars( $statuses[ $ticket['status_id'] ] ) : '',
+							),
+						),
+					),
+				) );
 			}
 		}
 	}

@@ -4222,12 +4222,6 @@ parameters:
 			path: includes/plugin_statistic/statistic.php
 
 		-
-			message: '#^Variable \$member_name might not be defined\.$#'
-			identifier: variable.undefined
-			count: 1
-			path: includes/plugin_subscription/hooks/invoice_sidebar.php
-
-		-
 			message: '#^Variable \$subscriptions might not be defined\.$#'
 			identifier: variable.undefined
 			count: 2
