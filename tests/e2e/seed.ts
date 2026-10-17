@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto';
 import { expect, Page } from '@playwright/test';
 
 /**
@@ -138,27 +139,100 @@ export async function aFile(page: Page): Promise<string> {
   }, 'file_id');
 }
 
-/** Deletes a record through the app's own confirm-delete, hash and all. */
+/**
+ * Deletes a record through the app's own confirm-delete, hash and all.
+ *
+ * A fixture that is made and left behind is not free: every run adds another row, the
+ * screens that draw one control per record grow with them, and the lists that page at
+ * twenty rows eventually push the record a later test is looking for out of view. Both
+ * have already happened here, which is why a test that makes a record deletes it again.
+ *
+ * module_form::confirm_delete() redirects to a confirmation screen and takes the post
+ * back when it carries md5( 'delete <key> <value>' ) and the literal 'yep'. Sending both
+ * at once is the request that screen makes, without the round trip. Modules that delete
+ * without confirming ignore the two extra fields.
+ */
 export async function deleteRecord(
   page: Page,
   postUrl: string,
   process: string,
   key: string,
   id: string,
+  options: {
+    /** the key confirm_delete() was given, where a module does not pass its own id field */
+    confirmKey?: string;
+    /** the delete button's name, where it is not butt_del */
+    button?: string;
+  } = {},
 ): Promise<void> {
-  const { createHash } = await import( 'node:crypto' );
-  await page.request.post( postUrl, {
+  const confirmKey = options.confirmKey || key;
+  // The hash covers whatever the module handed confirm_delete(), which is not always the
+  // record's own id - faq.php asks about customer_id - and is the empty string when the
+  // post does not carry that field at all.
+  const confirmValue = confirmKey === key ? id : '';
+  await page.request.post(postUrl, {
     form: {
       _process: process,
-      [ key ]: id,
-      butt_del: '1',
-      // module_form::confirm_delete() accepts md5( 'delete <key> <value>' ) plus the
-      // literal 'yep', which is how the confirmation screen posts back.
-      _confirm_delete: createHash( 'md5' ).update( `delete ${ key } ${ id }` ).digest( 'hex' ),
+      [key]: id,
+      [options.button || 'butt_del']: '1',
+      _confirm_delete: createHash('md5').update(`delete ${confirmKey} ${confirmValue}`).digest('hex'),
       really_confirm_delete: 'yep',
-      form_auth_key: await formAuthKey( page ),
+      form_auth_key: await formAuthKey(page),
       _redirect: '/',
     },
     failOnStatusCode: false,
-  } );
+  });
+}
+
+/**
+ * The ids a list page links a named record under, lowest first.
+ *
+ * Rows are matched on the text of their own link rather than anywhere in the body, so the
+ * term echoed back in the list's search box is not counted as a row. Every page of the
+ * list is read: a record a test has just made is rarely on the first one, and a count
+ * that stopped at twenty could not tell two leftovers from two hundred.
+ *
+ * enough stops the walk once that many have been found, for a caller that only wants to
+ * know whether there are more than a few.
+ */
+export async function listedIds(
+  page: Page,
+  listUrl: string,
+  idParam: string,
+  label: string,
+  enough = Infinity,
+): Promise<string[]> {
+  const ids = new Set<string>();
+  const first = await (await page.request.get(listUrl)).text();
+  collectIds(first, idParam, label, ids);
+
+  // The pagination links carry the page number in pg<table id>, and the summary above
+  // them says how many records there are in total. Separators in an href are written
+  // &amp;, so the parameter before the one being read is not always a bare &.
+  const param = (first.match(/[?&](?:amp;)?(pg[a-z_]+)=\d+/) || [])[1];
+  const total = Number((first.match(/Showing records \d+ to \d+ of (\d+)/) || [])[1] || 0);
+  const perPage = Number((first.match(/Showing records \d+ to (\d+) of \d+/) || [])[1] || 0);
+  if (param && perPage > 0) {
+    const pages = Math.ceil(total / perPage);
+    const joiner = listUrl.includes('?') ? '&' : '?';
+    for (let pageNumber = 1; pageNumber < pages && ids.size < enough; pageNumber++) {
+      collectIds(await (await page.request.get(`${listUrl}${joiner}${param}=${pageNumber}`)).text(), idParam, label, ids);
+    }
+  }
+
+  return [...ids].sort((a, b) => Number(a) - Number(b));
+}
+
+function collectIds(body: string, idParam: string, label: string, into: Set<string>) {
+  const id = new RegExp(`[?&](?:amp;)?${idParam}=(\\d+)`);
+  for (const [, href, text] of body.matchAll(/<a\b[^>]*href="([^"]*)"[^>]*>([\s\S]*?)<\/a>/g)) {
+    if (!text.replace(/<[^>]*>/g, '').includes(label)) {
+      continue;
+    }
+    const match = id.exec(href);
+    // id=0 is the "all records" link in the page furniture, not a row.
+    if (match && match[1] !== '0') {
+      into.add(match[1]);
+    }
+  }
 }
