@@ -1,4 +1,5 @@
 import { execSync } from 'child_process';
+import { readdirSync, readFileSync } from 'fs';
 import { test, expect, Page, APIRequestContext } from '@playwright/test';
 import { login, formAuthKey } from './seed';
 
@@ -137,6 +138,35 @@ test.describe('Updating from an update server', () => {
       expect(update.file_checksums[name], `${name} should carry a checksum`).toBeTruthy();
       expect(createHash('sha256').update(body).digest('hex'), `${name} checksum`).toBe(update.file_checksums[name]);
     }
+  });
+
+  test('a newer release is offered with no plugin bump, to a client that says which it runs', async ({ request }) => {
+    // Every plugin at a version far above anything on the server, so no plugin is offered
+    // and the core rows can only be there because of the release.
+    const current: Record<string, string> = {};
+    for (const entry of readdirSync('includes')) {
+      if (entry.startsWith('plugin_')) current[entry.slice('plugin_'.length)] = '999';
+    }
+    const release = /define\(\s*'_SCRIPT_VERSION',\s*'([^']+)'/.exec(readFileSync('init.php', 'utf8'))![1];
+    const ask = async (extra: Record<string, string>) => {
+      const response = await request.post(SERVER_URL.replace('http://localhost', ''), {
+        form: { current_plugins: JSON.stringify(current), client_protocol: '2', ...extra },
+      });
+      expect(response.status()).toBe(200);
+      return (await response.text()).trim();
+    };
+
+    const older = JSON.parse(await ask({ release_version: '3.555' }));
+    expect(Object.keys(older.available_updates.plugins)).toEqual(['corefiles', 'database']);
+    const core = older.available_updates.plugins.corefiles;
+    expect(core.installed_version).toBe('3.555');
+    expect(core.available_version).toBe(release);
+    expect(core.description).toContain(`${release}: `);
+    expect(core.files).toContain('init.php');
+
+    // The same release, and a client that sends none at all, get the empty answer.
+    expect(await ask({ release_version: release })).toBe('');
+    expect(await ask({})).toBe('');
   });
 
   test('an upgrade with no form auth key is refused', async ({ page }) => {

@@ -9,7 +9,7 @@
 #
 #   Main Files/     the product itself
 #   Documentation/  readme.html: getting started, linking to the live documentation
-#   Licensing/      the licence of everything bundled inside the product
+#   Licensing/      LICENSE (MIT), THIRD_PARTY_NOTICES.md and LICENSES/, from the repository root
 #
 # "Main Files" is produced with `git archive`, so only committed files go in and the
 # export-ignore list in .gitattributes decides what stays out. Anything lying around in
@@ -73,72 +73,13 @@ echo "Assembling Documentation..."
 cp -R Documentation/. "$DOCS/"
 
 echo "Assembling Licensing..."
-# The Licensing folder is written by hand and lives in the repository, so that the
-# licence of every bundled component is reviewable in a diff rather than guessed at by a
-# find(1) that can only see the components which happened to ship a licence file.
-cp -R Licensing/. "$LICENSING/"
-
-# third-party-libraries.tsv is the single source of truth. The web page is generated
-# from it at build time so the two can never disagree.
-echo "Rendering the licence manifest..."
-awk -F'\t' '
-	function esc(s) {
-		gsub( /&/, "\\&amp;", s ); gsub( /</, "\\&lt;", s ); gsub( />/, "\\&gt;", s )
-		return s
-	}
-	BEGIN {
-		print "<!doctype html>"
-		print "<html lang=\"en\">"
-		print "<head>"
-		print "<meta charset=\"utf-8\">"
-		print "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">"
-		print "<title>Ultimate Client Manager &mdash; Third party libraries</title>"
-		print "<style>"
-		print "body{font:15px/1.6 -apple-system,BlinkMacSystemFont,\"Segoe UI\",Roboto,Arial,sans-serif;color:#222;background:#fff;margin:0;padding:2rem 1rem 4rem}"
-		print "main{max-width:62rem;margin:0 auto}"
-		print "h1{font-size:1.6rem;margin:0 0 .25rem}"
-		print "p.lead{color:#555;margin:0 0 1.5rem}"
-		print ".wrap{overflow-x:auto;border:1px solid #e3e3e3;border-radius:6px}"
-		print "table{border-collapse:collapse;width:100%;font-size:.88rem}"
-		print "th,td{text-align:left;vertical-align:top;padding:.55rem .7rem;border-bottom:1px solid #eee}"
-		print "th{background:#fafafa;font-weight:600;white-space:nowrap;position:sticky;top:0}"
-		print "tr:last-child td{border-bottom:0}"
-		print "code{font:12px/1.5 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;background:#f5f5f5;padding:.1rem .3rem;border-radius:3px;word-break:break-all}"
-		print "a{color:#15609b}"
-		print ".note{margin-top:1.5rem;padding:.9rem 1rem;border-left:4px solid #d08a00;background:#fffaf0}"
-		print "</style>"
-		print "</head>"
-		print "<body><main>"
-		print "<h1>Third party libraries</h1>"
-	}
-	NR == 1 { next }
-	NF < 8 { next }
-	{
-		rows++
-		if ( $5 == "licenses/REVIEWED.txt" ) { reviewed++ }
-		body = body "<tr><td>" esc($2) "</td><td>" esc($3) "</td><td>" esc($4)
-		body = body "</td><td><a href=\"" esc($5) "\">" esc($5) "</a></td>"
-		body = body "<td>" esc($6) "</td>"
-		if ( $7 == "unknown" ) { body = body "<td>unknown</td>" }
-		else { body = body "<td><a href=\"" esc($7) "\">" esc($7) "</a></td>" }
-		body = body "<td><code>" esc($8) "</code></td></tr>\n"
-	}
-	END {
-		print "<p class=\"lead\">" rows " components are bundled inside <code>Main Files</code>. " \
-			reviewed " of them ship without a licence file or licence header; each of those was " \
-			"reviewed individually and " \
-			"<a href=\"licenses/REVIEWED.txt\">licenses/REVIEWED.txt</a> records the outcome.</p>"
-		print "<div class=\"wrap\"><table>"
-		print "<thead><tr><th>Component</th><th>Version</th><th>Licence</th><th>Licence text</th>" \
-			"<th>Copyright</th><th>Upstream</th><th>Path inside Main Files</th></tr></thead>"
-		printf "<tbody>\n%s</tbody>", body
-		print "</table></div>"
-		print "<p class=\"note\">Every component keeps its original copyright header inside the shipped" \
-			" source file. <a href=\"README.txt\">README.txt</a> explains how the Envato licence and" \
-			" these licences fit together.</p>"
-		print "</main></body></html>"
-	}
-' "$LICENSING/third-party-libraries.tsv" > "$LICENSING/third-party-libraries.html"
+# The product is MIT licensed. LICENSE (ours), THIRD_PARTY_NOTICES.md (what is bundled and
+# under which licence) and LICENSES/ (the full texts) live at the repository root, where
+# GitHub and everyone else look for them; the CodeCanyon archive gets the same three files
+# in its Licensing folder.
+cp LICENSE "$LICENSING/LICENSE.txt"
+cp THIRD_PARTY_NOTICES.md "$LICENSING/THIRD_PARTY_NOTICES.md"
+cp -R LICENSES "$LICENSING/LICENSES"
 
 echo "Zipping..."
 ( cd "$BUILD_DIR" && zip -qr "$ZIP_NAME" "Main Files" Documentation Licensing )
@@ -189,7 +130,7 @@ for file in \
 	'Main Files/package.json' 'Main Files/package-lock.json' \
 	'Main Files/playwright.config.ts' 'Main Files/phpcs.xml.dist' \
 	'Main Files/phpstan.neon' 'Main Files/phpstan-baseline.neon' \
-	'Main Files/phpunit.xml' 'Main Files/rector.php' \
+	'Main Files/phpunit.xml' \
 	'Main Files/Dockerfile' 'Main Files/docker-compose.yml' 'Main Files/.dockerignore' \
 	'Main Files/.gitignore' 'Main Files/.gitattributes' \
 	'Main Files/includes/config.local.php' 'Main Files/README.md' 'Main Files/TESTING.md' \
@@ -228,45 +169,41 @@ if ! grep -qiE '^Documentation/.+\.(html?|pdf)$' <<<"$listing"; then
 	fail=1
 fi
 
-# Licensing has to be real. A manifest that lists a licence file which is not in the
-# archive is worse than no manifest, because it reads as a promise that was kept.
-for path in 'Licensing/README.txt' 'Licensing/third-party-libraries.tsv' \
-	'Licensing/third-party-libraries.html'
-do
+# Licensing has to be real: our licence, the notices, and a text for every licence the
+# notices name. A notice that points at a licence text which is not there reads as a
+# promise that was kept.
+for path in 'Licensing/LICENSE.txt' 'Licensing/THIRD_PARTY_NOTICES.md'; do
 	if ! grep -qxF "$path" <<<"$listing"; then
 		echo "FAIL: the archive needs $path"
 		fail=1
 	fi
 done
-
-if [ -f "$LICENSING/third-party-libraries.tsv" ]; then
-	entries=$(( $(wc -l < "$LICENSING/third-party-libraries.tsv") - 1 ))
-	if [ "$entries" -lt 20 ]; then
-		echo "FAIL: the licence manifest lists only $entries components; the product bundles far more"
-		fail=1
-	fi
-
-	# Every licence text the manifest points at must exist...
-	while IFS=$'\t' read -r _ name _ _ licence_file _ _ bundled_path; do
-		if [ -n "$licence_file" ] && [ ! -f "$LICENSING/$licence_file" ]; then
-			echo "FAIL: $name points at $licence_file and that file is not in Licensing/"
+if ! grep -q '^MIT License' "$LICENSING/LICENSE.txt" 2>/dev/null; then
+	echo "FAIL: Licensing/LICENSE.txt is not the MIT licence"
+	fail=1
+fi
+if [ -f "$LICENSING/THIRD_PARTY_NOTICES.md" ]; then
+	while IFS= read -r text; do
+		if [ ! -f "$LICENSING/$text" ]; then
+			echo "FAIL: THIRD_PARTY_NOTICES.md links $text and it is not in the archive"
 			fail=1
 		fi
-		# ...and every component it describes must still be in the product. A library that
-		# has been deleted since the manifest was written is a stale claim, not a missing
-		# licence, so say so loudly without failing a build that is otherwise correct.
-		if [ -n "$bundled_path" ] && [ ! -e "$MAIN/$bundled_path" ]; then
-			echo "STALE: the manifest lists $name at $bundled_path, which is no longer in the product."
-			echo "       Remove its row from Licensing/third-party-libraries.tsv."
+	done < <(grep -oE '\(LICENSES/[^)]+\)' "$LICENSING/THIRD_PARTY_NOTICES.md" | tr -d '()' | sort -u)
+	# Every component the notices describe must still be in the product. A library that
+	# has been deleted since is a stale claim rather than a missing licence, so say so
+	# loudly without failing a build that is otherwise correct.
+	while IFS= read -r bundled_path; do
+		if [ ! -e "$MAIN/$bundled_path" ]; then
+			echo "STALE: THIRD_PARTY_NOTICES.md lists $bundled_path, which is no longer in the product."
 		fi
-	done < <(tail -n +2 "$LICENSING/third-party-libraries.tsv")
+	done < <(grep -oE '\| `[^`]+` \|$' "$LICENSING/THIRD_PARTY_NOTICES.md" | sed -E 's/^\| `//; s/` \|$//')
 fi
 
 # Documentation and Licensing must not still be the scaffolding. These phrases were in
 # the placeholders this script used to generate; if any of them survives into a release,
 # the folder was never filled in.
 placeholders=$(grep -rilE 'not written yet|INCOMPLETE\.|lorem ipsum|TODO|FIXME|XXX' \
-	"$DOCS" "$LICENSING" 2>/dev/null | grep -v '/licenses/' || true)
+	"$DOCS" "$LICENSING" 2>/dev/null | grep -v '/LICENSES/' || true)
 if [ -n "$placeholders" ]; then
 	echo "FAIL: placeholder text is still in the archive:"
 	sed "s#^$BUILD_DIR/#       #" <<<"$placeholders"

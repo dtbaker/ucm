@@ -18,8 +18,9 @@ class module_company extends module_base
 	public function __construct() {
 		$this->module_name     = 'company';
 		$this->module_position = 10;
-		$this->version         = 2.143;
+		$this->version         = 2.144;
 	}
+	// 2.144 - 2026-10-17 - 4.0.0 relaunch: security token on company saves, forms use the form helper, PHP 8.4
 	// 2.143 - 2016-07-10 - big update to mysqli
 	// 2.142 - 2014-07-21 - fix for custom company configurations
 	// 2.141 - 2014-07-21 - company permission improvement

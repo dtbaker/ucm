@@ -72,27 +72,6 @@ if ( is_array( $home_widgets2 ) ) {
 		</div>
 	</div>
 	<div class="g6 widgets">
-		<?php if ( _DEMO_MODE ) { ?>
-			<div class="widget" id="widgetdemo">
-				<h3 class="handle">UCM Demonstration Website</h3>
-				<div style="text-align: center">
-					<p>Welcome to the live demo for <a
-							href="https://ultimateclientmanager.com/?utm_source=Demo&utm_medium=HomePage&utm_campaign=WhiteLabel&utm_content=WhiteLabel"
-							target="_blank" title="UCM: Open Source CRM, Website and Project Management" style="font-weight: bold">Ultimate
-							Client Manager Pro Edition</a> using the lovely <a
-							href="https://themeforest.net/item/ucm-theme-white-label/4120556?ref=dtbaker" target="_blank"
-							style="font-weight: bold;">White Label</a> theme. <br/>
-						This demo resets every now and then, so please feel free to test it out by entering or changing any of the
-						data. <br/>
-						The Ultimate Client Manager can be purchased and downloaded from CodeCanyon. <br/>
-						<em>Please note: This White Label theme needs to be purchased separately to UCM <br/>To try the other themes
-							please click <strong>Change Theme</strong> at the top.</em> <br/>
-						<a
-							href="http://codecanyon.net/item/ultimate-client-manager-pro-edition/2621629?ref=dtbaker&utm_source=Demo&utm_medium=HomePage&utm_campaign=WhiteLabel&utm_content=WhiteLabel"
-							target="_blank" title="UCM Website and Project Management">Please click here for more details</a>.</p>
-				</div>
-			</div>
-		<?php } ?>
 	</div>
 	<div class="g12 widgets">
 		<?php /*

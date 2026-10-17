@@ -102,9 +102,6 @@ switch ( $display_mode ) {
 					<?php } else { ?>
 							<a href="<?php echo _BASE_HREF;?>"><?php echo module_config::s('header_title','UCM');?></a>
 					<?php } ?>
-					<?php if (_DEMO_MODE) { ?>
-							<a href="https://themeforest.net/item/ucm-theme-white-label/4120556?ref=dtbaker" target="_blank"><?php _e('White Label Theme'); ?></a>
-					<?php } ?>
 	</div>
 			<div id="header_menu_holder">
 					<?php if (module_security::getcred() && module_security::can_user(module_security::get_loggedin_id(),'Show Quick Search') && $display_mode != 'mobile') {

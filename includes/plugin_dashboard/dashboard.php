@@ -14,7 +14,7 @@ class module_dashboard extends module_base
 	public function __construct() {
 		$this->module_name     = 'dashboard';
 		$this->module_position = 140;
-		$this->version         = 2.142;
+		$this->version         = 2.143;
 	}
 
 	public static function can_i( $actions, $name = false, $category = false, $module = false ) {
@@ -30,6 +30,7 @@ class module_dashboard extends module_base
 	}
 
 	public function init() {
+		//2.143 - 2026-10-17 - 4.0.0 relaunch: security token on dashboard alerts, PHP 8 sorting fixes
 		//2.142 - 2022-12-27 - php8.1 fixes
 		//2.141 - 2022-10-22 - bug fix for dashboard alerts
 		//2.140 - 2017-02-16 - dashboard_tab_ajax_stream setting

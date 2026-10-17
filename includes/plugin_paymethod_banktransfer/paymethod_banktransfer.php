@@ -17,7 +17,7 @@ class module_paymethod_banktransfer extends module_base
 	public function __construct() {
 		$this->module_name     = 'paymethod_banktransfer';
 		$this->module_position = 330;
-		$this->version         = 2.241;
+		$this->version         = 2.242;
 	}
 
 	function init() {
@@ -26,6 +26,7 @@ class module_paymethod_banktransfer extends module_base
 		//2.23 - improved settings page
 		//2.24 - 2014-03-16 - added more tags to bank transfer templates
 		//2.241 - 2015-03-14 - better default payment method options
+		//2.242 - 2026-10-17 - 4.0.0 relaunch: stable payment method key, PHP 8.4
 
 		if ( class_exists( 'module_template', false ) ) {
 			module_template::init_template( 'paymethod_banktransfer', 'Hello,

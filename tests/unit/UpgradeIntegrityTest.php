@@ -435,4 +435,185 @@ PHP
 		// installation out of updates is the worse failure.
 		$this->assertTrue( ucm_upgrade_server::rate_limit_ok( '', $this->workspace . 'rate/', 1, 600 ) );
 	}
+
+	/** Every core file, as it is in this checkout, on the pretend server. */
+	private function seed_source_core() {
+		foreach ( ucm_upgrade_server::CORE_FILES as $file ) {
+			$this->write( $this->source, $file, (string) file_get_contents( _UCM_FOLDER . $file ) );
+		}
+	}
+
+	/** A plugin row the way upgrade_server.php builds one. */
+	private function plugin_row( $name ) {
+		return array( 'key' => $name, 'files' => array( 'includes/plugin_' . $name . '/' . $name . '.php' ), 'folders' => array() );
+	}
+
+	public function test_core_installs_first_and_the_updater_last() {
+		// A 3.x client installs rows in the order they arrive, one request each, and every
+		// request boots whatever is on disk. Core last meant new plugins on old core, and
+		// the 4.0.0 update died at paymethod_paypal on db_identifier(). The config plugin
+		// is the updater: in its alphabetical place, its new page wanted a form token the
+		// old page's javascript never sends, and refused every row after it.
+		$this->seed_source_core();
+		$plugins = array(
+			'db'               => $this->plugin_row( 'db' ),
+			'address'          => $this->plugin_row( 'address' ),
+			'config'           => $this->plugin_row( 'config' ),
+			'paymethod_paypal' => $this->plugin_row( 'paymethod_paypal' ),
+		);
+		$core    = ucm_upgrade_server::core_rows( $this->source, 0, 2.3, true, false, 1 );
+
+		$rows = ucm_upgrade_server::install_order( $plugins, $core );
+
+		$this->assertSame( array( 'corefiles', 'database', 'db', 'address', 'paymethod_paypal', 'config' ), array_keys( $rows ) );
+		// And the order survives the trip through JSON, which is how the client gets it.
+		$this->assertSame( array_keys( $rows ), array_keys( json_decode( (string) json_encode( $rows ), true ) ) );
+	}
+
+	public function test_a_core_row_from_somewhere_else_is_not_sent_twice() {
+		$this->seed_source_core();
+		$plugins = array( 'database' => $this->plugin_row( 'database' ), 'address' => $this->plugin_row( 'address' ) );
+
+		$rows = ucm_upgrade_server::install_order( $plugins, ucm_upgrade_server::core_rows( $this->source, 0, 2.3, true, false, 2 ) );
+
+		$this->assertSame( array( 'corefiles', 'database', 'address' ), array_keys( $rows ) );
+		$this->assertContains( 'includes/database.php', $rows['database']['files'] );
+	}
+
+	public function test_the_core_row_has_what_the_new_init_php_loads() {
+		// The new init.php requires class.libraries.php and the new database.php. Without
+		// them in the first row, every request after it is a fatal error.
+		$this->seed_source_core();
+
+		$core = ucm_upgrade_server::core_rows( $this->source, 0, 2.3, true, false, 1 );
+
+		foreach ( array( 'init.php', 'includes/functions.php', 'includes/database.php', 'includes/class.libraries.php', 'includes/plugin.php', 'includes/links.php' ) as $file ) {
+			$this->assertContains( $file, $core['corefiles']['files'], $file . ' is missing from the core row' );
+		}
+		// temp/.htaccess sits in a folder the server never lists, but it is a guard file.
+		$this->assertContains( 'temp/.htaccess', $core['corefiles']['files'] );
+		$this->assertSame( array( 'corefiles', 'database' ), array_keys( $core ) );
+		$this->assertSame( 1, $core['corefiles']['force'] );
+	}
+
+	public function test_every_core_file_is_in_the_release() {
+		// A listed file the server does not have reached the client as "no contents for
+		// this file" and failed the row. Two jQuery files did that on every update.
+		foreach ( ucm_upgrade_server::CORE_FILES as $file ) {
+			$this->assertFileExists( _UCM_FOLDER . $file );
+			$this->assertTrue( ucm_upgrade_server::is_servable_release_path( $file ), $file );
+		}
+		$this->assertNotContains( 'includes/config.php', ucm_upgrade_server::CORE_FILES );
+		$this->assertNotContains( 'includes/config.local.php', ucm_upgrade_server::CORE_FILES );
+	}
+
+	public function test_every_runtime_file_outside_the_plugins_is_a_core_file() {
+		// The updater only knows about plugin folders and this list, so a new file here
+		// that is not on it never reaches an existing install. class.libraries.php was
+		// that file for 4.0.0.
+		$found = array_merge(
+			glob( _UCM_FOLDER . '*.php' ),
+			glob( _UCM_FOLDER . 'includes/*.php' ),
+			glob( _UCM_FOLDER . 'pages/*' ),
+			glob( _UCM_FOLDER . 'pages/mobile/*' )
+		);
+		// The buyer's own settings, which an update must never touch.
+		$not_core = array( 'includes/config.php', 'includes/config.local.php' );
+		// And whatever .gitattributes keeps out of the release, like rector.php.
+		preg_match_all( '#^/(\S+)\s+export-ignore#m', (string) file_get_contents( _UCM_FOLDER . '.gitattributes' ), $ignored );
+		$not_core = array_merge( $not_core, $ignored[1] );
+		foreach ( $found as $path ) {
+			$file = substr( $path, strlen( _UCM_FOLDER ) );
+			if ( is_dir( $path ) || in_array( $file, $not_core, true ) ) {
+				continue;
+			}
+			$this->assertContains( $file, ucm_upgrade_server::CORE_FILES, $file . ' is not sent to existing installs' );
+		}
+	}
+
+	public function test_a_core_file_the_server_lacks_is_left_off() {
+		$this->write( $this->source, 'init.php', "<?php\n" );
+		$this->write( $this->source, 'includes/database.php', "<?php\n" );
+		$this->write( $this->source, 'includes/config.php', "<?php // the server's own database password\n" );
+
+		$core = ucm_upgrade_server::core_rows( $this->source, 0, 2.3, true, false, 2 );
+
+		$this->assertSame( array( 'init.php', 'includes/database.php' ), $core['corefiles']['files'] );
+		$this->assertSame( array( 'includes/database.php' ), $core['database']['files'] );
+	}
+
+	public function test_an_upload_folder_gets_its_guards_and_nothing_else() {
+		// The .htaccess that blocks web access to uploads ships with the release, in a
+		// folder the listing skips. An updated install never got it.
+		$this->seed_source_plugin();
+		$this->write( $this->source, 'includes/plugin_file/upload/.htaccess', "Require all denied\n" );
+		$this->write( $this->source, 'includes/plugin_file/upload/index.php', "<?php // silence\n" );
+		$this->write( $this->source, 'includes/plugin_file/upload/customer-7/contract.pdf', "private\n" );
+
+		$listing = ucm_upgrade_server::list_directory( $this->source, 'includes/plugin_file/' );
+
+		$this->assertSame( array( 'includes/plugin_file/upload/.htaccess', 'includes/plugin_file/upload/index.php' ), $listing['files'] );
+		$this->assertContains( 'includes/plugin_file/upload/', $listing['folders'] );
+		$this->assertNotContains( 'includes/plugin_file/upload/customer-7/', $listing['folders'] );
+	}
+
+	public function test_an_attachments_folder_gets_its_guard_and_nothing_else() {
+		// Here the folder itself is listed and only its files are skipped.
+		$this->write( $this->source, 'includes/plugin_ticket/ticket.php', "<?php\n" );
+		$this->write( $this->source, 'includes/plugin_ticket/attachments/.htaccess', "Require all denied\n" );
+		$this->write( $this->source, 'includes/plugin_ticket/attachments/12-passport.jpg', "private\n" );
+
+		$listing = ucm_upgrade_server::list_directory( $this->source, 'includes/plugin_ticket/' );
+
+		$this->assertSame( array( 'includes/plugin_ticket/attachments/.htaccess', 'includes/plugin_ticket/ticket.php' ), $listing['files'] );
+	}
+
+	public function test_an_old_client_is_not_sent_empty_files() {
+		// The 3.x client writes with `! file_put_contents()`, so zero bytes reads as a
+		// failed write and fails the row. contract.css has been empty since 3.555.
+		$this->write( $this->source, 'includes/plugin_contract/contract.php', "<?php\n" );
+		$this->write( $this->source, 'includes/plugin_contract/css/contract.css', '' );
+		$files = array( 'includes/plugin_contract/contract.php', 'includes/plugin_contract/css/contract.css' );
+
+		$this->assertSame( array( 'includes/plugin_contract/contract.php' ), ucm_upgrade_server::files_for_client( $this->source, 0, $files, 1 ) );
+		$this->assertSame( $files, ucm_upgrade_server::files_for_client( $this->source, 0, $files, 2 ) );
+	}
+
+	public function test_vendor_goes_to_a_client_without_it() {
+		$this->seed_source_core();
+		$this->write( $this->source, 'vendor/autoload.php', "<?php\n" );
+		$this->write( $this->source, 'vendor/composer/installed.json', '{"packages":[]}' );
+		$this->write( $this->source, 'vendor/stripe/stripe-php/lib/Stripe.php', "<?php\n" );
+		$fingerprint = ucm_upgrade_server::libraries_fingerprint( $this->source );
+
+		// A 3.x client sends nothing, and has no vendor/.
+		$this->assertTrue( ucm_upgrade_server::client_needs_libraries( $fingerprint, null ) );
+		$this->assertTrue( ucm_upgrade_server::client_needs_libraries( $fingerprint, '' ) );
+		$this->assertTrue( ucm_upgrade_server::client_needs_libraries( $fingerprint, str_repeat( 'a', 64 ) ) );
+		$this->assertFalse( ucm_upgrade_server::client_needs_libraries( $fingerprint, $fingerprint ) );
+		// A server with no vendor/ of its own has nothing to send.
+		$this->assertSame( '', ucm_upgrade_server::libraries_fingerprint( $this->destination ) );
+		$this->assertFalse( ucm_upgrade_server::client_needs_libraries( '', null ) );
+
+		$core = ucm_upgrade_server::core_rows( $this->source, 0, 2.3, true, true, 1 );
+
+		// In the database row, which comes second: a big download that fails there cannot
+		// stop the core files arriving.
+		$this->assertContains( 'vendor/stripe/stripe-php/lib/Stripe.php', $core['database']['files'] );
+		$this->assertContains( 'vendor/composer/installed.json', $core['database']['files'] );
+		$this->assertContains( 'vendor/stripe/stripe-php/lib/', $core['database']['folders'] );
+		$this->assertSame( array(), preg_grep( '#^vendor/#', $core['corefiles']['files'] ) );
+
+		$without = ucm_upgrade_server::core_rows( $this->source, 0, 2.3, true, false, 2 );
+		$this->assertSame( array( 'includes/database.php' ), $without['database']['files'] );
+	}
+
+	public function test_an_old_updater_can_still_record_a_version_on_the_new_core() {
+		// The 3.x updater runs on the new includes/plugin.php until the config row
+		// replaces it, which is the last row, and calls this by its old, misspelt name.
+		$source = (string) file_get_contents( _UCM_FOLDER . 'includes/plugin.php' );
+
+		$this->assertMatchesRegularExpression( '#function set_insatlled_plugin_version\(#', $source );
+		$this->assertMatchesRegularExpression( '#function set_installed_plugin_version\(#', $source );
+	}
 }

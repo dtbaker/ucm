@@ -107,6 +107,10 @@ function ucm_upgrade_server_respond() {
 	$return_base_system_in_zip = ! empty( $_REQUEST['return_base_system_in_zip'] );
 	$requested_plugin          = isset( $_REQUEST['requested_plugin'] ) && is_string( $_REQUEST['requested_plugin'] )
 		? $_REQUEST['requested_plugin'] : false;
+	// The release the client runs, from a client new enough to say. See
+	// ucm_upgrade_server::offers_core_files().
+	$client_release = ucm_upgrade_server::client_release( isset( $_REQUEST['release_version'] ) ? $_REQUEST['release_version'] : null );
+	$server_release = defined( '_SCRIPT_VERSION' ) ? (string) _SCRIPT_VERSION : '';
 
 	// The old one-file installer, and ucm-web/api/download_zip.php: the whole product in one
 	// zip, so a site installed from it is the same as one unzipped from CodeCanyon. It is
@@ -123,6 +127,11 @@ function ucm_upgrade_server_respond() {
 	$update_plugins                      = array();
 	$check_again_for_updates             = false;
 	$we_are_recommending_an_item_upgrade = false;
+
+	// The release file list, when this server was deployed from a built release. Plugin
+	// rows are built from it so that nothing the server wrote into a plugin folder at run
+	// time - dompdf's font caches, say - is offered to clients as part of the plugin.
+	$release_manifest = ucm_upgrade_server::release_manifest( $root );
 
 	$plugin_list = is_array( $plugins ) ? $plugins : array();
 	uasort( $plugin_list, function ( $a, $b ) {
@@ -157,7 +166,7 @@ function ucm_upgrade_server_respond() {
 
 		$new_version = max( $new_version, $new_plugin_version );
 
-		$listing = ucm_upgrade_server::list_directory( $root, 'includes/plugin_' . $plugin_name . '/' );
+		$listing = ucm_upgrade_server::listing( $root, 'includes/plugin_' . $plugin_name . '/', $release_manifest );
 		$files   = $listing['files'];
 		$folders = $listing['folders'];
 
@@ -203,7 +212,7 @@ function ucm_upgrade_server_respond() {
 		}
 
 		$update_plugins[ $plugin_name ]['description'] = 'Update to plugin: ' . $plugin_name . $additional_info;
-		$update_plugins[ $plugin_name ]['files']       = $files;
+		$update_plugins[ $plugin_name ]['files']       = ucm_upgrade_server::files_for_client( $root, $application, $files, $client_protocol );
 		$update_plugins[ $plugin_name ]['folders']     = $folders;
 		$update_plugins[ $plugin_name ]['recommended'] = $recommended_install;
 	}
@@ -257,64 +266,21 @@ function ucm_upgrade_server_respond() {
 		}
 	}
 
-	if ( $do_upgrade || 'corefiles' === $requested_plugin ) {
-		$do_upgrade  = true;
-		$new_version = max( $new_version, 2.2 );
-
-		$update_plugins['corefiles'] = array(
-			'key'               => 'corefiles',
-			'installed_version' => 'N/A',
-			'available_version' => $new_version,
-			'description'       => 'Core application files',
-			'files'             => array(
-				'index.php',
-				'ext.php',
-				'design_menu.php',
-				'design_header.php',
-				'design_footer.php',
-				'ajax.php',
-				'cron.php',
-				'init.php',
-				'includes/plugin.php',
-				'includes/functions.php',
-				'includes/links.php',
-				'pages/home.php',
-				'pages/mobile/login.php',
-				'pages/login.php',
-				'css/desktop.css',
-				'css/print.css',
-				'css/styles.css',
-				'css/smoothness/jquery-ui-1.9.2.custom.min.css',
-				'js/jquery-1.8.3.min.js',
-				'js/jquery-ui-1.9.2.custom.min.js',
-				'js/javascript.js',
-				'temp/.htaccess',
-			),
-			'folders'           => array(
-				'temp',
-				'pages/mobile',
-			),
-			'file_contents'     => array(),
-			'recommended'       => $we_are_recommending_an_item_upgrade,
-			'force'             => 1,
-		);
-	}
-
-	if ( $do_upgrade || 'database' === $requested_plugin ) {
+	if ( ucm_upgrade_server::offers_core_files( $do_upgrade, $requested_plugin, $server_release, $client_release ) ) {
 		$do_upgrade  = true;
 		$new_version = max( $new_version, 2.3 );
+		if ( ucm_upgrade_server::release_is_newer( $server_release, $client_release ) ) {
+			$we_are_recommending_an_item_upgrade = true;
+		}
 
-		$update_plugins['database'] = array(
-			'key'               => 'database',
-			'installed_version' => 2.2,
-			'available_version' => $new_version,
-			'description'       => 'Database application update',
-			'files'             => array( 'includes/database.php' ),
-			'folders'           => array(),
-			'file_contents'     => array(),
-			'recommended'       => $we_are_recommending_an_item_upgrade,
-			'force'             => 1,
+		$send_libraries = ucm_upgrade_server::client_needs_libraries(
+			ucm_upgrade_server::libraries_fingerprint( $root ),
+			isset( $_REQUEST['libraries'] ) && is_string( $_REQUEST['libraries'] ) ? $_REQUEST['libraries'] : null
 		);
+		$core_rows      = ucm_upgrade_server::core_rows( $root, $application, $new_version, $we_are_recommending_an_item_upgrade, $send_libraries, $client_protocol );
+		$init_file      = ucm_upgrade_server::source_path( $root, $application, 'init.php' );
+		$core_rows      = ucm_upgrade_server::label_release( $core_rows, $server_release, $client_release, $init_file ? file_get_contents( $init_file ) : false );
+		$update_plugins = ucm_upgrade_server::install_order( $update_plugins, $core_rows );
 	}
 
 	// Read the bodies, and hash every one of them on the way past.
@@ -381,7 +347,7 @@ function ucm_upgrade_server_respond() {
  * @return string|false
  */
 function ucm_upgrade_server_source_path( $root, $application, $file ) {
-	if ( ucm_upgrade_server::is_ignored_path( '/' . $file ) ) {
+	if ( ! ucm_upgrade_server::is_servable_release_path( $file ) ) {
 		return false;
 	}
 

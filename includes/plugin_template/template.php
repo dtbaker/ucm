@@ -21,7 +21,7 @@ class module_template extends module_base
 	public function __construct() {
 		$this->module_name     = 'template';
 		$this->module_position = 510;
-		$this->version         = 2.260;
+		$this->version         = 2.261;
 	}
 
 	public static function can_i( $actions, $name = false, $category = false, $module = false ) {
@@ -38,6 +38,7 @@ class module_template extends module_base
 
 	function init() {
 		$this->links = array();
+		//2.261 - 2026-10-17 - 4.0.0 relaunch: security token on template saves, escaped request values, PHP 8.4 fixes
 		//2.260 - 2019-04-06 - php error fix
 		//2.259 - 2015-11-06 - javascript template improvement
 		//2.258 - 2015-07-29 - delete template button

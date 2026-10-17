@@ -9,7 +9,7 @@ class module_hook extends module_base
 	public function __construct() {
 		$this->module_name     = 'hook';
 		$this->module_position = 2;
-		$this->version         = 2.1;
+		$this->version         = 2.101;
 	}
 
 	public static function can_i( $actions, $name = false, $category = false, $module = false ) {
@@ -25,6 +25,7 @@ class module_hook extends module_base
 	}
 
 	public function init() {
+		// 2.101 - 2026-10-17 - 4.0.0 relaunch: PHP 8.4 compatibility and code style
 		// 2.1 - 2016-06-15 - initial release
 	}
 

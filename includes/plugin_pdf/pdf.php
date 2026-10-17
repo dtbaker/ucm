@@ -20,7 +20,7 @@ class module_pdf extends module_base
 	public function __construct() {
 		$this->module_name     = 'pdf';
 		$this->module_position = 410;
-		$this->version         = 2.135;
+		$this->version         = 2.136;
 	}
 
 	/**
@@ -58,6 +58,7 @@ class module_pdf extends module_base
 		// 2.133 - 2016-07-10 - php7 support
 		// 2.134 - 2021-04-07 - php8 compatibility fix
 		// 2.135 - 2021-09-24 - change to dompdf generation
+		// 2.136 - 2026-10-17 - 4.0.0 relaunch: PDFs saved to disk, automatic mPDF installer removed, PHP 8.4
 		$this->links = array();
 	}
 

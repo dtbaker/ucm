@@ -13,7 +13,7 @@ class module_email extends module_base
 	public function __construct() {
 		$this->module_name     = 'email';
 		$this->module_position = 160;
-		$this->version         = 2.365;
+		$this->version         = 2.366;
 	}
 
 	public static function can_i( $actions, $name = false, $category = false, $module = false ) {
@@ -29,6 +29,7 @@ class module_email extends module_base
 	}
 
 	function init() {
+		// 2.366 - 2026-10-17 - 4.0.0 relaunch: security token on saves, contract accept works with emails blocked, compose warning fixed
 		// 2.365 - 2021-04-07 - php8 compatibility fix
 		// 2.364 - 2017-07-24 - auto bcc option
 		// 2.363 - 2017-05-18 - quote email fix

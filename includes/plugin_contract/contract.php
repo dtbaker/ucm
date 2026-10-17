@@ -15,8 +15,9 @@ class module_contract extends module_base
 	public function __construct() {
 		$this->module_name     = 'contract';
 		$this->module_position = 120;
-		$this->version         = 2.11;
+		$this->version         = 2.111;
 	}
+	//2.111 - 2026-10-17 - 4.0.0 relaunch: contract delete fixed, security token on saves, broken print logo removed, PHP 8.4
 	//2.11 - 2017-07-28 - terminate date
 	//2.1 - 2017-07-23 - initial release
 

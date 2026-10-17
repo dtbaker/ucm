@@ -1,9 +1,14 @@
 # Demo chrome
 
-The banner, theme switcher and demo login that wrap the app on
-demo.ultimateclientmanager.com. `module_theme::include_ucm()` picks `custom/<page>.php`
-ahead of the real one, so these two files wrap `design_header.php` and
-`design_footer.php` without the application knowing about it.
+The bar across the top of demo.ultimateclientmanager.com. It says the site is a demo,
+switches between the bundled themes, and links to the documentation, GitHub and the
+store. `module_theme::include_ucm()` picks `custom/<page>.php` ahead of the real one, so
+`design_header.php` here renders the real header and slips the bar in after its `<body>`
+tag, without the application knowing about it. `design_footer.php` does the same for the
+footer and adds nothing.
+
+`demo/` holds the theme menu's thumbnails: 280x176 screenshots of each theme's dashboard,
+taken at 1280x800 with the bar closed. Retake them when a theme changes visibly.
 
 ## It only renders when demo mode is on
 
@@ -11,7 +16,7 @@ Both files return early unless `_DEMO_MODE`, so a checkout that has this folder 
 automatically a demo. Demo mode is the `UCM_DEMO_MODE` environment variable:
 
 ```
-./scripts/demo-mode.sh on      # banner, theme switcher, demo login
+./scripts/demo-mode.sh on      # the demo bar, and the login form filled in
 ./scripts/demo-mode.sh off     # a plain install
 ./scripts/demo-mode.sh         # which is it currently
 ```
@@ -29,9 +34,3 @@ overrides it either way.
 `scripts/build-release.sh` uses - leaves it out of the item archive. Committed so a deploy
 carries it; excluded so a buyer does not get a header advertising the demo.
 
-## Known, deliberately left alone
-
-`design_footer.php` injects Universal Analytics (`analytics.js`, a UA- property). UA
-stopped processing data in July 2023, so it collects nothing and is a third-party script
-on every demo page doing no work. Replace it with a GA4 tag or delete it - removing the
-demo's analytics is an owner's decision, not a side effect of a refactor.

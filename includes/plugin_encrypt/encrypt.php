@@ -17,7 +17,7 @@ class module_encrypt extends module_base
 	public function __construct() {
 		$this->module_name     = 'encrypt';
 		$this->module_position = 170;
-		$this->version         = 2.270;
+		$this->version         = 2.271;
 	}
 
 	public static function can_i( $actions, $name = false, $category = false, $module = false ) {
@@ -51,6 +51,7 @@ class module_encrypt extends module_base
 		// 2.268 - 2014-10-13 - hook_filter_var for better theme support
 		// 2.269 - 2015-04-12 - fix dollar sign in extra field bug
 		// 2.270 - 2016-11-25 - modal popup fix
+		// 2.271 - 2026-10-17 - 4.0.0 relaunch: security token on encrypted field saves, form tables converted, PHP 8.4
 
 
 		module_config::register_js( 'encrypt', 'sjcl.js' );

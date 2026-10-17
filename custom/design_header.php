@@ -1,426 +1,191 @@
 <?php
+/**
+ * The public demo's bar: says this is a demo, switches theme, and links to the
+ * documentation, GitHub and the store.
+ *
+ * module_theme::include_ucm() picks custom/design_header.php ahead of the real header, so
+ * this file renders the real one itself and slips the bar in after its <body> tag. It only
+ * does that in demo mode; otherwise it renders the real header and nothing else.
+ *
+ * Picking a theme needs nothing here. module_theme::get_current_theme() reads demo_theme
+ * in demo mode and keeps the choice in the visitor's session, so the stored theme is left
+ * alone and each visitor sees their own.
+ */
 
-if(_DEMO_MODE && isset($_GET['demo_login'])){
-
-    if ( ! empty( $_SERVER['REQUEST_URI'] ) ) {
-        $url  = $_SERVER['REQUEST_URI'];
-        $bits = explode( '/', $url );
-        if ( empty( $bits[0] ) ) {
-            array_shift( $bits );
-        } // for some reason this is needed on wpdocker ?
-        $sub_host = preg_replace( '$[^a-zA-Z0-9]$', '', $bits[0] );
-        // strpos() returns 0 for a match at the start, so !strpos() was true for the very
-        // names this was meant to skip. And it only makes sense when the demo is served
-        // from a subdirectory - at the root of demo.ultimateclientmanager.com the first
-        // path segment is a page name, and redirecting to /<page>/index.php goes nowhere.
-        if( strlen( $sub_host ) && strpos( $sub_host, 'template' ) === false && is_dir( $sub_host ) ){
-	        ob_end_clean();
-	        ?>
-
-            <html>
-            <head>
-                <title>Ultimate Client Manager - Demo</title>
-            </head>
-            <body>
-            <div style="text-align: center; padding:40px; font-size: 23px;">
-                <a href="/<?php echo $sub_host;?>/index.php" target="_top" id="preview_link">Please click here to launch the demo.</a>
-            </div>
-            <script>
-                document.getElementById('preview_link').style.display = 'none';
-                top.location.href = '/<?php echo $sub_host;?>/index.php';
-            </script>
-
-            </body>
-            </html>
-	        <?php
-	        exit;
-        }
-    }
-
-
+// The header for the active theme, found the way include_ucm() finds it, minus custom/ -
+// which is this file.
+$ucm_demo_header = 'design_header.php';
+$ucm_demo_candidates = array();
+if ( get_display_mode() == 'mobile' ) {
+	$ucm_demo_candidates[] = 'mobile/' . $ucm_demo_header;
+}
+$ucm_demo_theme_dir = basename( (string) module_theme::$current_theme );
+if ( strlen( $ucm_demo_theme_dir ) > 2 && is_dir( 'includes/plugin_theme/themes/' . $ucm_demo_theme_dir . '/' ) ) {
+	$ucm_demo_candidates[] = 'includes/plugin_theme/themes/' . $ucm_demo_theme_dir . '/' . $ucm_demo_header;
+}
+if ( module_theme::$current_theme_settings && isset( module_theme::$current_theme_settings['base_dir'] ) && strlen( module_theme::$current_theme_settings['base_dir'] ) > 2 && is_dir( module_theme::$current_theme_settings['base_dir'] ) ) {
+	$ucm_demo_candidates[] = module_theme::$current_theme_settings['base_dir'] . $ucm_demo_header;
+}
+$ucm_demo_candidates[] = $ucm_demo_header;
+foreach ( $ucm_demo_candidates as $ucm_demo_file ) {
+	if ( is_file( $ucm_demo_file ) ) {
+		$ucm_demo_header = $ucm_demo_file;
+		break;
+	}
 }
 
-// The theme switcher needs nothing here. module_theme::get_current_theme() already reads
-// demo_theme in demo mode and keeps the choice in the session, so each visitor sees their
-// own theme and the stored one is left alone.
-//
-// What used to be here called save_config( 'theme_name', ... ) when demo mode was OFF -
-// the one case where it is not sandboxed - so any unauthenticated request with
-// ?demo_theme= could change the theme of a real install. It did nothing for the demo.
-header("Expires: Sat, 26 Jul 1997 05:00:00 GMT"); // Some time in the past
-header("Last-Modified: " . gmdate("D, d M Y H:i:s") . " GMT");
-header("Cache-Control: no-store, no-cache, must-revalidate");
-header("Cache-Control: post-check=0, pre-check=0", false);
-header("Pragma: no-cache");
-
-//echo 'checking '.$page."<br>";
-$custom_page = 'design_header.php';
-
-$display_mode = get_display_mode();
-
-
-        $check_files = array();
-        $current_theme = basename(module_theme::$current_theme);
-        if(strlen($current_theme)>2 && is_dir('includes/plugin_theme/themes/'.$current_theme.'/')){
-            // we have an active theme!
-        }else{
-            $current_theme = false;
-        }
-
-        // build up our file listing.
-        if($display_mode == 'mobile'){
-            //$check_files[] = 'custom/'.dirname($page).'/mobile/'.basename($page);
-        }
-        //$check_files[] = 'custom/'.$page;
-        if($display_mode == 'mobile'){
-            //$check_files[] = 'includes/plugin_mobile/custom_layout/'.$page;
-            $check_files[] = dirname($custom_page).'/mobile/'.basename($custom_page);
-        }
-        if($current_theme)$check_files[] = 'includes/plugin_theme/themes/'.$current_theme.'/'.$custom_page;
-if(module_theme::$current_theme_settings && isset(module_theme::$current_theme_settings['base_dir']) && strlen(module_theme::$current_theme_settings['base_dir']) > 2 && is_dir(module_theme::$current_theme_settings['base_dir'])){
-            // we have an active theme!
-            $check_files[] = module_theme::$current_theme_settings['base_dir'].$custom_page;
-        }
-//print_r($check_files);
-        $check_files[] = $custom_page;
-
-
-
-$page_to_use = $custom_page;
-
-        foreach($check_files as $file){
-            module_debug::log(array(
-                'title' => 'IncludeUCM',
-                'file' => 'includes/plugin_theme/theme.php',
-                'data' => "Checking for include file: ".$file,
-            ));
-            if(is_file($file)){
-                module_debug::log(array(
-                    'title' => 'IncludeUCM',
-                    'file' => 'includes/plugin_theme/theme.php',
-                    'data' => "FOUND FILE! ".$file,
-                ));
-                $page_to_use = $file;
-break;
-            }
-        }
-
-// Without demo mode there is no demo chrome to add, so render the real header and stop.
-// This file is only present on the demo and in a development checkout, but it being
-// present is not the same as the demo being on - ./scripts/demo-mode.sh switches that,
-// and the banner has to follow it or the switch does not mean anything.
+// Present is not the same as on: ./scripts/demo-mode.sh switches demo mode, and the bar
+// has to follow it or the switch does not mean anything.
 if ( ! _DEMO_MODE ) {
-	include( $page_to_use );
+	include( $ucm_demo_header );
 
 	return;
 }
 
-// Take back exactly the buffer opened on the line above. The loop that used to be here
-// drained every level, which on a host with output_buffering on swallows the one PHP
-// opened for the request as well, and leaves the rest of the page writing to nothing.
-$ob_level_before_header = ob_get_level();
+// Each visitor's theme lives in their session, so a cached page would show someone else's.
+header( 'Cache-Control: no-store, no-cache, must-revalidate' );
+header( 'Pragma: no-cache' );
+
+// Take back exactly the buffer opened here. Draining every level would also swallow the
+// one PHP opened for the request on a host with output_buffering on.
+$ucm_demo_ob_level = ob_get_level();
 ob_start();
-include($page_to_use);
-$header_html = '';
-while(ob_get_level() > $ob_level_before_header){
-	$header_html = ob_get_clean() . $header_html;
+include( $ucm_demo_header );
+$ucm_demo_header_html = '';
+while ( ob_get_level() > $ucm_demo_ob_level ) {
+	$ucm_demo_header_html = ob_get_clean() . $ucm_demo_header_html;
 }
 
+// The default first and the legacy theme last, the same order as Settings > Theme.
+$ucm_demo_themes = array(
+	'metis'          => 'Default',
+	'theme_adminlte' => 'AdminLTE',
+	'whitelabel1'    => 'White Label',
+);
+if ( is_dir( 'includes/plugin_theme_blocks/' ) ) {
+	$ucm_demo_themes['theme_blocks'] = 'Blocks';
+}
+$ucm_demo_themes['pro'] = 'Legacy';
+$ucm_demo_current = module_theme::get_current_theme();
+$ucm_demo_current_name = isset( $ucm_demo_themes[ $ucm_demo_current ] ) ? $ucm_demo_themes[ $ucm_demo_current ] : 'Default';
+
+// This page's address with demo_theme set, so picking a theme keeps you where you are.
+$ucm_demo_uri = isset( $_SERVER['REQUEST_URI'] ) ? (string) $_SERVER['REQUEST_URI'] : '/';
+$ucm_demo_path = (string) parse_url( $ucm_demo_uri, PHP_URL_PATH );
+$ucm_demo_query = array();
+parse_str( (string) parse_url( $ucm_demo_uri, PHP_URL_QUERY ), $ucm_demo_query );
+unset( $ucm_demo_query['demo_theme'] );
+
+$ucm_demo_hidden = isset( $_COOKIE['ucm_demo_hidden'] ) && $_COOKIE['ucm_demo_hidden'] === '1';
+$ucm_demo_assets = rtrim( (string) _BASE_HREF, '/' ) . '/custom/demo/';
+
 ob_start();
-$demo_header_height = 117;
-$demo_header_height_small_adjustment = 10;
 ?>
-	<!-- start theme demo code - copyright @dtbaker -->
-	<style type="text/css">
-		body.demo_visible {
-			margin-top: <?php echo $demo_header_height+5;?>px !important;
-		}
-		/* adminlte fix */
-		@media screen and (min-width: 992px) {
-			body.theme-adminlte.demo_visible .left-side {
-				top: <?php echo $demo_header_height+50;?>px;
-			}
-		}
-		body.demo_visible > #holder {
-			top: <?php echo $demo_header_height+10;?>px;
-		}
-		body.demo_visible .modal {
-			top: <?php echo $demo_header_height+30;?>px;
-		}
-		body.demo_visible #dtbaker_demo_header {
-			height: <?php echo $demo_header_height+5;?>px;
-		}
-		body.demo_visible #dtbaker_demo_header.loading #demo_loading {
-			top: <?php echo $demo_header_height+5;?>px;
-		}
-		body.demo_visible #dtbaker_demo_header div.preview_holder {
-			height: <?php echo $demo_header_height;?>px;
-		}
-		body.demo_visible #dtbaker_demo_header div.preview__envato-logo{
-			height: <?php echo $demo_header_height;?>px;
-		}
-		body.demo_visible #dtbaker_demo_header div.preview_buttons {
-			height: <?php echo $demo_header_height;?>px;
-		}
-		body.demo_visible #dtbaker_demo_header ul li {
-			height: <?php echo $demo_header_height;?>px;
-		}
-		body.demo_visible #dtbaker_demo_header ul li.options {
-			height: <?php echo $demo_header_height;?>px;
-		}
-	</style>
-	<link rel="stylesheet" href="//ultimateclientmanager.com/files/demo-images/demo.css">
-	<div id="dtbaker_demo_header">
-		<div class="preview__action--close">
-			<a href="#" id="hide_demo_options">
-				<i class="fa fa-times"></i> <span>Close Demo Options</span>
-			</a>
-		</div>
-		<div class="preview_hidden">
-			<a href="#" id="show_demo_options">
-				<i class="fa fa-arrow-down"></i> <span>Show Demo Options</span>
-			</a>
-		</div>
-		<!-- <div class="preview__envato-logo">
-			<a href="http://codecanyon.net/item/ultimate-client-manager-crm-pro-edition/2621629?ref=dtbaker" target="_blank">Envato Market</a>
-		</div> -->
-		<div class="preview_buttons">
-			<a href="http://ultimateclientmanager.com/" target="_blank"><img src="//ultimateclientmanager.com/files/demo-images/button-about.png"></a>
-			<a href="http://ultimateclientmanager.com/support/documentation-wiki/" target="_blank"><img src="//ultimateclientmanager.com/files/demo-images/button-documentation.png"></a>
-		</div>
-		<ul class="theme-presets">
-			<li class="core-system current">
-				<a href="http://codecanyon.net/item/ultimate-client-manager-crm-pro-edition/2621629?ref=dtbaker" target="_blank" class="dtbaker_demo_item">
-					<img src="//ultimateclientmanager.com/files/demo-images/ucm-pro-logo.png"
-					     alt="UCM CRM Pro">
-					<span>UCM Pro<br/>System</span>
-				</a>
-			</li>
-			<li class="plus">
-				<span>+</span>
-			</li>
-			<!-- <li class="theme-label">
-				<a href="http://codecanyon.net/item/ultimate-client-manager-crm-pro-edition/2621629?ref=dtbaker" target="_blank"><img
-						src="//ultimateclientmanager.com/files/demo-images/themes.png"
-						alt="PHP CRM Demo"></a>
-			</li> -->
-			<?php
-			$current_demo = module_theme::get_current_theme();
-			$themes = array(
-				'pro' => array(
-					'cost' => 0,
-					'name' => 'Default',
-					'image' => '//ultimateclientmanager.com/files/demo-images/theme-pro.png',
-					'link' => 'https://codecanyon.net/item/ultimate-client-manager-crm-pro-edition/2621629?ref=dtbaker',
-					'purchase' => 'https://codecanyon.net/cart/add_items?item_ids=2621629&ref=dtbaker',
-				),
-				'metis' => array(
-					'cost' => 0,
-					'name' => 'Metis',
-					'image' => '//ultimateclientmanager.com/files/demo-images/theme-default.png',
-					'link' => 'https://codecanyon.net/item/ultimate-client-manager-crm-pro-edition/2621629?ref=dtbaker',
-					'purchase' => 'https://codecanyon.net/cart/add_items?item_ids=2621629&ref=dtbaker',
-				),
-				'theme_adminlte' => array(
-					'cost' => 21,
-					'name' => 'AdminLTE',
-					'image' => '//ultimateclientmanager.com/files/demo-images/theme-adminlte.png',
-					'link' => 'https://themeforest.net/item/ucm-theme-adminlte-crm/8565409?ref=dtbaker',
-					'purchase' => 'https://codecanyon.net/cart/add_items?item_ids=2621629,8565409&ref=dtbaker',
-				),
-				'whitelabel1' => array(
-					'cost' => 21,
-					'name' => 'WhiteLabel',
-					'image' => '//ultimateclientmanager.com/files/demo-images/theme-whitelabel.png',
-					'link' => 'https://themeforest.net/item/ucm-theme-white-label/4120556?ref=dtbaker',
-					'purchase' => 'https://codecanyon.net/cart/add_items?item_ids=2621629,4120556&ref=dtbaker',
-				),
-			);
-			if(is_dir('includes/plugin_theme_blocks/')){
-				$themes['theme_blocks'] = array(
-					'cost' => 21,
-					'name' => 'Blocks',
-					'image' => '//ultimateclientmanager.com/files/demo-images/theme-blocks.png',
-					'link' => 'https://themeforest.net/item/ucm-theme-blocks-crm/14745039?ref=dtbaker',
-					'purchase' => 'https://codecanyon.net/cart/add_items?item_ids=2621629,14745039&ref=dtbaker',
-				);
-			}
-			$u = preg_replace('#.demo_theme=\w+#','',$_SERVER['REQUEST_URI']);
-			$has_addon = false;
-			$total_price = 63;
-			foreach($themes as $theme_id => $theme){
-				if($theme_id == $current_demo){ //} && $theme['cost']){
-					$total_price += $theme['cost'];
-					$has_addon = $theme;
-				}
+<!-- start theme demo code - copyright @dtbaker -->
+<style>
+#ucm-demo{position:fixed;top:0;left:0;right:0;z-index:1035;box-sizing:border-box;display:flex;align-items:center;gap:14px;height:46px;padding:0 14px;background:#1f2326;color:#d6d9dc;font:14px/1.2 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;text-align:left}
+#ucm-demo *{box-sizing:border-box}
+#ucm-demo a{color:#d6d9dc;text-decoration:none}
+#ucm-demo a:hover{color:#fff}
+#ucm-demo .ucm-demo-tag{background:#3b6d11;color:#eaf3de;border-radius:4px;padding:3px 8px;font-size:12px;font-weight:600;letter-spacing:.02em;white-space:nowrap}
+#ucm-demo .ucm-demo-about{color:#9aa1a6;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#ucm-demo .ucm-demo-gap{flex:1}
+#ucm-demo .ucm-demo-link{display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+#ucm-demo svg{width:16px;height:16px;fill:currentColor;flex:none}
+#ucm-demo .ucm-demo-buy{background:#5b9b2a;color:#fff;border-radius:4px;padding:7px 14px;font-weight:600;white-space:nowrap}
+#ucm-demo .ucm-demo-buy:hover{background:#4c8722;color:#fff}
+#ucm-demo .ucm-demo-close{display:inline-flex;padding:6px;border-radius:4px;color:#9aa1a6}
+#ucm-demo .ucm-demo-close:hover{background:#2e3337}
+#ucm-demo details{position:relative}
+#ucm-demo summary{display:inline-flex;align-items:center;gap:8px;list-style:none;cursor:pointer;border:1px solid #454b50;border-radius:4px;padding:6px 10px;color:#fff;white-space:nowrap;user-select:none}
+#ucm-demo summary::-webkit-details-marker{display:none}
+#ucm-demo summary:hover,#ucm-demo details[open] summary{border-color:#6b7277;background:#2a2f33}
+#ucm-demo summary .ucm-demo-caret{border:4px solid transparent;border-top-color:currentColor;margin-top:4px}
+#ucm-demo .ucm-demo-menu{position:absolute;top:calc(100% + 6px);left:0;display:grid;grid-template-columns:repeat(5,148px);gap:10px;padding:12px;background:#2a2f33;border:1px solid #454b50;border-radius:6px;box-shadow:0 10px 30px rgba(0,0,0,.35)}
+#ucm-demo .ucm-demo-menu a{display:block;text-align:center;font-size:13px;color:#d6d9dc;border-radius:4px;padding:4px}
+#ucm-demo .ucm-demo-menu img{display:block;width:140px;height:88px;object-fit:cover;object-position:top left;border-radius:3px;border:1px solid #454b50;margin:0 auto 6px;background:#3a4044}
+#ucm-demo .ucm-demo-menu a:hover img{border-color:#9aa1a6}
+#ucm-demo .ucm-demo-menu a.current{color:#a8d77d;font-weight:600}
+#ucm-demo .ucm-demo-menu a.current img{border-color:#7fbf45;outline:2px solid #7fbf45}
+#ucm-demo.loading summary .ucm-demo-name::after{content:"\2026"}
+#ucm-demo-show{display:none;position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:1035;background:#1f2326;color:#d6d9dc;border-radius:0 0 6px 6px;padding:5px 12px;font:12px/1.2 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;text-decoration:none;box-shadow:0 2px 8px rgba(0,0,0,.25)}
+#ucm-demo-show:hover{color:#fff}
+body:not(.ucm-demo-hidden){margin-top:46px!important}
+body:not(.ucm-demo-hidden)>#holder{top:46px}
+body.theme-adminlte.fixed:not(.ucm-demo-hidden) .header{top:46px}
+body.theme-adminlte.fixed:not(.ucm-demo-hidden) .left-side{top:96px}
+body.ucm-demo-hidden #ucm-demo{display:none}
+body.ucm-demo-hidden #ucm-demo-show{display:block}
+@media (max-width:1100px){#ucm-demo .ucm-demo-about{display:none}}
+@media (max-width:860px){#ucm-demo .ucm-demo-menu{grid-template-columns:repeat(2,148px)}}
+@media (max-width:640px){
+#ucm-demo{gap:8px;padding:0 8px}
+#ucm-demo .ucm-demo-link span{display:none}
+#ucm-demo .ucm-demo-label{display:none}
+#ucm-demo .ucm-demo-menu{position:fixed;top:52px;left:8px;right:8px;grid-template-columns:repeat(2,1fr)}
+#ucm-demo .ucm-demo-menu img{width:100%;height:auto;aspect-ratio:140/88}
+}
+</style>
+<div id="ucm-demo" role="region" aria-label="Demo options">
+	<span class="ucm-demo-tag">DEMO</span>
+	<details>
+		<summary><span class="ucm-demo-label">Theme:</span> <span class="ucm-demo-name"><?php echo htmlspecialchars( $ucm_demo_current_name ); ?></span><span class="ucm-demo-caret" aria-hidden="true"></span></summary>
+		<div class="ucm-demo-menu">
+			<?php foreach ( $ucm_demo_themes as $ucm_demo_id => $ucm_demo_name ) {
+				$ucm_demo_href = $ucm_demo_path . '?' . http_build_query( array_merge( $ucm_demo_query, array( 'demo_theme' => $ucm_demo_id ) ) );
 				?>
-				<li class="theme-switch <?php echo $theme_id == $current_demo ? ' current ' : ''; ?>">
-					<a href="<?php echo htmlspecialchars($u) . (strpos($u,'?') ? '&' : '?');?>demo_theme=<?php echo $theme_id; ?>" class="dtbaker_demo_style_switch">
-						<img src="<?php echo $theme['image'];?>"
-						     alt="<?php echo $theme['name']; ?> theme preview">
-						<span><?php echo $theme['name'];?><br/>Theme</span>
-					</a>
-				</li>
-			<?php }
-			if($has_addon){ ?>
-				<li class="options">
-					<div class="preview__actions">
-						<div class="preview__action--buy">
-
-							<div>
-								<table>
-									<tr class="title">
-										<td colspan="2">
-											<img src="//ultimateclientmanager.com/files/demo-images/your-package.png">
-										</td>
-									</tr>
-									<tr class="main">
-										<td>UCM Pro Edition</td>
-									</tr>
-									<tr class="addon">
-										<td><span>+</span> <a href="<?php echo $has_addon['link'];?>" target="_blank"><?php echo $has_addon['name'];?> Theme</a></td>
-									</tr>
-								</table>
-							</div>
-						</div>
-					</div>
-				</li>
+				<a href="<?php echo htmlspecialchars( $ucm_demo_href ); ?>" class="ucm-demo-theme<?php echo $ucm_demo_id === $ucm_demo_current ? ' current' : ''; ?>"<?php echo $ucm_demo_id === $ucm_demo_current ? ' aria-current="true"' : ''; ?>>
+					<img src="<?php echo htmlspecialchars( $ucm_demo_assets . 'theme-' . $ucm_demo_id . '.png' ); ?>" alt="" loading="lazy" width="140" height="88">
+					<?php echo htmlspecialchars( $ucm_demo_name ); ?>
+				</a>
 			<?php } ?>
-			<li class="options buy_now">
-				<a href="<?php echo $has_addon['purchase'];?>" target="_blank"
-				   class="btn btn--primary">Buy Now</a>
-			</li>
-            <!-- <li class="options">
-                <div class="preview__actions">
-                    <div class="preview__action--buy">
-
-                        <div>
-                            <p>Time Left: <span id="timer-counter">0:00</span> <?php _h('Your private demo website will expire when this timer runs out');?></p>
-                        </div>
-                    </div>
-                </div>
-            </li> -->
-		</ul>
-		<div id="demo_loading">
-			<span>Loading UCM Demo Theme...</span>
-			<div class="demo_loading_bg"></div>
 		</div>
-	</div>
-	<script type="text/javascript">
-		function dtbaker_demo_loading() {
-			jQuery('#dtbaker_demo_header').addClass('loading');
-		}
-		var fixedFix = false;
-		$(function(){
-			if($('body').hasClass('fixed')){
-				fixedFix = true;
-			}
-			if(Get_Cookie('demo_hidden') == 'yes'){
-				$('body').addClass('demo_hidden');
-			}else{
-				$('body').addClass('demo_visible').removeClass('fixed');
-			}
-			$('#hide_demo_options').click(function () {
-				Set_Cookie('demo_hidden', 'yes');
-				$('body').removeClass('demo_visible').addClass('demo_hidden').addClass( fixedFix ? 'fixed' : 'fixednope');
-				return false;
-			});
-			$('#show_demo_options').click(function () {
-				Set_Cookie('demo_hidden', 'no');
-				$('body').removeClass('demo_hidden').addClass('demo_visible').removeClass( fixedFix ? 'fixed' : 'fixednope');
-				return false;
-			});
-			$('.dtbaker_demo_style_switch').click(function () {
-				dtbaker_demo_loading();
-				return true;
-			});
-			$('.dtbaker_demo_theme_option').change(function () {
-				dtbaker_demo_loading();
-				window.location.href = '?dtbaker_demo=' + $(this).data('style') + '&dtbaker_demo_option=' + $(this).data('option') + '&dtbaker_demo_option_val=' + ($(this).is(':checked') ? 1 : 0);
-			});
-		});
-	</script>
-<?php
-$demo_html = ob_get_clean();
-
-$header_html = preg_replace('#<body[^>]*>#','$0'.str_replace('$','\$',$demo_html),$header_html);
-echo $header_html;
-
-if($current_theme == 'metis_old'){
-?>
-
-<div class="alert alert-info alert-dismissable">
-    <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
-    Welcome to the <strong>Ultimate Client Manager Demo</strong>. This is a preview of <a href="http://codecanyon.net/item/ultimate-client-manager-crm-pro-edition/2621629?ref=dtbaker&amp;utm_source=Demo&amp;utm_medium=Header&amp;utm_campaign=Metis&amp;utm_content=Metis" target="_blank">UCM Pro Edition</a> with the default Metis theme.  This demo resets every now and then, feel
-    free to test out all the features before purchase. (<a href="<?php echo htmlspecialchars($_SERVER['REQUEST_URI']) . (strpos($_SERVER['REQUEST_URI'],'?') === false ? '?' : '&') . 'demo_theme=theme_adminlte';?>">Swap to the new AdminLTE theme</a>)
+	</details>
+	<span class="ucm-demo-about">You're trying Ultimate Client Manager. Every theme here is included.</span>
+	<span class="ucm-demo-gap"></span>
+	<a class="ucm-demo-link" href="https://ultimateclientmanager.com/docs/" target="_blank" rel="noopener" title="Documentation"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 3h11a3 3 0 0 1 3 3v15H7a3 3 0 0 1-3-3V4a1 1 0 0 1 1-1zm1 15a1 1 0 0 0 1 1h10v-2H7a1 1 0 0 0-1 1zm0-3.8c.3-.1.6-.2 1-.2h10V6a1 1 0 0 0-1-1H6z"/></svg><span>Docs</span></a>
+	<a class="ucm-demo-link" href="https://github.com/dtbaker/ucm" target="_blank" rel="noopener" title="Download from GitHub"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 .5a11.5 11.5 0 0 0-3.6 22.4c.6.1.8-.3.8-.6v-2c-3.2.7-3.9-1.5-3.9-1.5-.5-1.3-1.3-1.7-1.3-1.7-1-.7.1-.7.1-.7 1.2.1 1.8 1.2 1.8 1.2 1 1.8 2.8 1.3 3.5 1 .1-.8.4-1.3.7-1.6-2.6-.3-5.3-1.3-5.3-5.7 0-1.3.5-2.3 1.2-3.1-.1-.3-.5-1.5.1-3.1 0 0 1-.3 3.2 1.2a11 11 0 0 1 5.8 0c2.2-1.5 3.2-1.2 3.2-1.2.6 1.6.2 2.8.1 3.1.8.8 1.2 1.9 1.2 3.1 0 4.4-2.7 5.4-5.3 5.7.4.4.8 1.1.8 2.2v3.2c0 .3.2.7.8.6A11.5 11.5 0 0 0 12 .5z"/></svg><span>Download from GitHub</span></a>
+	<a class="ucm-demo-buy" href="https://codecanyon.net/item/ultimate-client-manager-crm-pro-edition/2621629?ref=dtbaker" target="_blank" rel="noopener">Buy now</a>
+	<a class="ucm-demo-close" href="#" id="ucm-demo-hide" title="Close demo options" aria-label="Close demo options"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.4 5 5 6.4 10.6 12 5 17.6 6.4 19l5.6-5.6 5.6 5.6 1.4-1.4-5.6-5.6L19 6.4 17.6 5 12 10.6z"/></svg></a>
 </div>
-<?php }
-
-$bits = explode('/', ltrim($_SERVER['REQUEST_URI'], '/'));
-if(count($bits) > 1 && strpos($_SERVER['HTTP_HOST'], 'demo.net')){
-	?>
-    <script type="text/javascript" src="https://code-demo.net/script/<?php echo htmlspecialchars($_SERVER['HTTP_HOST'] . '/' . $bits[0] . '/' . base64_encode(implode('/', array_slice($bits,1))) );?>"></script>
-
-    <script type="text/javascript">
-        top.postMessage({
-            from_dave: true,
-            hide_demo_bar: true
-        },'*');
-        var DtbakerUCMDemo = (function() {
-            var end_time, end_time_stamp, counter_going = false;
-
-            function do_countdown() {
-
-                var t = end_time_stamp - Date.parse(new Date());
-                if (t <= 0) {
-                    $('#timer-counter').html('0:00');
-                } else {
-                    var minutes = Math.floor((t / 1000 / 60) % 60);
-                    var hours = Math.floor((t / (1000 * 60 * 60)) % 24);
-                    if (minutes < 10) {
-                        minutes = '0' + minutes;
-                    }
-                    $('#timer-counter').html(hours + ':' + minutes);
-                }
-
-            }
-
-            function start_countdown() {
-                if (counter_going)return;
-                counter_going = true;
-                do_countdown();
-                setInterval(do_countdown, 5000);
-            }
-
-            return {
-                init: function(){
-                    // what time did we start demo?
-                    end_time_stamp = parseInt(Get_Cookie('demo_end_time'));
-                    if(!end_time_stamp){
-                        end_time = new Date();
-                        end_time.setTime(end_time.getTime() + ( 1 * 60 * 60 * 1000 ) - 100);
-                        end_time_stamp = Date.parse(end_time);
-                        Set_Cookie('demo_end_time', end_time_stamp);
-                    }
-                    start_countdown();
-                }
-            }
-        })();
-        DtbakerUCMDemo.init();
-
-    </script>
-
-	<?php
-}
-?>
-
+<a href="#" id="ucm-demo-show">Show demo options</a>
 <script>
-    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
-            (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
-        m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
-    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
-
-    ga('create', 'UA-27663088-4', 'ultimateclientmanager.com');
-    ga('send', 'pageview');
-
+(function () {
+	var bar = document.getElementById('ucm-demo');
+	var menu = bar.querySelector('details');
+	function setHidden(hidden) {
+		document.body.classList.toggle('ucm-demo-hidden', hidden);
+		document.cookie = 'ucm_demo_hidden=' + (hidden ? '1' : '0') + '; path=/; max-age=31536000; SameSite=Lax';
+	}
+	document.getElementById('ucm-demo-hide').addEventListener('click', function (e) { e.preventDefault(); setHidden(true); });
+	document.getElementById('ucm-demo-show').addEventListener('click', function (e) { e.preventDefault(); setHidden(false); });
+	document.addEventListener('click', function (e) { if (menu.open && !menu.contains(e.target)) { menu.open = false; } });
+	document.addEventListener('keydown', function (e) { if (e.key === 'Escape') { menu.open = false; } });
+	Array.prototype.forEach.call(bar.querySelectorAll('.ucm-demo-theme'), function (a) {
+		a.addEventListener('click', function () { bar.classList.add('loading'); menu.open = false; });
+	});
+})();
 </script>
+<?php
+$ucm_demo_bar = ob_get_clean();
+
+// The bar goes straight after <body>. The class goes on <body> itself, so a closed bar
+// stays closed from the first paint rather than flashing open until the script runs.
+$ucm_demo_header_html = preg_replace_callback(
+	'#<body([^>]*)>#i',
+	function ( $m ) use ( $ucm_demo_bar, $ucm_demo_hidden ) {
+		$attributes = $m[1];
+		if ( $ucm_demo_hidden ) {
+			if ( preg_match( '#\bclass\s*=\s*(["\'])#i', $attributes ) ) {
+				$attributes = preg_replace( '#\bclass\s*=\s*(["\'])#i', 'class=$1ucm-demo-hidden ', $attributes, 1 );
+			} else {
+				$attributes .= ' class="ucm-demo-hidden"';
+			}
+		}
+
+		return '<body' . $attributes . '>' . $ucm_demo_bar;
+	},
+	$ucm_demo_header_html,
+	1
+);
+echo $ucm_demo_header_html;

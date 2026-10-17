@@ -58,12 +58,13 @@ async function aDataFieldGroup( page: Page ): Promise<{ typeId: string; groupId:
 /**
  * How the conversions were shown not to change anything, and what is left.
  *
- * Twenty-one pages were converted. ./scripts/fieldset-parity.sh puts each one back to the
- * markup it had before, and runs these specs against it: they assert an exact list of
- * controls, so a run that passes against the old markup and the new one is saying both
- * render the same fields. Four fail on one named assertion each - a row class their script
- * switches on, which the old <tbody id> markup had no equivalent of, or a PHP 8 bug fixed
- * alongside - and the script knows which, so anything else is reported as a difference.
+ * Twenty-one pages were converted. Each was put back to the markup it had before and these
+ * specs were run against it: they assert an exact list of controls, so a run that passes
+ * against the old markup and the new one is saying both render the same fields. Four failed
+ * on one named assertion each - a row class their script switches on, which the old
+ * <tbody id> markup had no equivalent of, or a PHP 8 bug fixed alongside - and nothing else.
+ * The script that did this (scripts/fieldset-parity.sh) was a one-off and is gone; git
+ * history has it if a conversion like this is ever done again.
  *
  * No page prints its own form table any more, and no page builds its own form rows either.
  * tests/unit/FieldsetMarkupTest.php scans includes/ and allows none.

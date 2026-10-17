@@ -1016,10 +1016,14 @@ public static function js_combine($version, $reinit=false){
 
 		$available_updates = array();
 
+		require_once _UCM_FOLDER . 'includes/plugin_config/class.upgrade_server.php';
 		$post_fields = array(
 			'application'           => _APPLICATION_ID,
 			'installation_code'     => module_config::c( '_installation_code' ),
 			'current_version'       => module_config::c( '_admin_system_version', 2.1 ),
+			// The release, so a server that compares releases offers the core files when
+			// only they changed. An old server ignores it and still reads current_version.
+			'release_version'       => _SCRIPT_VERSION,
 			'current_plugins'       => json_encode( $current_plugins ),
 			'current_files'         => json_encode( $current_files ),
 			'client_ip'             => isset( $_SERVER['REMOTE_ADDR'] ) ? $_SERVER['REMOTE_ADDR'] : '',
@@ -1030,6 +1034,9 @@ public static function js_combine($version, $reinit=false){
 			// An old server ignores the field, which is how an install still on the
 			// old protocol receives the update that teaches it this one.
 			'client_protocol'       => 2,
+			// Which vendor/ this install has, so the server only sends its own when
+			// the two differ. See ucm_upgrade_server::client_needs_libraries().
+			'libraries'             => ucm_upgrade_server::libraries_fingerprint( _UCM_FOLDER ),
 		);
 		$url         = module_config::c( 'ucm_upgrade_url', 'https://api.ultimateclientmanager.com/upgrade.php' );
 		if ( $url == 'http://ultimateclientmanager.com/api/upgrade.php' ) {

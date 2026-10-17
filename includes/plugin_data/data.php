@@ -26,7 +26,7 @@ class module_data extends module_base
 	public function __construct() {
 		$this->module_name     = 'data';
 		$this->module_position = 150;
-		$this->version         = 2.185;
+		$this->version         = 2.187;
 	}
 
 	public static function can_i( $actions, $name = false, $category = false, $module = false ) {
@@ -44,6 +44,8 @@ class module_data extends module_base
 	public function init() {
 		$this->links     = array();
 		$this->user_types = array();
+		//2.187 - 2026-10-17 - menu icon help names the default theme
+		//2.186 - 2026-10-17 - 4.0.0 relaunch: delete permission checked, escaped output, upload folders blocked, PHP 8 fixes
 		//2.185 - 2017-05-02 - file path configuration
 		//2.184 - 2017-02-20 - custom data extra field improvement
 		//2.183 - 2016-12-10 - ajax lookup from extra fields

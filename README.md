@@ -2,7 +2,10 @@
 
 Freelance project invoice CRM.
 
-Please purchase a license from https://codecanyon.net/item/freelance-project-invoice-crm/2621629
+Open source under the [MIT licence](LICENSE). Bundled third-party components keep their own
+licences; see [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md). A packaged release with
+support is also sold on
+[CodeCanyon](https://codecanyon.net/item/freelance-project-invoice-crm/2621629).
 
 ## Development Setup with Docker
 
@@ -82,15 +85,15 @@ npm install && npm run test:e2e
 The full documentation is online at <https://ultimateclientmanager.com/docs/>. Its source
 is in the `ucm-web` repository, not this one.
 
-`Documentation/` and `Licensing/` are the buyer-facing halves of the release archive.
-Both are written by hand and `export-ignore`d, so they land beside `Main Files` in the zip
-rather than inside it.
+`Documentation/` and `Licensing/` are the buyer-facing halves of the release archive. The
+build puts them beside `Main Files` in the zip rather than inside it.
 
 - `Documentation/readme.html` - one short getting-started page: requirements, installing,
   upgrading, and links to the live documentation for everything else. Keep it short; the
   release build fails if anything else appears in that folder.
-- `Licensing/` - `third-party-libraries.tsv` is the source of truth for every bundled
-  component; the web page beside it is generated from that file at build time.
+- `Licensing/` - assembled at build time from `LICENSE`, `THIRD_PARTY_NOTICES.md` and
+  `LICENSES/` at the repository root. Add a row to the notices when you bundle a new
+  library, and its licence text to `LICENSES/` if it is not there yet.
 
 ## Building the release archive
 
@@ -100,8 +103,8 @@ rather than inside it.
 
 Writes `build/ucm-codecanyon.zip` in the three-folder layout CodeCanyon requires, then
 checks it: nothing but those three folders at the root, no development files inside
-`Main Files`, real documentation rather than a placeholder, and a licence manifest whose
-entries all resolve. CI runs the same command.
+`Main Files`, the getting-started page, and third-party notices whose licence texts are
+all present. CI runs the same command.
 
 `Main Files` comes from `git archive`, so only committed files ship and
 [.gitattributes](.gitattributes) decides what stays out. Nothing in the working copy can
@@ -121,11 +124,14 @@ quotes. Every release:
    compares plugin versions and nothing else, so a changed file in a plugin that was not
    bumped never reaches an existing install. The comment is what the update screen shows
    as the description.
-3. **Core files only travel with a plugin update.** `init.php`, `design_header.php`,
-   `includes/functions.php` and the rest of the core list in
-   `includes/plugin_config/upgrade_server.php` are sent whenever any plugin is offered. A
-   release that changes only core files has to bump at least one plugin, or it is never
-   offered.
+3. **Core files travel with the release version.** `init.php`, `design_header.php`,
+   `includes/functions.php` and the rest of the core list (`CORE_FILES` in
+   `includes/plugin_config/class.upgrade_server.php`) are offered whenever the server's
+   `_SCRIPT_VERSION` is newer than the one the install reports, so a release that changes
+   only core files needs step 1 and nothing else. The update screen shows the newest
+   changelog line under `_SCRIPT_VERSION` as their description. They are also sent with
+   any plugin update. A 3.x install reports no release, so it gets core files only with a
+   plugin update.
 4. **Images, `css/` and `js/` outside that core list do not travel at all**, except in a
    fresh zip install. Put new assets inside a plugin, as `includes/plugin_theme/images/`
    does, so they arrive with it.

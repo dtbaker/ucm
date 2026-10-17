@@ -10,7 +10,7 @@ class module_calendar extends module_base
 	public function __construct() {
 		$this->module_name     = 'calendar';
 		$this->module_position = 100;
-		$this->version         = 2.238;
+		$this->version         = 2.239;
 	}
 
 	public static function can_i( $actions, $name = false, $category = false, $module = false ) {
@@ -27,6 +27,7 @@ class module_calendar extends module_base
 
 	function init() {
 		$this->links = array();
+		// 2.239 - 2026-10-17 - 4.0.0 relaunch: feeds survive commas and odd dates, security token on saves, no untrusted unserialise
 		// 2.238 - 2017-05-02 - calendar staff name
 		// 2.237 - 2016-10-06 - fix for multi-day events
 		// 2.236 - 2016-07-10 - big update to mysqli

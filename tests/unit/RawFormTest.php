@@ -81,10 +81,6 @@ class RawFormTest extends TestCase
 		'includes/plugin_paymethod_stripe/paymethod_stripe.php'  => 1,
 		'includes/plugin_quote/quote.php'                        => 1,
 
-		// Third-party libraries bundled inside a plugin. Not ours to rewrite, same reason
-		// htmlpurifier is skipped by the file walk.
-		'includes/plugin_paymethod_authorize/anet_php_1.1.8/lib/AuthorizeNetDPM.php' => 1,
-		'includes/plugin_paymethod_multisafepay/MultiSafepay.combined.php'           => 3,
 
 		// The helper itself, which is where the one real <form> now comes from.
 		'includes/plugin_form/form.php' => 1,
@@ -112,8 +108,6 @@ class RawFormTest extends TestCase
 		'includes/plugin_quote/quote.php'                        => 1,
 		'includes/plugin_form/form.php'                          => 1,
 
-		'includes/plugin_paymethod_authorize/anet_php_1.1.8/lib/AuthorizeNetDPM.php' => 1,
-		'includes/plugin_paymethod_multisafepay/MultiSafepay.combined.php'           => 3,
 
 		// str_replace( '</form>', ... ) - rewriting generated markup, not printing a form.
 		'includes/plugin_theme/themes/blue/pages/login.php'        => 2,
