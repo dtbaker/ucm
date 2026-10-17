@@ -124,6 +124,11 @@ function ucm_upgrade_server_respond() {
 	$check_again_for_updates             = false;
 	$we_are_recommending_an_item_upgrade = false;
 
+	// The release file list, when this server was deployed from a built release. Plugin
+	// rows are built from it so that nothing the server wrote into a plugin folder at run
+	// time - dompdf's font caches, say - is offered to clients as part of the plugin.
+	$release_manifest = ucm_upgrade_server::release_manifest( $root );
+
 	$plugin_list = is_array( $plugins ) ? $plugins : array();
 	uasort( $plugin_list, function ( $a, $b ) {
 		return strnatcasecmp( $a->module_name, $b->module_name );
@@ -157,7 +162,7 @@ function ucm_upgrade_server_respond() {
 
 		$new_version = max( $new_version, $new_plugin_version );
 
-		$listing = ucm_upgrade_server::list_directory( $root, 'includes/plugin_' . $plugin_name . '/' );
+		$listing = ucm_upgrade_server::listing( $root, 'includes/plugin_' . $plugin_name . '/', $release_manifest );
 		$files   = $listing['files'];
 		$folders = $listing['folders'];
 

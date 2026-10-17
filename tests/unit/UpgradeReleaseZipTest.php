@@ -258,4 +258,75 @@ class UpgradeReleaseZipTest extends TestCase
 		$this->remove( rtrim( $outside, '/' ) );
 		$this->assertSame( $this->root . 'images/logo.png', $found );
 	}
+
+	public function test_a_plugin_row_carries_only_what_the_release_shipped() {
+		$this->write( 'includes/plugin_pdf/pdf.php', '<?php // the plugin' );
+		$this->write( 'includes/plugin_pdf/dompdf/lib/fonts/Helvetica.afm', 'shipped font metrics' );
+		// What dompdf writes into its own folder at run time. Walking the disk offered these
+		// to every client as part of the pdf plugin.
+		$this->write( 'includes/plugin_pdf/dompdf/lib/fonts/Helvetica.afm.php', 'font cache' );
+		$this->write( 'includes/plugin_pdf/dompdf/lib/fonts/dompdf_font_family_cache.php', 'font cache' );
+		$this->write( 'includes/plugin_faq/faq.php', '<?php // another plugin' );
+		$manifest = array(
+			'includes/plugin_faq/faq.php',
+			'includes/plugin_pdf/dompdf/lib/fonts/Helvetica.afm',
+			'includes/plugin_pdf/pdf.php',
+		);
+
+		$this->assertSame(
+			array(
+				'files'   => array( 'includes/plugin_pdf/dompdf/lib/fonts/Helvetica.afm', 'includes/plugin_pdf/pdf.php' ),
+				'folders' => array( 'includes/plugin_pdf/', 'includes/plugin_pdf/dompdf/', 'includes/plugin_pdf/dompdf/lib/', 'includes/plugin_pdf/dompdf/lib/fonts/' ),
+			),
+			ucm_upgrade_server::list_release( $this->root, 'includes/plugin_pdf/', $manifest )
+		);
+		// The disk walk, for comparison, picks up the caches.
+		$walked = ucm_upgrade_server::list_directory( $this->root, 'includes/plugin_pdf/' );
+		$this->assertContains( 'includes/plugin_pdf/dompdf/lib/fonts/dompdf_font_family_cache.php', $walked['files'] );
+	}
+
+	public function test_a_plugin_row_does_not_take_the_list_on_trust() {
+		$this->write( 'includes/plugin_file/file.php', '<?php // the plugin' );
+		$this->write( 'includes/plugin_file/upload/.htaccess', 'Require all denied' );
+		$this->write( 'includes/plugin_file/upload/customer-contract.pdf', 'a customer\'s file' );
+		$manifest = array(
+			'includes/plugin_file/file.php',
+			'includes/plugin_file/gone.php',                    // named, but not on this disk
+			'includes/plugin_file/upload/.htaccess',            // a guard, which ships
+			'includes/plugin_file/upload/customer-contract.pdf', // never, whatever the list says
+			'includes/plugin_file/../../includes/config.local.php',
+		);
+		if ( function_exists( 'symlink' ) ) {
+			$this->write( 'outside.txt', 'not part of the plugin' );
+			@symlink( $this->root . 'outside.txt', $this->root . 'includes/plugin_file/linked.txt' );
+			$manifest[] = 'includes/plugin_file/linked.txt';
+		}
+
+		$listing = ucm_upgrade_server::list_release( $this->root, 'includes/plugin_file/', $manifest );
+		$this->assertSame( array( 'includes/plugin_file/file.php', 'includes/plugin_file/upload/.htaccess' ), $listing['files'] );
+		$this->assertSame( array( 'includes/plugin_file/', 'includes/plugin_file/upload/' ), $listing['folders'] );
+	}
+
+	public function test_a_plugin_the_list_does_not_name_has_an_empty_row() {
+		$this->write( 'includes/plugin_extra/extra.php', '<?php // on the disk, not in the release' );
+		$this->assertSame(
+			array( 'files' => array(), 'folders' => array() ),
+			ucm_upgrade_server::list_release( $this->root, 'includes/plugin_extra/', array( 'index.php' ) )
+		);
+	}
+
+	public function test_without_a_release_list_the_disk_is_walked() {
+		$this->write( 'includes/plugin_faq/faq.php', '<?php // the plugin' );
+		$this->write( 'includes/plugin_faq/pages/faq_admin.php', '<?php // a page' );
+
+		$this->assertSame(
+			ucm_upgrade_server::list_directory( $this->root, 'includes/plugin_faq/' ),
+			ucm_upgrade_server::listing( $this->root, 'includes/plugin_faq/', false ),
+			'a git checkout has no release list, and is served from its disk as before'
+		);
+		$this->assertSame(
+			array( 'includes/plugin_faq/faq.php' ),
+			ucm_upgrade_server::listing( $this->root, 'includes/plugin_faq/', array( 'includes/plugin_faq/faq.php' ) )['files']
+		);
+	}
 }
