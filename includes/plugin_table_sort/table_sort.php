@@ -31,10 +31,11 @@ class module_table_sort extends module_base
 	public function __construct() {
 		$this->module_name     = 'table_sort';
 		$this->module_position = 500;
-		$this->version         = 2.228;
+		$this->version         = 2.229;
 	}
 
 	public function init() {
+		// 2.229 - 2026-10-17 - 4.0.0 relaunch: grouped columns can be sorted again on PHP 8, PHP 8.4
 		// 2.228 - 2016-07-10 - big update to mysqli
 		// 2.227 - 2016-02-01 - css fix
 		// 2.226 - 2015-02-12 - extra field sorting on date fields (may be slow)

@@ -5,7 +5,7 @@ class module_setup extends module_base
 	public function __construct() {
 		$this->module_name     = 'setup';
 		$this->module_position = 20;
-		$this->version         = 2.324;
+		$this->version         = 2.325;
 	}
 
 	public static function can_i( $actions, $name = false, $category = false, $module = false ) {
@@ -28,6 +28,7 @@ class module_setup extends module_base
 		// 2.322 - 2016-07-10 - big update to mysqli
 		// 2.323 - 2016-08-12 - mysqli fixes
 		// 2.324 - 2017-05-02 - file path configuration
+		// 2.325 - 2026-10-17 - 4.0.0 relaunch: installer completes, no licence code needed, database settings from the environment
 
 	}
 }

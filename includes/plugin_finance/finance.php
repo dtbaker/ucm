@@ -17,8 +17,9 @@ class module_finance extends module_base
 	public function __construct() {
 		$this->module_name     = 'finance';
 		$this->module_position = 210;
-		$this->version         = 2.311;
+		$this->version         = 2.312;
 	}
+	// 2.312 - 2026-10-17 - 4.0.0 relaunch: transactions carry a sub total for the tax report, security token, escaped columns
 	// 2.311 - 2017-06-14 - tax report fixes
 	// 2.310 - 2017-05-02 - big changes
 	// 2.309 - 2017-01-12 - job finance totals

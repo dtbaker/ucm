@@ -5,7 +5,7 @@ class module_db extends module_base
 	public function __construct() {
 		$this->module_name     = 'db';
 		$this->module_position = 20;
-		$this->version         = 2.140;
+		$this->version         = 2.141;
 	}
 
 	public static function can_i( $actions, $name = false, $category = false, $module = false ) {
@@ -21,6 +21,7 @@ class module_db extends module_base
 	}
 
 	public function init() {
+		//2.141 - 2026-10-17 - 4.0.0 relaunch: setup wizard instead of a blank 500 on a bad connection, errors kept off screen
 		//2.140 - 2017-05-30 - upgrade fix
 		//2.139 - 2017-05-02 - speed fixes
 		//2.138 - 2017-05-02 - big changes

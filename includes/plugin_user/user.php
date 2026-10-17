@@ -13,8 +13,9 @@ class module_user extends module_base
 	public function __construct() {
 		$this->module_name     = 'user';
 		$this->module_position = 550;
-		$this->version         = 2.289;
+		$this->version         = 2.290;
 	}
+	// 2.290 - 2026-10-17 - 4.0.0 relaunch: security token on saves, sample logins with a known password closed, escaped output
 	// 2.289 - 2017-05-28 - api improvements
 	// 2.288 - 2017-02-27 - staff member first/last name flag for drop downs
 	// 2.287 - 2016-11-01 - ajax autocompletion

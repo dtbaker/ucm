@@ -8,7 +8,7 @@ class module_api extends module_base
 	public function __construct() {
 		$this->module_name     = 'api';
 		$this->module_position = 80;
-		$this->version         = 2.1;
+		$this->version         = 2.101;
 	}
 
 	public static function can_i( $actions, $name = false, $category = false, $module = false ) {
@@ -26,6 +26,7 @@ class module_api extends module_base
 	public function init() {
 		$this->links     = array();
 		$this->api_types = array();
+		//2.101 - 2026-10-17 - 4.0.0 relaunch: PHP 8.4 compatibility and code style
 		//2.1 - 2014-05-26 - initial release of new api system
 
 		if ( module_api::is_plugin_enabled() ) {

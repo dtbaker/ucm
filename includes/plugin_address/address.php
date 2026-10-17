@@ -8,8 +8,9 @@ class module_address extends module_base
 	public function __construct() {
 		$this->module_name     = 'address';
 		$this->module_position = 70;
-		$this->version         = 2.226;
+		$this->version         = 2.227;
 	}
+	// 2.227 - 2026-10-17 - 4.0.0 relaunch: security token on address saves, owner taken from the record, PHP 8.4 fixes
 	// 2.226 - 2022-12-27 - php8.1 fixes
 	// 2.225 - 2016-07-10 - big update to mysqli
 	// 2.224 - 2016-01-25 - remove address fields if empty title

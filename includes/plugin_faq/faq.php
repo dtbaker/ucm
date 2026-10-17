@@ -7,8 +7,9 @@ class module_faq extends module_base
 	public function __construct() {
 		$this->module_name     = 'faq';
 		$this->module_position = 190;
-		$this->version         = 2.150;
+		$this->version         = 2.151;
 	}
+	// 2.151 - 2026-10-17 - 4.0.0 relaunch: security token on FAQ saves, form layout converted, public pages no longer crash
 	// 2.150 - 2016-07-10 - big update to mysqli
 	// 2.149 - 2015-09-25 - product bug fix
 	// 2.148 - 2015-06-28 - started work on FAQ API

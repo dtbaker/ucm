@@ -9,7 +9,7 @@ class module_debug extends module_base
 	public function __construct() {
 		$this->module_name     = 'debug';
 		$this->module_position = 30;
-		$this->version         = 2.121;
+		$this->version         = 2.122;
 	}
 
 	public static function can_i( $actions, $name = false, $category = false, $module = false ) {
@@ -32,6 +32,7 @@ class module_debug extends module_base
 		// 2.11 - 2013-09-15 - ID in debug column output
 		// 2.12 - 2014-07-28 - more info in debug output and ?debug_only_bad url
 		// 2.121 - 2014-10-07 - memory_get_usage fix
+		// 2.122 - 2026-10-17 - 4.0.0 relaunch: debug table no longer pastes copies of the page into itself
 	}
 
 	/**

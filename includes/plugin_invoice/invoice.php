@@ -44,12 +44,13 @@ class module_invoice extends module_base
 	public function __construct() {
 		$this->module_name     = 'invoice';
 		$this->module_position = 250;
-		$this->version         = 2.809;
+		$this->version         = 2.810;
 	}
 
 	public function init() {
 		$this->links         = array();
 		$this->invoice_types = array();
+		//2.810 - 2026-10-17 - 4.0.0 relaunch: Stripe Checkout, shared payment recording, payment checks, renewal totals, no PHP notices
 		//2.809 - 2018-03-31 - timer + invoice link
 		//2.808 - 2017-07-23 - adding website invoies to website page.
 		//2.807 - 2017-05-30 - invoice api

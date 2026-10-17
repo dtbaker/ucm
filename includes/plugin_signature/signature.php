@@ -17,7 +17,7 @@ class module_signature extends module_base
 	public function __construct() {
 		$this->module_name     = 'signature';
 		$this->module_position = 450;
-		$this->version         = 2.21;
+		$this->version         = 2.211;
 	}
 
 	function init() {
@@ -25,6 +25,7 @@ class module_signature extends module_base
 		// 2.1 - 2014-07-09 - initial release
 		// 2.2 - 2014-07-12 - staff and customer signature from same login account support
 		// 2.21 - 2014-07-12 - staff and customer signature from same login account support
+		// 2.211 - 2026-10-17 - 4.0.0 relaunch: public pages no longer crash, PHP errors in the quote to invoice walk fixed
 
 		if ( self::is_plugin_enabled() ) {
 			module_config::register_css( 'signature', 'signature.css' );

@@ -21,7 +21,7 @@ class module_paymethod_stripe extends module_base
 	public function __construct() {
 		$this->module_name     = 'paymethod_stripe';
 		$this->module_position = 400;
-		$this->version         = 2.245;
+		$this->version         = 2.246;
 	}
 
 	/**
@@ -52,6 +52,7 @@ class module_paymethod_stripe extends module_base
 	}
 
 	function init() {
+		// 2.246 - 2026-10-17 - 4.0.0 relaunch: Stripe Checkout Sessions for payments and subscriptions, clearer key setup
 		// 2.245 - 2017-02-27 - config fix
 		// 2.244 - 2017-01-12 - stripe debugging information
 		// 2.243 - 2017-01-03 - stripe debugging information

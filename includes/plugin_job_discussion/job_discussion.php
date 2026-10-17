@@ -17,7 +17,7 @@ class module_job_discussion extends module_base
 	public function __construct() {
 		$this->module_name     = 'job_discussion';
 		$this->module_position = 270;
-		$this->version         = 2.153;
+		$this->version         = 2.154;
 	}
 
 	function init() {
@@ -40,6 +40,7 @@ class module_job_discussion extends module_base
 		// 2.151 - 2016-11-16 - fontaweome icons
 		// 2.152 - 2017-02-21 - email log errors
 		// 2.153 - 2017-02-26 - job discussion email issue
+		// 2.154 - 2026-10-17 - 4.0.0 relaunch: public pages no longer crash on an unexpected parameter, PHP 8.4
 
 		if ( self::is_plugin_enabled() ) {
 			module_config::register_css( 'job_discussion', 'job_discussion.css' );

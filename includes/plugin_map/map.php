@@ -20,12 +20,13 @@ class module_map extends module_base
 	public function __construct() {
 		$this->module_name     = 'map';
 		$this->module_position = 290;
-		$this->version         = 2.21;
+		$this->version         = 2.211;
 	}
 
 	public function init() {
 		$this->links    = array();
 		$this->map_types = array();
+		//2.211 - 2026-10-17 - 4.0.0 relaunch: security token on map saves, escaped request values
 		//2.21 - 2015-09-10 - map marker fix
 		//2.2 - 2015-09-09 - map marker fix
 		//2.1 - 2015-06-10 - initial release

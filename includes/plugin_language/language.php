@@ -8,7 +8,7 @@ class module_language extends module_base
 	public function __construct() {
 		$this->module_name     = 'language';
 		$this->module_position = 60;
-		$this->version         = 2.181;
+		$this->version         = 2.182;
 	}
 	// 2.14 default system language in advanced settings.
 	// 2.15 - added a default german translation (needs work!)
@@ -33,6 +33,7 @@ class module_language extends module_base
 	// 2.178 - 2016-03-16 - language table layout fix
 	// 2.179 - 2016-07-10 - big update to mysqli
 	// 2.181 - 2017-05-02 - php error fix
+	// 2.182 - 2026-10-17 - 4.0.0 relaunch: forms use the form helper, PHP errors in the quote to invoice walk fixed
 
 	public static function can_i( $actions, $name = false, $category = false, $module = false ) {
 		if ( ! $module ) {

@@ -22,6 +22,7 @@ class module_ticket extends module_base
 	public $links;
 	public $ticket_types;
 
+	// 2.505 - 2026-10-17 - 4.0.0 relaunch: one priority support invoice per ticket, security token on saves, upload folders blocked
 	// 2.504 - 2017-05-02 - file path configuration
 	// 2.503 - 2017-04-22 - more debug messages on save test page
 	// 2.502 - 2017-02-20 - gmail email markup
@@ -186,7 +187,7 @@ class module_ticket extends module_base
 	public function __construct() {
 		$this->module_name     = 'ticket';
 		$this->module_position = 530;
-		$this->version         = 2.504;
+		$this->version         = 2.505;
 	}
 
 	public function init() {

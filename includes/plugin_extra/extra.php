@@ -14,7 +14,7 @@ class module_extra extends module_base
 	public function __construct() {
 		$this->module_name     = 'extra';
 		$this->module_position = 180;
-		$this->version         = 2.265;
+		$this->version         = 2.266;
 	}
 
 	public static function can_i( $actions, $name = false, $category = false, $module = false ) {
@@ -30,6 +30,7 @@ class module_extra extends module_base
 	}
 
 	function init() {
+		// 2.266 - 2026-10-17 - 4.0.0 relaunch: security token on extra field saves, duplicate HTML ids fixed, PHP 8 sorting fixes
 		// 2.265 - 2017-02-20 - custom data extra field integration
 		// 2.264 - 2016-12-20 - ajax lookup fields
 		// 2.263 - 2016-10-25 - extra field update
