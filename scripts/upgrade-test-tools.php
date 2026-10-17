@@ -22,7 +22,14 @@ function ut_fail( $message ) {
 }
 
 if ( 'summarise' === $cmd ) {
-	$raw  = stream_get_contents( STDIN );
+	$raw = stream_get_contents( STDIN );
+	if ( '' === trim( (string) $raw ) ) {
+		// upgrade_server.php prints nothing at all when it has nothing to offer, as the old
+		// server did, so an empty answer is the "no updates" answer rather than a failure.
+		echo "message:     (none - the server sent an empty answer, which means nothing to update)\n";
+		echo "offers:      0\n";
+		exit( 0 );
+	}
 	$data = json_decode( (string) $raw, true );
 	if ( ! is_array( $data ) || ! isset( $data['available_updates'] ) ) {
 		ut_fail( 'not an update server response. First 300 bytes: ' . substr( (string) $raw, 0, 300 ) );
