@@ -5,13 +5,24 @@ install it in a fresh container, publish a newer version from a local update ser
 check that the installation finds the update, installs it in the right order, migrates its
 database, shows the right messages, and handles licence codes the way it should.
 
+It covers all three ways the product gets onto a server, and both ways it gets updated:
+
+| | Method | Where |
+| --- | --- | --- |
+| Install | Unzip the CodeCanyon zip by hand, then run the setup wizard | Setup step 5 |
+| Install | The old one-file `install.php`, which fetches everything from the update server as a zip | [S12](#s12-the-old-one-file-installer) |
+| Update | The in-app updater, Settings, then Upgrade | S2 to S8 |
+| Update | Copy one plugin folder by hand, then Run Manual Upgrades | [S9](#s9-the-manual-upgrade-path) |
+| Update | Unzip a whole new release over the top, then Run Manual Upgrades | [S11](#s11-a-full-manual-unzip-over-the-top) |
+
 Written for an agent or a person to follow from top to bottom. Every step says what to run
 and what you should see. Record what you actually saw in the results log at the end.
 
 > **Status.** Written 2026-10-17. The helper script, the version and ordering rules, the
 > licence gate and the server's answers were each checked on their own against the real
-> code. The full run from top to bottom has not been done yet. The first person to run it
-> should fix any step that is wrong and add a line to the change log at the bottom.
+> code, and the old installer (S12) was run once in throwaway containers. The full run
+> from top to bottom has not been done yet. The first person to run it should fix any step
+> that is wrong and add a line to the change log at the bottom.
 
 ## What this covers
 
@@ -29,6 +40,12 @@ and what you should see. Record what you actually saw in the results log at the 
 | Licences | No code, a short code, a wrong code, several codes, the right code | [S8](#s8-licence-codes) |
 | Manual path | Files copied by hand, then Run Manual Upgrades | [S9](#s9-the-manual-upgrade-path) |
 | Legacy | The old API endpoints still answer without errors | [S10](#s10-legacy-api-endpoints) |
+| Manual upgrade | A whole release unzipped over the top keeps its settings and upgrades cleanly | [S11](#s11-a-full-manual-unzip-over-the-top) |
+| Old installer | `install.php` fetches the product as a zip and the result starts | [S12](#s12-the-old-one-file-installer) |
+
+**Known failures, as of 2026-10-17.** S12 is expected to fail today. The zip the update
+server builds for the old installer leaves out files the product needs and replaces
+`includes/config.php` with a pre-rewrite copy. See [Findings](#findings).
 
 Out of scope: the live documentation site. The help system's network address is a
 constant, so a local run can only test the help that ships inside the download. The
@@ -51,6 +68,7 @@ The local stack copies that layout exactly:
 | `api.ultimateclientmanager.com/public_html` | `ucm-ut-api`, document root | `$UT/server-www/api.ultimateclientmanager.com/public_html` |
 | `demo.ultimateclientmanager.com/public_html` | `ucm-ut-api`, beside it | `$UT/server-www/demo.ultimateclientmanager.com/public_html` |
 | A customer's installation | `ucm-ut-client` | `$UT/client` |
+| A customer using the old installer | `ucm-ut-legacy` (S12 only) | `$UT/legacy` |
 | Their database server | `ucm-ut-db` | |
 
 The client is the release as built ("release A"). The server holds the same build with
@@ -71,7 +89,9 @@ scenarios marked "Mode A" do not apply to it. Everything else is the same.
   only serves one testing code, stored as a hash. The local copy has that hash replaced
   with the hash of a throwaway code. Nothing here needs the real one.
 - **Leave the development stack alone.** Different container names, a different network,
-  different ports. Nothing here touches `ucm-app`, `ucm-db` or port 8090.
+  different ports. Nothing here touches `ucm-app`, `ucm-db` or port 8090. Worktree stacks
+  on the same machine take ports in the 8090s too, so the setup checks its ports are free
+  before it starts anything.
 - **A licence failure is not a bug to fix with enforcement.** The product deliberately
   does no licence checking. A code is a thank-you. The gate in the API is a temporary
   switch for testing a release. Record what happens; do not add checks.
@@ -79,7 +99,8 @@ scenarios marked "Mode A" do not apply to it. Everything else is the same.
 ## Prerequisites
 
 - Docker, with the daemon running.
-- PHP 8.2 or newer on the host, plus `composer`, `git`, `rsync`, `curl`, `shasum`, `perl`.
+- PHP 8.2 or newer on the host, plus `composer`, `git`, `rsync`, `curl`, `shasum`, `perl`,
+  `zip` and `unzip`.
 - Node and the Playwright browsers, for the installer walk (`npm ci && npx playwright install chromium`).
 - This repository. For Mode A, a checkout of `ucm-web` beside it.
 
@@ -93,13 +114,28 @@ export UCM_WEB="$UCM/../ucm-web"            # Mode A only
 export UT="$HOME/ucm-upgrade-test"          # scratch space; deleted at the end
 export REF=2026-revive-2                    # the branch or tag to build release A from
 export UT_CODE=local-upgrade-test-code      # throwaway licence code, lower case
-export UT_NET=172.31.250.0/24 UT_API_IP=172.31.250.10 UT_CLIENT_IP=172.31.250.20
+export UT_NET=172.31.250.0/24 UT_API_IP=172.31.250.10 UT_CLIENT_IP=172.31.250.20 UT_LEGACY_IP=172.31.250.30
+export UT_CLIENT_PORT=8110 UT_API_PORT=8111 UT_LEGACY_PORT=8112
 export SERVER="$UT/server-www/demo.ultimateclientmanager.com/public_html"
 export API="$UT/server-www/api.ultimateclientmanager.com/public_html"
 export CLIENT="$UT/client"
+export LEGACY="$UT/legacy"
+export ZIP="$UT/src/build/ucm-codecanyon.zip"
 export TOOLS="$UCM/scripts/upgrade-test-tools.php"
 db() { docker exec -i ucm-ut-db mysql -uroot -proot "$@"; }
 ```
+
+Check nothing is in the way before starting:
+
+```bash
+for p in $UT_CLIENT_PORT $UT_API_PORT $UT_LEGACY_PORT; do
+  lsof -iTCP:$p -sTCP:LISTEN -n -P >/dev/null 2>&1 && echo "port $p is taken - pick another"
+done
+docker ps -a --format '{{.Names}}' | grep '^ucm-ut-' && echo "old ucm-ut containers exist - run Teardown first"
+docker network inspect ucm-ut >/dev/null 2>&1 && echo "the ucm-ut network exists - run Teardown first"
+```
+
+No output means you can go on.
 
 ### 1. Build release A
 
@@ -112,16 +148,27 @@ git clone --quiet --shared --branch "$REF" "$UCM" "$UT/src"
 ( cd "$UT/src" && ./scripts/build-release.sh --verify )
 ```
 
-Expect `OK: ... shaped the way CodeCanyon wants.` The product is in
-`$UT/src/build/Main Files/`.
+Expect `OK: ... shaped the way CodeCanyon wants.` The file a buyer downloads is `$ZIP`.
 
-### 2. Lay out the two trees
+### 2. Lay out the two trees, by unzipping the release
+
+This is the full manual install a buyer does: unzip the CodeCanyon download, and upload
+the contents of `Main Files` to their web root. Use the zip itself, not the build folder,
+so the thing tested is the thing that ships.
 
 ```bash
-mkdir -p "$CLIENT" "$SERVER" "$API"
-rsync -a "$UT/src/build/Main Files/" "$CLIENT/"
-rsync -a "$UT/src/build/Main Files/" "$SERVER/"
+mkdir -p "$UT/unzipped" "$CLIENT" "$SERVER" "$API"
+unzip -q "$ZIP" -d "$UT/unzipped"
+ls "$UT/unzipped"                                   # Documentation  Licensing  Main Files
+rsync -a "$UT/unzipped/Main Files/" "$CLIENT/"
+rsync -a "$UT/unzipped/Main Files/" "$SERVER/"
+ls "$CLIENT/index.php" "$CLIENT/vendor/autoload.php" "$CLIENT/temp/.htaccess" "$CLIENT/includes/plugin_file/upload/.htaccess"
+[ ! -e "$CLIENT/Documentation" ] && [ ! -e "$CLIENT/includes/config.local.php" ] && echo "web root is clean"
 ```
+
+Expect the three folders at the top of the zip, all four files listed, and "web root is
+clean". `Documentation` and `Licensing` are for the buyer to read and stay out of the web
+root. The release ships no `config.local.php`; the wizard writes it.
 
 Mode A: copy the API and point its licence gate at the throwaway code.
 
@@ -144,13 +191,23 @@ Mode B: skip the block above. `$API` stays empty.
 
 ### 3. Build the image
 
+The repository's image has no `zip` extension, so it cannot build the zip the old
+installer asks for, or unpack one. Shared hosts almost always have it, so add it:
+
 ```bash
-docker build -t ucm-ut-php "$UCM"
+docker build -t ucm-ut-php-base "$UCM"
+docker build -t ucm-ut-php --build-arg BASE=ucm-ut-php-base - <<'EOF'
+ARG BASE
+FROM ${BASE}
+RUN apt-get update && apt-get install -y --no-install-recommends libzip-dev \
+ && rm -rf /var/lib/apt/lists/* && docker-php-ext-install zip
+EOF
+docker run --rm ucm-ut-php php -r 'echo PHP_VERSION, class_exists("ZipArchive") ? " zip ok\n" : " NO ZIP\n";'
 ```
 
 If the Dockerfile has an `ARG PHP_VERSION` line, test the lowest supported PHP as well:
-`docker build --build-arg PHP_VERSION=8.2 -t ucm-ut-php "$UCM"`. Run the whole procedure
-once per version you care about.
+add `--build-arg PHP_VERSION=8.2` to the first build. Run the whole procedure once per
+version you care about.
 
 ### 4. Start the database
 
@@ -170,14 +227,14 @@ rather than trusting the first answer: MySQL restarts once on a new volume.
 ### 5. Start the client and install release A
 
 ```bash
-docker run -d --name ucm-ut-client --network ucm-ut --ip "$UT_CLIENT_IP" -p 8094:80 \
+docker run -d --name ucm-ut-client --network ucm-ut --ip "$UT_CLIENT_IP" -p "$UT_CLIENT_PORT:80" \
   --add-host ultimateclientmanager.com:127.0.0.1 \
   --add-host www.ultimateclientmanager.com:127.0.0.1 \
   --add-host api.ultimateclientmanager.com:127.0.0.1 \
   -e APACHE_DOCUMENT_ROOT=/var/www/html -e UCM_SECRET=local-upgrade-test-client \
   -v "$CLIENT:/var/www/html" ucm-ut-php
-for i in $(seq 1 30); do curl -fsS -o /dev/null http://localhost:8094/ && break; sleep 1; done
-UCM_INSTALL_BASE_URL=http://localhost:8094 npx playwright test tests/e2e/install.spec.ts --workers=1 > "$UT/install.log" 2>&1; echo "exit $?"
+for i in $(seq 1 30); do curl -fsS -o /dev/null "http://localhost:$UT_CLIENT_PORT/" && break; sleep 1; done
+UCM_INSTALL_BASE_URL="http://localhost:$UT_CLIENT_PORT" npx playwright test tests/e2e/install.spec.ts --workers=1 > "$UT/install.log" 2>&1; echo "exit $?"
 ```
 
 Expect `exit 0` and `2 passed` in `$UT/install.log`. If it says `skipped`, the wizard was
@@ -210,7 +267,7 @@ db ucm_ut_server -e "REPLACE INTO ucm_config (\`key\`,\`val\`) VALUES ('upgrade_
 Then, either mode:
 
 ```bash
-docker run -d --name ucm-ut-api --network ucm-ut --ip "$UT_API_IP" -p 8095:80 \
+docker run -d --name ucm-ut-api --network ucm-ut --ip "$UT_API_IP" -p "$UT_API_PORT:80" \
   --add-host ultimateclientmanager.com:127.0.0.1 \
   --add-host www.ultimateclientmanager.com:127.0.0.1 \
   --add-host api.ultimateclientmanager.com:127.0.0.1 \
@@ -264,13 +321,13 @@ Define the helpers used below:
 ut_reset() {   # client back to the snapshot, server back to release A
   rsync -a --delete "$UT/baseline/client/" "$CLIENT/"
   db ucm_install_test < "$UT/baseline/client.sql"
-  rsync -a --delete "$UT/src/build/Main Files/" "$SERVER/"
+  rsync -a --delete "$UT/unzipped/Main Files/" "$SERVER/"
   docker exec ucm-ut-api rm -rf /tmp/ucm-upgrade-rate
   sleep 3   # opcache revalidates every 2 seconds
 }
 ut_offer() {   # what the server offers the client right now, in install order
   php "$TOOLS" plugins-json "$CLIENT" > "$UT/client-plugins.json"
-  curl -s -X POST "http://localhost:8095${UPGRADE_URL#http://$UT_API_IP}" \
+  curl -s -X POST "http://localhost:$UT_API_PORT${UPGRADE_URL#http://$UT_API_IP}" \
     --data-urlencode "installation_code=${1-$UT_CODE}" \
     --data-urlencode "client_protocol=2" \
     --data-urlencode "current_plugins@$UT/client-plugins.json" | tee "$UT/offer.json" | php "$TOOLS" summarise
@@ -282,7 +339,7 @@ ut_version() { db ucm_install_test -N -e "SELECT val FROM ucm_config WHERE \`key
 see the offer without the browser. The upgrade page is still the real test: always check
 the page as well.
 
-To drive the client in a browser, log in at <http://localhost:8094> as
+To drive the client in a browser, log in at <http://localhost:8110> (`$UT_CLIENT_PORT`) as
 `admin@example.com` / `password` (the installer's seeded account). The upgrade screen is
 Settings, then Upgrade, then **Check for Upgrades**.
 
@@ -531,15 +588,189 @@ should answer without a PHP error.
 ```bash
 php "$TOOLS" bump "$SERVER" faq "legacy endpoint check"
 for u in "/index.php?curl_check=1" "/latest_updates.php" "/info.php" "/help.php?modules=faq&pages=faq_questions"; do
-  printf '%-45s ' "$u"; curl -s -o "$UT/legacy.html" -w '%{http_code} ' "http://localhost:8095$u"
+  printf '%-45s ' "$u"; curl -s -o "$UT/legacy.html" -w '%{http_code} ' "http://localhost:$UT_API_PORT$u"
   grep -ciE 'fatal error|warning:|parse error' "$UT/legacy.html"
 done
-curl -s http://localhost:8095/latest_updates.php | grep -c 'legacy endpoint check'
+curl -s "http://localhost:$UT_API_PORT/latest_updates.php" | grep -c 'legacy endpoint check'
 ```
 
 Expect `200 0` on every line: an answer, and no PHP error in it. `curl_check` answers
 `success`. `latest_updates.php` lists the bumped faq line under today's date. Pages that
 pull styles from the old WordPress site will look unstyled locally; that is expected.
+
+### S11. A full manual unzip over the top
+
+The documented way to update without the updater: download the new release, unzip it,
+copy the contents of `Main Files` over the existing site, then run the manual upgrade.
+Copying over the top never deletes anything, so settings and uploads must survive.
+
+**Make release B into a zip, shaped like the CodeCanyon download.**
+
+```bash
+php "$TOOLS" bump "$SERVER" faq "full unzip upgrade"
+php "$TOOLS" add-column "$SERVER" faq faq ut_unzip
+php "$TOOLS" bump "$SERVER" help "full unzip upgrade"
+php "$TOOLS" help-marker "$SERVER" using/faq "LOCAL-UPGRADE-TEST unzip marker"
+rm -rf "$UT/release-b" "$UT/release-b-unzipped" && mkdir -p "$UT/release-b/Main Files"
+rsync -a --exclude php_errorlog --exclude '/temp/cache-*' "$SERVER/" "$UT/release-b/Main Files/"
+( cd "$UT/release-b" && zip -qr ../ucm-release-b.zip "Main Files" )
+unzip -q "$UT/ucm-release-b.zip" -d "$UT/release-b-unzipped"
+```
+
+**S11a. A current install.**
+
+```bash
+cp "$CLIENT/includes/config.local.php" "$UT/config.local.before"
+printf 'a customer upload\n' > "$CLIENT/includes/plugin_file/upload/ut-customer-upload.txt"
+rsync -a "$UT/release-b-unzipped/Main Files/" "$CLIENT/"
+sleep 3
+```
+
+1. Settings survive: `cmp "$UT/config.local.before" "$CLIENT/includes/config.local.php" && echo kept`.
+2. Uploads survive, and so does the guard on their folder:
+   `ls "$CLIENT/includes/plugin_file/upload/ut-customer-upload.txt" "$CLIENT/includes/plugin_file/upload/.htaccess"`.
+3. The site loads and you can log in. Record whether it shows any notice that the database
+   is behind the files before you run the upgrade.
+4. Settings, then Upgrade, then **Run Manual Upgrades**. The faq and help lines read
+   `Upgrading plugin from version <old> to <new>`, then `all good`, ending in
+   "Success! Everything worked."
+5. `ut_version faq` and `ut_version help` print the new versions. The `ut_unzip` column
+   exists: `db ucm_install_test -e "SHOW COLUMNS FROM ucm_faq LIKE 'ut_unzip'"`.
+6. The FAQ screen's help panel starts with "LOCAL-UPGRADE-TEST unzip marker".
+7. `ut_offer` prints `offers: 0`: the client now matches the server.
+
+**S11b. An install from before the rewrite, with its database details in `includes/config.php`.**
+
+Releases before this one wrote the database details into `includes/config.php`, which is a
+product file and is replaced by the unzip. The upgrade guide says to move them into
+`includes/config.local.php` first. This checks what happens when someone does not.
+
+```bash
+ut_reset
+grep -E "define\( '(_DB_[A-Z]+|_UCM_SECRET)'" "$CLIENT/includes/config.local.php" > "$UT/creds.txt"
+wc -l < "$UT/creds.txt"                                   # expect 6
+php -r '$f = $argv[1]; file_put_contents( $f, preg_replace( "/^<\?php\n/", "<?php\n" . file_get_contents( getenv( "UT" ) . "/creds.txt" ), file_get_contents( $f ), 1 ) );' "$CLIENT/includes/config.php"
+rm "$CLIENT/includes/config.local.php"; sleep 3
+curl -s -o /dev/null -w 'before: %{http_code}\n' "http://localhost:$UT_CLIENT_PORT/"
+rsync -a "$UT/release-b-unzipped/Main Files/" "$CLIENT/"; sleep 3
+curl -s "http://localhost:$UT_CLIENT_PORT/" | sed 's/<[^>]*>//g' | grep -v '^\s*$' | head -5
+```
+
+1. `before: 200`. A site with its details in `config.php` works.
+2. After the unzip, the page is a database connection error. Record the exact text. In
+   these containers `includes/config.php` falls back to the Docker defaults (`db`, `ucm`),
+   so the message names the database `ucm`; on a real host it names `username`.
+3. Follow the guide's fix: put the details in `config.local.php`.
+
+   ```bash
+   { echo '<?php'; cat "$UT/creds.txt"; } > "$CLIENT/includes/config.local.php"; sleep 3
+   curl -s -o /dev/null -w 'after: %{http_code}\n' "http://localhost:$UT_CLIENT_PORT/"
+   ```
+
+   Expect `after: 200`, then run S11a steps 4 to 7.
+
+### S12. The old one-file installer
+
+Before the CodeCanyon zip carried the whole product, a buyer could upload one
+`install.php` to an empty folder and open it. It asked the update server for everything as
+a zip (`return_as_zip` and `return_base_system_in_zip`), unpacked it beside itself, and
+sent the buyer to the setup wizard. The original script is no longer in either repository,
+so `scripts/upgrade-test-legacy-install.php` stands in for it. It makes the same request
+that `ucm-web/api/download_zip.php` still makes. If you have a copy of the original, use
+it instead and say so in the results.
+
+**Expected today: this fails.** See [Findings](#findings). Run it anyway; the point is to
+see it go green once the zip is fixed.
+
+```bash
+ut_reset
+rm -rf "$LEGACY" && mkdir -p "$LEGACY"
+cp "$UCM/scripts/upgrade-test-legacy-install.php" "$LEGACY/install.php"
+docker run -d --name ucm-ut-legacy --network ucm-ut --ip "$UT_LEGACY_IP" -p "$UT_LEGACY_PORT:80" \
+  --add-host ultimateclientmanager.com:127.0.0.1 \
+  --add-host www.ultimateclientmanager.com:127.0.0.1 \
+  --add-host api.ultimateclientmanager.com:127.0.0.1 \
+  -e APACHE_DOCUMENT_ROOT=/var/www/html \
+  -e UCM_UT_SERVER="$UPGRADE_URL" -e UCM_UT_CODE="$UT_CODE" \
+  -v "$LEGACY:/var/www/html" ucm-ut-php
+# Wait for Apache on a page that does not exist. Never poll install.php: one GET of it runs the install.
+for i in $(seq 1 30); do [ "$(curl -s -o /dev/null -w '%{http_code}' "http://localhost:$UT_LEGACY_PORT/ut-not-here")" = 404 ] && break; sleep 1; done
+curl -s --max-time 300 "http://localhost:$UT_LEGACY_PORT/install.php" | sed 's/<[^>]*>//g' | grep -v '^\s*$'
+```
+
+1. **The download.** Expect `Unpacked <n> entries` and a link to the setup wizard. On
+   2026-10-17 the zip held 2,844 files, against 3,640 in the release.
+2. **A wrong code.** Mode A with the gate present. Ask for the zip with a code the gate
+   does not know:
+
+   ```bash
+   curl -s -X POST "http://localhost:$UT_API_PORT${UPGRADE_URL#http://$UT_API_IP}" \
+     -d installation_code=wrong-code-123 -d current_version=0 -d get_file_contents=1 \
+     -d return_as_zip=1 -d return_base_system_in_zip=1 | head -c 300; echo
+   ```
+
+   Expect the JSON "Updates are paused" answer instead of a zip. The stand-in reports the
+   same thing as "The server did not send a zip", and unpacks nothing.
+3. **Compare it with the release.**
+
+   ```bash
+   ( cd "$UT/unzipped/Main Files" && find . -type f | sed 's#^\./##' | sort ) > "$UT/release-files.txt"
+   ( cd "$LEGACY" && find . -type f ! -name install.php | sed 's#^\./##' | sort ) > "$UT/legacy-files.txt"
+   echo "missing, outside vendor/:"; comm -23 "$UT/release-files.txt" "$UT/legacy-files.txt" | grep -v '^vendor/'
+   echo "missing from vendor/: $(comm -23 "$UT/release-files.txt" "$UT/legacy-files.txt" | grep -c '^vendor/')"
+   echo "only in the legacy install:"; comm -13 "$UT/release-files.txt" "$UT/legacy-files.txt"
+   cmp -s "$UT/unzipped/Main Files/includes/config.php" "$LEGACY/includes/config.php" && echo "config.php matches the release" || echo "config.php DIFFERS from the release"
+   ```
+
+   Passing means nothing missing except buyer notes, and `config.php matches the release`.
+   Today, expect the list in [Findings](#findings).
+4. **Does it start?**
+
+   ```bash
+   curl -s -o /dev/null -w '%{http_code}\n' "http://localhost:$UT_LEGACY_PORT/"
+   ```
+
+   Passing is `200` with step 1 of the setup wizard. Today it is `500`. The zip's
+   `config.php` switches error reporting off at runtime, so a shutdown hook is the way to
+   see why:
+
+   ```bash
+   docker exec ucm-ut-legacy sh -c 'printf "%s\n" "<?php register_shutdown_function(function(){ \$e = error_get_last(); if (\$e) fwrite(STDERR, \"LAST ERROR: \" . \$e[\"message\"] . \" at \" . \$e[\"file\"] . \":\" . \$e[\"line\"] . \"\\n\"); });" > /tmp/last-error.php'
+   docker exec -w /var/www/html -e REQUEST_URI=/ -e HTTP_HOST=localhost -e SCRIPT_NAME=/index.php ucm-ut-legacy \
+     php -d auto_prepend_file=/tmp/last-error.php index.php 2>&1 >/dev/null | head -2
+   ```
+
+   Today: `Failed opening required 'includes/class.libraries.php' ... at /var/www/html/init.php:130`.
+5. **Once it starts, walk the wizard.** This reuses the client's database, so it wipes it
+   and puts it back afterwards.
+
+   ```bash
+   db -e "DROP DATABASE ucm_install_test; CREATE DATABASE ucm_install_test; GRANT ALL ON ucm_install_test.* TO 'ucm'@'%';"
+   UCM_INSTALL_BASE_URL="http://localhost:$UT_LEGACY_PORT" npx playwright test tests/e2e/install.spec.ts --workers=1 > "$UT/legacy-install.log" 2>&1; echo "exit $?"
+   ut_reset
+   ```
+
+   Expect `exit 0` and `2 passed`. The second test logs in, which proves the database
+   details the wizard saved actually reach the app.
+
+## Findings
+
+Confirmed on 2026-10-17 by building the old installer's zip from the real update server
+code and comparing it with a release built from `2026-revive-2`. Each is a reason S12
+fails. The zip is assembled in `includes/plugin_config/upgrade_server.php`, in the
+`return_base_system_in_zip` block and the per-plugin listings.
+
+| What | Effect on an install made this way |
+| --- | --- |
+| `includes/class.libraries.php` is left out | Every page fails at `init.php:130`. Confirmed end to end. |
+| `includes/config.php` is replaced with a pre-rewrite copy | It never loads `config.local.php`, so the wizard's saved database details are never read. It also turns error reporting off, sets `_REWRITE_LINKS` to false, and puts a new random secret into a product file on every download. |
+| `vendor/` is left out (780 files) | No Composer libraries. Stripe cannot take a payment, because it has no bundled fallback. |
+| `temp/.htaccess`, `temp/index.php` and the guard files in the upload and attachment folders are left out | Private folders are reachable from the web, which undoes one of this release's security fixes. The listing skips those folders entirely, including their guards. |
+| `n/index.php` is left out | The newsletter link folder is missing. |
+| The repository's Docker image has no `zip` extension | The zip route cannot run in the dev stack at all, so `tests/e2e/upgrade.spec.ts` cannot cover it. This runbook adds the extension to its own image. |
+
+Two smaller questions for S4 and S6 to answer: whether a core-file change with no plugin
+bump is ever offered, and which help article the Upgrade screen should open.
 
 ## Results log
 
@@ -560,6 +791,10 @@ S7 messages: changelog / progress / escaping / rate limit  ...
 S8 licences (one line per row of the table)  ...
 S9 manual path                  ...
 S10 legacy endpoints            ...
+S11a unzip over a current install: settings / uploads / manual upgrade / help  ...
+S11b unzip over a pre-rewrite install: error text / fix  ...
+S12 old installer: download / wrong code / file diff / starts / wizard  ...
+Install by manual unzip (setup step 2 and 5)  ...
 UpgradeIntegrityTest            ./vendor/bin/phpunit --filter UpgradeIntegrity  -> <result>
 
 Anything surprising:
@@ -568,8 +803,9 @@ Anything surprising:
 ## Teardown
 
 ```bash
-docker rm -f ucm-ut-client ucm-ut-api ucm-ut-db
+docker rm -f ucm-ut-client ucm-ut-api ucm-ut-legacy ucm-ut-db
 docker network rm ucm-ut
+docker rmi ucm-ut-php ucm-ut-php-base
 rm -rf "$UT"
 ```
 
@@ -593,8 +829,21 @@ rm -rf "$UT"
 - **Mode A paused message for the right code.** The gate rewrite in setup step 2 did not
   match. Check it printed "gate now accepts the local code", and that the code is lower
   case.
+- **A port is taken, or a request lands on a different app.** Other worktree stacks use
+  ports in the 8090s. Run the check under Setup, and change `UT_CLIENT_PORT`,
+  `UT_API_PORT` or `UT_LEGACY_PORT` if it reports anything.
+- **S12 says "This folder already has UCM in it".** Something requested `install.php`
+  already, which runs the install. That includes a readiness loop. Wait on a missing page
+  instead, as the S12 block does, or add `?again=1`.
+- **"Class ZipArchive not found" in the server's log.** The image was built without the
+  zip extension. Redo setup step 3.
 
 ## Change log
 
 - 2026-10-17: written. Helper, ordering rules, licence gate and server answers verified
   individually; full run not yet done.
+- 2026-10-17: added the manual unzip install (setup step 2), a full unzip over the top
+  (S11) and the old one-file installer (S12), with a stand-in for the lost `install.php`.
+  S12 was run once in throwaway containers and fails as recorded under Findings. Moved the
+  ports to 8110 to 8112 after 8094 and 8095 turned out to be in use by worktree stacks, and
+  added the zip extension to the test image.

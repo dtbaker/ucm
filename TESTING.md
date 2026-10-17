@@ -74,9 +74,10 @@ running, the installer tests skip instead of failing.
 
 `tests/e2e/upgrade.spec.ts` checks that an installation can update itself from itself.
 To test a real update - a built release installed fresh, a newer version published from a
-local copy of the update server, licence codes, install order, migrations and help - follow
+local copy of the update server, licence codes, install order, migrations, help, a manual
+unzip over the top, and the old one-file installer - follow
 [docs/local-upgrade-test.md](docs/local-upgrade-test.md). It runs in its own containers on
-:8094 and :8095 and leaves the development app alone.
+:8110 to :8112 and leaves the development app alone.
 
 ## Pointing the app somewhere else
 
