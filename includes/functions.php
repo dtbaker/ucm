@@ -982,8 +982,15 @@ function _h( $text ) {
 	if ( ! module_config::c( 'show_help', 1 ) || get_display_mode() == 'mobile' ) {
 		return '';
 	}
-	$help_id = md5( $text );
-	$argv    = func_get_args();
+	// The id is the hash of the help text, so the same topic used twice on one page used
+	// to emit the id twice. Number the repeats - the modal's content selector is built
+	// from the same value just below, so each icon still opens its own copy.
+	static $help_seen = array();
+
+	$hash               = md5( $text );
+	$help_seen[ $hash ] = isset( $help_seen[ $hash ] ) ? $help_seen[ $hash ] + 1 : 1;
+	$help_id            = $hash . ( $help_seen[ $hash ] > 1 ? '_' . $help_seen[ $hash ] : '' );
+	$argv               = func_get_args();
 	?> <a href="#"
 	      data-ajax-modal='{"type":"inline","content":"#help_<?php echo $help_id; ?>","buttons":"close","title":"<?php _e( 'Help' ); ?>"}'
 	      class="" style="display:inline-block;"><i class="fa fa-question"></i></a>
