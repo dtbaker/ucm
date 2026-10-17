@@ -180,7 +180,7 @@ then prints each plugin as it starts and finishes, which tells you where it is s
 	<thead><tr><th>Symptom</th><th>Usually means</th></tr></thead>
 	<tbody>
 		<tr><td>Last run says <em>Never</em></td><td>The cron entry was never created, or the command path is wrong.</td></tr>
-		<tr><td>It runs but nothing happens</td><td>The command is calling an older PHP than 8.4. Use a version-specific PHP binary.</td></tr>
+		<tr><td>It runs but nothing happens</td><td>The command is calling an older PHP than 8.2. Use a version-specific PHP binary.</td></tr>
 		<tr><td><code>failed - please check cron.php link in settings</code></td><td>Wrong or missing hash in the web address.</td></tr>
 		<tr><td>Cron emails you errors every 15 minutes</td><td>Something inside a plugin&rsquo;s scheduled work is failing. Turn on cron debugging to find which, then look at that area&rsquo;s settings.</td></tr>
 		<tr><td>Recurring invoices go out late</td><td>The task is only running once a day. Move it to every 15 minutes.</td></tr>

@@ -41,15 +41,15 @@
 
 <p class="kicker">Getting started</p>
 <h1>Upgrading from 2.x</h1>
-<p class="lead">This is the largest update the product has had. It moves from PHP 5 to PHP 8.4,
+<p class="lead">This is the largest update the product has had. It moves from PHP 5 to PHP 8.2 or newer,
 changes where your database settings live, and removes some features that no longer work. Read
 the whole page before you touch your live site.</p>
 
 <div class="stop">
 	<strong>Two things will break your site if you skip them</strong>
 	<ol>
-		<li><strong>PHP 8.4.</strong> This release refuses to run on anything older. Confirm your
-		host offers 8.4 <em>before</em> you upload.</li>
+		<li><strong>PHP 8.2 or newer.</strong> This release refuses to run on anything older. Confirm your
+		host offers 8.2 or newer <em>before</em> you upload.</li>
 		<li><strong>Your database settings.</strong> On an older installation they live inside
 		<code>includes/config.php</code>, which this update overwrites. Copy them out first.</li>
 	</ol>
@@ -61,7 +61,7 @@ the whole page before you touch your live site.</p>
 
 <h3>Check your PHP version</h3>
 
-<p>In your hosting control panel, find the PHP version selector and confirm 8.4 or newer is
+<p>In your hosting control panel, find the PHP version selector and confirm 8.2 or newer is
 available. If it is not, stop here and ask your host to make it available. Do not upgrade the
 files first and sort out PHP afterwards &mdash; that leaves your site down in the meantime.</p>
 
@@ -134,7 +134,7 @@ show errors, so you do not want customers in the middle of paying an invoice.</p
 </li>
 
 <li>
-<h3>Switch PHP to 8.4</h3>
+<h3>Switch PHP to 8.2 or newer</h3>
 <p>Do this now, before uploading. Your existing installation will probably break the moment you
 switch &mdash; that is expected and is why you are doing it immediately before the upload
 rather than days earlier.</p>
@@ -294,9 +294,9 @@ to <code>includes/config.local.php</code> with 64 random hexadecimal characters 
 	anything outstanding. Once set, never change it again.</p>
 </div>
 
-<h3>PHP 8.4 and your own customisations</h3>
+<h3>PHP 8 and your own customisations</h3>
 
-<p>If you have written your own plugin, or edited core files, PHP 8.4 is stricter than PHP 5
+<p>If you have written your own plugin, or edited core files, PHP 8 is stricter than PHP 5
 about several things that used to be warnings. The most common ones to fix are passing
 <code>null</code> where a string is expected, accessing an array key that does not exist, and
 functions removed from PHP since version 7. If a page you customised now shows an error, that is

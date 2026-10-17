@@ -71,7 +71,7 @@ you can do before reporting a problem.</p>
 still blank afterwards, PHP itself failed to start &mdash; look in your hosting control
 panel&rsquo;s error log, which will have the reason.</p>
 
-<h3>&ldquo;PHP version of 8.4 or above is REQUIRED&rdquo;</h3>
+<h3>&ldquo;PHP version of 8.2 or above is REQUIRED&rdquo;</h3>
 
 <p>Exactly what it says. Change the PHP version for your account in your hosting control panel.
 If you have several domains on one account, make sure you changed it for the right one.</p>
@@ -248,7 +248,7 @@ functional. The better fix is to get rewriting working &mdash; see
 	<tbody>
 		<tr><td>&ldquo;Unknown column&rdquo; or &ldquo;table does not exist&rdquo;</td><td>The database upgrade has not been run. Go to <em>Settings &rarr; Upgrade</em> and click <em>Run Manual Upgrades</em>.</td></tr>
 		<tr><td>Your customisations have vanished</td><td>They were edits to shipped files, which the update replaced. Restore them from your backup and move them into <code>custom/</code> this time &mdash; see <a href="customising.html">Customising</a>.</td></tr>
-		<tr><td>One screen errors, the rest are fine</td><td>Usually a customised file that PHP 8.4 is stricter about. Turn on debug mode to see the exact line.</td></tr>
+		<tr><td>One screen errors, the rest are fine</td><td>Usually a customised file that PHP 8 is stricter about. Turn on debug mode to see the exact line.</td></tr>
 		<tr><td>Emailed payment links no longer work</td><td>The installation secret changed. See <a href="upgrading.html">Upgrading from 2.x</a>. Re-send the affected invoices.</td></tr>
 	</tbody>
 </table>

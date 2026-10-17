@@ -27,7 +27,7 @@ return RectorConfig::configure()
 		__DIR__ . '/includes/plugin_file/file.php',
 	])
 	->withIndent("\t")
-	->withPhpSets(php84: true)
+	->withPhpSets(php82: true)
 	->withPreparedSets(
 		codeQuality: true,
 		codingStyle: true,

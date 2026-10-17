@@ -9,13 +9,14 @@ Developer notes on the breaking changes in this release.
 ## PHP version
 
 - **Previous**: PHP 5.3.0 or higher
-- **Current**: **PHP 8.4.0 or higher**
+- **Current**: **PHP 8.2.0 or higher**
 
-8.4 is the floor and is enforced at `index.php:16`, which stops the request before
-anything else loads. CI runs the suite on 8.4 and 8.5, so both are supported.
+8.2 is the floor and is enforced at `index.php:16`, which stops the request before
+anything else loads. CI runs the suite on 8.2, 8.3, 8.4 and 8.5, so all four are supported.
+8.2 only receives security fixes until the end of 2026, so 8.3 or newer is what to recommend.
 
 Some older strings in the tree still say "PHP 8.5". They are message text, not a check —
-nothing enforces 8.5. `composer.json` and `phpcs.xml.dist` both say 8.4, which is correct.
+nothing enforces 8.5. `composer.json` and `phpcs.xml.dist` both say 8.2, which is correct.
 
 The deprecated `mysql_*` extension has been removed; only MySQLi is supported.
 

@@ -2,14 +2,14 @@
 <ruleset name="UCM Coding Standards">
     <description>PSR-12 coding standards for Ultimate Client Manager (relaxed for tabs and spaces-in-parens to match the existing code)</description>
 
-    <!-- Prove the PHP versions we claim to support. composer.json asks for ^8.4 and
-         index.php refuses to start on anything older, so "8.4 and up" is the range that
-         has to hold - and the build checks 8.4 and 8.5 for real. -->
-    <config name="testVersion" value="8.4-"/>
+    <!-- Prove the PHP versions we claim to support. composer.json asks for ^8.2 and
+         index.php refuses to start on anything older, so "8.2 and up" is the range that
+         has to hold - and the build checks 8.2 to 8.5 for real. -->
+    <config name="testVersion" value="8.2-"/>
     <rule ref="PHPCompatibility">
         <!-- Reports that func_get_args() has returned the current value of a parameter,
              not the one passed in, since PHP 7.0. That is settled history for a codebase
-             that will not start on anything below 8.4, and the two places it fires are
+             that will not start on anything below 8.2, and the two places it fires are
              reading a value that was deliberately cast first. -->
         <exclude name="PHPCompatibility.FunctionUse.ArgumentFunctionsReportCurrentValue"/>
     </rule>
