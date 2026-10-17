@@ -141,7 +141,6 @@ class module_security extends module_base
 			);
 		}
 
-		error_log( 'UCMPROBE init uri=' . ( $_SERVER['REQUEST_URI'] ?? '' ) );
 		if ( class_exists( 'module_template', false ) ) {
 			module_template::init_template( 'password_reset', 'Dear {NAME},<br>
     <br>
