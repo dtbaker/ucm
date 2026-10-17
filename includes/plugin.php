@@ -343,6 +343,15 @@ class module_base
 		module_config::save_config( '_plugin_version_' . $this->module_name, $version );
 	}
 
+	/**
+	 * The old, misspelt name. A 3.x install updating itself installs this file first and
+	 * then keeps running its old updater, which calls this, until the config plugin's row
+	 * replaces it.
+	 */
+	function set_insatlled_plugin_version( $version ) {
+		$this->set_installed_plugin_version( $version );
+	}
+
 	function get_installed_plugin_version() {
 		return module_config::c( '_plugin_version_' . $this->module_name );
 	}

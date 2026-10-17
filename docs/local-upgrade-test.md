@@ -385,6 +385,7 @@ ut_offer() {   # what the server offers the client right now, in install order
   curl -s -X POST "http://localhost:$UT_API_PORT${UPGRADE_URL#http://$UT_API_IP}" \
     --data-urlencode "installation_code=${1-$UT_CODE}" \
     --data-urlencode "client_protocol=2" \
+    --data-urlencode "libraries=$(shasum -a 256 "$CLIENT/vendor/composer/installed.json" 2>/dev/null | cut -d' ' -f1)" \
     --data-urlencode "current_plugins@$UT/client-plugins.json" | tee "$UT/offer.json" | php "$TOOLS" summarise
 }
 ut_version() { db ucm_install_test -N -e "SELECT val FROM ucm_config WHERE \`key\`='_plugin_version_$1'"; }
@@ -429,7 +430,7 @@ A client identical to its server has nothing to install.
 php "$TOOLS" bump "$SERVER" faq "local upgrade test marker"
 ```
 
-1. `ut_offer`. Expect, in this order: `faq`, then `corefiles`, then `database`. The `faq`
+1. `ut_offer`. Expect, in this order: `corefiles`, then `database`, then `faq`. The `faq`
    line reads `2.150 -> 2.151` (or whatever the current version is, plus 0.001), with the
    description `Update to plugin: faq ( local upgrade test marker (on <today>))`.
 2. On the client, Check for Upgrades. The table shows the same three rows, all ticked. The
@@ -441,9 +442,6 @@ php "$TOOLS" bump "$SERVER" faq "local upgrade test marker"
    continue" when the whole run takes longer than 4 seconds; a short run puts it back to
    "Start the Upgrade" (see [Findings](#findings)).
 
-   The `corefiles` row ends with three lines that look like errors and are expected today:
-   `REFUSED: the server sent no contents for this file:` for `js/jquery-1.8.3.min.js`,
-   `js/jquery-ui-1.9.2.custom.min.js` and `temp/.htaccess`.
 4. Check the files arrived exactly:
 
    ```bash
@@ -541,8 +539,9 @@ The rules, from `upgrade_server.php`: offers are sorted by plugin name. If the c
 behind on `db` (below 2.13) or `language` (below 2.179), then `db`, `language` and `session`
 are moved to the front and `check_again` is set. If it is behind on `backup` (below 2.111)
 or `config` (below 2.385), only `config`, `backup`, `core`, `theme`, `form` and `db` stay
-ticked; everything else is offered unticked. `corefiles` and `database` always come last
-and stay ticked. The page works through the ticked rows top to bottom; for each one it
+ticked; everything else is offered unticked. `corefiles` and `database` always come first
+and stay ticked, and `config`, which holds the updater, always comes last
+(`ucm_upgrade_server::install_order()`). The page works through the ticked rows top to bottom; for each one it
 writes the files and then runs that plugin's database step, before moving to the next row.
 
 **Name order.**
@@ -551,7 +550,7 @@ writes the files and then runs that plugin's database step, before moving to the
 for p in theme help faq; do php "$TOOLS" bump "$SERVER" $p "order check"; done
 ```
 
-1. `ut_offer`. Expect `faq`, `help`, `theme`, `corefiles`, `database`.
+1. `ut_offer`. Expect `corefiles`, `database`, `faq`, `help`, `theme`.
 2. Upgrade on the client. The "Processing update" lines appear in that same order. Record
    the `Current Version` each one shows: each should be the new version. Before
    dtbaker/ucm#29 some were the old one (the stale code finding; on 2026-10-17 `faq` and
@@ -564,7 +563,7 @@ php "$TOOLS" set-version "$CLIENT" db 2.12
 php "$TOOLS" bump "$SERVER" faq "behind on db"
 ```
 
-3. `ut_offer`. Expect `db` first, then `faq`, `corefiles`, `database`, and `check_again: yes`.
+3. `ut_offer`. Expect `corefiles`, `database`, then `db`, then `faq`, and `check_again: yes`.
    (Checked against the real server code on 2026-10-17: exactly this.)
 4. Upgrade on the client. `db` installs first. The page does **not** ask you to check
    again: the client never reads `check_again` (see [Findings](#findings)). Check for
@@ -920,7 +919,7 @@ it, and each step that meets it says what you will see today.
 | --- | --- | --- |
 | **Fixed by dtbaker/ucm#29. The in-app updater runs each plugin's database step on stale code.** The page writes a plugin's files in one request and runs its database step in the next. PHP's opcache only re-reads a changed file every `opcache.revalidate_freq` seconds (2 by default, often more on shared hosts), and nothing calls `opcache_invalidate()` after a write, so the second request usually still has the old class. | `class.upgrade.php`, `complete_plugin_installation()` after `install_plugin_update_files()` | The new version is not recorded and the plugin's upgrade SQL does not run, while the page says `all good` and "Success! Everything worked." Seen in 7 of 9 plugin steps on 2026-10-17 (S2, S3, S5, S6). Proven by S3 passing with `opcache.revalidate_freq=0`. Run Manual Upgrades repairs it afterwards. The fix invalidates opcache for every file the updater writes; where the host refuses that (`opcache.restrict_api`), the database step now says `not finished` and changes nothing instead of reporting success. |
 | **A fresh install with no `config.local.php` is a blank HTTP 500, not the setup wizard,** unless the fallback database details in `includes/config.php` happen to connect. On PHP 8.1 and later `mysqli_connect()` throws on failure, and nothing catches it or calls `mysqli_report()`, so the "Connect failed" message in `db_connect()` is never reached. | `init.php:206` `is_installed()` → `includes/plugin_db/db.php:257` | The main install route (unzip and open the site) does not reach the wizard on a normal host, whose fallback is `localhost` / `username` / `ucm`. The same blank 500 is what a site that loses its `config.local.php` shows (S11b). The dev stack and CI never see it, because `docker-compose.yml` sets `UCM_DB_NAME`. |
-| The `corefiles` list names three files the server never sends | `upgrade_server.php`, the `corefiles` list | Every update ends the core row with three `REFUSED: the server sent no contents for this file` lines. `js/jquery-1.8.3.min.js` and `js/jquery-ui-1.9.2.custom.min.js` are not in the release; `temp/.htaccess` is skipped by `is_ignored_path()` (`/temp/`), so an updated install never gets a newer `temp/.htaccess` either. |
+| **Fixed by the 3.x upgrade fix.** The `corefiles` list names three files the server never sends | `upgrade_server.php`, the `corefiles` list | Every update ended the core row with three `REFUSED: the server sent no contents for this file` lines. `js/jquery-1.8.3.min.js` and `js/jquery-ui-1.9.2.custom.min.js` are not in the release; `temp/.htaccess` is skipped by `is_ignored_path()` (`/temp/`), so an updated install never gets a newer `temp/.htaccess` either. |
 | A core file changed with no plugin bump is never offered | `upgrade_server.php`, the `$do_upgrade` check before `corefiles` | Answers the S4 question: no. A release that changes only core files reaches nobody through the updater. |
 | The Upgrade screen's help opens "The plugin system" | `includes/plugin_config/config.help.json`, generated from `ucm-web` `site/src/content/docs/developers/plugins.md` frontmatter | Answers the S6 question: it shows `developers/plugins`; it should show `install/upgrading` ("Upgrading from 2.x"). |
 | The client ignores `check_again` | no reference to it outside `upgrade_server.php` | A client that is behind gets part of its updates and is never told there are more. It has to think of pressing Check for Upgrades again. |

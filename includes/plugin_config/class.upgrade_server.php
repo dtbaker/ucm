@@ -57,6 +57,48 @@ class ucm_upgrade_server
 	const RELEASE_GUARDS = array( '.htaccess', 'index.php', 'index.html', '.gitkeep' );
 
 	/**
+	 * Everything outside the plugin folders that the application runs on, sent in the
+	 * `corefiles` row.
+	 *
+	 * includes/config.php is not here and never will be: it holds the database settings of
+	 * every install from before config.local.php. The client refuses it anyway.
+	 */
+	const CORE_FILES = array(
+		'index.php',
+		'ext.php',
+		'design_menu.php',
+		'design_header.php',
+		'design_footer.php',
+		'ajax.php',
+		'cron.php',
+		'init.php',
+		'includes/plugin.php',
+		'includes/functions.php',
+		'includes/links.php',
+		'includes/database.php',
+		'includes/class.libraries.php',
+		'pages/home.php',
+		'pages/home.help.json',
+		'pages/mobile/login.php',
+		'pages/login.php',
+		'css/desktop.css',
+		'css/print.css',
+		'css/styles.css',
+		'css/smoothness/jquery-ui-1.9.2.custom.min.css',
+		'js/javascript.js',
+		'temp/.htaccess',
+	);
+
+	/** Folders the core files need, created before any of them is written. */
+	const CORE_FOLDERS = array( 'temp', 'pages/mobile' );
+
+	/** Composer's libraries, built into every release by scripts/build-release.sh. */
+	const LIBRARY_FOLDER = 'vendor/';
+
+	/** The plugin that holds the updater, which installs last. See install_order(). */
+	const UPDATER_PLUGIN = 'config';
+
+	/**
 	 * Paths never served to a client.
 	 *
 	 * The server is a real installation with real data in it. `find` did not know that, so
@@ -154,6 +196,12 @@ class ucm_upgrade_server
 			}
 			$relative = $directory . $entry;
 			if ( self::is_ignored_path( '/' . $relative ) ) {
+				if ( self::is_guard_file( $root, $relative ) ) {
+					// In a folder that is listed, but whose other files never are.
+					$files[] = $relative;
+				} elseif ( ! is_link( $root . $relative ) && is_dir( $root . $relative ) ) {
+					self::add_guards( $root, $relative, $files, $folders );
+				}
 				continue;
 			}
 			if ( is_link( $root . $relative ) ) {
@@ -168,6 +216,40 @@ class ucm_upgrade_server
 			}
 		}
 		closedir( $handle );
+	}
+
+	/**
+	 * The guard files of a folder the listing skips, such as an upload folder.
+	 *
+	 * The folder holds customers' files and is never listed, but the .htaccess and
+	 * index.php that keep it private ship with the release. Skipping them too meant an
+	 * updated install never got the ones that block web access to its uploads. Only the
+	 * folder's own guards are looked for by name: a folder of uploads can be enormous, and
+	 * nothing in it is read.
+	 *
+	 * @param string   $root
+	 * @param string   $directory Relative, with no trailing slash.
+	 * @param string[] $files
+	 * @param string[] $folders
+	 */
+	private static function add_guards( $root, $directory, array &$files, array &$folders ) {
+		$found = false;
+		foreach ( self::RELEASE_GUARDS as $guard ) {
+			if ( self::is_guard_file( $root, $directory . '/' . $guard ) ) {
+				$files[] = $directory . '/' . $guard;
+				$found   = true;
+			}
+		}
+		if ( $found ) {
+			$folders[] = $directory . '/';
+		}
+	}
+
+	/** Is this one of the files that keeps a private folder private? See add_guards(). */
+	private static function is_guard_file( $root, $relative ) {
+		return in_array( basename( $relative ), self::RELEASE_GUARDS, true )
+			&& is_file( $root . $relative ) && ! is_link( $root . $relative )
+			&& self::is_servable_release_path( $relative );
 	}
 
 	/**
@@ -419,6 +501,164 @@ class ucm_upgrade_server
 		self::tidy_rate_limit_files( $directory, $now - ( $window * 3 ) );
 
 		return $allowed;
+	}
+
+	/**
+	 * The `corefiles` and `database` rows, in the order a client must install them.
+	 *
+	 * They go before every plugin. A client installs one row per request, and every request
+	 * boots the whole application from whatever is on disk at that moment. With core last,
+	 * a 3.x install ran new plugin code on its old core until the very end, and the first
+	 * plugin that called a new core function took the site down halfway through (4.0.0:
+	 * paymethod_paypal, db_identifier()). Core first means the plugins still waiting run on
+	 * the new core instead, and the new core is written to cope with old plugins.
+	 *
+	 * `database` also carries vendor/ when the client's copy is not this server's, since
+	 * the updater has no other way to deliver it. It is a row of its own so that a large
+	 * download that fails cannot stop the core files arriving. An old client only treats
+	 * `corefiles` and `database` as rows with nothing to process afterwards, so a new row
+	 * name would show as a failure there.
+	 *
+	 * A file the server cannot send is left off rather than listed, because a client
+	 * reports every listed file it gets no contents for as a failure.
+	 *
+	 * @param string           $root            Application root, with a trailing slash.
+	 * @param int|string       $application     Branded build id, or 0.
+	 * @param int|float|string $version         Version to show on both rows.
+	 * @param bool             $recommended     Whether to tick them.
+	 * @param bool             $send_libraries  Whether to add vendor/ to `database`.
+	 * @param int              $client_protocol What the client said it speaks.
+	 *
+	 * @return array<string, array<string, mixed>>
+	 */
+	public static function core_rows( $root, $application, $version, $recommended, $send_libraries, $client_protocol ) {
+		$files = self::files_for_client( $root, $application, self::CORE_FILES, $client_protocol );
+
+		$database_files   = self::files_for_client( $root, $application, array( 'includes/database.php' ), $client_protocol );
+		$database_folders = array();
+		$description      = 'Database application update';
+		if ( $send_libraries ) {
+			$listing = self::list_directory( $root, self::LIBRARY_FOLDER );
+			if ( $listing['files'] ) {
+				$database_files   = array_merge( $database_files, self::files_for_client( $root, $application, $listing['files'], $client_protocol ) );
+				$database_folders = $listing['folders'];
+				$description      = 'Database application update and third party libraries';
+			}
+		}
+
+		return array(
+			'corefiles' => array(
+				'key'               => 'corefiles',
+				'installed_version' => 'N/A',
+				'available_version' => $version,
+				'description'       => 'Core application files',
+				'files'             => $files,
+				'folders'           => self::CORE_FOLDERS,
+				'file_contents'     => array(),
+				'recommended'       => $recommended,
+				'force'             => 1,
+			),
+			'database'  => array(
+				'key'               => 'database',
+				'installed_version' => 2.2,
+				'available_version' => $version,
+				'description'       => $description,
+				'files'             => $database_files,
+				'folders'           => $database_folders,
+				'file_contents'     => array(),
+				'recommended'       => $recommended,
+				'force'             => 1,
+			),
+		);
+	}
+
+	/**
+	 * The order the client installs the rows in: core, then the plugins, then the updater.
+	 *
+	 * The client shows rows in the order they arrive and installs them in the order shown.
+	 * Core goes first, see core_rows(). The config plugin, which holds the updater itself,
+	 * goes last: the page running the upgrade keeps its own javascript to the end, and the
+	 * updater that replaces it may expect something from that javascript the old one never
+	 * sent. 4.0.0's wants a form token on every step, so with config in its alphabetical
+	 * place a 3.x install had every row after it refused.
+	 *
+	 * @param array<string, array<string, mixed>> $plugin_rows
+	 * @param array<string, array<string, mixed>> $core_rows
+	 *
+	 * @return array<string, array<string, mixed>>
+	 */
+	public static function install_order( array $plugin_rows, array $core_rows ) {
+		foreach ( $core_rows as $key => $ignored ) {
+			unset( $plugin_rows[ $key ] );
+		}
+		$updater = array();
+		if ( isset( $plugin_rows[ self::UPDATER_PLUGIN ] ) ) {
+			$updater = array( self::UPDATER_PLUGIN => $plugin_rows[ self::UPDATER_PLUGIN ] );
+			unset( $plugin_rows[ self::UPDATER_PLUGIN ] );
+		}
+
+		return $core_rows + $plugin_rows + $updater;
+	}
+
+	/**
+	 * The files from a list that this server can actually send to this client.
+	 *
+	 * An empty file is left off for a client that does not speak protocol 2: the 3.x client
+	 * writes with `! file_put_contents()`, so writing zero bytes reads as a failed write and
+	 * marks the whole row as failed. Every empty file in the release is empty in 3.555 too.
+	 *
+	 * @param string[] $files
+	 *
+	 * @return string[]
+	 */
+	public static function files_for_client( $root, $application, array $files, $client_protocol ) {
+		$sendable = array();
+		foreach ( $files as $file ) {
+			if ( ! self::is_servable_release_path( $file ) ) {
+				continue;
+			}
+			$source = self::source_path( $root, $application, $file );
+			if ( ! $source ) {
+				continue;
+			}
+			if ( (int) $client_protocol < 2 && 0 === (int) filesize( $source ) ) {
+				continue;
+			}
+			$sendable[] = $file;
+		}
+
+		return $sendable;
+	}
+
+	/**
+	 * Which set of Composer libraries an installation has, or '' when it has none.
+	 *
+	 * Composer writes installed.json from the exact package versions it installed, so two
+	 * installs with the same file have the same vendor/.
+	 */
+	public static function libraries_fingerprint( $root ) {
+		$file = $root . self::LIBRARY_FOLDER . 'composer/installed.json';
+		if ( ! is_file( $file ) ) {
+			return '';
+		}
+
+		return (string) hash_file( 'sha256', $file );
+	}
+
+	/**
+	 * Does the client need this server's vendor/?
+	 *
+	 * A client that sends no fingerprint is a 3.x install, which has no vendor/ at all.
+	 *
+	 * @param string $server_fingerprint libraries_fingerprint() of this server.
+	 * @param mixed  $client_fingerprint The `libraries` field the client posted, or null.
+	 */
+	public static function client_needs_libraries( $server_fingerprint, $client_fingerprint ) {
+		if ( '' === (string) $server_fingerprint ) {
+			return false;
+		}
+
+		return ! is_string( $client_fingerprint ) || ! hash_equals( (string) $server_fingerprint, $client_fingerprint );
 	}
 
 	/** Drop counter files from windows that have long since closed. */

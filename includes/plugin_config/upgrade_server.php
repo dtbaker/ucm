@@ -203,7 +203,7 @@ function ucm_upgrade_server_respond() {
 		}
 
 		$update_plugins[ $plugin_name ]['description'] = 'Update to plugin: ' . $plugin_name . $additional_info;
-		$update_plugins[ $plugin_name ]['files']       = $files;
+		$update_plugins[ $plugin_name ]['files']       = ucm_upgrade_server::files_for_client( $root, $application, $files, $client_protocol );
 		$update_plugins[ $plugin_name ]['folders']     = $folders;
 		$update_plugins[ $plugin_name ]['recommended'] = $recommended_install;
 	}
@@ -257,63 +257,17 @@ function ucm_upgrade_server_respond() {
 		}
 	}
 
-	if ( $do_upgrade || 'corefiles' === $requested_plugin ) {
-		$do_upgrade  = true;
-		$new_version = max( $new_version, 2.2 );
-
-		$update_plugins['corefiles'] = array(
-			'key'               => 'corefiles',
-			'installed_version' => 'N/A',
-			'available_version' => $new_version,
-			'description'       => 'Core application files',
-			'files'             => array(
-				'index.php',
-				'ext.php',
-				'design_menu.php',
-				'design_header.php',
-				'design_footer.php',
-				'ajax.php',
-				'cron.php',
-				'init.php',
-				'includes/plugin.php',
-				'includes/functions.php',
-				'includes/links.php',
-				'pages/home.php',
-				'pages/mobile/login.php',
-				'pages/login.php',
-				'css/desktop.css',
-				'css/print.css',
-				'css/styles.css',
-				'css/smoothness/jquery-ui-1.9.2.custom.min.css',
-				'js/jquery-1.8.3.min.js',
-				'js/jquery-ui-1.9.2.custom.min.js',
-				'js/javascript.js',
-				'temp/.htaccess',
-			),
-			'folders'           => array(
-				'temp',
-				'pages/mobile',
-			),
-			'file_contents'     => array(),
-			'recommended'       => $we_are_recommending_an_item_upgrade,
-			'force'             => 1,
-		);
-	}
-
-	if ( $do_upgrade || 'database' === $requested_plugin ) {
+	if ( $do_upgrade || 'corefiles' === $requested_plugin || 'database' === $requested_plugin ) {
 		$do_upgrade  = true;
 		$new_version = max( $new_version, 2.3 );
 
-		$update_plugins['database'] = array(
-			'key'               => 'database',
-			'installed_version' => 2.2,
-			'available_version' => $new_version,
-			'description'       => 'Database application update',
-			'files'             => array( 'includes/database.php' ),
-			'folders'           => array(),
-			'file_contents'     => array(),
-			'recommended'       => $we_are_recommending_an_item_upgrade,
-			'force'             => 1,
+		$send_libraries = ucm_upgrade_server::client_needs_libraries(
+			ucm_upgrade_server::libraries_fingerprint( $root ),
+			isset( $_REQUEST['libraries'] ) && is_string( $_REQUEST['libraries'] ) ? $_REQUEST['libraries'] : null
+		);
+		$update_plugins = ucm_upgrade_server::install_order(
+			$update_plugins,
+			ucm_upgrade_server::core_rows( $root, $application, $new_version, $we_are_recommending_an_item_upgrade, $send_libraries, $client_protocol )
 		);
 	}
 
@@ -381,7 +335,7 @@ function ucm_upgrade_server_respond() {
  * @return string|false
  */
 function ucm_upgrade_server_source_path( $root, $application, $file ) {
-	if ( ucm_upgrade_server::is_ignored_path( '/' . $file ) ) {
+	if ( ! ucm_upgrade_server::is_servable_release_path( $file ) ) {
 		return false;
 	}
 
