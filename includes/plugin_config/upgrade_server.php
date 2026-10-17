@@ -108,6 +108,15 @@ function ucm_upgrade_server_respond() {
 	$requested_plugin          = isset( $_REQUEST['requested_plugin'] ) && is_string( $_REQUEST['requested_plugin'] )
 		? $_REQUEST['requested_plugin'] : false;
 
+	// The old one-file installer, and ucm-web/api/download_zip.php: the whole product in one
+	// zip, so a site installed from it is the same as one unzipped from CodeCanyon. It is
+	// built from the release's own file list, and nothing below applies to it.
+	if ( $return_base_system_in_zip ) {
+		ucm_upgrade_server_send_release_zip( $root, $application );
+
+		return;
+	}
+
 	$message                             = '';
 	$new_version                         = $current_version;
 	$do_upgrade                          = false;
@@ -199,112 +208,52 @@ function ucm_upgrade_server_respond() {
 		$update_plugins[ $plugin_name ]['recommended'] = $recommended_install;
 	}
 
-	if ( $return_base_system_in_zip ) {
-		$do_upgrade = true;
-		$files      = array();
-		$folders    = array();
-		foreach ( array( 'css', 'images', 'js', 'pages' ) as $directory ) {
-			$listing = ucm_upgrade_server::list_directory( $root, $directory . '/' );
-			$files   = array_merge( $files, $listing['files'] );
-			$folders = array_merge( $folders, $listing['folders'] );
+	// An install too far behind gets the plumbing first and everything else next time
+	// round, because the later updates assume the earlier ones are in place.
+	$backlog = array(
+		array(
+			'behind' => ( ! isset( $current_plugins['backup'] ) || $current_plugins['backup'] < 2.111
+			              || ! isset( $current_plugins['config'] ) || $current_plugins['config'] < 2.385 ),
+			'first'  => array( 'config', 'backup', 'core', 'theme', 'form', 'db' ),
+			'demote' => true,
+		),
+		array(
+			'behind' => ( ! isset( $current_plugins['db'] ) || $current_plugins['db'] < 2.13
+			              || ! isset( $current_plugins['language'] ) || $current_plugins['language'] < 2.179 ),
+			'first'  => array( 'db', 'language', 'session' ),
+			'demote' => false,
+		),
+	);
+	foreach ( $backlog as $stage ) {
+		if ( ! $stage['behind'] ) {
+			continue;
 		}
-		$files[] = '.htaccess';
-
-		$update_plugins['base_zip'] = array(
-			'key'               => 'base_zip',
-			'installed_version' => 'N/A',
-			'available_version' => 2,
-			'description'       => 'Main application files for zip install',
-			'files'             => $files,
-			'folders'           => array(),
-			'file_contents'     => array(),
-			'recommended'       => 1,
-			'force'             => 1,
-		);
-
-		$update_plugins['base_zip']['file_contents']['.htaccess'] = base64_encode(
-			"<IfModule mod_rewrite.c>\n"
-			. "RewriteEngine on\n"
-			. "RewriteCond %{REQUEST_FILENAME} !-f\n"
-			. "RewriteCond %{REQUEST_FILENAME} !-d\n"
-			. "RewriteRule ^(.*)$ index.php [L,QSA]\n"
-			. "</IfModule>\n\n"
-			. "<IfModule mod_security.c>\n"
-			. "  SecFilterEngine Off\n"
-			. "  SecFilterScanPOST Off\n"
-			. "</IfModule>\n"
-		);
-		// images/logo.png comes out of the images/ listing above like any other file; the
-		// old server had a special case here to swap in a free or pro logo, and both
-		// branches of it had already been commented out for years.
-		$update_plugins['base_zip']['file_contents']['includes/config.php'] = base64_encode(
-			"<?php\n\n"
-			. "//Ultimate Client Manager - config file\n\n"
-			. "define('_DB_SERVER','localhost');\n"
-			. "define('_DB_NAME','');\n"
-			. "define('_DB_USER','');\n"
-			. "define('_DB_PASS','');\n"
-			. "define('_DB_PREFIX','ucm_');\n\n"
-			. "define('_UCM_VERSION',2);\n"
-			. "define('_UCM_FOLDER',dirname( dirname( __FILE__ ) ) . '/' );\n"
-			. "define('_UCM_SECRET','" . bin2hex( random_bytes( 16 ) ) . "'); // change this to something unique\n\n"
-			. "define('_EXTERNAL_TUNNEL','ext.php');\n"
-			. "define('_EXTERNAL_TUNNEL_REWRITE','external/');\n"
-			. "define('_ENABLE_CACHE',true);\n"
-			. "define('_DEBUG_MODE',false);\n"
-			. "define('_DEMO_MODE',false);\n"
-			. "if(!defined('_REWRITE_LINKS'))define('_REWRITE_LINKS',false);\n\n"
-			. "ini_set('display_errors',false);\n"
-			. "ini_set('error_reporting',0);\n\n"
-		);
-	} else {
-		// An install too far behind gets the plumbing first and everything else next time
-		// round, because the later updates assume the earlier ones are in place.
-		$backlog = array(
-			array(
-				'behind' => ( ! isset( $current_plugins['backup'] ) || $current_plugins['backup'] < 2.111
-				              || ! isset( $current_plugins['config'] ) || $current_plugins['config'] < 2.385 ),
-				'first'  => array( 'config', 'backup', 'core', 'theme', 'form', 'db' ),
-				'demote' => true,
-			),
-			array(
-				'behind' => ( ! isset( $current_plugins['db'] ) || $current_plugins['db'] < 2.13
-				              || ! isset( $current_plugins['language'] ) || $current_plugins['language'] < 2.179 ),
-				'first'  => array( 'db', 'language', 'session' ),
-				'demote' => false,
-			),
-		);
-		foreach ( $backlog as $stage ) {
-			if ( ! $stage['behind'] ) {
-				continue;
+		$applies = false;
+		foreach ( $stage['first'] as $name ) {
+			if ( isset( $update_plugins[ $name ] ) ) {
+				$applies                 = true;
+				$check_again_for_updates = true;
 			}
-			$applies = false;
+		}
+		if ( ! $applies ) {
+			continue;
+		}
+		if ( $stage['demote'] ) {
+			foreach ( $update_plugins as $name => $ignored ) {
+				if ( ! in_array( $name, $stage['first'], true ) ) {
+					$update_plugins[ $name ]['recommended'] = 0;
+					$update_plugins[ $name ]['force']       = 0;
+				}
+			}
+		} else {
+			$move = array();
 			foreach ( $stage['first'] as $name ) {
 				if ( isset( $update_plugins[ $name ] ) ) {
-					$applies                 = true;
-					$check_again_for_updates = true;
+					$move[ $name ] = $update_plugins[ $name ];
+					unset( $update_plugins[ $name ] );
 				}
 			}
-			if ( ! $applies ) {
-				continue;
-			}
-			if ( $stage['demote'] ) {
-				foreach ( $update_plugins as $name => $ignored ) {
-					if ( ! in_array( $name, $stage['first'], true ) ) {
-						$update_plugins[ $name ]['recommended'] = 0;
-						$update_plugins[ $name ]['force']       = 0;
-					}
-				}
-			} else {
-				$move = array();
-				foreach ( $stage['first'] as $name ) {
-					if ( isset( $update_plugins[ $name ] ) ) {
-						$move[ $name ] = $update_plugins[ $name ];
-						unset( $update_plugins[ $name ] );
-					}
-				}
-				$update_plugins = $move + $update_plugins;
-			}
+			$update_plugins = $move + $update_plugins;
 		}
 	}
 
@@ -384,17 +333,12 @@ function ucm_upgrade_server_respond() {
 				continue;
 			}
 			foreach ( $update_plugin['files'] as $file ) {
-				if ( isset( $update_plugin['file_contents'][ $file ] ) ) {
-					// Generated rather than read off the disk - includes/config.php, .htaccess.
-					$contents = (string) base64_decode( $update_plugin['file_contents'][ $file ] );
-				} else {
-					$file_to_get = ucm_upgrade_server_source_path( $root, $application, $file );
-					if ( ! $file_to_get ) {
-						continue;
-					}
-					$contents = (string) file_get_contents( $file_to_get );
-					$update_plugins[ $update_plugin_id ]['file_contents'][ $file ] = base64_encode( $contents );
+				$file_to_get = ucm_upgrade_server_source_path( $root, $application, $file );
+				if ( ! $file_to_get ) {
+					continue;
 				}
+				$contents = (string) file_get_contents( $file_to_get );
+				$update_plugins[ $update_plugin_id ]['file_contents'][ $file ] = base64_encode( $contents );
 				$checksum = ucm_upgrade_server::checksum( $contents );
 				if ( false !== $checksum ) {
 					$update_plugins[ $update_plugin_id ]['file_checksums'][ $file ] = $checksum;
@@ -432,12 +376,7 @@ function ucm_upgrade_server_respond() {
 }
 
 /**
- * Where a file for this response is read from.
- *
- * A deploy/<application id>/ copy wins over the stock file, which is how a branded build
- * ships a different logo or template. The id is run through basename() so it cannot climb
- * out of the deploy directory, and the resolved path is checked against the root for the
- * same reason.
+ * Where a file for this response is read from. See ucm_upgrade_server::source_path().
  *
  * @return string|false
  */
@@ -445,25 +384,83 @@ function ucm_upgrade_server_source_path( $root, $application, $file ) {
 	if ( ucm_upgrade_server::is_ignored_path( '/' . $file ) ) {
 		return false;
 	}
-	$candidates = array();
-	if ( $application ) {
-		$candidates[] = $root . 'deploy/' . basename( (string) $application ) . '/' . $file;
+
+	return ucm_upgrade_server::source_path( $root, $application, $file );
+}
+
+/**
+ * Send the whole release as one zip, for the old one-file installer.
+ *
+ * Every file comes from the list scripts/build-release.sh wrote into the release, so the
+ * zip is the CodeCanyon zip's Main Files: the real includes/config.php (the setup wizard
+ * writes config.local.php beside it), vendor/, and the guard files in temp/ and the upload
+ * folders, but never what a customer has put in those folders. If this server cannot
+ * produce exactly that, it sends no zip at all, because an install that half works is
+ * worse than one that says why it stopped.
+ */
+function ucm_upgrade_server_send_release_zip( $root, $application ) {
+	$manifest = ucm_upgrade_server::release_manifest( $root );
+	if ( ! $manifest ) {
+		error_log( 'UCM update server: no ' . ucm_upgrade_server::RELEASE_MANIFEST . ', so no install zip. Deploy this server from scripts/build-release.sh.' );
+		ucm_upgrade_server_refuse_zip();
+
+		return;
 	}
-	$candidates[] = $root . $file;
 
-	foreach ( $candidates as $candidate ) {
-		if ( ! is_file( $candidate ) ) {
-			continue;
+	$release = ucm_upgrade_server::release_files( $root, $application, $manifest );
+	if ( $release['missing'] || $release['refused'] ) {
+		$problems = array();
+		foreach ( array( 'missing' => 'Missing', 'refused' => 'Refused' ) as $key => $label ) {
+			if ( $release[ $key ] ) {
+				$problems[] = $label . ': ' . implode( ', ', array_slice( $release[ $key ], 0, 20 ) )
+					. ( count( $release[ $key ] ) > 20 ? ' and ' . ( count( $release[ $key ] ) - 20 ) . ' more' : '' ) . '.';
+			}
 		}
-		$real = realpath( $candidate );
-		if ( false === $real || strpos( str_replace( '\\', '/', $real ) . '', rtrim( str_replace( '\\', '/', (string) realpath( $root ) ), '/' ) . '/' ) !== 0 ) {
-			continue;
-		}
+		error_log( 'UCM update server: the install zip would not match the release. ' . implode( ' ', $problems ) );
+		ucm_upgrade_server_refuse_zip();
 
-		return $candidate;
+		return;
 	}
 
-	return false;
+	$zip_file_name = tempnam( sys_get_temp_dir(), 'UCMZip' );
+	if ( ! $zip_file_name || ! ucm_upgrade_server::write_release_zip( $zip_file_name, $release['files'] ) ) {
+		error_log( 'UCM update server: could not write the install zip to ' . sys_get_temp_dir() . '.' );
+		if ( $zip_file_name ) {
+			@unlink( $zip_file_name );
+		}
+		ucm_upgrade_server_refuse_zip();
+
+		return;
+	}
+
+	if ( ! headers_sent() ) {
+		header( 'Content-Type: application/zip' );
+		header( 'Content-Length: ' . filesize( $zip_file_name ) );
+		header( 'Content-Disposition: attachment; filename="ucm-package.zip"' );
+	}
+	readfile( $zip_file_name );
+	unlink( $zip_file_name );
+}
+
+/**
+ * Say no to an install zip, in the shape an old client already knows how to show.
+ *
+ * The reason goes to the server's error log rather than to the caller.
+ */
+function ucm_upgrade_server_refuse_zip() {
+	if ( ! headers_sent() ) {
+		header( 'HTTP/1.1 503 Service Unavailable' );
+		header( 'Content-Type: application/json; charset=utf-8' );
+	}
+	echo json_encode( array(
+		'available_updates' => array(
+			'message'     => 'The install package is not available from the update server right now. Please download the product from CodeCanyon instead.',
+			'new_version' => 0,
+			'plugins'     => array(),
+			'check_again' => 0,
+		),
+		'licence_codes'     => array(),
+	) );
 }
 
 /** Stream the selected files back as a zip rather than as JSON. */
