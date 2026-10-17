@@ -17,10 +17,11 @@ class module_theme_blocks extends module_base
 	public function __construct() {
 		$this->module_name     = 'theme_blocks';
 		$this->module_position = 0;
-		$this->version         = 2.130;
+		$this->version         = 2.131;
 	}
 
 	public function init() {
+		//2.131 - 2026-10-17 - dashboard widgets sort without a PHP 8 deprecation warning
 		//2.130 - 2026-10-17 - new SVG logo and favicon, release version in the footer
 		//2.129 - 2017-01-12 - fieldset settings
 		//2.128 - 2016-12-20 - ajax lookup forms

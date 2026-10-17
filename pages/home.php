@@ -64,7 +64,7 @@
 							}
 							// sort the alerts
 							function sort_alert( $a, $b ) {
-								return strtotime( $a['date'] ) > strtotime( $b['date'] );
+								return strtotime( $a['date'] ) <=> strtotime( $b['date'] );
 							}
 
 							uasort( $alerts, 'sort_alert' );

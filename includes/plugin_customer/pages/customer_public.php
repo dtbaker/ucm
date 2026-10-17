@@ -426,13 +426,7 @@ if ( $jobs ) {
 	}
 
 	usort( $transactions, function ( $a, $b ) {
-		$da = $a['dd'];
-		$db = $b['dd'];
-		if ( $da > $db ) {
-			return 1;
-		} else {
-			return 0;
-		}
+		return $a['dd'] <=> $b['dd'];
 	} );
 
 	$charges = array_column( $transactions, 'amount' );
