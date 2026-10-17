@@ -1,6 +1,6 @@
 import { test, expect, Browser, Page } from '@playwright/test';
 import { describeDiagnostics } from './diagnostics';
-import { aCustomer, aFile, anInvoice, createRecord, formAuthKey, login } from './seed';
+import { aCustomer, aFile, anInvoice, createRecord, deleteRecord, formAuthKey, login } from './seed';
 import { byProcess, expectFields, expectFieldsIn, fieldsIn } from './form-fields';
 
 /**
@@ -1235,32 +1235,6 @@ async function signedInAs(
     throw error;
   }
 }
-
-/** Deletes a record through the app's own confirm-delete, hash and all. */
-async function deleteRecord(
-  page: Page,
-  postUrl: string,
-  process: string,
-  key: string,
-  id: string,
-): Promise<void> {
-  const { createHash } = await import( 'node:crypto' );
-  await page.request.post( postUrl, {
-    form: {
-      _process: process,
-      [ key ]: id,
-      butt_del: '1',
-      // module_form::confirm_delete() accepts md5( 'delete <key> <value>' ) plus the
-      // literal 'yep', which is how the confirmation screen posts back.
-      _confirm_delete: createHash( 'md5' ).update( `delete ${ key } ${ id }` ).digest( 'hex' ),
-      really_confirm_delete: 'yep',
-      form_auth_key: await formAuthKey( page ),
-      _redirect: '/',
-    },
-    failOnStatusCode: false,
-  } );
-}
-
 
 test.describe( 'Forms moved to generate_fieldset (restricted contact blocks)', () => {
   test( 'a staff member who cannot view contacts is told the details are hidden', async ( { page, browser } ) => {

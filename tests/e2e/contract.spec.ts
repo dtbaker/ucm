@@ -198,8 +198,10 @@ test.describe('Contracts', () => {
     await openContract(page, contractId);
     await expect(page.locator('input[name="approved_by"]').first()).toHaveValue('Signed In Person');
     await expect(page.locator('input[name="date_approved"]').first()).toHaveValue(date);
+    // The note list cuts each line off at note_trim_length, 35 characters by default, so
+    // the history line shows as much of itself as fits and no more.
     await expect(page.locator('body'), 'approving from the staff side should be noted too')
-      .toContainText('Contract approved by Signed In Person');
+      .toContainText('Contract approved by Signed In Pers');
 
     // --- duplicate, with the button the screen shows
     await Promise.all([
