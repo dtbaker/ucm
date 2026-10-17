@@ -23,7 +23,7 @@ class module_file extends module_base
 	public function __construct() {
 		$this->module_name     = 'file';
 		$this->module_position = 200;
-		$this->version         = 2.574;
+		$this->version         = 2.575;
 	}
 
 	public static function can_i( $actions, $name = false, $category = false, $module = false ) {
@@ -40,6 +40,7 @@ class module_file extends module_base
 
 	function init() {
 		$this->links = array();
+		// 2.575 - 2026-10-17 - 4.0.0 relaunch: permission checks on save and delete, upload folders blocked, no untrusted unserialise
 		// 2.574 - 2017-07-26 - fixes for php error messages
 		// 2.573 - 2017-05-02 - file path configuration
 		// 2.572 - 2017-01-03 - extra field searching

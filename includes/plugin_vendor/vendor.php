@@ -32,12 +32,13 @@ class module_vendor extends module_base
 	public function __construct() {
 		$this->module_name     = 'vendor';
 		$this->module_position = 560;
-		$this->version         = 2.122;
+		$this->version         = 2.123;
 	}
 
 	public function init() {
 		$this->links        = array();
 		$this->vendor_types = array();
+		// 2.123 - 2026-10-17 - 4.0.0 relaunch: security token on vendor saves, deleted vendors clear from cache
 		// 2.122 - 2016-07-10 - big update to mysqli
 		// 2.121 - 2016-04-30 - update message
 		// 2.12 - 2014-07-31 - responsive improvements

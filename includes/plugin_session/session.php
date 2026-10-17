@@ -53,7 +53,7 @@ class module_session extends module_base
 	public function __construct() {
 		$this->module_name     = 'session';
 		$this->module_position = 0;
-		$this->version         = 2.168;
+		$this->version         = 2.169;
 
 		if ( isset( $_SESSION ) ) {
 			return true;
@@ -99,6 +99,7 @@ class module_session extends module_base
 	}
 
 	public function init() {
+		//2.169 - 2026-10-17 - 4.0.0 relaunch: remove a pre PHP 7 database call that could never run, PHP 8.4
 		//2.168 - 2019-04-20 - fix database sessions
 		//2.167 - 2019-04-06 - fix database sessions
 		//2.166 - 2017-05-02 - file path configuration

@@ -11,7 +11,7 @@ class module_form extends module_base
 	public function __construct() {
 		$this->module_name     = 'form';
 		$this->module_position = 11;
-		$this->version         = 2.277;
+		$this->version         = 2.278;
 	}
 
 	public static function can_i( $actions, $name = false, $category = false, $module = false ) {
@@ -22,6 +22,7 @@ class module_form extends module_base
 		return parent::can_i( $actions, $name, $category, $module );
 	}
 
+	// 2.278 - 2026-10-17 - 4.0.0 relaunch: CSRF check now blocks, token kept out of URLs, password bypass fixed, fieldset helpers
 	// 2.277 - 2021-04-07 - php8 compatibility fix
 	// 2.276 - 2017-06-27 - date format
 	// 2.275 - 2017-06-14 - decimal processing

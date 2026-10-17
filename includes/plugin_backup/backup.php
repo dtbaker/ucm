@@ -9,8 +9,9 @@ class module_backup extends module_base
 	public function __construct() {
 		$this->module_name     = 'backup';
 		$this->module_position = 90;
-		$this->version         = 2.117;
+		$this->version         = 2.118;
 	}
+	// 2.118 - 2026-10-17 - 4.0.0 relaunch: forms use the form helper, public pages no longer crash on odd parameters, PHP 8.4
 	// 2.117 - 2017-05-02 - backup fix
 	// 2.116 - 2017-05-02 - backup fix
 	// 2.115 - 2016-07-10 - big update to mysqli

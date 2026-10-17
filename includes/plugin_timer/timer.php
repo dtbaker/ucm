@@ -14,8 +14,9 @@ class module_timer extends module_base
 	public function __construct() {
 		$this->module_name     = 'timer';
 		$this->module_position = 540;
-		$this->version         = 2.141;
+		$this->version         = 2.142;
 	}
+	//2.142 - 2026-10-17 - 4.0.0 relaunch: corrected segment keeps its duration when paused, PHP 8.4 deprecation fixes
 	//2.141 - 2018-03-31 - timer + invoice link
 	//2.140 - 2017-07-26 - bug fixes
 	//2.139 - 2017-07-23 - timers linked to customers/websites

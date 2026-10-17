@@ -8,7 +8,7 @@ class module_captcha extends module_base
 	public function __construct() {
 		$this->module_name     = 'captcha';
 		$this->module_position = 110;
-		$this->version         = 2.24;
+		$this->version         = 2.241;
 	}
 
 	public static function can_i( $actions, $name = false, $category = false, $module = false ) {
@@ -28,6 +28,7 @@ class module_captcha extends module_base
 		// 2.22 - 2014-12-19 - php fix
 		// 2.23 - 2016-10-06 - new captcha
 		// 2.24 - 2016-10-25 - new captcha fixes
+		// 2.241 - 2026-10-17 - 4.0.0 relaunch: fix the default captcha not working, PHP 8.4 fixes
 
 	}
 

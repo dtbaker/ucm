@@ -13,7 +13,7 @@ class module_cache extends module_base
 	public function __construct() {
 		$this->module_name     = 'cache';
 		$this->module_position = 10;
-		$this->version         = 2.232;
+		$this->version         = 2.233;
 	}
 
 	public static function can_i( $actions, $name = false, $category = false, $module = false ) {
@@ -32,6 +32,7 @@ class module_cache extends module_base
 	private static $_db_cache = array();
 
 	public function init() {
+		// 2.233 - 2026-10-17 - 4.0.0 relaunch: fix customer credit going missing, PHP 8.4 compatibility
 		// 2.232 - 2016-12-20 - speed improvements
 		// 2.231 - 2016-12-18 - speed improvements
 		// 2.230 - 2016-07-10 - big update to mysqli

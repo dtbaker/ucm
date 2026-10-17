@@ -23,10 +23,11 @@ class module_paymethod_paypal extends module_base
 	public function __construct() {
 		$this->module_name     = 'paymethod_paypal';
 		$this->module_position = 390;
-		$this->version         = 2.261;
+		$this->version         = 2.262;
 	}
 
 	function init() {
+		// 2.262 - 2026-10-17 - 4.0.0 relaunch: PayPal Orders v2, IPN posted to the documented host, subscription billing dates match
 		// 2.261 - 2017-02-27 - config fix
 		// 2.260 - 2017-01-05 - php7 support
 		// 2.259 - 2015-03-14 - better default payment method options

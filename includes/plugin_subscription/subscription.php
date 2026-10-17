@@ -22,12 +22,13 @@ class module_subscription extends module_base
 	public function __construct() {
 		$this->module_name     = 'subscription';
 		$this->module_position = 30;
-		$this->version         = 2.204;
+		$this->version         = 2.205;
 	}
 
 	public function init() {
 		$this->links              = array();
 		$this->subscription_types = array();
+		// 2.205 - 2026-10-17 - 4.0.0 relaunch: two cron runs no longer bill twice, security token on saves, missing records handled
 		// 2.204 - 2017-02-26 - add website details to subscription
 		// 2.203 - 2017-01-04 - subscription pdf template customer option
 		// 2.202 - 2016-12-01 - ajax lookup for subscribers

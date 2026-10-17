@@ -17,12 +17,13 @@ class module_paymethod_coinbase extends module_base
 	public function __construct() {
 		$this->module_name     = 'paymethod_coinbase';
 		$this->module_position = 350;
-		$this->version         = 2.11;
+		$this->version         = 2.111;
 	}
 
 	function init() {
 		// 2.1 - 2013-06-24 - initial release
 		// 2.11 - 2015-03-14 - better default payment method options
+		// 2.111 - 2026-10-17 - 4.0.0 relaunch: retired, kept so past payments still display
 
 	}
 

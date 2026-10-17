@@ -11,8 +11,9 @@ class module_group extends module_base
 	public function __construct() {
 		$this->module_name     = 'group';
 		$this->module_position = 220;
-		$this->version         = 2.198;
+		$this->version         = 2.199;
 	}
+	// 2.199 - 2026-10-17 - 4.0.0 relaunch: security token on bulk actions and CSV export, group picker converted
 	// 2.198 - 2016-11-01 - layout improvement
 	// 2.197 - 2016-07-10 - big update to mysqli
 	// 2.196 - 2016-03-29 - autocomplete fix

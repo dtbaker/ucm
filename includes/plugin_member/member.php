@@ -21,12 +21,13 @@ class module_member extends module_base
 	public function __construct() {
 		$this->module_name     = 'member';
 		$this->module_position = 300;
-		$this->version         = 2.185;
+		$this->version         = 2.186;
 	}
 
 	public function init() {
 		$this->links        = array();
 		$this->member_types = array();
+		// 2.186 - 2026-10-17 - 4.0.0 relaunch: delete permission checked, security token on saves, deleted members clear from cache
 		// 2.185 - 2016-07-10 - big update to mysqli
 		// 2.184 - 2014-11-26 - duplicate member warning on add
 		// 2.183 - 2014-08-10 - responsive fixes

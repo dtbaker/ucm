@@ -7,7 +7,7 @@ class module_import_export extends module_base
 	public function __construct() {
 		$this->module_name     = 'import_export';
 		$this->module_position = 240;
-		$this->version         = 2.242;
+		$this->version         = 2.243;
 	}
 
 	public static function can_i( $actions, $name = false, $category = false, $module = false ) {
@@ -40,6 +40,7 @@ class module_import_export extends module_base
 		// 2.24 - 2016-01-06 - extra field export order
 		// 2.241 - 2016-07-10 - big update to mysqli
 		// 2.242 - 2016-10-25 - extra field update
+		// 2.243 - 2026-10-17 - 4.0.0 relaunch: security token before an import writes rows, only module import handlers callable
 
 
 		module_config::register_css( 'import_export', 'import_export.css' );

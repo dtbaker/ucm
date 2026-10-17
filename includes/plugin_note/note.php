@@ -19,8 +19,9 @@ class module_note extends module_base
 	public function __construct() {
 		$this->module_name     = 'note';
 		$this->module_position = 310;
-		$this->version         = 2.278;
+		$this->version         = 2.279;
 	}
+	// 2.279 - 2026-10-17 - 4.0.0 relaunch: security token on note saves, no untrusted unserialise, PHP notices fixed
 	// 2.278 - 2016-11-16 - fontawesome icon fixes
 	// 2.277 - 2016-11-06 - timepicker improvement
 	// 2.276 - 2016-10-22 - modal popup improvements

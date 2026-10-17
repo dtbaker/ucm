@@ -17,7 +17,7 @@ class module_statistic extends module_base
 	public function __construct() {
 		$this->module_name     = 'statistic';
 		$this->module_position = 490;
-		$this->version         = 2.167;
+		$this->version         = 2.168;
 	}
 	// 2.1 - initial release of finance staff report
 	// 2.11 - added new "Job Report"
@@ -33,6 +33,7 @@ class module_statistic extends module_base
 	// 2.165 - 2014-11-19 - fix for finance list when assigning customer credit / overpayments
 	// 2.166 - 2016-07-10 - big update to mysqli
 	// 2.167 - 2017-06-14 - tax report fixes
+	// 2.168 - 2026-10-17 - 4.0.0 relaunch: escaped request values, forms use the form helper, PHP 8.4
 
 	function init() {
 		$this->links = array();

@@ -25,12 +25,13 @@ class module_change_request extends module_base
 	public function __construct() {
 		$this->module_name     = 'change_request';
 		$this->module_position = 30;
-		$this->version         = 2.298;
+		$this->version         = 2.299;
 	}
 
 	public function init() {
 		$this->links                = array();
 		$this->change_request_types = array();
+		// 2.299 - 2026-10-17 - 4.0.0 relaunch: security token on saves, deleted requests clear from cache, PHP 8.4
 		// 2.298 - 2021-04-07 - php8 compatibility fix
 		// 2.297 - 2016-07-10 - big update to mysqli
 		// 2.296 - 2015-06-14 - fix for newer fancybox version

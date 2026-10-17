@@ -17,7 +17,7 @@ class module_paymethod_multisafepay extends module_base
 	public function __construct() {
 		$this->module_name     = 'paymethod_multisafepay';
 		$this->module_position = 360;
-		$this->version         = 2.222;
+		$this->version         = 2.223;
 	}
 
 	function init() {
@@ -25,6 +25,7 @@ class module_paymethod_multisafepay extends module_base
 		// 2.22 - 2013-07-29 - new _UCM_SECRET hash in config.php
 		// 2.221 - 2013-08-07 - currency fix
 		// 2.222 - 2015-03-14 - better default payment method options
+		// 2.223 - 2026-10-17 - 4.0.0 relaunch: retired, kept so past payments still display
 	}
 
 	public function pre_menu() {

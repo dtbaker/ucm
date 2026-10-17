@@ -21,10 +21,11 @@ class module_log extends module_base
 	public function __construct() {
 		$this->module_name     = 'log';
 		$this->module_position = 280;
-		$this->version         = 2.1;
+		$this->version         = 2.101;
 	}
 
 	public function init() {
+		// 2.101 - 2026-10-17 - 4.0.0 relaunch: PHP 8.4 compatibility and code style
 		// 2.1 - 2018-04-01 - log integration
 	}
 

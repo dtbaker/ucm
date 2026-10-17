@@ -36,7 +36,7 @@ class module_security extends module_base
 	public function __construct() {
 		$this->module_name     = 'security';
 		$this->module_position = 50;
-		$this->version         = 2.527;
+		$this->version         = 2.528;
 	}
 
 	/**
@@ -58,6 +58,7 @@ class module_security extends module_base
 	public function init() {
 		$this->links          = array();
 		$this->security_types = array();
+		// 2.528 - 2026-10-17 - 4.0.0 relaunch: shipped default passwords must be changed, auto-login links fixed, role saves fixed
 		// 2.527 - 2021-04-07 - php8 compatibility fix
 		// 2.526 - 2017-05-02 - file path configuration
 		// 2.525 - 2017-02-16 - js error fix

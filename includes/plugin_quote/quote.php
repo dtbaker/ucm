@@ -19,8 +19,9 @@ class module_quote extends module_base
 	public function __construct() {
 		$this->module_name     = 'quote';
 		$this->module_position = 440;
-		$this->version         = 2.179;
+		$this->version         = 2.180;
 	}
+	//2.180 - 2026-10-17 - 4.0.0 relaunch: security token on saves, broken print logo removed, PHP notices fixed
 	//2.179 - 2017-05-18 - quote email fix
 	//2.178 - 2017-05-07 - quote pdf fix
 	//2.177 - 2017-05-02 - file path configuration
