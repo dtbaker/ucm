@@ -1141,6 +1141,86 @@ class module_form extends module_base
 	}
 
 	/**
+	 * How many input variables this request sent, if that was more than PHP would parse.
+	 *
+	 * PHP stops parsing a request at `max_input_vars` - 1000 by default - and quietly
+	 * drops everything past it. There is no flag to read afterwards: the warning goes to
+	 * the error log at request startup, before any of this code runs, and $_POST simply
+	 * arrives short. A form that outgrows the limit therefore saves whatever fitted and
+	 * reports success, which is how a security role could be saved with half its
+	 * permissions missing.
+	 *
+	 * PHP counts the `&` separated pairs in the body as it parses, so counting them again
+	 * here gives the number it measured against the limit - duplicate names and array
+	 * keys included, which is why this counts the raw body rather than $_POST. A multipart
+	 * body cannot be read back, so those fall back to the parsed count, which cannot see
+	 * what was dropped: that only catches a form sitting right on the limit, and counts
+	 * no uploaded files, so it would rather miss a truncation than invent one.
+	 *
+	 * @return int The number of variables sent, or 0 if nothing was truncated.
+	 */
+	public static function request_input_overflow() {
+		$max = (int) ini_get( 'max_input_vars' );
+		if ( $max <= 0 ) {
+			return 0;
+		}
+
+		// A query string is parsed separately from the body, against the same limit.
+		if ( ! empty( $_SERVER['QUERY_STRING'] ) ) {
+			$sent = substr_count( $_SERVER['QUERY_STRING'], '&' ) + 1;
+			if ( $sent > $max ) {
+				return $sent;
+			}
+		}
+
+		if ( empty( $_SERVER['REQUEST_METHOD'] ) || 'POST' !== strtoupper( (string) $_SERVER['REQUEST_METHOD'] ) ) {
+			return 0;
+		}
+
+		$content_type = isset( $_SERVER['CONTENT_TYPE'] ) ? (string) $_SERVER['CONTENT_TYPE'] : '';
+		if ( false !== stripos( $content_type, 'multipart/form-data' ) ) {
+			$parsed = self::count_input_vars( $_POST );
+
+			return $parsed >= $max ? $parsed : 0;
+		}
+
+		$raw = file_get_contents( 'php://input' );
+		if ( ! is_string( $raw ) || ! strlen( $raw ) ) {
+			return 0;
+		}
+		$sent = substr_count( $raw, '&' ) + 1;
+
+		return $sent > $max ? $sent : 0;
+	}
+
+	/** Leaf values in a parsed input array - PHP counts those, not the top level keys. */
+	private static function count_input_vars( $input ) {
+		$count = 0;
+		foreach ( $input as $value ) {
+			$count += is_array( $value ) ? self::count_input_vars( $value ) : 1;
+		}
+
+		return $count;
+	}
+
+	/**
+	 * Halt the request after a post arrived truncated, rather than saving what fitted.
+	 */
+	public static function reject_truncated_request( $sent ) {
+		$max = (int) ini_get( 'max_input_vars' );
+		if ( ob_get_level() ) {
+			@ob_end_clean();
+		}
+		if ( ! headers_sent() ) {
+			header( 'HTTP/1.1 413 Payload Too Large' );
+			header( 'Content-Type: text/plain; charset=utf-8' );
+		}
+		echo "This form sent $sent values and PHP accepted only $max of them, so it was not saved.\n";
+		echo "Nothing has been changed. Please save fewer items at a time, or ask your host to raise max_input_vars.";
+		exit;
+	}
+
+	/**
 	 * Halt the request after a failed CSRF check. Callers that can recover should test
 	 * check_secure_key() themselves; this is for dispatchers that must not continue.
 	 */

@@ -117,6 +117,13 @@ try {
 
 			// handle any form submits for this module.
 			if ( isset( $_REQUEST['_process'] ) && $_REQUEST['_process'] ) {
+				// A post that outgrew max_input_vars arrives with its tail missing and no
+				// way for the handler to tell. Saving what fitted is worse than not
+				// saving at all, so say so instead. See request_input_overflow().
+				$overflow = module_form::request_input_overflow();
+				if ( $overflow ) {
+					module_form::reject_truncated_request( $overflow );
+				}
 				if ( $module ) {
 					module_debug::log( array(
 						'title' => 'Process Post Back',
