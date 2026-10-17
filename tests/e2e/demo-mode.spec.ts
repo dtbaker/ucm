@@ -90,6 +90,8 @@ test.describe( 'The public demo @demo', () => {
     await expect( bar ).toContainText( 'DEMO' );
     await expect( bar.locator( 'a[href="https://ultimateclientmanager.com/docs/"]' ) ).toHaveCount( 1 );
     await expect( bar.locator( 'a[href="https://github.com/dtbaker/ucm"]' ) ).toHaveCount( 1 );
+    // The way back to the website comes first, ahead of the DEMO tag.
+    await expect( bar.locator( 'a' ).first() ).toHaveAttribute( 'href', 'https://ultimateclientmanager.com/' );
     await expect( bar.locator( 'a', { hasText: 'Buy now' } ) ).toHaveAttribute( 'href', /codecanyon\.net\/item\// );
 
     // Every theme ships with the product now, so none of them is sold separately any more.

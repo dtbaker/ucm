@@ -88,7 +88,7 @@ ob_start();
 #ucm-demo a{color:#d6d9dc;text-decoration:none}
 #ucm-demo a:hover{color:#fff}
 #ucm-demo .ucm-demo-tag{background:#3b6d11;color:#eaf3de;border-radius:4px;padding:3px 8px;font-size:12px;font-weight:600;letter-spacing:.02em;white-space:nowrap}
-#ucm-demo .ucm-demo-about{color:#9aa1a6;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#ucm-demo .ucm-demo-home{padding-right:14px;border-right:1px solid #3a4044}
 #ucm-demo .ucm-demo-gap{flex:1}
 #ucm-demo .ucm-demo-link{display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
 #ucm-demo svg{width:16px;height:16px;fill:currentColor;flex:none}
@@ -116,7 +116,6 @@ body.theme-adminlte.fixed:not(.ucm-demo-hidden) .header{top:46px}
 body.theme-adminlte.fixed:not(.ucm-demo-hidden) .left-side{top:96px}
 body.ucm-demo-hidden #ucm-demo{display:none}
 body.ucm-demo-hidden #ucm-demo-show{display:block}
-@media (max-width:1100px){#ucm-demo .ucm-demo-about{display:none}}
 @media (max-width:860px){#ucm-demo .ucm-demo-menu{grid-template-columns:repeat(2,148px)}}
 @media (max-width:640px){
 #ucm-demo{gap:8px;padding:0 8px}
@@ -127,6 +126,7 @@ body.ucm-demo-hidden #ucm-demo-show{display:block}
 }
 </style>
 <div id="ucm-demo" role="region" aria-label="Demo options">
+	<a class="ucm-demo-link ucm-demo-home" href="https://ultimateclientmanager.com/" title="Back to ultimateclientmanager.com"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11H7.8l5.6-5.6L12 4l-8 8 8 8 1.4-1.4L7.8 13H20z"/></svg><span>Website</span></a>
 	<span class="ucm-demo-tag">DEMO</span>
 	<details>
 		<summary><span class="ucm-demo-label">Theme:</span> <span class="ucm-demo-name"><?php echo htmlspecialchars( $ucm_demo_current_name ); ?></span><span class="ucm-demo-caret" aria-hidden="true"></span></summary>
@@ -141,10 +141,9 @@ body.ucm-demo-hidden #ucm-demo-show{display:block}
 			<?php } ?>
 		</div>
 	</details>
-	<span class="ucm-demo-about">You're trying Ultimate Client Manager. Every theme here is included.</span>
 	<span class="ucm-demo-gap"></span>
 	<a class="ucm-demo-link" href="https://ultimateclientmanager.com/docs/" target="_blank" rel="noopener" title="Documentation"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 3h11a3 3 0 0 1 3 3v15H7a3 3 0 0 1-3-3V4a1 1 0 0 1 1-1zm1 15a1 1 0 0 0 1 1h10v-2H7a1 1 0 0 0-1 1zm0-3.8c.3-.1.6-.2 1-.2h10V6a1 1 0 0 0-1-1H6z"/></svg><span>Docs</span></a>
-	<a class="ucm-demo-link" href="https://github.com/dtbaker/ucm" target="_blank" rel="noopener" title="Download from GitHub"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 .5a11.5 11.5 0 0 0-3.6 22.4c.6.1.8-.3.8-.6v-2c-3.2.7-3.9-1.5-3.9-1.5-.5-1.3-1.3-1.7-1.3-1.7-1-.7.1-.7.1-.7 1.2.1 1.8 1.2 1.8 1.2 1 1.8 2.8 1.3 3.5 1 .1-.8.4-1.3.7-1.6-2.6-.3-5.3-1.3-5.3-5.7 0-1.3.5-2.3 1.2-3.1-.1-.3-.5-1.5.1-3.1 0 0 1-.3 3.2 1.2a11 11 0 0 1 5.8 0c2.2-1.5 3.2-1.2 3.2-1.2.6 1.6.2 2.8.1 3.1.8.8 1.2 1.9 1.2 3.1 0 4.4-2.7 5.4-5.3 5.7.4.4.8 1.1.8 2.2v3.2c0 .3.2.7.8.6A11.5 11.5 0 0 0 12 .5z"/></svg><span>Download from GitHub</span></a>
+	<a class="ucm-demo-link" href="https://github.com/dtbaker/ucm" target="_blank" rel="noopener" title="Ultimate Client Manager on GitHub"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 .5a11.5 11.5 0 0 0-3.6 22.4c.6.1.8-.3.8-.6v-2c-3.2.7-3.9-1.5-3.9-1.5-.5-1.3-1.3-1.7-1.3-1.7-1-.7.1-.7.1-.7 1.2.1 1.8 1.2 1.8 1.2 1 1.8 2.8 1.3 3.5 1 .1-.8.4-1.3.7-1.6-2.6-.3-5.3-1.3-5.3-5.7 0-1.3.5-2.3 1.2-3.1-.1-.3-.5-1.5.1-3.1 0 0 1-.3 3.2 1.2a11 11 0 0 1 5.8 0c2.2-1.5 3.2-1.2 3.2-1.2.6 1.6.2 2.8.1 3.1.8.8 1.2 1.9 1.2 3.1 0 4.4-2.7 5.4-5.3 5.7.4.4.8 1.1.8 2.2v3.2c0 .3.2.7.8.6A11.5 11.5 0 0 0 12 .5z"/></svg><span>GitHub</span></a>
 	<a class="ucm-demo-buy" href="https://codecanyon.net/item/ultimate-client-manager-crm-pro-edition/2621629?ref=dtbaker" target="_blank" rel="noopener">Buy now</a>
 	<a class="ucm-demo-close" href="#" id="ucm-demo-hide" title="Close demo options" aria-label="Close demo options"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.4 5 5 6.4 10.6 12 5 17.6 6.4 19l5.6-5.6 5.6 5.6 1.4-1.4-5.6-5.6L19 6.4 17.6 5 12 10.6z"/></svg></a>
 </div>
