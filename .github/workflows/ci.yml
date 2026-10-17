@@ -224,10 +224,10 @@ jobs:
             --exclude 'includes/plugin_ticket/cron/mime_parser.php' \
             --exclude 'js/tiny_mce3.4.4'
 
-  # The documentation site moved to its own repository, github.com/dtbaker/ucm-web, so
-  # the check that the shipped help files are in step with the articles lives there now -
-  # it needs the articles, which are no longer here. What is still checked here is the
-  # help content this repository actually ships: tests/unit/HelpDocsTest.php pins the
+  # The documentation lives in its own repository, github.com/dtbaker/ucm-web, and so does
+  # the check that the help index and screen maps shipped here are in step with its
+  # articles (the article text itself is read from the website, not shipped). What is
+  # checked here is how this repository talks to it: tests/unit/HelpDocsTest.php pins the
   # outbound URL and header set, and runs in the phpunit job above.
 
   package:
