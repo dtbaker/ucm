@@ -53,3 +53,7 @@ docs/proposals/
 # docs/proposals/website.md).
 /website/dist/
 /website/.astro/
+
+# Written into the release by scripts/build-release.sh. A copy in a checkout would go
+# stale, and the update server would build its install zip from it.
+/includes/release-files.txt

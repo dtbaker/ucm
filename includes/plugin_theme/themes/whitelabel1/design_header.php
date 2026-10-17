@@ -11,7 +11,7 @@ switch ( $display_mode ) {
 	case 'iframe':
 	case 'normal':
 	default:
-			$header_logo = module_theme::get_config('theme_logo',_BASE_HREF . 'images/logo.png');
+			$header_logo = module_theme::logo_url( true );
 
 			?>
 
@@ -30,7 +30,7 @@ switch ( $display_mode ) {
 			<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no,maximum-scale=1">
 
 
-			<?php $header_favicon = module_theme::get_config('theme_favicon','');
+			<?php $header_favicon = module_theme::favicon_url();
 					if ($header_favicon) { ?>
 							<link rel="icon" href="<?php echo htmlspecialchars($header_favicon);?>">
 			<?php } ?>

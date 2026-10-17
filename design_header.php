@@ -22,7 +22,7 @@ switch ( $display_mode ) {
 			<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 			<title><?php echo $page_title; ?></title>
 
-			<?php $header_favicon = module_theme::get_config( 'theme_favicon', '' );
+			<?php $header_favicon = module_theme::favicon_url();
 			if ( $header_favicon ) { ?>
 				<link rel="icon" href="<?php echo htmlspecialchars( $header_favicon ); ?>">
 			<?php } ?>
@@ -73,7 +73,7 @@ switch ( $display_mode ) {
 
 
 			<div id="header_logo">
-				<?php if ( $header_logo = module_theme::get_config( 'theme_logo', _BASE_HREF . 'images/logo.png' ) ) { ?>
+				<?php if ( $header_logo = module_theme::logo_url() ) { ?>
 					<a href="<?php echo _BASE_HREF; ?>"><img src="<?php echo htmlspecialchars( $header_logo ); ?>"
 					                                         border="0"
 					                                         title="<?php echo htmlspecialchars( module_config::s( 'header_title', 'UCM' ) ); ?>"></a>

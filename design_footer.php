@@ -29,7 +29,7 @@ switch ( $display_mode ) {
 		<div id="footer">
 			&copy; <?php echo module_config::s( 'admin_system_name', 'Ultimate Client Manager' ); ?>
 			- <?php echo date( "Y" ); ?>
-			- Version: <?php echo module_config::current_version(); ?>
+			- Version: <?php echo htmlspecialchars( module_config::product_version() ); ?>
 			- Time: <?php echo round( microtime( true ) - $start_time, 5 ); ?>
 			<?php if ( class_exists( 'module_mobile', false ) && module_config::c( 'mobile_link_in_footer', 1 ) ) { ?>
 				- <a href="<?php echo htmlspecialchars( $_SERVER['REQUEST_URI'] );

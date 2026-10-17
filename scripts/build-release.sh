@@ -52,6 +52,20 @@ composer install --no-dev --no-interaction \
 	--working-dir="$MAIN"
 rm -f "$MAIN/composer.json" "$MAIN/composer.lock"
 
+echo "Writing the release file list..."
+# Every file in Main Files, this list included. The update server builds the old one-file
+# installer's zip from it (ucm_upgrade_server::release_manifest), so that zip and this one
+# cannot drift apart: the server used to keep its own list of folders, and it fell behind
+# the product without anyone noticing. Written last, so vendor/ is in it. The path has to
+# match ucm_upgrade_server::RELEASE_MANIFEST.
+MANIFEST="includes/release-files.txt"
+{
+	echo "# Every file in this release. Written by scripts/build-release.sh; the update server"
+	echo "# builds its install zip from it. Do not edit."
+	{ ( cd "$MAIN" && find . -type f | sed 's#^\./##' ); echo "$MANIFEST"; } | LC_ALL=C sort
+} > "$BUILD_DIR/release-files.txt"
+mv "$BUILD_DIR/release-files.txt" "$MAIN/$MANIFEST"
+
 echo "Assembling Documentation..."
 # Written by hand and kept in the repository, the same as Licensing, so that a change to
 # what buyers read shows up in a diff and goes through review like any other change.
@@ -160,7 +174,8 @@ for dir in \
 	'Main Files/.github/' 'Main Files/.git/' 'Main Files/tests/' 'Main Files/docker/' \
 	'Main Files/docs/' 'Main Files/scripts/' 'Main Files/node_modules/' \
 	'Main Files/docs-site/' 'Main Files/website/' \
-	'Main Files/build/' 'Main Files/playwright-report/' 'Main Files/test-results/'
+	'Main Files/build/' 'Main Files/playwright-report/' 'Main Files/test-results/' \
+	'Main Files/custom/'
 do
 	if grep -qF "$dir" <<<"$listing"; then
 		echo "FAIL: development directory in the archive: $dir"
@@ -176,7 +191,9 @@ for file in \
 	'Main Files/phpunit.xml' 'Main Files/rector.php' \
 	'Main Files/Dockerfile' 'Main Files/docker-compose.yml' 'Main Files/.dockerignore' \
 	'Main Files/.gitignore' 'Main Files/.gitattributes' \
-	'Main Files/includes/config.local.php' 'Main Files/README.md' 'Main Files/TESTING.md'
+	'Main Files/includes/config.local.php' 'Main Files/README.md' 'Main Files/TESTING.md' \
+	'Main Files/SECURITY.md' 'Main Files/UPGRADE.md' \
+	'Main Files/includes/config.local.php.example'
 do
 	if grep -qxF "$file" <<<"$listing"; then
 		echo "FAIL: development file in the archive: $file"
@@ -263,9 +280,19 @@ if [ "$doc_pages" -lt 5 ]; then
 	fail=1
 fi
 
+# The release file list must be this archive's Main Files, exactly. The update server
+# trusts it to say what an install is made of.
+listed=$(grep -v '^#' "$MAIN/$MANIFEST" | LC_ALL=C sort)
+archived=$(grep '^Main Files/' <<<"$listing" | grep -v '/$' | sed 's#^Main Files/##' | LC_ALL=C sort)
+if [ "$listed" != "$archived" ]; then
+	echo "FAIL: $MANIFEST does not match the files in Main Files:"
+	diff <(echo "$listed") <(echo "$archived") | sed 's/^/       /' | head -20 || true
+	fail=1
+fi
+
 # The things the product needs at runtime that are easy to lose to an exclusion rule.
 for path in 'Main Files/index.php' 'Main Files/init.php' 'Main Files/temp/.htaccess' \
-	'Main Files/includes/config.php'
+	'Main Files/includes/config.php' "Main Files/$MANIFEST"
 do
 	if ! grep -qF "$path" <<<"$listing"; then
 		echo "FAIL: the product needs $path and it is not in the archive"

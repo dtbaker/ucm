@@ -17,10 +17,11 @@ class module_theme_adminlte extends module_base
 	public function __construct() {
 		$this->module_name     = 'theme_adminlte';
 		$this->module_position = 0;
-		$this->version         = 2.159;
+		$this->version         = 2.160;
 	}
 
 	public function init() {
+		//2.160 - 2026-10-17 - new SVG logo and favicon, release version in the footer
 		//2.159 - 2022-12-27 - php8.1 fixes
 		//2.158 - 2017-01-12 - fieldset settings
 		//2.157 - 2017-01-05 - php warning fix

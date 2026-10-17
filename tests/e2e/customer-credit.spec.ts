@@ -157,7 +157,7 @@ test.describe('Customer credit', () => {
       if (customerId) {
         await deleteRecord(
           page, '/?m[]=customer', 'save_customer', 'customer_id', customerId,
-          'customer_id', { delete_others: '1' },
+          { extra: { delete_others: '1' } },
         );
       }
     }

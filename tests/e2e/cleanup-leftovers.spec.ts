@@ -153,6 +153,23 @@ const TARGETS: Target[] = [
     terms: [ 'CSRF %' ],
     idColumn: 'product_category_id', postUrl: '/?m[]=product', process: 'save_product_category',
   },
+  // Three that name their fixture in a key column rather than a name column, which is
+  // why the first pass of this file walked straight past them.
+  {
+    what: 'templates', table: 'template', column: 'template_key',
+    terms: [ 'csrf_test_template%', 'csrf_seed_template%' ],
+    idColumn: 'template_id', postUrl: '/?m[]=template', process: 'save_template',
+  },
+  {
+    what: 'ticket fields', table: 'ticket_data_key', column: 'key',
+    terms: [ 'csrf_test_key%', 'csrf_seed_key%' ],
+    idColumn: 'ticket_data_key_id', postUrl: '/?m[]=ticket', process: 'save_ticket_data_key',
+  },
+  {
+    what: 'extra fields', table: 'extra_default', column: 'extra_key',
+    terms: [ 'csrf_test_field%', 'csrf_seed_field%' ],
+    idColumn: 'extra_default_id', postUrl: '/?m[]=extra', process: 'save_extra_default',
+  },
   {
     what: 'transactions', table: 'finance', column: 'name',
     terms: [ 'CSRF %' ],
@@ -167,7 +184,6 @@ test.describe( 'Clearing leftovers @cleanup', () => {
       await login( page );
       // Once, not once per record: the token is good for the session.
       const authKey = await formAuthKey( page );
-      const extra = { ...( target.extra ?? {} ), form_auth_key: authKey };
 
       let removed = 0;
       for ( const like of target.terms ) {
@@ -192,7 +208,7 @@ test.describe( 'Clearing leftovers @cleanup', () => {
           for ( const id of ids ) {
             await deleteRecord(
               page, target.postUrl, target.process, target.idColumn, id,
-              target.confirmKey, extra,
+              { confirmKey: target.confirmKey, extra: target.extra, authKey },
             );
             removed++;
           }

@@ -22,7 +22,7 @@ if ( $show_theme_selector ) {
 		),
 		array(
 			'key'         => _THEME_CONFIG_PREFIX . 'theme_logo',
-			'default'     => _BASE_HREF . 'images/logo.png',
+			'default'     => module_theme::default_logo_url(),
 			'type'        => 'text',
 			'description' => 'URL for header logo',
 		),

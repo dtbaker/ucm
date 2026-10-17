@@ -50,7 +50,7 @@ meet all of them, but the PHP version is the one that catches people out.</p>
 <table>
 	<thead><tr><th>You need</th><th>Version</th></tr></thead>
 	<tbody>
-		<tr><td>PHP</td><td><strong>8.4 or newer.</strong> 8.4 and 8.5 are both tested.</td></tr>
+		<tr><td>PHP</td><td><strong>8.2 or newer.</strong> 8.2, 8.3, 8.4 and 8.5 are all tested. PHP 8.2 receives security fixes only until the end of 2026, so 8.3 or newer is recommended.</td></tr>
 		<tr><td>MySQL or MariaDB</td><td>MySQL 8.0, or MariaDB 10.5 or newer, is what this release is developed and tested against.</td></tr>
 		<tr><td>Web server</td><td>Apache with <code>mod_rewrite</code>. nginx works with caveats &mdash; see below.</td></tr>
 		<tr><td>Disk space</td><td>About 120&nbsp;MB for the application, plus whatever your uploaded files come to.</td></tr>
@@ -59,10 +59,10 @@ meet all of them, but the PHP version is the one that catches people out.</p>
 </div>
 
 <div class="stop">
-	<strong>PHP 8.4 is a hard requirement</strong>
+	<strong>PHP 8.2 or newer is a hard requirement</strong>
 	<p>The application checks the PHP version before it does anything else and stops with a
 	message if it is too old. There is no way to override this. If your host still offers only
-	PHP 7.x or 8.0&ndash;8.3, ask them to move your account to 8.4 &mdash; most control panels
+	PHP 7.x or 8.0&ndash;8.1, ask them to move your account to 8.2 or newer &mdash; most control panels
 	have a PHP version selector that does it in a few seconds.</p>
 </div>
 

@@ -239,7 +239,56 @@ class module_db extends module_base
 
 	public static $dbcnx = false;
 
+	/**
+	 * Set once a connection attempt has failed on a copy that is not set up yet, so the
+	 * rest of the request does not try again. module_config::c() connects on every read
+	 * until the system is installed, and an unreachable host can take seconds each time.
+	 *
+	 * @var bool
+	 */
+	private static $connect_failed = false;
+
+	/**
+	 * What to do when the database will not connect.
+	 *
+	 * A copy with no config.local.php has never been set up: its settings are the
+	 * placeholders in includes/config.php, so this returns and the caller treats the
+	 * system as not installed, which is what sends the request to the setup wizard.
+	 *
+	 * A copy that has been set up stops here with a page saying so. Its database is down
+	 * or its settings are wrong, and carrying on as "not installed" would offer the setup
+	 * wizard to anyone who visits. The database's own message names the user and host, so
+	 * it goes to the error log, and on screen only in debug mode.
+	 */
+	private static function connect_failed( $error ) {
+		if ( defined( '_UCM_CONFIGURED' ) && ! _UCM_CONFIGURED ) {
+			self::$connect_failed = true;
+
+			return;
+		}
+		// No _UCM_CONFIGURED at all means a config.php from before it existed, which held
+		// the real credentials itself - so that counts as set up as well.
+		error_log( 'UCM could not connect to its database: ' . $error );
+		if ( ! headers_sent() ) {
+			http_response_code( 503 );
+			header( 'Content-Type: text/html; charset=utf-8' );
+		}
+		echo '<!doctype html><html><head><meta charset="utf-8"><title>Database connection failed</title></head><body>';
+		echo '<h1>Database connection failed</h1>';
+		echo '<p>UCM could not connect to its database. Check that the database server is running, and that the server, database name, username and password in includes/config.local.php are correct.</p>';
+		if ( defined( '_DEBUG_MODE' ) && _DEBUG_MODE ) {
+			echo '<p>The error was: <strong>' . htmlspecialchars( $error ) . '</strong></p>';
+		} else {
+			echo '<p>The exact error has been written to the PHP error log.</p>';
+		}
+		echo '</body></html>';
+		exit();
+	}
+
 	public static function db_connect() {
+		if ( self::$connect_failed ) {
+			return false;
+		}
 		if ( ! self::$dbcnx ) {
 			if ( function_exists( 'mysqli_connect' ) ) {
 				// todo; parse out port number or :/tmp/socket listing from _DB_SERVER and add to correct params
@@ -254,10 +303,21 @@ class module_db extends module_base
 					$server = str_replace( ':' . $matches[1], '', $server );
 					$socket = $matches[1];
 				}
-				self::$dbcnx = mysqli_connect( $server, _DB_USER, _DB_PASS, _DB_NAME, $port_number, $socket );
-				if ( mysqli_connect_errno() ) {
-					printf( "Connect failed: %s\n", mysqli_connect_error() );
-					exit();
+				// PHP 8.1 made mysqli throw on a failed connection instead of returning
+				// false, so without the catch a wrong password is an uncaught exception
+				// and a blank 500 - including on a fresh unzip, before the setup wizard
+				// has had a chance to ask for the real details.
+				try {
+					self::$dbcnx = mysqli_connect( $server, _DB_USER, _DB_PASS, _DB_NAME, $port_number, $socket );
+					$connect_error = self::$dbcnx ? '' : mysqli_connect_error();
+				} catch ( mysqli_sql_exception $e ) {
+					self::$dbcnx   = false;
+					$connect_error = $e->getMessage();
+				}
+				if ( ! self::$dbcnx ) {
+					self::connect_failed( (string) $connect_error );
+
+					return false;
 				}
 				if ( module_config::c( 'database_utf8', 1 ) ) {
 					self::set_charset();
@@ -345,6 +405,14 @@ class module_db extends module_base
 	}
 
 	public static function escape( $string ) {
+		// No connection only happens before setup, when db_connect() has given up on the
+		// placeholder settings. query() refuses to run without a connection, so whatever
+		// is built from this never reaches a database - it only has to be a string,
+		// rather than the TypeError mysqli raises when given false.
+		if ( ! self::$dbcnx ) {
+			return addslashes( (string) $string );
+		}
+
 		return mysqli_real_escape_string( self::$dbcnx, (string) $string );
 	}
 

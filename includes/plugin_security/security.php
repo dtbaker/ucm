@@ -141,7 +141,6 @@ class module_security extends module_base
 			);
 		}
 
-		error_log( 'UCMPROBE init uri=' . ( $_SERVER['REQUEST_URI'] ?? '' ) );
 		if ( class_exists( 'module_template', false ) ) {
 			module_template::init_template( 'password_reset', 'Dear {NAME},<br>
     <br>
@@ -283,13 +282,35 @@ class module_security extends module_base
 				}
 			}
 			if ( ! $security_permission_id ) {
-				$security_permission_id = update_insert( 'security_permission_id', 'new', 'security_permission', array(
-					'name'        => $access_requirements['name'],
-					'category'    => $access_requirements['category'],
-					'module'      => $access_requirements['module'],
-					'description' => $access_requirements['description'],
+				// The cache is per request, so a permission first reached by two requests
+				// at once is missing from both and inserted twice. That is how this table
+				// came to hold four rows for some names: the browser suite runs four
+				// workers, and they all registered the same new data type in the same
+				// second. Look again in the database before adding one.
+				$existing = get_single( 'security_permission', array(
+					'name',
+					'category',
+					'module',
+				), array(
+					$access_requirements['name'],
+					$access_requirements['category'],
+					$access_requirements['module'],
 				) );
-				$available_perms        = array();
+				if ( $existing ) {
+					$security_permission_id = $existing['security_permission_id'];
+					$available_perms        = @unserialize( $existing['available_perms'] );
+					if ( ! is_array( $available_perms ) ) {
+						$available_perms = array();
+					}
+				} else {
+					$security_permission_id = update_insert( 'security_permission_id', 'new', 'security_permission', array(
+						'name'        => $access_requirements['name'],
+						'category'    => $access_requirements['category'],
+						'module'      => $access_requirements['module'],
+						'description' => $access_requirements['description'],
+					) );
+					$available_perms = array();
+				}
 				self::_build_perms_cache();
 			}/*
 			$permission = get_single('security_permission',array(
@@ -1032,6 +1053,11 @@ class module_security extends module_base
 			$security_role_id = update_insert( 'security_role_id', $_REQUEST['security_role_id'], 'security_role', $_POST );
 			// todo - deleting.
 
+			// The role form posts its permission grid as one field rather than one per
+			// permission per action - see security_role_edit.php for why. Anything else
+			// posting to save_security_role still works the old way.
+			$posted = self::decode_permission_data( $_REQUEST );
+
 			if ( $security_role_id ) {
 				$sql = "DELETE FROM `" . _DB_PREFIX . "security_role_perm` WHERE security_role_id = '" . (int) $security_role_id . "'";
 				query( $sql );
@@ -1107,9 +1133,9 @@ class module_security extends module_base
 
 
 				} else {
-					if ( isset( $_REQUEST['permission'] ) && is_array( $_REQUEST['permission'] ) ) {
+					if ( isset( $posted['permission'] ) && is_array( $posted['permission'] ) ) {
 						// update permissions for this role.
-						foreach ( $_REQUEST['permission'] as $security_permission_id => $permissions ) {
+						foreach ( $posted['permission'] as $security_permission_id => $permissions ) {
 							$actions = array();
 							foreach ( self::$available_permissions as $permission ) {
 								if ( isset( $permissions[ $permission ] ) && $permissions[ $permission ] ) {
@@ -1123,10 +1149,10 @@ class module_security extends module_base
 							query( $sql );
 						}
 					}
-					if ( isset( $_REQUEST['permission_drop_down'] ) && is_array( $_REQUEST['permission_drop_down'] ) ) {
+					if ( isset( $posted['permission_drop_down'] ) && is_array( $posted['permission_drop_down'] ) ) {
 						// update permissions for this role.
 						$permission = 'view';
-						foreach ( $_REQUEST['permission_drop_down'] as $security_permission_ids => $selected_security_permission_id ) {
+						foreach ( $posted['permission_drop_down'] as $security_permission_ids => $selected_security_permission_id ) {
 							$ids_to_clear = explode( '|', $security_permission_ids );
 							foreach ( $ids_to_clear as $id_to_clear ) {
 								$id_to_clear = (int) $id_to_clear;
@@ -1143,8 +1169,8 @@ class module_security extends module_base
 							}
 						}
 					}
-					if ( isset( $_REQUEST['group_access'] ) && is_array( $_REQUEST['group_access'] ) ) {
-						foreach ( $_REQUEST['group_access'] as $group_id => $enabled ) {
+					if ( isset( $posted['group_access'] ) && is_array( $posted['group_access'] ) ) {
+						foreach ( $posted['group_access'] as $group_id => $enabled ) {
 							if ( $enabled ) {
 								$sql = "INSERT INTO `" . _DB_PREFIX . "security_group_role_rel` SET security_role_id = '" . (int) $security_role_id . "', group_id = '" . (int) $group_id . "' ";
 								query( $sql );
@@ -1205,6 +1231,86 @@ class module_security extends module_base
 		self::$user_id_override = false;
 	}
 
+
+	/**
+	 * The permission state a save_security_role post is asking for.
+	 *
+	 * The role form posts `permission_data`, one JSON field holding the whole grid, the
+	 * data access drop downs and the group access boxes. It does that because a field per
+	 * permission per action stopped fitting in a post: PHP parses at most max_input_vars
+	 * of them (1000 by default) and silently drops the rest, and the grid has one control
+	 * per row in `security_permission`, a table that grows as the install is used.
+	 *
+	 * Anything that posts the older `permission[id][action]` fields - a saved integration,
+	 * a script - still works, so long as it stays under the limit. The JSON field wins
+	 * when both are present.
+	 *
+	 * @param array $request The request to read, normally $_REQUEST.
+	 *
+	 * @return array With `permission`, `permission_drop_down` and `group_access` keys,
+	 *               each present only if the request actually carried it.
+	 */
+	public static function decode_permission_data( $request ) {
+		$legacy = array();
+		foreach ( array( 'permission', 'permission_drop_down', 'group_access' ) as $key ) {
+			if ( isset( $request[ $key ] ) && is_array( $request[ $key ] ) ) {
+				$legacy[ $key ] = $request[ $key ];
+			}
+		}
+
+		if ( ! isset( $request['permission_data'] ) || ! is_string( $request['permission_data'] ) ) {
+			return $legacy;
+		}
+		$bundle = json_decode( $request['permission_data'], true );
+		if ( ! is_array( $bundle ) ) {
+			return $legacy;
+		}
+
+		$decoded = array();
+
+		if ( isset( $bundle['permission'] ) && is_array( $bundle['permission'] ) ) {
+			$decoded['permission'] = array();
+			foreach ( $bundle['permission'] as $security_permission_id => $actions ) {
+				if ( ! (int) $security_permission_id || ! is_array( $actions ) ) {
+					continue;
+				}
+				$allowed = array();
+				foreach ( self::$available_permissions as $action ) {
+					if ( ! empty( $actions[ $action ] ) ) {
+						$allowed[ $action ] = 1;
+					}
+				}
+				$decoded['permission'][ (int) $security_permission_id ] = $allowed;
+			}
+		}
+
+		if ( isset( $bundle['permission_drop_down'] ) && is_array( $bundle['permission_drop_down'] ) ) {
+			$decoded['permission_drop_down'] = array();
+			foreach ( $bundle['permission_drop_down'] as $security_permission_ids => $selected ) {
+				if ( is_array( $selected ) ) {
+					continue;
+				}
+				// The key is the pipe separated list of ids the drop down covers; the
+				// handler explodes it again to clear them. Keep it to digits and pipes.
+				$key = preg_replace( '/[^0-9|]/', '', (string) $security_permission_ids );
+				if ( '' === $key ) {
+					continue;
+				}
+				$decoded['permission_drop_down'][ $key ] = (string) (int) $selected;
+			}
+		}
+
+		if ( isset( $bundle['group_access'] ) && is_array( $bundle['group_access'] ) ) {
+			$decoded['group_access'] = array();
+			foreach ( $bundle['group_access'] as $group_id => $enabled ) {
+				if ( (int) $group_id && ! empty( $enabled ) && ! is_array( $enabled ) ) {
+					$decoded['group_access'][ (int) $group_id ] = 1;
+				}
+			}
+		}
+
+		return $decoded + $legacy;
+	}
 
 	public static function get_permissions( $search = array() ) {
 		return get_multiple( 'security_permission', $search, 'security_permission_id', 'exact', 'category' );

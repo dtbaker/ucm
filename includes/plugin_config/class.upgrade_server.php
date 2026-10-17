@@ -43,6 +43,20 @@ class ucm_upgrade_server
 	const RATE_WINDOW = 600;
 
 	/**
+	 * The list of every file in the release this installation was deployed from.
+	 *
+	 * scripts/build-release.sh writes it into Main Files after everything else is in place,
+	 * vendor/ included, so it is the CodeCanyon zip's own file list. The old one-file
+	 * installer's zip is built from it rather than from a hand-kept list of folders, which
+	 * is how that zip came to be missing class.libraries.php, vendor/, n/ and every guard
+	 * file without anybody noticing.
+	 */
+	const RELEASE_MANIFEST = 'includes/release-files.txt';
+
+	/** Files that keep a private folder private, and so ship even though the folder does not. */
+	const RELEASE_GUARDS = array( '.htaccess', 'index.php', 'index.html', '.gitkeep' );
+
+	/**
 	 * Paths never served to a client.
 	 *
 	 * The server is a real installation with real data in it. `find` did not know that, so
@@ -154,6 +168,148 @@ class ucm_upgrade_server
 			}
 		}
 		closedir( $handle );
+	}
+
+	/**
+	 * Read the release file list, or false if this installation has none.
+	 *
+	 * A git checkout has none: the list only exists in a built release.
+	 *
+	 * @return string[]|false
+	 */
+	public static function release_manifest( $root ) {
+		$file = $root . self::RELEASE_MANIFEST;
+		if ( ! is_file( $file ) ) {
+			return false;
+		}
+		$lines = file( $file, FILE_IGNORE_NEW_LINES );
+		if ( ! is_array( $lines ) ) {
+			return false;
+		}
+		$paths = array();
+		foreach ( $lines as $line ) {
+			$line = trim( $line );
+			if ( '' === $line || '#' === $line[0] ) {
+				continue;
+			}
+			$paths[] = $line;
+		}
+
+		return $paths ? $paths : false;
+	}
+
+	/**
+	 * Whether a path from the release file list may go out in the installer zip.
+	 *
+	 * The list comes from the build and should never name anything private, but the server
+	 * is a live installation with customers' files in it, so this does not take the list's
+	 * word for it. The folders is_ignored_path() keeps out stay out, apart from their guard
+	 * files, and the installation's own config.local.php never leaves.
+	 */
+	public static function is_servable_release_path( $path ) {
+		$path = (string) $path;
+		if ( '' === $path || '/' === $path[0] || false !== strpos( $path, '\\' ) || false !== strpos( $path, "\0" ) ) {
+			return false;
+		}
+		if ( in_array( '..', explode( '/', $path ), true ) ) {
+			return false;
+		}
+		if ( 'includes/config.local.php' === $path ) {
+			return false;
+		}
+		if ( self::is_ignored_path( '/' . $path ) && ! in_array( basename( $path ), self::RELEASE_GUARDS, true ) ) {
+			return false;
+		}
+
+		return true;
+	}
+
+	/**
+	 * Where a file is read from on this server.
+	 *
+	 * A deploy/<application id>/ copy wins over the stock file, which is how a branded build
+	 * ships a different logo or template. The id is run through basename() so it cannot climb
+	 * out of the deploy directory, and the resolved path is checked against the root for the
+	 * same reason.
+	 *
+	 * @return string|false
+	 */
+	public static function source_path( $root, $application, $file ) {
+		$candidates = array();
+		if ( $application ) {
+			$candidates[] = $root . 'deploy/' . basename( (string) $application ) . '/' . $file;
+		}
+		$candidates[] = $root . $file;
+
+		$real_root = rtrim( str_replace( '\\', '/', (string) realpath( $root ) ), '/' ) . '/';
+		foreach ( $candidates as $candidate ) {
+			if ( ! is_file( $candidate ) ) {
+				continue;
+			}
+			$real = realpath( $candidate );
+			if ( false === $real || strpos( str_replace( '\\', '/', $real ), $real_root ) !== 0 ) {
+				continue;
+			}
+
+			return $candidate;
+		}
+
+		return false;
+	}
+
+	/**
+	 * Match every path in the release file list to the file on this server that serves it.
+	 *
+	 * `missing` is a path the list names that is not on the disk, and `refused` is one that
+	 * is_servable_release_path() turned away. Either means the zip would not be the release,
+	 * so the caller sends no zip at all rather than a site that half works.
+	 *
+	 * @param string[] $manifest
+	 *
+	 * @return array{files: array<string, string>, missing: string[], refused: string[]}
+	 */
+	public static function release_files( $root, $application, array $manifest ) {
+		$files   = array();
+		$missing = array();
+		$refused = array();
+		foreach ( $manifest as $path ) {
+			if ( ! self::is_servable_release_path( $path ) ) {
+				$refused[] = $path;
+				continue;
+			}
+			$source = self::source_path( $root, $application, $path );
+			if ( ! $source ) {
+				$missing[] = $path;
+				continue;
+			}
+			$files[ $path ] = $source;
+		}
+
+		return array( 'files' => $files, 'missing' => $missing, 'refused' => $refused );
+	}
+
+	/**
+	 * Write a zip holding each file under its release path.
+	 *
+	 * @param array<string, string> $files Release path => file to read it from.
+	 */
+	public static function write_release_zip( $zip_path, array $files ) {
+		if ( ! class_exists( 'ZipArchive' ) ) {
+			return false;
+		}
+		$zip = new ZipArchive();
+		if ( true !== $zip->open( $zip_path, ZipArchive::CREATE | ZipArchive::OVERWRITE ) ) {
+			return false;
+		}
+		foreach ( $files as $path => $source ) {
+			if ( ! $zip->addFile( $source, $path ) ) {
+				$zip->close();
+
+				return false;
+			}
+		}
+
+		return $zip->close();
 	}
 
 	/**

@@ -441,10 +441,21 @@ test.describe( 'Forms moved to generate_fieldset', () => {
     ] );
   } );
 
-  test( 'the public ticket form keeps its controls', async ( { page } ) => {
-    // No login: this is the page an anonymous visitor reaches through ext.php, which is
-    // the reason to be careful with it. generate_fieldset only reads or writes its
-    // per-user display settings when the fieldset has an id, so this one is given none.
+  test( 'the public ticket form keeps its controls', async ( { page, browser } ) => {
+    // The fixture field is made in a context of its own, because the assertion below
+    // has to run without a session: this is the page an anonymous visitor reaches
+    // through ext.php, which is the reason to be careful with it. generate_fieldset
+    // only reads or writes its per-user display settings when the fieldset has an id,
+    // so this one is given none.
+    const admin = await browser.newContext();
+    try {
+      const adminPage = await admin.newPage();
+      await login( adminPage );
+      await ensureTicketExtraField( adminPage );
+    } finally {
+      await admin.close();
+    }
+
     await page.goto( '/ext.php?m=ticket&h=public_new' );
 
     await expectFieldsIn( page, '#ticket_form', [
@@ -692,6 +703,7 @@ test.describe( 'Forms moved to generate_fieldset', () => {
     // still held tickets an earlier run had left: the page checks for the "Related To"
     // and "Customer" rows, and the tickets that survive a clean-up have customer_id 0,
     // so that block does not render and the failure says nothing about the conversion.
+    await ensureTicketExtraField( page );
     const customerId = await aCustomer( page );
     const ticketId = await createRecord( page, '/?m[]=ticket', {
       _process: 'save_ticket',
@@ -1260,15 +1272,11 @@ test.describe( 'Forms moved to generate_fieldset (data field group)', () => {
  * were written off as unreachable. An administrator cannot reach them at all:
  * module_security::has_feature_access() returns true unconditionally for user id 1.
  *
- * An explicit grant list rather than "everything except X", because the permission table
- * grows: has_feature_access() inserts a row the first time any page asks for a permission
- * it has not seen, so the count climbs as the suite covers more screens - 951 rows at the
- * start of this work, 1133 a few hours later. PHP's max_input_vars is 1000, and the role
- * form posts one checkbox per permission per action, so "tick everything" silently
- * truncates and lands back on the login screen. Granting a fixed handful is both stable
- * and well under the limit. (That the form is unsaveable at all past ~1000 permissions is
- * a real bug, raised separately; the assertion below is here so this fixture cannot drift
- * back into it unnoticed.)
+ * An explicit grant list rather than "everything except X", so these fixtures say what
+ * they rely on. It used to have to be explicit for a second reason - the role form posted
+ * a field per permission per action, and a grant of more than about a thousand of them
+ * was silently truncated - but the form now posts them as one field, so the only limit on
+ * this list is what the tests actually need. See security-role-permissions.spec.ts.
  *
  * The ids: 82 Can User Login - never omit it, or establish_session() answers "Account
  * disabled" and the account is unusable. 33 Customers and 199 Customer, 180 Vendors, and
@@ -1283,24 +1291,24 @@ async function aRoleGranting( page: Page, roleName: string, grant: string[] ): P
   const token = ( form.match( /name="form_auth_key" value="([^"]+)"/ ) || [] )[ 1 ];
   expect( token, 'the role form published no token' ).toBeTruthy();
 
+  const permission: Record<string, Record<string, number>> = {};
+  for ( const permissionId of grant ) {
+    expect(
+      form,
+      `the role form has no view checkbox for permission ${ permissionId }`,
+    ).toContain( `data-permission="${ permissionId }"` );
+    permission[ permissionId ] = { view: 1 };
+  }
+
   const body: Record<string, string> = {
     _process: 'save_security_role',
     security_role_id: 'new',
     name: roleName,
     form_auth_key: token,
     _redirect: '/',
+    // The whole grid travels in this one field - see module_security::process().
+    permission_data: JSON.stringify( { permission } ),
   };
-  for ( const permissionId of grant ) {
-    expect(
-      form,
-      `the role form has no view checkbox for permission ${ permissionId }`,
-    ).toContain( `name="permission[${ permissionId }][view]"` );
-    body[ `permission[${ permissionId }][view]` ] = '1';
-  }
-  expect(
-    Object.keys( body ).length,
-    'this post exceeds max_input_vars (1000) and will be silently truncated',
-  ).toBeLessThan( 1000 );
 
   // The save redirects to the new role, which is the only reliable way to learn its id:
   // the role list shows twenty at a time and offers no paging parameter to follow.
@@ -1378,6 +1386,45 @@ async function signedInAs(
 }
 
 
+
+
+/**
+ * One ticket extra field, so the forms that draw ticket_extra[*] have one to draw.
+ *
+ * The public ticket form and the customer's ticket view both render an input per row
+ * in ticket_data_key. Those rows used to be supplied by csrf-modules' own leftovers -
+ * 191 of them named csrf_test_key - and once those were cleared the only row left was
+ * an old one with an empty key, which renders nothing. So the fixture is made here
+ * rather than borrowed, and reused once it exists.
+ */
+const TICKET_FIELD_KEY = 'fieldset_fixture_field';
+
+async function ensureTicketExtraField( page: Page ): Promise<void> {
+  const list = '/?m[]=ticket&p[]=ticket_settings_fields';
+  if ( await idNamedOn( page, list, 'ticket_data_key_id', TICKET_FIELD_KEY ) ) {
+    return;
+  }
+  await page.request.post( '/?m[]=ticket', {
+    form: {
+      _process: 'save_ticket_data_key',
+      ticket_data_key_id: 'new',
+      key: TICKET_FIELD_KEY,
+      // Without a type the row saves but renders nothing - which is the state the one
+      // surviving row on this database was in, and why clearing the leftovers took the
+      // ticket_extra control off both forms.
+      type: 'text',
+      order: '1',
+      form_auth_key: await formAuthKey( page ),
+      _redirect: '/',
+    },
+    maxRedirects: 0,
+    failOnStatusCode: false,
+  } );
+  expect(
+    await idNamedOn( page, list, 'ticket_data_key_id', TICKET_FIELD_KEY ),
+    'the ticket extra field this spec needs could not be created',
+  ).toBeTruthy();
+}
 
 test.describe( 'Forms moved to generate_fieldset (restricted contact blocks)', () => {
   test( 'a staff member who cannot view contacts is told the details are hidden', async ( { page, browser } ) => {

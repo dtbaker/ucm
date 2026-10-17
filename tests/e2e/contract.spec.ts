@@ -202,11 +202,8 @@ test.describe('Contracts', () => {
     await openContract(page, contractId);
     await expect(page.locator('input[name="approved_by"]').first()).toHaveValue('Signed In Person');
     await expect(page.locator('input[name="date_approved"]').first()).toHaveValue(date);
-    // Trimmed, not whole: display_notes() cuts each note to note_trim_length - 35 by
-    // default - and appends an ellipsis, so the full 37-character message is never on
-    // this screen. The first test in this file asserts its whole string and passes only
-    // because 'Contract approved by Jane Signatory' is exactly 35 characters; one more
-    // and it would have failed the same way for the same non-reason.
+    // The note list cuts each line off at note_trim_length, 35 characters by default, so
+    // the history line shows as much of itself as fits and no more.
     await expect(page.locator('body'), 'approving from the staff side should be noted too')
       .toContainText('Contract approved by Signed In Pers');
 

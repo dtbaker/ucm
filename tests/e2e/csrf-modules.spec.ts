@@ -1,8 +1,5 @@
 import { test, expect, Page } from '@playwright/test';
-import {
-  login, formAuthKey, existingId, aCustomer, anInvoice, aFile, anAddress,
-  deleteRecord, idInUrl,
-} from './seed';
+import { login, formAuthKey, existingId, aCustomer, anInvoice, aFile, anAddress, deleteRecord, listedIds } from './seed';
 
 /**
  * Per-module form_auth_key coverage.
@@ -15,6 +12,12 @@ import {
  *   2. post the same thing with no token and see a 403
  *
  * The first test is the one that matters. Adding a module here is one entry.
+ *
+ * Saving a real form makes a real record, so every entry also says how to delete the one
+ * it made again. Without that they pile up, one per module per run: by October 2026 this
+ * file had left 198 companies, 197 websites, 201 users, 199 contracts and 209 templates
+ * behind, and the staff screen - which draws a checkbox per company - had grown to 445KB.
+ * The last test in this file fails if that ever starts again.
  */
 
 type ModuleCase = {
@@ -24,20 +27,6 @@ type ModuleCase = {
   url: string;
   /** the _process value this form submits */
   process: string;
-  /**
-   * The primary key field, used to delete the record the test saved.
-   *
-   * Written out per module rather than worked out from badTokenBody: two of those
-   * carry a customer_id as well, so guessing picks the wrong one and the cleanup
-   * silently deletes nothing.
-   */
-  key: string;
-  /**
-   * The field module_form::confirm_delete() hashes, when it is not the record's own
-   * key. Both FAQ screens pass 'customer_id' there, so a delete signed with faq_id is
-   * silently ignored and the row stays.
-   */
-  confirmKey?: string;
   /** text inputs to fill before saving, by input name */
   fill: Record<string, string>;
   /** message the app shows after a successful save */
@@ -46,51 +35,328 @@ type ModuleCase = {
   postUrl: string;
   /** body for the no-token post, minus the token */
   badTokenBody: Record<string, string>;
+  /** the field this module addresses its record by, in the save redirect and the delete */
+  idParam: string;
+  /** the text the record's row links under, on the list below */
+  label: string;
+  /**
+   * A page that lists the module's records, used to find the record again when the save
+   * redirect does not name it, and by the guard at the bottom of this file. {customer} is
+   * replaced the same way it is in url.
+   */
+  list: string;
+  /** the key confirm_delete() was given, where the module does not pass its own id field */
+  confirmKey?: string;
+  /** the delete button's name, where it is not butt_del */
+  deleteButton?: string;
   /**
    * Some records cannot be created from their own edit page, so there is nothing to
    * open on a fresh install. When set, this body is posted with a real token first and
    * the id it redirects to is substituted into url.
    */
   seed?: { body: Record<string, string>; idParam: string };
-  /**
-   * For a module whose save hands back no id at all. Returns the id of every record
-   * matching this test's fixture, so the cleanup takes the one just made and any left
-   * by an older run with it.
-   */
-  findIds?: ( page: Page ) => Promise<string[]>;
 };
 
-/** The extra field fixture, looked up on the settings screen that lists them all. */
-const EXTRA_FIELD_KEY = 'csrf_test_field';
-
-async function findExtraFieldsByKey( page: Page ): Promise<string[]> {
-  await page.goto( '/?m[]=extra&p[]=extra_settings' );
-
-  return page.evaluate( ( key ) => {
-    const ids = new Set<string>();
-    document.querySelectorAll( 'a[href*="extra_default_id="]' ).forEach( ( a: any ) => {
-      if ( ( a.textContent || '' ).trim() !== key ) {
-        return;
-      }
-      const found = /extra_default_id=(\d+)/.exec( a.getAttribute( 'href' ) || '' );
-      if ( found && found[ 1 ] !== '0' ) {
-        ids.add( found[ 1 ] );
-      }
-    } );
-
-    return Array.from( ids );
-  }, EXTRA_FIELD_KEY );
-}
+const MODULES: ModuleCase[] = [
+  {
+    name: 'company',
+    url: '/?m[]=company&p[]=company_edit',
+    process: 'save_company',
+    fill: { name: 'CSRF Test Company' },
+    saved: /company saved successfully/i,
+    postUrl: '/?m[]=company',
+    badTokenBody: { _process: 'save_company', company_id: 'new', name: 'Should Not Save' },
+    idParam: 'company_id',
+    label: 'CSRF Test Company',
+    list: '/?m[]=company&p[]=company_settings',
+  },
+  {
+    name: 'member',
+    url: '/?m[]=member&p[]=member_admin_edit',
+    process: 'save_member',
+    fill: { first_name: 'CSRF', last_name: 'Test', email: 'csrf-member@example.com' },
+    saved: /member saved successfully/i,
+    postUrl: '/?m[]=member',
+    badTokenBody: { _process: 'save_member', member_id: 'new', first_name: 'Should Not Save' },
+    idParam: 'member_id',
+    label: 'CSRF Test',
+    list: '/?m[]=member&p[]=member_admin_list',
+  },
+  {
+    name: 'website',
+    url: '/?m[]=website&p[]=website_admin_edit',
+    process: 'save_website',
+    fill: { name: 'CSRF Test Website' },
+    saved: /saved successfully/i,
+    postUrl: '/?m[]=website',
+    badTokenBody: { _process: 'save_website', website_id: 'new', name: 'Should Not Save', _redirect: '/' },
+    idParam: 'website_id',
+    label: 'CSRF Test Website',
+    list: '/?m[]=website&p[]=website_admin_list',
+  },
+  {
+    name: 'subscription',
+    url: '/?m[]=subscription&p[]=subscription_admin_edit',
+    process: 'save_subscription',
+    fill: { name: 'CSRF Test Subscription', amount: '10' },
+    saved: /subscription saved successfully/i,
+    postUrl: '/?m[]=subscription',
+    badTokenBody: { _process: 'save_subscription', subscription_id: 'new', name: 'Should Not Save', amount: '1' },
+    idParam: 'subscription_id',
+    label: 'CSRF Test Subscription',
+    list: '/?m[]=subscription&p[]=subscription_admin_list',
+  },
+  {
+    name: 'template',
+    url: '/?m[]=template&p[]=template_edit&template_id=new',
+    process: 'save_template',
+    fill: { template_key: 'csrf_test_template', description: 'CSRF test template' },
+    saved: /template saved successfully/i,
+    postUrl: '/?m[]=template',
+    badTokenBody: { _process: 'save_template', template_id: 'new', template_key: 'should_not_save' },
+    idParam: 'template_id',
+    label: 'csrf_test_template',
+    list: '/?m[]=template&p[]=template_list',
+  },
+  {
+    name: 'group',
+    // Groups are created alongside the record they belong to, never from this page,
+    // so a fresh install has none to open.
+    seed: { body: { _process: 'save_group', group_id: 'new', name: 'CSRF Seed Group', owner_table: 'customer' }, idParam: 'group_id' },
+    url: '/?m[]=group&p[]=group_settings&group_id={id}',
+    process: 'save_group',
+    fill: { name: 'CSRF Test Group' },
+    saved: /group saved successfully/i,
+    postUrl: '/?m[]=group',
+    badTokenBody: { _process: 'save_group', group_id: 'new', name: 'Should Not Save', owner_table: 'customer' },
+    idParam: 'group_id',
+    label: 'CSRF Test Group',
+    list: '/?m[]=group&p[]=group_settings',
+  },
+  {
+    name: 'product category',
+    url: '/?m[]=product&p[]=product_admin_category_edit',
+    process: 'save_product_category',
+    fill: { product_category_name: 'CSRF Test Category' },
+    saved: /product category saved successfully/i,
+    postUrl: '/?m[]=product',
+    badTokenBody: { _process: 'save_product_category', product_category_id: 'new', product_category_name: 'Should Not Save' },
+    idParam: 'product_category_id',
+    label: 'CSRF Test Category',
+    list: '/?m[]=product&p[]=product_admin_category_list',
+  },
+  {
+    name: 'extra field',
+    url: '/?m[]=extra&p[]=extra_settings&extra_default_id=new',
+    process: 'save_extra_default',
+    fill: { extra_key: 'csrf_test_field' },
+    saved: /extra field saved successfully/i,
+    postUrl: '/?m[]=extra',
+    badTokenBody: { _process: 'save_extra_default', extra_default_id: 'new', owner_table: 'file', extra_key: 'should_not_save' },
+    idParam: 'extra_default_id',
+    label: 'csrf_test_field',
+    list: '/?m[]=extra&p[]=extra_settings',
+  },
+  {
+    name: 'FAQ',
+    url: '/?m[]=faq&p[]=faq_questions&faq_id=new',
+    process: 'save_faq',
+    fill: { question: 'CSRF test question?' },
+    saved: /faq saved successfully/i,
+    postUrl: '/?m[]=faq',
+    badTokenBody: { _process: 'save_faq', faq_id: 'new', question: 'Should Not Save' },
+    idParam: 'faq_id',
+    label: 'CSRF test question?',
+    list: '/?m[]=faq&p[]=faq_questions',
+    // faq.php hands confirm_delete() customer_id rather than the faq's own id.
+    confirmKey: 'customer_id',
+  },
+  {
+    name: 'FAQ product',
+    url: '/?m[]=faq&p[]=faq_products&faq_product_id=new',
+    process: 'save_faq_product',
+    fill: { name: 'CSRF Test FAQ Product' },
+    saved: /faq product saved successfully/i,
+    postUrl: '/?m[]=faq',
+    badTokenBody: { _process: 'save_faq_product', faq_product_id: 'new', name: 'Should Not Save' },
+    idParam: 'faq_product_id',
+    label: 'CSRF Test FAQ Product',
+    list: '/?m[]=faq&p[]=faq_products',
+    confirmKey: 'customer_id',
+  },
+  {
+    name: 'user',
+    url: '/?m[]=user&p[]=user_admin&user_id=new',
+    process: 'save_user',
+    fill: { name: 'CSRF Test User', email: 'csrf-user@example.com' },
+    saved: /user saved successfully/i,
+    postUrl: '/?m[]=user',
+    badTokenBody: { _process: 'save_user', user_id: '0', name: 'Should Not Save', email: 'nope@example.com', _redirect: '/' },
+    idParam: 'user_id',
+    label: 'CSRF Test User',
+    list: '/?m[]=user&p[]=user_admin_list',
+  },
+  {
+    name: 'customer contact',
+    url: '/?m[]=user&p[]=contact_admin&customer_id={customer}&user_id=new',
+    process: 'save_user',
+    fill: { name: 'CSRF Test Contact', email: 'csrf-contact@example.com' },
+    saved: /saved successfully/i,
+    postUrl: '/?m[]=user',
+    badTokenBody: { _process: 'save_user', user_id: '0', name: 'Should Not Save', email: 'nope2@example.com', _redirect: '/' },
+    idParam: 'user_id',
+    label: 'CSRF Test Contact',
+    list: '/?m[]=user&p[]=contact_admin_list&customer_id={customer}',
+    // user.php looks for butt_del_contact on this one, and butt_del on the staff form.
+    deleteButton: 'butt_del_contact',
+  },
+  {
+    name: 'security role',
+    url: '/?m[]=security&p[]=security_role&security_role_id=new',
+    process: 'save_security_role',
+    fill: { name: 'CSRF Test Role' },
+    saved: /role saved successfully/i,
+    postUrl: '/?m[]=security',
+    badTokenBody: { _process: 'save_security_role', security_role_id: 'new', name: 'Should Not Save' },
+    idParam: 'security_role_id',
+    label: 'CSRF Test Role',
+    list: '/?m[]=security&p[]=security_role_list',
+  },
+  {
+    name: 'vendor',
+    url: '/?m[]=vendor&p[]=vendor_admin_edit&vendor_id=new',
+    process: 'save_vendor',
+    fill: { vendor_name: 'CSRF Test Vendor', name: 'CSRF Contact' },
+    saved: /vendor saved successfully/i,
+    postUrl: '/?m[]=vendor',
+    badTokenBody: { _process: 'save_vendor', vendor_id: 'new', vendor_name: 'Should Not Save' },
+    idParam: 'vendor_id',
+    label: 'CSRF Test Vendor',
+    list: '/?m[]=vendor&p[]=vendor_admin_list',
+  },
+  {
+    name: 'contract',
+    url: '/?m[]=contract&p[]=contract_admin&contract_id=new',
+    process: 'save_contract',
+    fill: { name: 'CSRF Test Contract' },
+    saved: /contract saved successfully/i,
+    postUrl: '/?m[]=contract',
+    badTokenBody: { _process: 'save_contract', contract_id: 'new', name: 'Should Not Save', _redirect: '/' },
+    idParam: 'contract_id',
+    label: 'CSRF Test Contract',
+    list: '/?m[]=contract&p[]=contract_admin',
+  },
+  {
+    name: 'newsletter',
+    url: '/?m[]=newsletter&p[]=newsletter_edit&newsletter_id=new',
+    process: 'save_newsletter',
+    fill: { subject: 'CSRF Test Newsletter' },
+    saved: /newsletter saved successfully/i,
+    postUrl: '/?m[]=newsletter',
+    badTokenBody: { _process: 'save_newsletter', newsletter_id: 'new', subject: 'Should Not Save', _redirect: '/' },
+    idParam: 'newsletter_id',
+    label: 'CSRF Test Newsletter',
+    // newsletter_list only shows the ones that have been sent.
+    list: '/?m[]=newsletter&p[]=newsletter_list_draft',
+  },
+  {
+    name: 'customer',
+    url: '/?m[]=customer&p[]=customer_admin_edit&customer_id=new',
+    process: 'save_customer',
+    fill: { customer_name: 'CSRF Test Customer', name: 'CSRF Contact', email: 'csrf-customer@example.com' },
+    saved: /customer saved successfully/i,
+    postUrl: '/?m[]=customer',
+    badTokenBody: { _process: 'save_customer', customer_id: 'new', customer_name: 'Should Not Save' },
+    idParam: 'customer_id',
+    label: 'CSRF Test Customer',
+    list: '/?m[]=customer&p[]=customer_admin_list&customer_type_id=0',
+  },
+  {
+    name: 'customer type',
+    url: '/?m[]=customer&p[]=customer_settings_types&customer_type_id=new',
+    process: 'save_customer_type',
+    fill: { type_name: 'CSRF Test Customer Type' },
+    saved: /saved successfully/i,
+    postUrl: '/?m[]=customer',
+    badTokenBody: { _process: 'save_customer_type', customer_type_id: 'new', type_name: 'Should Not Save' },
+    idParam: 'customer_type_id',
+    label: 'CSRF Test Customer Type',
+    list: '/?m[]=customer&p[]=customer_settings_types',
+  },
+  {
+    name: 'ticket type',
+    url: '/?m[]=ticket&p[]=ticket_settings_types&ticket_type_id=new',
+    process: 'save_ticket_type',
+    fill: { name: 'CSRF Test Ticket Type' },
+    saved: /ticket type saved successfully/i,
+    postUrl: '/?m[]=ticket',
+    badTokenBody: { _process: 'save_ticket_type', ticket_type_id: 'new', name: 'Should Not Save' },
+    idParam: 'ticket_type_id',
+    label: 'CSRF Test Ticket Type',
+    list: '/?m[]=ticket&p[]=ticket_settings_types',
+  },
+  {
+    name: 'ticket field',
+    url: '/?m[]=ticket&p[]=ticket_settings_fields&ticket_data_key_id=new',
+    process: 'save_ticket_data_key',
+    fill: { key: 'csrf_test_key' },
+    saved: /ticket field saved successfully/i,
+    postUrl: '/?m[]=ticket',
+    badTokenBody: { _process: 'save_ticket_data_key', ticket_data_key_id: 'new', key: 'should_not_save' },
+    idParam: 'ticket_data_key_id',
+    label: 'csrf_test_key',
+    list: '/?m[]=ticket&p[]=ticket_settings_fields',
+  },
+  {
+    name: 'job',
+    url: '/?m[]=job&p[]=job_admin&job_id=new&customer_id={customer}',
+    process: 'save_job',
+    fill: { name: 'CSRF Test Job' },
+    saved: /job saved successfully/i,
+    postUrl: '/?m[]=job',
+    badTokenBody: { _process: 'save_job', job_id: 'new', name: 'Should Not Save', customer_id: '1', _redirect: '/' },
+    idParam: 'job_id',
+    label: 'CSRF Test Job',
+    list: '/?m[]=job&p[]=job_admin',
+  },
+  {
+    name: 'quote',
+    url: '/?m[]=quote&p[]=quote_admin&quote_id=new&customer_id={customer}',
+    process: 'save_quote',
+    fill: { name: 'CSRF Test Quote' },
+    saved: /quote saved successfully/i,
+    postUrl: '/?m[]=quote',
+    badTokenBody: { _process: 'save_quote', quote_id: 'new', name: 'Should Not Save', customer_id: '1', _redirect: '/' },
+    idParam: 'quote_id',
+    label: 'CSRF Test Quote',
+    list: '/?m[]=quote&p[]=quote_admin',
+  },
+  {
+    name: 'data type',
+    url: '/?m[]=data&p[]=data_type_admin_open&data_type_id=new',
+    process: 'save_data_type',
+    fill: { data_type_name: 'CSRF Test Data Type' },
+    saved: /saved successfully/i,
+    postUrl: '/?m[]=data',
+    badTokenBody: { _process: 'save_data_type', data_type_id: 'new', data_type_name: 'Should Not Save' },
+    idParam: 'data_type_id',
+    label: 'CSRF Test Data Type',
+    list: '/?m[]=data&p[]=data_type_admin_list',
+  },
+];
 
 /**
- * The ids a list page links to, after narrowing it with its own search box.
- *
- * The row text is deliberately not matched against: these lists print an invoice
- * number, a customer and an amount, not the record's name, so filtering on the name
- * finds nothing and the cleanup silently deletes nothing. The search has already done
- * the narrowing, and the fixture names carry a per-run stamp, so what comes back is
- * this run's record and nothing else - which the callers assert.
+ * The record the test in hand has made, for the afterEach below. Playwright runs the
+ * tests in a file one at a time in the same worker, so one slot is enough.
  */
+let created: { mod: ModuleCase; id: string } | null = null;
+
+/** A fixture name nothing else in the database can collide with. */
+function stamped(prefix: string): string {
+  return `${prefix} ${Date.now().toString(36)}${Math.floor(Math.random() * 1e4)}`;
+}
+
+/** The ids a list links to, once its own search has narrowed it to one record. */
 async function idsFromSearch(page: Page, listUrl: string, term: string, key: string): Promise<string[]> {
   await page.goto(listUrl + '&search[generic]=' + encodeURIComponent(term));
 
@@ -107,328 +373,77 @@ async function idsFromSearch(page: Page, listUrl: string, term: string, key: str
   }, key);
 }
 
-/** A fixture name nothing else in the database can collide with. */
-function stamped(prefix: string): string {
-  return `${prefix} ${Date.now().toString(36)}${Math.floor(Math.random() * 1e4)}`;
-}
-
-const MODULES: ModuleCase[] = [
-  {
-    name: 'company',
-    url: '/?m[]=company&p[]=company_edit',
-    process: 'save_company',
-    key: 'company_id',
-    fill: { name: 'CSRF Test Company' },
-    saved: /company saved successfully/i,
-    postUrl: '/?m[]=company',
-    badTokenBody: { _process: 'save_company', company_id: 'new', name: 'Should Not Save' },
-  },
-  {
-    name: 'member',
-    seed: { body: { _process: 'save_member', member_id: 'new', first_name: 'CSRF', last_name: 'Seed', email: 'csrf-member-seed@example.com', _redirect: '' }, idParam: 'member_id' },
-    url: '/?m[]=member&p[]=member_admin_edit&member_id={id}',
-    process: 'save_member',
-    key: 'member_id',
-    fill: { first_name: 'CSRF', last_name: 'Test', email: 'csrf-member@example.com' },
-    saved: /member saved successfully/i,
-    postUrl: '/?m[]=member',
-    badTokenBody: { _process: 'save_member', member_id: 'new', first_name: 'Should Not Save' },
-  },
-  {
-    name: 'website',
-    url: '/?m[]=website&p[]=website_admin_edit',
-    process: 'save_website',
-    key: 'website_id',
-    fill: { name: 'CSRF Test Website' },
-    saved: /saved successfully/i,
-    postUrl: '/?m[]=website',
-    badTokenBody: { _process: 'save_website', website_id: 'new', name: 'Should Not Save', _redirect: '/' },
-  },
-  {
-    name: 'subscription',
-    url: '/?m[]=subscription&p[]=subscription_admin_edit',
-    process: 'save_subscription',
-    key: 'subscription_id',
-    fill: { name: 'CSRF Test Subscription', amount: '10' },
-    saved: /subscription saved successfully/i,
-    postUrl: '/?m[]=subscription',
-    badTokenBody: { _process: 'save_subscription', subscription_id: 'new', name: 'Should Not Save', amount: '1' },
-  },
-  {
-    name: 'template',
-    url: '/?m[]=template&p[]=template_edit&template_id=new',
-    process: 'save_template',
-    key: 'template_id',
-    fill: { template_key: 'csrf_test_template', description: 'CSRF test template' },
-    saved: /template saved successfully/i,
-    postUrl: '/?m[]=template',
-    badTokenBody: { _process: 'save_template', template_id: 'new', template_key: 'should_not_save' },
-  },
-  {
-    name: 'group',
-    // Groups are created alongside the record they belong to, never from this page,
-    // so a fresh install has none to open.
-    seed: { body: { _process: 'save_group', group_id: 'new', name: 'CSRF Seed Group', owner_table: 'customer' }, idParam: 'group_id' },
-    url: '/?m[]=group&p[]=group_settings&group_id={id}',
-    process: 'save_group',
-    key: 'group_id',
-    fill: { name: 'CSRF Test Group' },
-    saved: /group saved successfully/i,
-    postUrl: '/?m[]=group',
-    badTokenBody: { _process: 'save_group', group_id: 'new', name: 'Should Not Save', owner_table: 'customer' },
-  },
-  {
-    name: 'product category',
-    url: '/?m[]=product&p[]=product_admin_category_edit',
-    process: 'save_product_category',
-    key: 'product_category_id',
-    fill: { product_category_name: 'CSRF Test Category' },
-    saved: /product category saved successfully/i,
-    postUrl: '/?m[]=product',
-    badTokenBody: { _process: 'save_product_category', product_category_id: 'new', product_category_name: 'Should Not Save' },
-  },
-  {
-    name: 'extra field',
-    url: '/?m[]=extra&p[]=extra_settings&extra_default_id=new',
-    // save_extra_default ends in redirect_browser( REQUEST_URI ), so neither the
-    // response nor the page it lands on carries the new id. The settings screen lists
-    // every extra field though, so the fixture is found there by its own key.
-    findIds: findExtraFieldsByKey,
-    process: 'save_extra_default',
-    key: 'extra_default_id',
-    fill: { extra_key: EXTRA_FIELD_KEY },
-    saved: /extra field saved successfully/i,
-    postUrl: '/?m[]=extra',
-    badTokenBody: { _process: 'save_extra_default', extra_default_id: 'new', owner_table: 'file', extra_key: 'should_not_save' },
-  },
-  {
-    name: 'FAQ',
-    url: '/?m[]=faq&p[]=faq_questions&faq_id=new',
-    process: 'save_faq',
-    key: 'faq_id',
-    confirmKey: 'customer_id',
-    fill: { question: 'CSRF test question?' },
-    saved: /faq saved successfully/i,
-    postUrl: '/?m[]=faq',
-    badTokenBody: { _process: 'save_faq', faq_id: 'new', question: 'Should Not Save' },
-  },
-  {
-    name: 'FAQ product',
-    url: '/?m[]=faq&p[]=faq_products&faq_product_id=new',
-    process: 'save_faq_product',
-    key: 'faq_product_id',
-    confirmKey: 'customer_id',
-    fill: { name: 'CSRF Test FAQ Product' },
-    saved: /faq product saved successfully/i,
-    postUrl: '/?m[]=faq',
-    badTokenBody: { _process: 'save_faq_product', faq_product_id: 'new', name: 'Should Not Save' },
-  },
-  {
-    name: 'user',
-    url: '/?m[]=user&p[]=user_admin&user_id=new',
-    process: 'save_user',
-    key: 'user_id',
-    fill: { name: 'CSRF Test User', email: 'csrf-user@example.com' },
-    saved: /user saved successfully/i,
-    postUrl: '/?m[]=user',
-    badTokenBody: { _process: 'save_user', user_id: '0', name: 'Should Not Save', email: 'nope@example.com', _redirect: '/' },
-  },
-  {
-    name: 'customer contact',
-    url: '/?m[]=user&p[]=contact_admin&customer_id={customer}&user_id=new',
-    process: 'save_user',
-    key: 'user_id',
-    fill: { name: 'CSRF Test Contact', email: 'csrf-contact@example.com' },
-    saved: /saved successfully/i,
-    postUrl: '/?m[]=user',
-    badTokenBody: { _process: 'save_user', user_id: '0', name: 'Should Not Save', email: 'nope2@example.com', _redirect: '/' },
-  },
-  {
-    name: 'security role',
-    url: '/?m[]=security&p[]=security_role&security_role_id=new',
-    process: 'save_security_role',
-    key: 'security_role_id',
-    fill: { name: 'CSRF Test Role' },
-    saved: /role saved successfully/i,
-    postUrl: '/?m[]=security',
-    badTokenBody: { _process: 'save_security_role', security_role_id: 'new', name: 'Should Not Save' },
-  },
-  {
-    name: 'vendor',
-    seed: { body: { _process: 'save_vendor', vendor_id: 'new', vendor_name: 'CSRF Seed Vendor', name: 'CSRF Seed Contact', _redirect: '' }, idParam: 'vendor_id' },
-    url: '/?m[]=vendor&p[]=vendor_admin_edit&vendor_id={id}',
-    process: 'save_vendor',
-    key: 'vendor_id',
-    fill: { vendor_name: 'CSRF Test Vendor', name: 'CSRF Contact' },
-    saved: /vendor saved successfully/i,
-    postUrl: '/?m[]=vendor',
-    badTokenBody: { _process: 'save_vendor', vendor_id: 'new', vendor_name: 'Should Not Save' },
-  },
-  {
-    name: 'contract',
-    seed: { body: { _process: 'save_contract', contract_id: 'new', name: 'CSRF Seed Contract', _redirect: '' }, idParam: 'contract_id' },
-    url: '/?m[]=contract&p[]=contract_admin&contract_id={id}',
-    process: 'save_contract',
-    key: 'contract_id',
-    fill: { name: 'CSRF Test Contract' },
-    saved: /contract saved successfully/i,
-    postUrl: '/?m[]=contract',
-    badTokenBody: { _process: 'save_contract', contract_id: 'new', name: 'Should Not Save', _redirect: '/' },
-  },
-  {
-    name: 'newsletter',
-    url: '/?m[]=newsletter&p[]=newsletter_edit&newsletter_id=new',
-    process: 'save_newsletter',
-    key: 'newsletter_id',
-    fill: { subject: 'CSRF Test Newsletter' },
-    saved: /newsletter saved successfully/i,
-    postUrl: '/?m[]=newsletter',
-    badTokenBody: { _process: 'save_newsletter', newsletter_id: 'new', subject: 'Should Not Save', _redirect: '/' },
-  },
-  {
-    name: 'customer',
-    seed: { body: { _process: 'save_customer', customer_id: 'new', customer_name: 'CSRF Seed Subject', name: 'CSRF Seed Contact', _redirect: '' }, idParam: 'customer_id' },
-    url: '/?m[]=customer&p[]=customer_admin_edit&customer_id={id}',
-    process: 'save_customer',
-    key: 'customer_id',
-    fill: { customer_name: 'CSRF Test Customer', name: 'CSRF Contact', email: 'csrf-customer@example.com' },
-    saved: /customer saved successfully/i,
-    postUrl: '/?m[]=customer',
-    badTokenBody: { _process: 'save_customer', customer_id: 'new', customer_name: 'Should Not Save' },
-  },
-  {
-    name: 'customer type',
-    url: '/?m[]=customer&p[]=customer_settings_types&customer_type_id=new',
-    process: 'save_customer_type',
-    key: 'customer_type_id',
-    fill: { type_name: 'CSRF Test Customer Type' },
-    saved: /saved successfully/i,
-    postUrl: '/?m[]=customer',
-    badTokenBody: { _process: 'save_customer_type', customer_type_id: 'new', type_name: 'Should Not Save' },
-  },
-  {
-    name: 'ticket type',
-    url: '/?m[]=ticket&p[]=ticket_settings_types&ticket_type_id=new',
-    process: 'save_ticket_type',
-    key: 'ticket_type_id',
-    fill: { name: 'CSRF Test Ticket Type' },
-    saved: /ticket type saved successfully/i,
-    postUrl: '/?m[]=ticket',
-    badTokenBody: { _process: 'save_ticket_type', ticket_type_id: 'new', name: 'Should Not Save' },
-  },
-  {
-    name: 'ticket field',
-    url: '/?m[]=ticket&p[]=ticket_settings_fields&ticket_data_key_id=new',
-    process: 'save_ticket_data_key',
-    key: 'ticket_data_key_id',
-    fill: { key: 'csrf_test_key' },
-    saved: /ticket field saved successfully/i,
-    postUrl: '/?m[]=ticket',
-    badTokenBody: { _process: 'save_ticket_data_key', ticket_data_key_id: 'new', key: 'should_not_save' },
-  },
-  {
-    name: 'job',
-    url: '/?m[]=job&p[]=job_admin&job_id=new&customer_id={customer}',
-    process: 'save_job',
-    key: 'job_id',
-    fill: { name: 'CSRF Test Job' },
-    saved: /job saved successfully/i,
-    postUrl: '/?m[]=job',
-    badTokenBody: { _process: 'save_job', job_id: 'new', name: 'Should Not Save', customer_id: '1', _redirect: '/' },
-  },
-  {
-    name: 'quote',
-    seed: { body: { _process: 'save_quote', quote_id: 'new', name: 'CSRF Seed Quote', customer_id: '{customer}', _redirect: '' }, idParam: 'quote_id' },
-    url: '/?m[]=quote&p[]=quote_admin&quote_id={id}',
-    process: 'save_quote',
-    key: 'quote_id',
-    fill: { name: 'CSRF Test Quote' },
-    saved: /quote saved successfully/i,
-    postUrl: '/?m[]=quote',
-    badTokenBody: { _process: 'save_quote', quote_id: 'new', name: 'Should Not Save', customer_id: '1', _redirect: '/' },
-  },
-  {
-    name: 'data type',
-    url: '/?m[]=data&p[]=data_type_admin_open&data_type_id=new',
-    process: 'save_data_type',
-    key: 'data_type_id',
-    fill: { data_type_name: 'CSRF Test Data Type' },
-    saved: /saved successfully/i,
-    postUrl: '/?m[]=data',
-    badTokenBody: { _process: 'save_data_type', data_type_id: 'new', data_type_name: 'Should Not Save' },
-  },
-];
-
 test.describe('Form auth key, per module', () => {
   test.beforeEach(async ({ page }) => {
+    created = null;
     await login(page);
+  });
+
+  // In afterEach rather than at the end of each test, so the record is taken away again
+  // even when an assertion fails.
+  test.afterEach(async ({ page }) => {
+    if (!created) {
+      return;
+    }
+    const { mod, id } = created;
+    created = null;
+    await deleteRecord(page, mod.postUrl, mod.process, mod.idParam, id, {
+      confirmKey: mod.confirmKey,
+      button: mod.deleteButton,
+    });
   });
 
   for (const mod of MODULES) {
     test(`the ${mod.name} form still saves`, async ({ page }) => {
       let url = mod.url;
-      // Whatever this test brings into being, so the finally below can take it away.
-      // Every one of these forms used to leave its record behind, which is how the
-      // subscription table reached 208 rows named 'CSRF Test Subscription' and made
-      // every customer and invoice screen too slow for the suite to drive.
-      let createdId: string | null = null;
 
-      try {
-        if (mod.seed) {
-          const key = await formAuthKey(page);
-          const seeded = await page.request.post(mod.postUrl, {
-            form: { ...mod.seed.body, form_auth_key: key },
-            maxRedirects: 0,
-            failOnStatusCode: false,
-          });
-          const location = seeded.headers()['location'] || '';
-          const id = new URL(location, 'http://localhost').searchParams.get(mod.seed.idParam);
-          expect(id, `seeding a ${mod.name} should redirect to the new record`).toBeTruthy();
-          url = url.replace('{id}', String(id));
-          // The save below updates this record rather than making another, so this is
-          // the row to remove.
-          createdId = String(id);
-        }
-
-        if (url.includes('{customer}')) {
-          url = url.replace('{customer}', await aCustomer(page));
-        }
-
-        await page.goto(url);
-
-        const form = page.locator(`form:has(input[name="_process"][value="${mod.process}"])`);
-        await expect(form).toHaveCount(1);
-
-        // The guard is useless, and the form is broken, if the token is not on the page.
-        // More than one is fine - the bulk action and export controls publish their own.
-        await expect(form.locator('input[name="form_auth_key"]').first()).toBeAttached();
-
-        for (const [field, value] of Object.entries(mod.fill)) {
-          await form.locator(`[name="${field}"]`).first().fill(value);
-        }
-        await form.locator('input[type="submit"][name="butt_save"]').first().click();
-
-        await expect(page.locator('body')).toContainText(mod.saved);
-        await expect(page.locator('body')).not.toContainText(/invalid or expired form submission/i);
-
-        // A save lands on the record it wrote, which is where the id comes from. Asserted
-        // rather than shrugged off: a cleanup that deletes nothing looks exactly like a
-        // cleanup that works, and that is how two earlier attempts at this went unnoticed.
-        createdId = createdId ?? idInUrl(page.url(), mod.key);
-        expect(
-          createdId ?? mod.findIds,
-          `saving a ${mod.name} should land on the record, so the test can delete it again`,
-        ).toBeTruthy();
-      } finally {
-        const doomed = createdId ? [createdId] : mod.findIds ? await mod.findIds(page) : [];
-        expect(
-          doomed.length,
-          `the ${mod.name} test should have something to clean up`,
-        ).toBeGreaterThan(0);
-        for (const id of doomed) {
-          await deleteRecord(page, mod.postUrl, mod.process, mod.key, id, mod.confirmKey);
-        }
+      if (mod.seed) {
+        const key = await formAuthKey(page);
+        const seeded = await page.request.post(mod.postUrl, {
+          form: { ...mod.seed.body, form_auth_key: key },
+          maxRedirects: 0,
+          failOnStatusCode: false,
+        });
+        const location = seeded.headers()['location'] || '';
+        const id = new URL(location, 'http://localhost').searchParams.get(mod.seed.idParam);
+        expect(id, `seeding a ${mod.name} should redirect to the new record`).toBeTruthy();
+        url = url.replace('{id}', String(id));
       }
+
+      if (url.includes('{customer}')) {
+        url = url.replace('{customer}', await aCustomer(page));
+      }
+
+      // Resolved before the save, because looking it up afterwards would navigate away
+      // from the page the assertions below read.
+      const list = await listFor(page, mod);
+
+      await page.goto(url);
+
+      const form = page.locator(`form:has(input[name="_process"][value="${mod.process}"])`);
+      await expect(form).toHaveCount(1);
+
+      // The guard is useless, and the form is broken, if the token is not on the page.
+      // More than one is fine - the bulk action and export controls publish their own.
+      await expect(form.locator('input[name="form_auth_key"]').first()).toBeAttached();
+
+      for (const [field, value] of Object.entries(mod.fill)) {
+        await form.locator(`[name="${field}"]`).first().fill(value);
+      }
+      await Promise.all([
+        page.waitForNavigation({ waitUntil: 'load' }),
+        form.locator('input[type="submit"][name="butt_save"]').first().click(),
+      ]);
+
+      // Found before the assertions below rather than after, so afterEach still has the
+      // record to delete when one of them fails.
+      const id = await savedId(page, mod, list);
+      expect(id, `the ${mod.name} test cannot find the record it just saved, so it cannot delete it again`)
+        .toBeTruthy();
+      created = { mod, id: String(id) };
+
+      await expect(page.locator('body')).toContainText(mod.saved);
+      await expect(page.locator('body')).not.toContainText(/invalid or expired form submission/i);
     });
 
     test(`the ${mod.name} form is refused without a token`, async ({ page }) => {
@@ -442,13 +457,56 @@ test.describe('Form auth key, per module', () => {
 });
 
 /**
+ * The id of the record a save just made.
+ *
+ * Most modules redirect to the record itself, so the id is already in the url. The ones
+ * that go back to their list instead - and the extra fields screen, which redirects to
+ * itself - are looked up by name. The fixture names in the table above belong to this
+ * spec alone, so the newest row carrying one is the row the save just made.
+ */
+async function savedId(page: Page, mod: ModuleCase, list: string): Promise<string | null> {
+  const inUrl = idIn(page.url(), mod.idParam);
+  if (inUrl) {
+    return inUrl;
+  }
+
+  const ids = await listedIds(page, list, mod.idParam, mod.label);
+
+  return ids.length ? ids[ids.length - 1] : null;
+}
+
+/** A record id out of a url the app has redirected to. */
+function idIn(url: string, idParam: string): string | null {
+  const match = new RegExp(`[?&]${idParam}=(\\d+)`).exec(url);
+
+  return match && match[1] !== '0' ? match[1] : null;
+}
+
+/** A module's list page, with the customer the contact list needs filled in. */
+async function listFor(page: Page, mod: ModuleCase): Promise<string> {
+  return mod.list.includes('{customer}') ? mod.list.replace('{customer}', await aCustomer(page)) : mod.list;
+}
+
+/**
  * Notes and addresses open in a popup rather than on a page of their own, and the note
  * popup posts itself with jQuery's serialize(), so the token has to be a field inside
  * the form rather than something the JS adds. These drive the real popups.
  */
 test.describe('Form auth key, popups', () => {
+  /** What the test in hand has to take away again, set as soon as it knows the id. */
+  let madeHere: (() => Promise<void>) | null = null;
+
   test.beforeEach(async ({ page }) => {
+    madeHere = null;
     await login(page);
+  });
+
+  test.afterEach(async () => {
+    const remove = madeHere;
+    madeHere = null;
+    if (remove) {
+      await remove();
+    }
   });
 
   test('a note can still be added from a customer', async ({ page }) => {
@@ -467,10 +525,12 @@ test.describe('Form auth key, popups', () => {
     await expect(page.locator('body')).toContainText(note);
     await expect(page.locator('body')).not.toContainText(/invalid or expired form submission/i);
 
-    // Take it off again. Notes are not deleted through a _process at all - the screen
-    // renders a link carrying do_delete - so this clicks the app's own link. Left in
-    // place they pile up on the one customer every suite shares, and that customer's
-    // screen is on the critical path of half the suite.
+    // The trash link on the row does take just this note. It goes to note_admin with
+    // do_delete and the row's note_id, which calls note_delete( table, owner, note_id )
+    // - the three argument form. The two argument call that would empty the customer is
+    // handle_hook( 'note_delete' ), which fires when the customer itself is deleted, not
+    // from this link. Checked by putting three notes on the customer and pressing the
+    // middle one's link: the other two stayed.
     page.on('dialog', d => d.accept());
     const customerPage = '/?m[]=customer&p[]=customer_admin_edit&customer_id=' + customerId;
     const row = page.locator('tr', { hasText: note }).first();
@@ -482,8 +542,7 @@ test.describe('Form auth key, popups', () => {
     ]);
 
     // Checked back on the customer screen, not on wherever the delete redirected to:
-    // asserting against the landing page passes whether or not anything was removed,
-    // which is how the first version of this cleanup did nothing at all and said it had.
+    // asserting against the landing page passes whether or not anything was removed.
     await page.goto(customerPage);
     await expect(
       page.locator('tr', { hasText: note }),
@@ -516,29 +575,25 @@ test.describe('Form auth key, popups', () => {
   });
 
   test('the quick add transaction form still saves', async ({ page }) => {
-    const name = stamped('CSRF Test Transaction');
-    try {
-      await page.goto('/?m[]=finance&p[]=finance');
+    await page.goto('/?m[]=finance&p[]=finance');
 
-      const form = page.locator('form#quick_add_form').first();
-      await expect(form.locator('input[name="form_auth_key"]').first()).toBeAttached();
+    const form = page.locator('form#quick_add_form').first();
+    await expect(form.locator('input[name="form_auth_key"]').first()).toBeAttached();
 
-      await form.locator('[name="name"]').first().fill(name);
-      await form.locator('[name="credit"]').first().fill('12.34');
-      await form.locator('input[type="submit"][name="addnew"]').first().click();
+    await form.locator('[name="name"]').first().fill('CSRF Test Transaction');
+    await form.locator('[name="credit"]').first().fill('12.34');
+    await form.locator('input[type="submit"][name="addnew"]').first().click();
 
-      await expect(page.locator('body')).toContainText(/transaction saved successfully/i);
-    } finally {
-      // Quick add redirects to the list without saying which row it wrote, so the
-      // fixture is found by its stamped name. Searching rather than scanning the list:
-      // the list is paged, and the row just written is not reliably on the first page.
-      const doomed = await idsFromSearch(page, '/?m[]=finance&p[]=finance_list', name, 'finance_id');
-      expect(doomed, 'the transaction this test saved should be findable again, exactly once')
-        .toHaveLength(1);
-      await deleteRecord(page, '/?m[]=finance', 'save_finance', 'finance_id', doomed[0]);
-    }
+    await expect(page.locator('body')).toContainText(/transaction saved successfully/i);
+
+    // The quick add row goes back to the list rather than to the transaction, so the
+    // transaction it made is the newest one on the list carrying its name. finance.php
+    // deletes this one without asking to confirm.
+    const listed = await listedIds(page, '/?m[]=finance&p[]=finance', 'finance_id', 'CSRF Test Transaction');
+    const transaction = listed[listed.length - 1];
+    expect(transaction, 'the new transaction should be on the finance list').toBeTruthy();
+    madeHere = () => deleteRecord(page, '/?m[]=finance', 'save_finance', 'finance_id', transaction);
   });
-
 
   test('saving a transaction is refused without a token', async ({ page }) => {
     const response = await page.request.post('/?m[]=finance', {
@@ -593,8 +648,12 @@ test.describe('Form auth key, popups', () => {
   });
 
   test('the invoice form still saves', async ({ page }) => {
-    let invoiceId: string | null = null;
+    // Named for this run, which is what makes it findable again: saving an invoice goes
+    // back to the list rather than to the invoice, so there is no id in the response,
+    // and scanning the list is no good because it pages at twenty. The list's own
+    // search takes the stamped name and returns exactly this invoice.
     const name = stamped('CSRF Test Invoice');
+    let doomed: string[] = [];
     try {
       await page.goto('/?m[]=invoice&p[]=invoice_admin&invoice_id=new&customer_id=1');
       const form = page.locator('form:has(input[name="_process"][value="save_invoice"])');
@@ -604,20 +663,13 @@ test.describe('Form auth key, popups', () => {
       await form.locator('input[type="submit"][name="butt_save"]').first().click();
 
       await expect(page.locator('body')).toContainText(/invoice saved successfully/i);
-
-      invoiceId = idInUrl(page.url(), 'invoice_id');
     } finally {
-      // Saving an invoice does not land back on it - it returns to whatever the invoice
-      // belongs to - so the address bar usually has no id and the row is found by name.
-      const doomed = invoiceId
-        ? [invoiceId]
-        : await idsFromSearch(page, '/?m[]=invoice&p[]=invoice_admin', name, 'invoice_id');
+      doomed = await idsFromSearch(page, '/?m[]=invoice&p[]=invoice_admin', name, 'invoice_id');
       expect(doomed, 'the invoice this test saved should be findable again, exactly once')
         .toHaveLength(1);
       await deleteRecord(page, '/?m[]=invoice', 'save_invoice', 'invoice_id', doomed[0]);
     }
   });
-
 
   test('saving an invoice is refused without a token', async ({ page }) => {
     const response = await page.request.post('/?m[]=invoice', {
@@ -696,26 +748,23 @@ test.describe('Form auth key, popups', () => {
   test('the file form still saves', async ({ page }) => {
     // The file form has no plain text field - the description is a rich text editor -
     // so this saves it as it stands, which is what the Save button does.
-    let fileId: string | null = null;
-    try {
-      await page.goto('/?m[]=file&p[]=file_admin&file_id=new');
-      const form = page.locator('form:has(input[name="_process"][value="save_file"])');
-      await expect(form.locator('input[name="form_auth_key"]').first()).toBeAttached();
+    await page.goto('/?m[]=file&p[]=file_admin&file_id=new');
+    const form = page.locator('form:has(input[name="_process"][value="save_file"])');
+    await expect(form.locator('input[name="form_auth_key"]').first()).toBeAttached();
 
-      await form.locator('input[type="submit"][name="butt_save"]').first().click();
-      await expect(page.locator('body')).not.toContainText(/invalid or expired form submission/i);
-      await expect(page.locator('body')).toContainText(/saved successfully/i);
+    await Promise.all([
+      page.waitForNavigation({ waitUntil: 'load' }),
+      form.locator('input[type="submit"][name="butt_save"]').first().click(),
+    ]);
 
-      // Saved with nothing uploaded, so the row has no name to find it by later - the
-      // address bar is the only handle on it. Asserted, because without the id this
-      // test used to leave a nameless file row behind on every run.
-      fileId = idInUrl(page.url(), 'file_id');
-      expect(fileId, 'saving a file should land on it, so this test can remove it').toBeTruthy();
-    } finally {
-      if (fileId) {
-        await deleteRecord(page, '/?m[]=file', 'save_file', 'file_id', fileId);
-      }
-    }
+    // This record has no name to find it by - the form has no plain text field - so the
+    // id has to come off the url the save landed on.
+    const fileId = idIn(page.url(), 'file_id');
+    expect(fileId, 'the save should land on the file it made').toBeTruthy();
+    madeHere = () => deleteRecord(page, '/?m[]=file', 'save_file', 'file_id', String(fileId));
+
+    await expect(page.locator('body')).not.toContainText(/invalid or expired form submission/i);
+    await expect(page.locator('body')).toContainText(/saved successfully/i);
   });
 
   test('saving a file is refused without a token', async ({ page }) => {
@@ -830,5 +879,45 @@ test.describe('Form auth key, popups', () => {
       form: { _process: 'save_change_request', change_request_id: 'new', request: 'Should Not Save' },
     });
     expect(response.status()).toBe(403);
+  });
+});
+
+/**
+ * Every fixture above is deleted again as its test finishes. This is what notices when
+ * one of them stops being.
+ *
+ * A module whose delete quietly breaks leaves one more record behind on every run and
+ * nothing else in the suite complains, until a list pages the record another test is
+ * looking for out of view or a screen that draws a control per record grows to half a
+ * megabyte. Both have happened here. Two is slack for a record an interrupted run left
+ * behind, not room to grow in.
+ */
+const LEFTOVERS_ALLOWED = 2;
+
+test.describe('Form auth key fixtures', () => {
+  test.beforeEach(async ({ page }) => {
+    await login(page);
+  });
+
+  test('the records the module tests make are deleted again', async ({ page }) => {
+    // Reading every page of twenty-odd lists is more than the default timeout allows,
+    // and a list that has already been let go is the slowest of all.
+    test.slow();
+
+    const piling: string[] = [];
+    for (const mod of MODULES) {
+      // Counting stops as soon as there are too many: the number is not interesting past
+      // that point, and stopping is what keeps this from crawling over a list that has
+      // already collected a few hundred.
+      const ids = await listedIds(page, await listFor(page, mod), mod.idParam, mod.label, LEFTOVERS_ALLOWED + 1);
+      if (ids.length > LEFTOVERS_ALLOWED) {
+        piling.push(`${mod.name}: more than ${LEFTOVERS_ALLOWED} records named ${JSON.stringify(mod.label)}`);
+      }
+    }
+
+    expect(
+      piling,
+      'these modules are leaving their fixtures behind - delete the rows, then fix the cleanup that should have',
+    ).toEqual([]);
   });
 });

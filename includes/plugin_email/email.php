@@ -640,11 +640,10 @@ class module_email extends module_base
 		}
 	}
 
-	// The website module fires this hook with two arguments, not three, so the third has
-	// to have a default - without one, deleting a website died with an ArgumentCountError
-	// before it reached the DELETE, and the website stayed. hook_invoice_deleted() above
-	// already defends itself the same way.
-	public static function hook_website_deleted( $callback_name, $website_id, $remove_linked_data = false ) {
+	// website.php dispatches this one with the website id alone, so a third parameter
+	// here - copied from hook_customer_deleted() above, which does get one - made every
+	// website delete a fatal under PHP 8.
+	public static function hook_website_deleted( $callback_name, $website_id ) {
 		if ( (int) $website_id > 0 ) {
 			delete_from_db( 'email', 'website_id', $website_id );
 		}

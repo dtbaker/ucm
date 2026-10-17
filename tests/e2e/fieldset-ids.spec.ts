@@ -39,10 +39,10 @@ const THEME_SETTINGS = '/?m[]=theme&p[]=theme_settings';
  * data-element-id on every row, so this sees the same rows under either one.
  *
  * Deliberately not every [id] on the page. These screens have duplicate ids of their own
- * that have nothing to do with fieldsets - module_extra builds its row id from the extra's
- * key, so two extras whose keys differ only in punctuation both come out as `extra_new`,
- * and a help topic used twice renders two `help_<md5>` icons. Those are real and tracked
- * separately; counting them here would make this spec fail for a reason it is not about.
+ * that have nothing to do with fieldsets - the extra field rows and the help icons used to
+ * repeat theirs, and still do for a couple of form element ids. The two generators are
+ * fixed and covered by duplicate-ids.spec.ts; counting any of this here would make this
+ * spec fail for a reason it is not about.
  */
 async function duplicateFieldsetIds( page: Page, url: string ): Promise<string[]> {
   await page.goto( url );

@@ -20,6 +20,13 @@ import { Fixture, countFixtures } from './db';
  * many. It reads the database directly because no screen in the app gives an honest
  * total - the lists page at twenty rows, which is exactly how the backlog hid.
  *
+ * csrf-modules.spec.ts has a guard of its own over the modules it drives, which reads
+ * their list screens. This one is the whole-suite version and reads the database, so
+ * it sees the twenty-one tables the other suites write to as well, and it sees a true
+ * count rather than as much of one as a paged list will show. Keeping both is
+ * deliberate: the screen-level check also proves the record is gone from the list a
+ * person would look at, which a row count cannot.
+ *
  * When this fails, the message names the table. Either a spec has stopped cleaning up
  * after itself, or the database is carrying a backlog from before it did:
  *
@@ -80,6 +87,12 @@ const FIXTURES: Fixture[] = [
   { table: 'ticket_type', column: 'name', like: 'CSRF %' },
   { table: 'product_category', column: 'product_category_name', like: 'CSRF %' },
   { table: 'faq_product', column: 'name', like: 'CSRF %' },
+  // These three name their fixture in a key column, not a name column. Easy to miss,
+  // and missed on the first pass: csrf-modules' own guard found 208 templates and 191
+  // ticket fields that this list had walked straight past.
+  { table: 'template', column: 'template_key', like: 'csrf_test_%' },
+  { table: 'ticket_data_key', column: 'key', like: 'csrf_test_%' },
+  { table: 'extra_default', column: 'extra_key', like: 'csrf_test_%' },
 ];
 
 test.describe( 'Leftovers', () => {

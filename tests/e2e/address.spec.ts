@@ -57,7 +57,7 @@ test.describe('Customer address', () => {
     // the only way it does not add a customer per run is to delete the one it made.
     await deleteRecord(
       page, '/?m[]=customer', 'save_customer', 'customer_id', String(customerId),
-      'customer_id', { delete_others: '1' },
+      { extra: { delete_others: '1' } },
     );
     await page.goto('/?m[]=customer&p[]=customer_admin_list&customer_type_id=0&search[generic]=' + encodeURIComponent(name));
     await expect(
