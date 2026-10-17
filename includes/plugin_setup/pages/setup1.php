@@ -19,9 +19,17 @@ if ( isset( $_REQUEST['save'] ) ) {
 	$db_user   = $_REQUEST['db_user'];
 	$db_pass   = $_REQUEST['db_pass'];
 	$db_prefix = $_REQUEST['db_prefix'];
-	$link      = mysqli_connect( $db_host, $db_user, $db_pass, $db_name );
-	if ( ! $link || mysqli_connect_errno() ) {
-		set_error( "Sorry there was an error connecting to the mysql database. Please ensure the details you entered are correct and try again.\n The error was: <strong>" . mysqli_connect_error() . "</strong> \nPlease contact your hosting provider if you need assistance with database connection details." );
+	// mysqli throws on a failed connection since PHP 8.1, so a mistyped password was a
+	// blank 500 rather than the message below.
+	try {
+		$link          = mysqli_connect( $db_host, $db_user, $db_pass, $db_name );
+		$connect_error = $link ? '' : mysqli_connect_error();
+	} catch ( mysqli_sql_exception $e ) {
+		$link          = false;
+		$connect_error = $e->getMessage();
+	}
+	if ( ! $link ) {
+		set_error( "Sorry there was an error connecting to the mysql database. Please ensure the details you entered are correct and try again.\n The error was: <strong>" . h( (string) $connect_error ) . "</strong> \nPlease contact your hosting provider if you need assistance with database connection details." );
 		print_header_message();
 	} else {
 		// db worked! woop woop

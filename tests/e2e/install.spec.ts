@@ -18,7 +18,8 @@ const INSTALL_URL = process.env.UCM_INSTALL_BASE_URL || 'http://localhost:8092';
 const DB = {
   host: 'db',
   prefix: 'ucm_',
-  name: 'ucm_install_test',
+  // Overridable so a second install stack (a worktree's) can use a database of its own.
+  name: process.env.UCM_INSTALL_DB_NAME || 'ucm_install_test',
   user: 'ucm',
   pass: 'ucm',
 };
