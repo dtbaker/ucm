@@ -351,7 +351,7 @@ if($current_theme == 'metis_old'){
 
 <div class="alert alert-info alert-dismissable">
     <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
-    Welcome to the <strong>Ultimate Client Manager Demo</strong>. This is a preview of <a href="http://codecanyon.net/item/ultimate-client-manager-crm-pro-edition/2621629?ref=dtbaker&amp;utm_source=Demo&amp;utm_medium=Header&amp;utm_campaign=Metis&amp;utm_content=Metis" target="_blank">UCM Pro Edition</a> with the default Metis theme.  This demo resets every now and then, feel
+    Welcome to the <strong>Ultimate Client Manager Demo</strong>. This is a preview of <a href="http://codecanyon.net/item/ultimate-client-manager-crm-pro-edition/2621629?ref=dtbaker" target="_blank">UCM Pro Edition</a> with the default Metis theme.  This demo resets every now and then, feel
     free to test out all the features before purchase. (<a href="<?php echo htmlspecialchars($_SERVER['REQUEST_URI']) . (strpos($_SERVER['REQUEST_URI'],'?') === false ? '?' : '&') . 'demo_theme=theme_adminlte';?>">Swap to the new AdminLTE theme</a>)
 </div>
 <?php }
@@ -414,13 +414,3 @@ if(count($bits) > 1 && strpos($_SERVER['HTTP_HOST'], 'demo.net')){
 }
 ?>
 
-<script>
-    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
-            (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
-        m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
-    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
-
-    ga('create', 'UA-27663088-4', 'ultimateclientmanager.com');
-    ga('send', 'pageview');
-
-</script>
