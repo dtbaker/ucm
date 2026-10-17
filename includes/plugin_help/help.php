@@ -15,7 +15,7 @@ require_once( dirname( __FILE__ ) . '/docs_api.php' );
  *
  *   index.php works out a page identity   ->  invoice-invoice_admin_edit
  *   the plugin's invoice.help.json maps it ->  invoices/editing
- *   the article comes from, in order:         cache, the copy in the download, the web
+ *   the article comes from, in order:         cache, the web, an old copy, the index
  *
  * The documentation is fetched by PHP rather than by the browser. That is not an
  * implementation detail, it is the privacy design: a request the browser never makes
@@ -205,7 +205,8 @@ class module_help extends module_base
 	}
 
 	/**
-	 * Every article that ships inside this download, as slug => title and summary.
+	 * Every article in the documentation, as slug => title and summary. Only this index ships
+ * with the plugin; the articles themselves are read from the documentation site.
 	 *
 	 * This doubles as the list of slugs it is permissible to build a URL out of. A slug
 	 * that is not in here is answered locally and never becomes a request - which is what
@@ -235,13 +236,14 @@ class module_help extends module_base
 	/**
 	 * The article for a slug, however we can get it.
 	 *
-	 * In order: a recently fetched copy, the copy in the download, the web, an old copy.
+	 * In order: a recently fetched copy, the documentation site, an older fetched copy, and
+	 * finally the title and summary from the shipped index with a link to the full article.
 	 * The caller always gets something printable, or false when the slug is not one this
 	 * release knows about.
 	 *
-	 * The shipped copy is deliberately ahead of the network. Plenty of these installations
-	 * sit on an intranet with no route out, and help that spins for five seconds before
-	 * giving up is worse than help that is a few weeks out of date.
+	 * The article text is not shipped in the download. A copy kept there drifted from the
+	 * website between releases, and an installation with no route out still gets a title,
+	 * a summary and a link, quickly: the circuit breaker stops it retrying a dead network.
 	 *
 	 * @param string $slug
 	 *
@@ -259,8 +261,6 @@ class module_help extends module_base
 			return $cached['article'];
 		}
 
-		$bundled = self::load_bundled( $slug );
-
 		if ( self::remote_allowed() ) {
 			$remote = self::fetch_remote( $slug );
 			if ( $remote ) {
@@ -272,9 +272,6 @@ class module_help extends module_base
 			self::breaker_trip();
 		}
 
-		if ( $bundled ) {
-			return $bundled;
-		}
 		if ( $cached && isset( $cached['article'] ) ) {
 			$cached['article']['stale'] = true;
 
@@ -293,31 +290,6 @@ class module_help extends module_base
 			'slug'    => $slug,
 			'stale'   => false,
 		);
-	}
-
-	/**
-	 * The copy of an article that shipped in the download.
-	 *
-	 * The whole corpus is a few hundred kilobytes of JSON, which is less than one
-	 * screenshot, so there is no reason for an installation ever to be unable to show its
-	 * own documentation.
-	 *
-	 * @param string $slug
-	 *
-	 * @return array|false
-	 */
-	public static function load_bundled( $slug ) {
-		$slug = ucm_help_docs::clean_slug( $slug );
-		if ( ! $slug ) {
-			return false;
-		}
-		$file = dirname( __FILE__ ) . '/content/' . str_replace( '/', '--', $slug ) . '.json';
-		if ( ! is_file( $file ) ) {
-			return false;
-		}
-		$data = json_decode( (string) file_get_contents( $file ), true );
-
-		return ucm_help_docs::clean_article( $data );
 	}
 
 	/**

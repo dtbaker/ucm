@@ -7,7 +7,8 @@
  *   php scripts/upgrade-test-tools.php bump        <root> <plugin> <note>        version + 0.001, with a changelog line
  *   php scripts/upgrade-test-tools.php set-version <root> <plugin> <version>     set an exact version (no changelog line)
  *   php scripts/upgrade-test-tools.php add-column  <root> <plugin> <table> <col> make the plugin's upgrade SQL add a column
- *   php scripts/upgrade-test-tools.php help-marker <root> <slug> <text>          put a marker paragraph at the top of a bundled help article
+ *   php scripts/upgrade-test-tools.php help-marker <root> <slug> <text>          put a marker at the start of an article's summary in the help index
+ *   php scripts/upgrade-test-tools.php help-map    <root> <plugin> <page> <slug> point one screen in a plugin's screen map at another article
  *   php scripts/upgrade-test-tools.php version     <root> <plugin>               print the plugin's version
  *   php scripts/upgrade-test-tools.php plugins-json <root>                       every plugin's version, as the client sends it
  *   php scripts/upgrade-test-tools.php summarise   < response.json               the server's answer: message, then each offer in order
@@ -170,22 +171,39 @@ switch ( $cmd ) {
 		break;
 
 	case 'help-marker':
+		// Only the index of articles ships with the help plugin; the article text is read
+		// from the documentation site. So the marker goes into the summary, which is what the
+		// help panel shows when it cannot reach the site.
 		$slug = $argv[3];
 		$text = isset( $argv[4] ) ? $argv[4] : 'local upgrade test marker';
-		if ( ! preg_match( '#^[a-z0-9_\-]+(/[a-z0-9_\-]+)*$#', $slug ) ) {
-			ut_fail( "bad slug: $slug" );
+		$file = "$root/includes/plugin_help/content/_index.json";
+		$index = is_file( $file ) ? json_decode( file_get_contents( $file ), true ) : null;
+		if ( ! is_array( $index ) || ! isset( $index[ $slug ] ) ) {
+			ut_fail( "no article $slug in $file" );
 		}
-		$file = "$root/includes/plugin_help/content/" . str_replace( '/', '--', $slug ) . '.json';
-		if ( ! is_file( $file ) ) {
-			ut_fail( "no bundled article at $file" );
+		$summary                  = isset( $index[ $slug ]['summary'] ) ? (string) $index[ $slug ]['summary'] : '';
+		$index[ $slug ]['summary'] = $text . ' ' . $summary;
+		file_put_contents( $file, json_encode( $index, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE ) . "\n" );
+		echo "help index $slug: marker added to the summary\n";
+		break;
+
+	case 'help-map':
+		// A plugin's screen map says which article each of its screens opens. It lives in the
+		// plugin's own folder, so it reaches an install with that plugin's update.
+		list( , , , $name, $page, $slug ) = $argv + array_fill( 0, 6, '' );
+		$file = "$root/includes/plugin_$name/$name.help.json";
+		$map  = is_file( $file ) ? json_decode( file_get_contents( $file ), true ) : null;
+		if ( ! is_array( $map ) || ! isset( $map['pages'] ) || ! is_array( $map['pages'] ) ) {
+			ut_fail( "no screen map at $file" );
 		}
-		$article = json_decode( file_get_contents( $file ), true );
-		if ( ! is_array( $article ) || ! isset( $article['html'] ) ) {
-			ut_fail( "$file is not an article with an html field" );
+		$index = json_decode( (string) @file_get_contents( "$root/includes/plugin_help/content/_index.json" ), true );
+		if ( ! is_array( $index ) || ! isset( $index[ $slug ] ) ) {
+			ut_fail( "$slug is not in the help index, so the app would refuse it" );
 		}
-		$article['html'] = '<p>' . htmlspecialchars( $text ) . '</p>' . "\n" . $article['html'];
-		file_put_contents( $file, json_encode( $article, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE ) . "\n" );
-		echo "help $slug: marker added\n";
+		$old                   = isset( $map['pages'][ $page ] ) ? $map['pages'][ $page ] : '(none)';
+		$map['pages'][ $page ] = $slug;
+		file_put_contents( $file, json_encode( $map, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE ) . "\n" );
+		echo "$name screen map: $page $old -> $slug\n";
 		break;
 
 	default:

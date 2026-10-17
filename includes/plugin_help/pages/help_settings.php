@@ -20,7 +20,7 @@ module_config::print_settings_form(
 			'default'     => 1,
 			'type'        => 'checkbox',
 			'description' => 'Fetch the latest documentation from ultimateclientmanager.com.',
-			'help'        => 'A copy of the documentation is included in this download and is used first, so help works with no internet connection at all. With this ticked, opening a help article also checks the documentation site for a newer version and keeps it for a week. The request is made by this server, not by your browser, and it sends only three things: which article, which version of this software, and a language code. It does not send your licence key, your web address, your name, or anything about your customers. Untick it on a closed network and this installation will never contact anything.'
+			'help'        => 'With this ticked, opening a help article fetches it from the documentation site and keeps the copy for a week. Unticked, the help button shows each article\'s title and summary with a link to read it online. The request is made by this server, not by your browser, and it sends only three things: which article, which version of this software, and a language code. It does not send your licence key, your web address, your name, or anything about your customers. Untick it on a closed network and this installation will never contact anything.'
 		),
 	)
 );

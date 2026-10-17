@@ -585,34 +585,49 @@ for p in config faq; do php "$TOOLS" bump "$SERVER" $p "behind on config"; done
 
 ### S6. Help documentation
 
-Help articles ship inside the help plugin, in `includes/plugin_help/content/`. An edited
-article only reaches an install when the help plugin's version goes up.
+The help panel reads each article from the documentation site. What ships with the app is
+the index of articles (`includes/plugin_help/content/_index.json`, in the help plugin) and
+one screen map per plugin (`includes/plugin_<name>/<name>.help.json`), which says which
+article each screen opens. Each reaches an install only with its own plugin's update.
 
-**Edit without a bump.**
+In these containers the documentation site is unreachable (setup step 6) and remote help is
+off (setup step 7), so the panel shows what an install without internet sees: the title and
+summary from the index, and a link to read the article online.
+
+**An index edit without a bump.**
 
 ```bash
-php "$TOOLS" help-marker "$SERVER" using/faq "LOCAL-UPGRADE-TEST help marker"
+php "$TOOLS" help-marker "$SERVER" using/faq "LOCAL-UPGRADE-TEST summary marker"
 ```
 
 1. `ut_offer`. Expect `offers: 0`. The edit alone is not offered.
 
-**Edit with a bump.**
+**With a bump.**
 
 ```bash
-php "$TOOLS" bump "$SERVER" help "bundled help update"
+php "$TOOLS" bump "$SERVER" help "help index update"
 ```
 
 2. `ut_offer`. `help` is offered.
 3. Before upgrading, open the FAQ screen on the client (`/?m[]=faq&p[]=faq_questions`) and
-   open the help panel with the **?** button at the top right (`#header_help`). It opens a
-   "Help" pop-up headed "FAQ", without the marker.
+   open the help panel with the **?** button at the top right (`#header_help`). It shows the
+   heading "FAQ", its one-line summary without the marker, and "Read this on the
+   documentation site".
 4. Upgrade on the client.
-5. Open the same screen's help again. The marker paragraph,
-   "LOCAL-UPGRADE-TEST help marker", is now the first paragraph of the article body,
-   under the "FAQ" heading and the one-line summary (those two come from separate fields).
-   Also check the file:
-   `grep -c LOCAL-UPGRADE-TEST "$CLIENT/includes/plugin_help/content/using--faq.json"` prints `1`.
-6. Open the help on the Upgrade screen itself and record which article it shows. Today it
+5. Open the same screen's help again. The summary now starts with
+   "LOCAL-UPGRADE-TEST summary marker". Also check the file:
+   `grep -c LOCAL-UPGRADE-TEST "$CLIENT/includes/plugin_help/content/_index.json"` prints `1`.
+
+**A screen map change.** `ut_reset` first.
+
+```bash
+php "$TOOLS" help-map "$SERVER" faq faq-faq_questions install/installing
+php "$TOOLS" bump "$SERVER" faq "screen map update"
+```
+
+6. `ut_offer`. `faq` is offered, `help` is not.
+7. Upgrade on the client. The FAQ screen's help now opens "Installing" instead of "FAQ".
+8. Open the help on the Upgrade screen itself and record which article it shows. Today it
    is "The plugin system" (`developers/plugins`), not "Upgrading from 2.x"
    (`install/upgrading`). `config.help.json` is generated from the documentation site, and
    in `ucm-web` the frontmatter of `site/src/content/docs/developers/plugins.md` lists
@@ -767,7 +782,7 @@ sleep 3
    ends "Success! Everything worked." with no `failed`.
 5. `ut_version faq` and `ut_version help` print the new versions. The `ut_unzip` column
    exists: `db ucm_install_test -e "SHOW COLUMNS FROM ucm_faq LIKE 'ut_unzip'"`.
-6. The FAQ screen's help panel starts with "LOCAL-UPGRADE-TEST unzip marker".
+6. The FAQ screen's help panel summary starts with "LOCAL-UPGRADE-TEST unzip marker".
 7. `ut_offer` prints `offers: 0`: the client now matches the server.
 
 **S11b. An install from before the rewrite, with its database details in `includes/config.php`.**
@@ -943,7 +958,7 @@ S2 one plugin bumped            ...
 S3 database migration           ...
 S4 core file alone / new file   ...  (record what the core-file-alone offer was)
 S5 order: name / db / config    ...
-S6 help: no bump / bump / upgrade-screen article  ...
+S6 help: index no bump / index bump / screen map / upgrade-screen article  ...
 S7 messages: changelog / progress / escaping / rate limit  ...
 S8 licences (one line per row of the table)  ...
 S9 manual path                  ...

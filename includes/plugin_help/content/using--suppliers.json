@@ -1,8 +1,0 @@
-{
-	"slug": "using/suppliers",
-	"title": "Suppliers and vendors",
-	"summary": "Two different things with confusingly similar names, and what each is for.",
-	"html": "<p>These are two separate features and the naming does not help, so take them one at a time.</p>\n<h2>Suppliers</h2>\n<p>A supplier is a <a href=\"https://ultimateclientmanager.com/docs/using/customers/\">customer</a> record with the supplier type. It is the\nsame record with different fields shown and its own place in the menu — so a company you\nboth buy from and sell to is one record, not two.</p>\n<p>Use suppliers for the companies you buy from. Products can record which supplier they come\nfrom, which makes a price change easy to trace through the catalogue. See\n<a href=\"https://ultimateclientmanager.com/docs/using/products/\">Products</a>.</p>\n<h2>Vendors</h2>\n<p>A vendor is a grouping. It gathers staff members or suppliers together under one heading,\nwhich is useful when you subcontract: a vendor can hold the several people who work for\none subcontracting firm, and you can see everything assigned across them.</p>\n<p>It is a light feature and plenty of installations never use it. If it is not useful to\nyou, switch the plugin off in <em>Settings → Plugins</em> and the menu goes away.</p>",
-	"video": "",
-	"updated": ""
-}
