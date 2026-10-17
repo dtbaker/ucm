@@ -640,7 +640,10 @@ class module_email extends module_base
 		}
 	}
 
-	public static function hook_website_deleted( $callback_name, $website_id, $remove_linked_data ) {
+	// website.php dispatches this one with the website id alone, so a third parameter
+	// here - copied from hook_customer_deleted() above, which does get one - made every
+	// website delete a fatal under PHP 8.
+	public static function hook_website_deleted( $callback_name, $website_id ) {
 		if ( (int) $website_id > 0 ) {
 			delete_from_db( 'email', 'website_id', $website_id );
 		}

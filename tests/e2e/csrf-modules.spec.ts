@@ -1,5 +1,5 @@
 import { test, expect, Page } from '@playwright/test';
-import { login, formAuthKey, existingId, aCustomer, anInvoice, aFile, anAddress } from './seed';
+import { login, formAuthKey, existingId, aCustomer, anInvoice, aFile, anAddress, deleteRecord, listedIds } from './seed';
 
 /**
  * Per-module form_auth_key coverage.
@@ -12,6 +12,12 @@ import { login, formAuthKey, existingId, aCustomer, anInvoice, aFile, anAddress 
  *   2. post the same thing with no token and see a 403
  *
  * The first test is the one that matters. Adding a module here is one entry.
+ *
+ * Saving a real form makes a real record, so every entry also says how to delete the one
+ * it made again. Without that they pile up, one per module per run: by October 2026 this
+ * file had left 198 companies, 197 websites, 201 users, 199 contracts and 209 templates
+ * behind, and the staff screen - which draws a checkbox per company - had grown to 445KB.
+ * The last test in this file fails if that ever starts again.
  */
 
 type ModuleCase = {
@@ -29,6 +35,20 @@ type ModuleCase = {
   postUrl: string;
   /** body for the no-token post, minus the token */
   badTokenBody: Record<string, string>;
+  /** the field this module addresses its record by, in the save redirect and the delete */
+  idParam: string;
+  /** the text the record's row links under, on the list below */
+  label: string;
+  /**
+   * A page that lists the module's records, used to find the record again when the save
+   * redirect does not name it, and by the guard at the bottom of this file. {customer} is
+   * replaced the same way it is in url.
+   */
+  list: string;
+  /** the key confirm_delete() was given, where the module does not pass its own id field */
+  confirmKey?: string;
+  /** the delete button's name, where it is not butt_del */
+  deleteButton?: string;
   /**
    * Some records cannot be created from their own edit page, so there is nothing to
    * open on a fresh install. When set, this body is posted with a real token first and
@@ -46,6 +66,9 @@ const MODULES: ModuleCase[] = [
     saved: /company saved successfully/i,
     postUrl: '/?m[]=company',
     badTokenBody: { _process: 'save_company', company_id: 'new', name: 'Should Not Save' },
+    idParam: 'company_id',
+    label: 'CSRF Test Company',
+    list: '/?m[]=company&p[]=company_settings',
   },
   {
     name: 'member',
@@ -55,6 +78,9 @@ const MODULES: ModuleCase[] = [
     saved: /member saved successfully/i,
     postUrl: '/?m[]=member',
     badTokenBody: { _process: 'save_member', member_id: 'new', first_name: 'Should Not Save' },
+    idParam: 'member_id',
+    label: 'CSRF Test',
+    list: '/?m[]=member&p[]=member_admin_list',
   },
   {
     name: 'website',
@@ -64,6 +90,9 @@ const MODULES: ModuleCase[] = [
     saved: /saved successfully/i,
     postUrl: '/?m[]=website',
     badTokenBody: { _process: 'save_website', website_id: 'new', name: 'Should Not Save', _redirect: '/' },
+    idParam: 'website_id',
+    label: 'CSRF Test Website',
+    list: '/?m[]=website&p[]=website_admin_list',
   },
   {
     name: 'subscription',
@@ -73,6 +102,9 @@ const MODULES: ModuleCase[] = [
     saved: /subscription saved successfully/i,
     postUrl: '/?m[]=subscription',
     badTokenBody: { _process: 'save_subscription', subscription_id: 'new', name: 'Should Not Save', amount: '1' },
+    idParam: 'subscription_id',
+    label: 'CSRF Test Subscription',
+    list: '/?m[]=subscription&p[]=subscription_admin_list',
   },
   {
     name: 'template',
@@ -82,6 +114,9 @@ const MODULES: ModuleCase[] = [
     saved: /template saved successfully/i,
     postUrl: '/?m[]=template',
     badTokenBody: { _process: 'save_template', template_id: 'new', template_key: 'should_not_save' },
+    idParam: 'template_id',
+    label: 'csrf_test_template',
+    list: '/?m[]=template&p[]=template_list',
   },
   {
     name: 'group',
@@ -94,6 +129,9 @@ const MODULES: ModuleCase[] = [
     saved: /group saved successfully/i,
     postUrl: '/?m[]=group',
     badTokenBody: { _process: 'save_group', group_id: 'new', name: 'Should Not Save', owner_table: 'customer' },
+    idParam: 'group_id',
+    label: 'CSRF Test Group',
+    list: '/?m[]=group&p[]=group_settings',
   },
   {
     name: 'product category',
@@ -103,6 +141,9 @@ const MODULES: ModuleCase[] = [
     saved: /product category saved successfully/i,
     postUrl: '/?m[]=product',
     badTokenBody: { _process: 'save_product_category', product_category_id: 'new', product_category_name: 'Should Not Save' },
+    idParam: 'product_category_id',
+    label: 'CSRF Test Category',
+    list: '/?m[]=product&p[]=product_admin_category_list',
   },
   {
     name: 'extra field',
@@ -112,6 +153,9 @@ const MODULES: ModuleCase[] = [
     saved: /extra field saved successfully/i,
     postUrl: '/?m[]=extra',
     badTokenBody: { _process: 'save_extra_default', extra_default_id: 'new', owner_table: 'file', extra_key: 'should_not_save' },
+    idParam: 'extra_default_id',
+    label: 'csrf_test_field',
+    list: '/?m[]=extra&p[]=extra_settings',
   },
   {
     name: 'FAQ',
@@ -121,6 +165,11 @@ const MODULES: ModuleCase[] = [
     saved: /faq saved successfully/i,
     postUrl: '/?m[]=faq',
     badTokenBody: { _process: 'save_faq', faq_id: 'new', question: 'Should Not Save' },
+    idParam: 'faq_id',
+    label: 'CSRF test question?',
+    list: '/?m[]=faq&p[]=faq_questions',
+    // faq.php hands confirm_delete() customer_id rather than the faq's own id.
+    confirmKey: 'customer_id',
   },
   {
     name: 'FAQ product',
@@ -130,6 +179,10 @@ const MODULES: ModuleCase[] = [
     saved: /faq product saved successfully/i,
     postUrl: '/?m[]=faq',
     badTokenBody: { _process: 'save_faq_product', faq_product_id: 'new', name: 'Should Not Save' },
+    idParam: 'faq_product_id',
+    label: 'CSRF Test FAQ Product',
+    list: '/?m[]=faq&p[]=faq_products',
+    confirmKey: 'customer_id',
   },
   {
     name: 'user',
@@ -139,6 +192,9 @@ const MODULES: ModuleCase[] = [
     saved: /user saved successfully/i,
     postUrl: '/?m[]=user',
     badTokenBody: { _process: 'save_user', user_id: '0', name: 'Should Not Save', email: 'nope@example.com', _redirect: '/' },
+    idParam: 'user_id',
+    label: 'CSRF Test User',
+    list: '/?m[]=user&p[]=user_admin_list',
   },
   {
     name: 'customer contact',
@@ -148,6 +204,11 @@ const MODULES: ModuleCase[] = [
     saved: /saved successfully/i,
     postUrl: '/?m[]=user',
     badTokenBody: { _process: 'save_user', user_id: '0', name: 'Should Not Save', email: 'nope2@example.com', _redirect: '/' },
+    idParam: 'user_id',
+    label: 'CSRF Test Contact',
+    list: '/?m[]=user&p[]=contact_admin_list&customer_id={customer}',
+    // user.php looks for butt_del_contact on this one, and butt_del on the staff form.
+    deleteButton: 'butt_del_contact',
   },
   {
     name: 'security role',
@@ -157,6 +218,9 @@ const MODULES: ModuleCase[] = [
     saved: /role saved successfully/i,
     postUrl: '/?m[]=security',
     badTokenBody: { _process: 'save_security_role', security_role_id: 'new', name: 'Should Not Save' },
+    idParam: 'security_role_id',
+    label: 'CSRF Test Role',
+    list: '/?m[]=security&p[]=security_role_list',
   },
   {
     name: 'vendor',
@@ -166,6 +230,9 @@ const MODULES: ModuleCase[] = [
     saved: /vendor saved successfully/i,
     postUrl: '/?m[]=vendor',
     badTokenBody: { _process: 'save_vendor', vendor_id: 'new', vendor_name: 'Should Not Save' },
+    idParam: 'vendor_id',
+    label: 'CSRF Test Vendor',
+    list: '/?m[]=vendor&p[]=vendor_admin_list',
   },
   {
     name: 'contract',
@@ -175,6 +242,9 @@ const MODULES: ModuleCase[] = [
     saved: /contract saved successfully/i,
     postUrl: '/?m[]=contract',
     badTokenBody: { _process: 'save_contract', contract_id: 'new', name: 'Should Not Save', _redirect: '/' },
+    idParam: 'contract_id',
+    label: 'CSRF Test Contract',
+    list: '/?m[]=contract&p[]=contract_admin',
   },
   {
     name: 'newsletter',
@@ -184,6 +254,10 @@ const MODULES: ModuleCase[] = [
     saved: /newsletter saved successfully/i,
     postUrl: '/?m[]=newsletter',
     badTokenBody: { _process: 'save_newsletter', newsletter_id: 'new', subject: 'Should Not Save', _redirect: '/' },
+    idParam: 'newsletter_id',
+    label: 'CSRF Test Newsletter',
+    // newsletter_list only shows the ones that have been sent.
+    list: '/?m[]=newsletter&p[]=newsletter_list_draft',
   },
   {
     name: 'customer',
@@ -193,6 +267,9 @@ const MODULES: ModuleCase[] = [
     saved: /customer saved successfully/i,
     postUrl: '/?m[]=customer',
     badTokenBody: { _process: 'save_customer', customer_id: 'new', customer_name: 'Should Not Save' },
+    idParam: 'customer_id',
+    label: 'CSRF Test Customer',
+    list: '/?m[]=customer&p[]=customer_admin_list&customer_type_id=0',
   },
   {
     name: 'customer type',
@@ -202,6 +279,9 @@ const MODULES: ModuleCase[] = [
     saved: /saved successfully/i,
     postUrl: '/?m[]=customer',
     badTokenBody: { _process: 'save_customer_type', customer_type_id: 'new', type_name: 'Should Not Save' },
+    idParam: 'customer_type_id',
+    label: 'CSRF Test Customer Type',
+    list: '/?m[]=customer&p[]=customer_settings_types',
   },
   {
     name: 'ticket type',
@@ -211,6 +291,9 @@ const MODULES: ModuleCase[] = [
     saved: /ticket type saved successfully/i,
     postUrl: '/?m[]=ticket',
     badTokenBody: { _process: 'save_ticket_type', ticket_type_id: 'new', name: 'Should Not Save' },
+    idParam: 'ticket_type_id',
+    label: 'CSRF Test Ticket Type',
+    list: '/?m[]=ticket&p[]=ticket_settings_types',
   },
   {
     name: 'ticket field',
@@ -220,6 +303,9 @@ const MODULES: ModuleCase[] = [
     saved: /ticket field saved successfully/i,
     postUrl: '/?m[]=ticket',
     badTokenBody: { _process: 'save_ticket_data_key', ticket_data_key_id: 'new', key: 'should_not_save' },
+    idParam: 'ticket_data_key_id',
+    label: 'csrf_test_key',
+    list: '/?m[]=ticket&p[]=ticket_settings_fields',
   },
   {
     name: 'job',
@@ -229,6 +315,9 @@ const MODULES: ModuleCase[] = [
     saved: /job saved successfully/i,
     postUrl: '/?m[]=job',
     badTokenBody: { _process: 'save_job', job_id: 'new', name: 'Should Not Save', customer_id: '1', _redirect: '/' },
+    idParam: 'job_id',
+    label: 'CSRF Test Job',
+    list: '/?m[]=job&p[]=job_admin',
   },
   {
     name: 'quote',
@@ -238,6 +327,9 @@ const MODULES: ModuleCase[] = [
     saved: /quote saved successfully/i,
     postUrl: '/?m[]=quote',
     badTokenBody: { _process: 'save_quote', quote_id: 'new', name: 'Should Not Save', customer_id: '1', _redirect: '/' },
+    idParam: 'quote_id',
+    label: 'CSRF Test Quote',
+    list: '/?m[]=quote&p[]=quote_admin',
   },
   {
     name: 'data type',
@@ -247,12 +339,36 @@ const MODULES: ModuleCase[] = [
     saved: /saved successfully/i,
     postUrl: '/?m[]=data',
     badTokenBody: { _process: 'save_data_type', data_type_id: 'new', data_type_name: 'Should Not Save' },
+    idParam: 'data_type_id',
+    label: 'CSRF Test Data Type',
+    list: '/?m[]=data&p[]=data_type_admin_list',
   },
 ];
 
+/**
+ * The record the test in hand has made, for the afterEach below. Playwright runs the
+ * tests in a file one at a time in the same worker, so one slot is enough.
+ */
+let created: { mod: ModuleCase; id: string } | null = null;
+
 test.describe('Form auth key, per module', () => {
   test.beforeEach(async ({ page }) => {
+    created = null;
     await login(page);
+  });
+
+  // In afterEach rather than at the end of each test, so the record is taken away again
+  // even when an assertion fails.
+  test.afterEach(async ({ page }) => {
+    if (!created) {
+      return;
+    }
+    const { mod, id } = created;
+    created = null;
+    await deleteRecord(page, mod.postUrl, mod.process, mod.idParam, id, {
+      confirmKey: mod.confirmKey,
+      button: mod.deleteButton,
+    });
   });
 
   for (const mod of MODULES) {
@@ -276,6 +392,10 @@ test.describe('Form auth key, per module', () => {
         url = url.replace('{customer}', await aCustomer(page));
       }
 
+      // Resolved before the save, because looking it up afterwards would navigate away
+      // from the page the assertions below read.
+      const list = await listFor(page, mod);
+
       await page.goto(url);
 
       const form = page.locator(`form:has(input[name="_process"][value="${mod.process}"])`);
@@ -288,7 +408,17 @@ test.describe('Form auth key, per module', () => {
       for (const [field, value] of Object.entries(mod.fill)) {
         await form.locator(`[name="${field}"]`).first().fill(value);
       }
-      await form.locator('input[type="submit"][name="butt_save"]').first().click();
+      await Promise.all([
+        page.waitForNavigation({ waitUntil: 'load' }),
+        form.locator('input[type="submit"][name="butt_save"]').first().click(),
+      ]);
+
+      // Found before the assertions below rather than after, so afterEach still has the
+      // record to delete when one of them fails.
+      const id = await savedId(page, mod, list);
+      expect(id, `the ${mod.name} test cannot find the record it just saved, so it cannot delete it again`)
+        .toBeTruthy();
+      created = { mod, id: String(id) };
 
       await expect(page.locator('body')).toContainText(mod.saved);
       await expect(page.locator('body')).not.toContainText(/invalid or expired form submission/i);
@@ -305,13 +435,56 @@ test.describe('Form auth key, per module', () => {
 });
 
 /**
+ * The id of the record a save just made.
+ *
+ * Most modules redirect to the record itself, so the id is already in the url. The ones
+ * that go back to their list instead - and the extra fields screen, which redirects to
+ * itself - are looked up by name. The fixture names in the table above belong to this
+ * spec alone, so the newest row carrying one is the row the save just made.
+ */
+async function savedId(page: Page, mod: ModuleCase, list: string): Promise<string | null> {
+  const inUrl = idIn(page.url(), mod.idParam);
+  if (inUrl) {
+    return inUrl;
+  }
+
+  const ids = await listedIds(page, list, mod.idParam, mod.label);
+
+  return ids.length ? ids[ids.length - 1] : null;
+}
+
+/** A record id out of a url the app has redirected to. */
+function idIn(url: string, idParam: string): string | null {
+  const match = new RegExp(`[?&]${idParam}=(\\d+)`).exec(url);
+
+  return match && match[1] !== '0' ? match[1] : null;
+}
+
+/** A module's list page, with the customer the contact list needs filled in. */
+async function listFor(page: Page, mod: ModuleCase): Promise<string> {
+  return mod.list.includes('{customer}') ? mod.list.replace('{customer}', await aCustomer(page)) : mod.list;
+}
+
+/**
  * Notes and addresses open in a popup rather than on a page of their own, and the note
  * popup posts itself with jQuery's serialize(), so the token has to be a field inside
  * the form rather than something the JS adds. These drive the real popups.
  */
 test.describe('Form auth key, popups', () => {
+  /** What the test in hand has to take away again, set as soon as it knows the id. */
+  let madeHere: (() => Promise<void>) | null = null;
+
   test.beforeEach(async ({ page }) => {
+    madeHere = null;
     await login(page);
+  });
+
+  test.afterEach(async () => {
+    const remove = madeHere;
+    madeHere = null;
+    if (remove) {
+      await remove();
+    }
   });
 
   test('a note can still be added from a customer', async ({ page }) => {
@@ -328,6 +501,11 @@ test.describe('Form auth key, popups', () => {
 
     await expect(page.locator('body')).toContainText('CSRF popup note');
     await expect(page.locator('body')).not.toContainText(/invalid or expired form submission/i);
+
+    // This note is left behind, unlike the fixtures above. The only delete a note has is
+    // the trash link on its row, and that goes to handle_hook( 'note_delete' ), which
+    // calls note_delete( owner_table, owner_id ) with no note id - so it would take every
+    // note on the customer with it, not the one this test made.
   });
 
   test('saving a note is refused without a token', async ({ page }) => {
@@ -365,6 +543,14 @@ test.describe('Form auth key, popups', () => {
     await form.locator('input[type="submit"][name="addnew"]').first().click();
 
     await expect(page.locator('body')).toContainText(/transaction saved successfully/i);
+
+    // The quick add row goes back to the list rather than to the transaction, so the
+    // transaction it made is the newest one on the list carrying its name. finance.php
+    // deletes this one without asking to confirm.
+    const listed = await listedIds(page, '/?m[]=finance&p[]=finance', 'finance_id', 'CSRF Test Transaction');
+    const transaction = listed[listed.length - 1];
+    expect(transaction, 'the new transaction should be on the finance list').toBeTruthy();
+    madeHere = () => deleteRecord(page, '/?m[]=finance', 'save_finance', 'finance_id', transaction);
   });
 
   test('saving a transaction is refused without a token', async ({ page }) => {
@@ -428,6 +614,11 @@ test.describe('Form auth key, popups', () => {
     await form.locator('input[type="submit"][name="butt_save"]').first().click();
 
     await expect(page.locator('body')).toContainText(/invoice saved successfully/i);
+
+    // This invoice is left behind too. Saving one goes back to the invoice list rather
+    // than to the invoice, and finding it again means reading a list that is already
+    // thousands of rows long - it wants a fixture that names itself, which is a change to
+    // more of the suite than this one.
   });
 
   test('saving an invoice is refused without a token', async ({ page }) => {
@@ -511,7 +702,17 @@ test.describe('Form auth key, popups', () => {
     const form = page.locator('form:has(input[name="_process"][value="save_file"])');
     await expect(form.locator('input[name="form_auth_key"]').first()).toBeAttached();
 
-    await form.locator('input[type="submit"][name="butt_save"]').first().click();
+    await Promise.all([
+      page.waitForNavigation({ waitUntil: 'load' }),
+      form.locator('input[type="submit"][name="butt_save"]').first().click(),
+    ]);
+
+    // This record has no name to find it by - the form has no plain text field - so the
+    // id has to come off the url the save landed on.
+    const fileId = idIn(page.url(), 'file_id');
+    expect(fileId, 'the save should land on the file it made').toBeTruthy();
+    madeHere = () => deleteRecord(page, '/?m[]=file', 'save_file', 'file_id', String(fileId));
+
     await expect(page.locator('body')).not.toContainText(/invalid or expired form submission/i);
     await expect(page.locator('body')).toContainText(/saved successfully/i);
   });
@@ -628,5 +829,45 @@ test.describe('Form auth key, popups', () => {
       form: { _process: 'save_change_request', change_request_id: 'new', request: 'Should Not Save' },
     });
     expect(response.status()).toBe(403);
+  });
+});
+
+/**
+ * Every fixture above is deleted again as its test finishes. This is what notices when
+ * one of them stops being.
+ *
+ * A module whose delete quietly breaks leaves one more record behind on every run and
+ * nothing else in the suite complains, until a list pages the record another test is
+ * looking for out of view or a screen that draws a control per record grows to half a
+ * megabyte. Both have happened here. Two is slack for a record an interrupted run left
+ * behind, not room to grow in.
+ */
+const LEFTOVERS_ALLOWED = 2;
+
+test.describe('Form auth key fixtures', () => {
+  test.beforeEach(async ({ page }) => {
+    await login(page);
+  });
+
+  test('the records the module tests make are deleted again', async ({ page }) => {
+    // Reading every page of twenty-odd lists is more than the default timeout allows,
+    // and a list that has already been let go is the slowest of all.
+    test.slow();
+
+    const piling: string[] = [];
+    for (const mod of MODULES) {
+      // Counting stops as soon as there are too many: the number is not interesting past
+      // that point, and stopping is what keeps this from crawling over a list that has
+      // already collected a few hundred.
+      const ids = await listedIds(page, await listFor(page, mod), mod.idParam, mod.label, LEFTOVERS_ALLOWED + 1);
+      if (ids.length > LEFTOVERS_ALLOWED) {
+        piling.push(`${mod.name}: more than ${LEFTOVERS_ALLOWED} records named ${JSON.stringify(mod.label)}`);
+      }
+    }
+
+    expect(
+      piling,
+      'these modules are leaving their fixtures behind - delete the rows, then fix the cleanup that should have',
+    ).toEqual([]);
   });
 });
