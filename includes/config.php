@@ -34,6 +34,22 @@ if ( ! defined( '_UCM_CONFIG_LOCAL' ) ) {
 if ( is_file( _UCM_CONFIG_LOCAL ) ) {
 	require_once _UCM_CONFIG_LOCAL;
 }
+// Has this copy been set up yet? The setup wizard writes config.local.php once it has
+// connected to a database, so until that file exists the database settings below are
+// placeholders, and a failed connection means "not installed yet" rather than "broken".
+// The database layer reads this to choose between the setup wizard and an error page.
+//
+// The environment variables do not count. They are placeholders too until something
+// proves they work, and a container pointed at a database it cannot reach is better off
+// on the wizard than on a blank page.
+//
+// Literal values in two steps, for the same reason as _UCM_SECRET below.
+if ( ! defined( '_UCM_CONFIGURED' ) && is_file( _UCM_CONFIG_LOCAL ) ) {
+	define( '_UCM_CONFIGURED', true );
+}
+if ( ! defined( '_UCM_CONFIGURED' ) ) {
+	define( '_UCM_CONFIGURED', false );
+}
 // Defaults for anything not set (Docker: use 'db' when in container, no config.local needed)
 $in_docker = file_exists( '/.dockerenv' ) || getenv( 'DOCKER' );
 if ( ! defined( '_DB_SERVER' ) ) {
