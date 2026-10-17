@@ -14,10 +14,11 @@ permissions:
 
 jobs:
   lint:
-    # composer.json asks for ^8.4 and index.php refuses to start on anything older, so
-    # 8.4 is what has to pass. 8.5 is checked too, because the next PHP is always the one
-    # that breaks a codebase this old, and because saying "PHP 8.4 or newer" is only
-    # honest if something proves it. Both pass today, so both block.
+    # composer.json asks for ^8.2 and index.php refuses to start on anything older, so
+    # 8.2 is the floor and has to pass - it is what most shared hosting still runs. 8.3
+    # and 8.4 are the versions in between, and 8.5 is checked too, because the next PHP
+    # is always the one that breaks a codebase this old. Saying "PHP 8.2 or newer" is only
+    # honest if something proves it. All four pass today, so all four block.
     #
     # If a future 8.5 release starts failing for reasons that are not ours, add
     #   continue-on-error: ${{ matrix.php == '8.5' }}
@@ -28,7 +29,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        php: ['8.4', '8.5']
+        php: ['8.2', '8.3', '8.4', '8.5']
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
       - uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # v2
@@ -51,7 +52,7 @@ jobs:
           exit $fail
 
   phpcs:
-    # Also runs PHPCompatibility, which is what mechanically proves the "PHP 8.4 or
+    # Also runs PHPCompatibility, which is what mechanically proves the "PHP 8.2 or
     # newer" claim - it finds functions and syntax that stopped working in a version
     # we say we support.
     name: Coding standard + PHP compatibility
@@ -75,7 +76,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        php: ['8.4', '8.5']
+        php: ['8.2', '8.3', '8.4', '8.5']
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
       - uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # v2
@@ -93,7 +94,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        php: ['8.4', '8.5']
+        php: ['8.2', '8.3', '8.4', '8.5']
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
       - uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # v2
@@ -243,7 +244,8 @@ jobs:
         with:
           fetch-depth: 0
       # The build runs `composer install` to put vendor/ in the archive, and the lock file
-      # is for PHP 8.4. Without this the runner's own PHP decides, and it is older.
+      # is resolved on PHP 8.4, the version the release is built with. Without this the
+      # runner's own PHP decides, and it can be a different one.
       - uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # v2
         with:
           php-version: '8.4'
