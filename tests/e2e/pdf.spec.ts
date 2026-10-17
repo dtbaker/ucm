@@ -1,4 +1,5 @@
 import { test, expect, Page } from '@playwright/test';
+import { aCustomer, createRecord, deleteRecord } from './seed';
 
 /**
  * Regression tests for PDF generation.
@@ -22,13 +23,27 @@ test.describe('PDF generation', () => {
   });
 
   test('the invoice print route returns a PDF', async ({ page }) => {
-    // page.request shares the logged-in session cookies.
-    const response = await page.request.get('/?m[]=invoice&p[]=invoice_admin&print=true&go=true&invoice_id=1');
-    expect(response.status()).toBe(200);
-    expect(response.headers()['content-type']).toContain('application/pdf');
-    const body = await response.body();
-    expect(body.subarray(0, 4).toString()).toBe('%PDF');
-    expect(body.length).toBeGreaterThan(1000);
+    // Its own invoice rather than invoice 1. The print route answers an id it cannot find
+    // with 'invalid invoice id' as an HTML page, so once invoice 1 was cleared out of the
+    // development database this failed on the content type with nothing wrong in the PDF.
+    const invoiceId = await createRecord(page, '/?m[]=invoice', {
+      _process: 'save_invoice',
+      invoice_id: 'new',
+      name: 'PDF print test',
+      customer_id: await aCustomer(page),
+      _redirect: '',
+    }, 'invoice_id');
+    try {
+      // page.request shares the logged-in session cookies.
+      const response = await page.request.get(`/?m[]=invoice&p[]=invoice_admin&print=true&go=true&invoice_id=${invoiceId}`);
+      expect(response.status()).toBe(200);
+      expect(response.headers()['content-type']).toContain('application/pdf');
+      const body = await response.body();
+      expect(body.subarray(0, 4).toString()).toBe('%PDF');
+      expect(body.length).toBeGreaterThan(1000);
+    } finally {
+      await deleteRecord(page, '/?m[]=invoice', 'save_invoice', 'invoice_id', invoiceId);
+    }
   });
 
   for (const [label, url] of [

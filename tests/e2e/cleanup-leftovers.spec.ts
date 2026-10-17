@@ -57,7 +57,7 @@ const TARGETS: Target[] = [
   },
   {
     what: 'invoices', table: 'invoice', column: 'name',
-    terms: [ 'CSRF %', 'Fieldset %', 'Credit Note Test %', 'Credit spend test', 'Invoice arithmetic test', 'Renewal %' ],
+    terms: [ 'CSRF %', 'Fieldset %', 'Credit Note Test %', 'Credit spend test', 'Invoice arithmetic test', 'Renewal %', 'PDF print test' ],
     idColumn: 'invoice_id', postUrl: '/?m[]=invoice', process: 'save_invoice',
   },
   {
