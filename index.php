@@ -13,10 +13,10 @@
  * If you would like to re-use parts of this system or ideas from this system elsewhere please ask permission first.
  */
 
-$required_php_version = '8.4.0';
+$required_php_version = '8.2.0';
 if ( version_compare( PHP_VERSION, $required_php_version ) < 0 ) {
 	header( 'Content-Type: text/html; charset=UTF-8' );
-	die( "PHP version of 8.4 or above is REQUIRED to run this software. Current version: " . PHP_VERSION . ". Please contact your hosting provider to upgrade PHP." );
+	die( "PHP version of 8.2 or above is REQUIRED to run this software. Current version: " . PHP_VERSION . ". Please contact your hosting provider to upgrade PHP." );
 }
 
 $start_time   = microtime( true );
@@ -117,6 +117,13 @@ try {
 
 			// handle any form submits for this module.
 			if ( isset( $_REQUEST['_process'] ) && $_REQUEST['_process'] ) {
+				// A post that outgrew max_input_vars arrives with its tail missing and no
+				// way for the handler to tell. Saving what fitted is worse than not
+				// saving at all, so say so instead. See request_input_overflow().
+				$overflow = module_form::request_input_overflow();
+				if ( $overflow ) {
+					module_form::reject_truncated_request( $overflow );
+				}
 				if ( $module ) {
 					module_debug::log( array(
 						'title' => 'Process Post Back',

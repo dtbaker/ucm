@@ -16,7 +16,7 @@
 	},
 	"install/upgrading": {
 		"title": "Upgrading from 2.x",
-		"summary": "This is the largest update the product has had. It moves from PHP 5 to PHP 8.4, changes where your database settings live, and removes some features that no longer work. Read the whole page before you touch your live site.",
+		"summary": "This is the largest update the product has had. It moves from PHP 5 to PHP 8.2 or newer, changes where your database settings live, and removes some features that no longer work. Read the whole page before you touch your live site.",
 		"featured": false
 	},
 	"running/configuration": {

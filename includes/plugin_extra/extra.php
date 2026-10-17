@@ -294,16 +294,28 @@ class module_extra extends module_base
 				$extra_items = array();
 				$extra_items = self::sort_extras( $extra_items, $default_fields, $allow_new );
 			}
+			// One screen can show more than one block of extras - the customer edit screen
+			// shows the customer's and the contact user's - and the ids below only run
+			// unique inside a single block. The owner table separates the usual case; the
+			// counter covers a screen that shows the same table twice.
+			static $blocks_rendered = array();
+
+			$blocks_rendered[ $owner_table ] = isset( $blocks_rendered[ $owner_table ] ) ? $blocks_rendered[ $owner_table ] + 1 : 1;
+			$id_prefix                       = 'extra_' . $owner_table . ( $blocks_rendered[ $owner_table ] > 1 ? '_' . $blocks_rendered[ $owner_table ] : '' ) . '_';
+
 			$more_fields_available = false;
 			foreach ( $extra_items as $extra_item ) {
 				$extra_id = $extra_item['extra_id'];
-				$id       = 'extra_' . preg_replace( '#\W+#', '_', $extra_item['extra_key'] );
+				// The key on its own collapses every run of punctuation to a single
+				// underscore, so two keys that differ only in punctuation would share an
+				// id. The extra's own id keeps them apart.
+				$id = $id_prefix . preg_replace( '#\W+#', '_', $extra_item['extra_key'] ) . '_' . $extra_id;
 				if ( ! empty( $extra_item['hidden'] ) ) {
 					$more_fields_available = true;
 				}
 				ob_start();
 				?>
-				<tr id="extra_<?php echo $extra_id; ?>"
+				<tr id="<?php echo $id_prefix . $extra_id; ?>"
 				    class="extra_field_row<?php echo ! empty( $extra_item['hidden'] ) ? ' extra_field_row_hidden' : ''; ?>">
 					<th <?php if ( $can_edit_settings && isset( $default_fields[ $extra_item['extra_key'] ]['field_type'] ) ) {
 						echo ' data-settings-url="' . module_extra::link_open_extra_default( $default_fields[ $extra_item['extra_key'] ]['extra_default_id'], false ) . '"';
@@ -397,11 +409,11 @@ class module_extra extends module_base
 				$extra_id = 'new';
 				ob_start();
 				?>
-				<tr id="extra_<?php echo $owner_table; ?>_options_<?php echo $extra_id; ?>" class="extra_fields_show_more">
+				<tr id="<?php echo $id_prefix . 'options_' . $extra_id; ?>" class="extra_fields_show_more">
 					<th></th>
 					<td>
 						<a href="#" class="extra_fields_show_button"
-						   onclick="$('#extra_<?php echo $owner_table; ?>_options_<?php echo $extra_id; ?>').hide();$('#extra_<?php echo $owner_table; ?>_holder_<?php echo $extra_id; ?>').show(); return false;"><?php _e( 'more fields &raquo;' ); ?></a>
+						   onclick="$('#<?php echo $id_prefix . 'options_' . $extra_id; ?>').hide();$('#<?php echo $id_prefix . 'holder_' . $extra_id; ?>').show(); return false;"><?php _e( 'more fields &raquo;' ); ?></a>
 					</td>
 				</tr>
 				<?php
@@ -410,7 +422,7 @@ class module_extra extends module_base
 					$extra_id = 'new';
 					ob_start();
 					?>
-					<tr id="extra_<?php echo $extra_id; ?>" class="extra_field_row_hidden">
+					<tr id="<?php echo $id_prefix . $extra_id; ?>" class="extra_field_row_hidden">
 						<th>
 							<input type="text" name="extra_<?php echo $owner_table; ?>_field[<?php echo $extra_id; ?>][key]"
 							       value="<?php ?>" class="extra_field" placeholder="<?php _e( 'New Field' ); ?>">

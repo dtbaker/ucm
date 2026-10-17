@@ -1119,15 +1119,11 @@ test.describe( 'Forms moved to generate_fieldset (data field group)', () => {
  * were written off as unreachable. An administrator cannot reach them at all:
  * module_security::has_feature_access() returns true unconditionally for user id 1.
  *
- * An explicit grant list rather than "everything except X", because the permission table
- * grows: has_feature_access() inserts a row the first time any page asks for a permission
- * it has not seen, so the count climbs as the suite covers more screens - 951 rows at the
- * start of this work, 1133 a few hours later. PHP's max_input_vars is 1000, and the role
- * form posts one checkbox per permission per action, so "tick everything" silently
- * truncates and lands back on the login screen. Granting a fixed handful is both stable
- * and well under the limit. (That the form is unsaveable at all past ~1000 permissions is
- * a real bug, raised separately; the assertion below is here so this fixture cannot drift
- * back into it unnoticed.)
+ * An explicit grant list rather than "everything except X", so these fixtures say what
+ * they rely on. It used to have to be explicit for a second reason - the role form posted
+ * a field per permission per action, and a grant of more than about a thousand of them
+ * was silently truncated - but the form now posts them as one field, so the only limit on
+ * this list is what the tests actually need. See security-role-permissions.spec.ts.
  *
  * The ids: 82 Can User Login - never omit it, or establish_session() answers "Account
  * disabled" and the account is unusable. 33 Customers and 199 Customer, 180 Vendors, and
@@ -1142,24 +1138,24 @@ async function aRoleGranting( page: Page, roleName: string, grant: string[] ): P
   const token = ( form.match( /name="form_auth_key" value="([^"]+)"/ ) || [] )[ 1 ];
   expect( token, 'the role form published no token' ).toBeTruthy();
 
+  const permission: Record<string, Record<string, number>> = {};
+  for ( const permissionId of grant ) {
+    expect(
+      form,
+      `the role form has no view checkbox for permission ${ permissionId }`,
+    ).toContain( `data-permission="${ permissionId }"` );
+    permission[ permissionId ] = { view: 1 };
+  }
+
   const body: Record<string, string> = {
     _process: 'save_security_role',
     security_role_id: 'new',
     name: roleName,
     form_auth_key: token,
     _redirect: '/',
+    // The whole grid travels in this one field - see module_security::process().
+    permission_data: JSON.stringify( { permission } ),
   };
-  for ( const permissionId of grant ) {
-    expect(
-      form,
-      `the role form has no view checkbox for permission ${ permissionId }`,
-    ).toContain( `name="permission[${ permissionId }][view]"` );
-    body[ `permission[${ permissionId }][view]` ] = '1';
-  }
-  expect(
-    Object.keys( body ).length,
-    'this post exceeds max_input_vars (1000) and will be silently truncated',
-  ).toBeLessThan( 1000 );
 
   // The save redirects to the new role, which is the only reliable way to learn its id:
   // the role list shows twenty at a time and offers no paging parameter to follow.
@@ -1235,6 +1231,7 @@ async function signedInAs(
     throw error;
   }
 }
+
 
 test.describe( 'Forms moved to generate_fieldset (restricted contact blocks)', () => {
   test( 'a staff member who cannot view contacts is told the details are hidden', async ( { page, browser } ) => {
