@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ultimate Client Manager - Getting started</title>
+<style>
+:root { --ink: #1c2530; --soft: #4a5663; --line: #dde3e9; --paper: #ffffff; --wash: #f4f7fa; --accent: #10589a; }
+@media (prefers-color-scheme: dark) {
+	:root { --ink: #e6ecf2; --soft: #b3bfcb; --line: #2b3742; --paper: #121a22; --wash: #18222c; --accent: #6aa9e2; }
+}
+* { box-sizing: border-box; }
+body { margin: 0; padding: 2.5rem 1rem 4rem; background: var(--paper); color: var(--ink);
+	font: 16px/1.6 system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+main { max-width: 44rem; margin: 0 auto; }
+h1 { font-size: 1.75rem; line-height: 1.2; margin: 0 0 .25rem; }
+h2 { font-size: 1.15rem; margin: 2.25rem 0 .5rem; }
+p.lead { color: var(--soft); margin: 0 0 2rem; }
+a { color: var(--accent); }
+ol, ul { padding-left: 1.4rem; }
+li { margin: .35rem 0; }
+code { font: .9em/1.4 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; background: var(--wash);
+	border: 1px solid var(--line); border-radius: 4px; padding: .05rem .3rem; }
+.note { margin: 1.25rem 0; padding: .85rem 1rem; background: var(--wash); border: 1px solid var(--line); border-radius: 6px; }
+.more { margin-top: 2.5rem; padding-top: 1.25rem; border-top: 1px solid var(--line); }
+</style>
+</head>
+<body>
+<main>
+
+<h1>Ultimate Client Manager</h1>
+<p class="lead">Getting started with version 4.0.0. This page covers installing and upgrading. Everything
+else is in the full documentation at
+<a href="https://ultimateclientmanager.com/docs/">ultimateclientmanager.com/docs</a>, which is kept up to
+date with each release.</p>
+
+<h2>What you need</h2>
+<ul>
+	<li>PHP 8.2 or newer, with the <code>mysqli</code> extension. PHP 8.3 or newer is recommended.</li>
+	<li>MySQL 8 or MariaDB 10.5 or newer, with an empty database. The database user needs permission to
+		create and alter tables.</li>
+	<li>HTTPS, so sign-in cookies are kept secure.</li>
+</ul>
+<p>The <a href="https://ultimateclientmanager.com/docs/install/requirements/">requirements page</a> has the
+full list.</p>
+
+<h2>Installing</h2>
+<ol>
+	<li>Unzip the download. Upload everything inside the <code>Main Files</code> folder to your web space,
+		either the site root or a subfolder. The <code>Documentation</code> and <code>Licensing</code>
+		folders are for you to read and do not need uploading.</li>
+	<li>Create an empty database and a database user in your hosting control panel.</li>
+	<li>Open the address you uploaded to in a browser. The setup wizard asks for the database details,
+		creates the tables, and saves your settings in <code>includes/config.local.php</code>.</li>
+	<li>Sign in. The installer creates sample accounts with the password <code>password</code>. Change it
+		when you are asked to, or delete the sample accounts.</li>
+	<li>Set up the scheduled task, so invoices, renewals and reminders go out on time. See
+		<a href="https://ultimateclientmanager.com/docs/running/scheduled-tasks/">scheduled tasks</a>.</li>
+</ol>
+<p>Step-by-step instructions with screenshots are in the
+<a href="https://ultimateclientmanager.com/docs/install/installing/">installation guide</a>.</p>
+
+<h2>Upgrading from an earlier version</h2>
+<ol>
+	<li>Back up your files and your database.</li>
+	<li>If your site keeps its database details in <code>includes/config.php</code>, move them into
+		<code>includes/config.local.php</code> first. The next step replaces <code>config.php</code>.</li>
+	<li>Upload the contents of <code>Main Files</code> over your existing site.</li>
+	<li>Sign in, go to Settings, then Upgrade, and press <strong>Run Manual Upgrades</strong>.</li>
+</ol>
+<div class="note">This release is a large one. Read the
+<a href="https://ultimateclientmanager.com/docs/install/upgrading/">upgrade guide</a> before you start.</div>
+
+<div class="more">
+<h2>More help</h2>
+<ul>
+	<li><a href="https://ultimateclientmanager.com/docs/">Full documentation</a></li>
+	<li><a href="https://ultimateclientmanager.com/docs/running/configuration/">Configuration</a> and
+		<a href="https://ultimateclientmanager.com/docs/running/payment-methods/">payment methods</a></li>
+	<li><a href="https://ultimateclientmanager.com/docs/reference/troubleshooting/">Troubleshooting</a></li>
+	<li><a href="https://ultimateclientmanager.com/docs/reference/changelog/">What changed in this release</a></li>
+	<li>Inside the app, the <strong>?</strong> button at the top of each screen opens the help for that screen.</li>
+	<li>The <code>Licensing</code> folder lists every library included in the download and its licence.</li>
+</ul>
+</div>
+
+</main>
+</body>
+</html>

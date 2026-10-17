@@ -8,7 +8,7 @@
 # The zip must not have the application at its root. It needs a wrapper of three folders:
 #
 #   Main Files/     the product itself
-#   Documentation/  buyer documentation, as HTML or PDF
+#   Documentation/  readme.html: getting started, linking to the live documentation
 #   Licensing/      the licence of everything bundled inside the product
 #
 # "Main Files" is produced with `git archive`, so only committed files go in and the
@@ -67,8 +67,9 @@ MANIFEST="includes/release-files.txt"
 mv "$BUILD_DIR/release-files.txt" "$MAIN/$MANIFEST"
 
 echo "Assembling Documentation..."
-# Written by hand and kept in the repository, the same as Licensing, so that a change to
-# what buyers read shows up in a diff and goes through review like any other change.
+# One short getting-started page, written by hand. The full documentation lives at
+# https://ultimateclientmanager.com/docs/ (source: the ucm-web repository) and the page
+# links to it, so the download never carries a second copy that drifts out of date.
 cp -R Documentation/. "$DOCS/"
 
 echo "Assembling Licensing..."
@@ -272,11 +273,20 @@ if [ -n "$placeholders" ]; then
 	fail=1
 fi
 
-# A documentation folder with one thin page passes the "is there an HTML file" check
-# below while telling a buyer nothing. CodeCanyon asks for every feature to be explained.
-doc_pages=$(grep -cE '^Documentation/.+\.html?$' <<<"$listing" || true)
-if [ "$doc_pages" -lt 5 ]; then
-	echo "FAIL: Documentation has $doc_pages HTML pages; that is not buyer documentation"
+# Documentation is the getting-started page and nothing else: the full documentation is
+# online, and a copy here would drift out of date. The page has to exist and has to send
+# people to the live documentation, which is the point of keeping it short.
+if ! grep -qxF 'Documentation/readme.html' <<<"$listing"; then
+	echo "FAIL: Documentation/readme.html is missing"
+	fail=1
+elif ! grep -qF 'https://ultimateclientmanager.com/docs/' "$DOCS/readme.html"; then
+	echo "FAIL: Documentation/readme.html does not link to https://ultimateclientmanager.com/docs/"
+	fail=1
+fi
+extra_docs=$(grep -E '^Documentation/.' <<<"$listing" | grep -vxF 'Documentation/readme.html' || true)
+if [ -n "$extra_docs" ]; then
+	echo "FAIL: Documentation should hold only readme.html; the full docs live online. Also found:"
+	sed 's/^/       /' <<<"$extra_docs"
 	fail=1
 fi
 
