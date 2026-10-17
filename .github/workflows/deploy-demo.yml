@@ -1,8 +1,10 @@
 # Deploys the release build, plus the demo chrome in custom/, to the public demo.
 #
-# Manual only: pick a branch in the "Run workflow" dropdown and that branch is what goes
-# live. It never runs on a push or a merge. The host, account and key live in the `demo`
-# environment's secrets, not in this file.
+# Runs by itself after every merge to master, once CI has passed on that commit, so the
+# demo never drifts behind master. It can still be run by hand: pick a branch in the
+# "Run workflow" dropdown and that branch is what goes live, until the next merge to
+# master replaces it. The host, account and key live in the `demo` environment's
+# secrets, not in this file.
 #
 # The server keeps its own config.local.php (database, secret, demo mode), its uploads and
 # its SSL challenge folder. Those are excluded from the sync, and rsync does not delete
@@ -12,6 +14,11 @@ name: Deploy to demo
 
 on:
   workflow_dispatch:
+  # After CI, not on push, so a merge that breaks CI never reaches the demo.
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+    branches: [master]
 
 concurrency:
   group: deploy-demo
@@ -25,8 +32,23 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     environment: demo
+    # A workflow_run deploy has to be CI passing on a push to master in this repository.
+    # The branches filter alone is not enough: it matches a branch's name, and a pull
+    # request from a fork whose branch is called master would match it too, with this
+    # job's secrets in reach.
+    if: >-
+      github.event_name == 'workflow_dispatch' || (
+        github.event.workflow_run.conclusion == 'success' &&
+        github.event.workflow_run.event == 'push' &&
+        github.event.workflow_run.head_branch == 'master' &&
+        github.event.workflow_run.head_repository.full_name == github.repository
+      )
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          # The commit CI passed, not whatever master is by the time this starts. For a
+          # manual run there is no workflow_run, and this is the branch that was picked.
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
       # The build runs `composer install` and the lock file is for PHP 8.4.
       - uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # v2
         with:
