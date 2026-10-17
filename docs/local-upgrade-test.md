@@ -46,10 +46,10 @@ and what you should see. Record what you actually saw in the results log at the 
 
 - S12 fails. The zip the update server builds for the old installer leaves out files the
   product needs and replaces `includes/config.php` with a pre-rewrite copy.
-- The in-app updater often runs a plugin's database step against the old copy of its code,
-  so in S2, S3, S5 and S6 the new version is often not recorded and the upgrade SQL often
-  does not run, while the page still says "Success! Everything worked." Run Manual
-  Upgrades repairs it.
+- Fixed by dtbaker/ucm#29: the in-app updater used to run a plugin's database step
+  against the old copy of its code, so in S2, S3, S5 and S6 the new version was often not
+  recorded and the upgrade SQL often did not run, while the page still said "Success!
+  Everything worked." A release A built without that change still does this.
 - A fresh unzip with no `config.local.php` returns a blank HTTP 500 instead of the setup
   wizard unless the fallback database details happen to work. Setup step 5 works round it
   the same way `docker-compose.yml` does.
@@ -450,12 +450,15 @@ php "$TOOLS" bump "$SERVER" faq "local upgrade test marker"
    diff -r "$SERVER/includes/plugin_faq" "$CLIENT/includes/plugin_faq" && echo identical
    ```
 
-5. Check the version was recorded: `ut_version faq` should print the new version.
-   **Today it usually prints the old one.** Look at the `Processing update` line from
-   step 3: if it says `Current Version: 2.15` rather than `2.151`, the database step ran
-   against the old copy of `faq.php` and recorded nothing. See [Findings](#findings).
-   Record which you got, then run **Run Manual Upgrades**, which reads
-   `Upgrading plugin from version 2.15 to 2.151` and records it.
+5. Check the version was recorded: `ut_version faq` should print the new version, and the
+   `Processing update` line from step 3 should read `Current Version: 2.151` followed by
+   `Upgrading plugin from version 2.15 to 2.151`.
+   If it says `Current Version: 2.15`, the database step ran against the old copy of
+   `faq.php` (the stale code finding, see [Findings](#findings)). On a build with
+   dtbaker/ucm#29 the line then ends `not finished: ... still running the old copy` and
+   "Some things failed", not "Success!". On a build without it, the page says "Success!"
+   anyway and records nothing. Either way, record it, then run **Run Manual Upgrades**,
+   which reads `Upgrading plugin from version 2.15 to 2.151` and records it.
 6. `ut_offer` again. Expect `offers: 0`. Check for Upgrades on the page shows nothing.
    (Both are read from the files, so they are clean even when step 5 was not.)
 
@@ -475,12 +478,14 @@ column goes in through the real upgrade path.
    `Processing update: faq - Current Version: 2.151.... all good`, then
    `Upgrading plugin from version 2.15 to 2.151`, ending in "Success! Everything worked."
 
-   **Today this usually fails without saying so**: the line reads `Current Version: 2.15`,
-   there is no `Upgrading plugin` line, the column is not there, and the page still says
-   "Success! Everything worked." That is the stale code finding again. Record it.
+   Before dtbaker/ucm#29 this usually failed without saying so: the line read
+   `Current Version: 2.15`, there was no `Upgrading plugin` line, the column was not
+   there, and the page still said "Success! Everything worked." That is the stale code
+   finding. With the fix it passes with the default opcache settings (4 runs out of 4 on
+   2026-10-17). If you see it fail, record it.
 
-   To prove the cause, run the scenario once more with PHP's opcache checking files on
-   every request, then put the setting back:
+   To prove the cause of a failure, run the scenario once more with PHP's opcache checking
+   files on every request, then put the setting back:
 
    ```bash
    docker exec ucm-ut-client sh -c 'echo opcache.revalidate_freq=0 > /usr/local/etc/php/conf.d/zz-ut.ini && apache2ctl graceful'
@@ -548,8 +553,9 @@ for p in theme help faq; do php "$TOOLS" bump "$SERVER" $p "order check"; done
 
 1. `ut_offer`. Expect `faq`, `help`, `theme`, `corefiles`, `database`.
 2. Upgrade on the client. The "Processing update" lines appear in that same order. Record
-   the `Current Version` each one shows: some will be the old version (the stale code
-   finding); on 2026-10-17 `faq` and `theme` were right and `help` was not.
+   the `Current Version` each one shows: each should be the new version. Before
+   dtbaker/ucm#29 some were the old one (the stale code finding; on 2026-10-17 `faq` and
+   `theme` were right and `help` was not); with it, 6 of 6 were right over two runs.
 
 **A client behind on db.** Make the client look old, then bump something else:
 
@@ -897,7 +903,7 @@ it, and each step that meets it says what you will see today.
 
 | What | Where | Effect |
 | --- | --- | --- |
-| **The in-app updater runs each plugin's database step on stale code.** The page writes a plugin's files in one request and runs its database step in the next. PHP's opcache only re-reads a changed file every `opcache.revalidate_freq` seconds (2 by default, often more on shared hosts), and nothing calls `opcache_invalidate()` after a write, so the second request usually still has the old class. | `class.upgrade.php`, `complete_plugin_installation()` after `install_plugin_update_files()` | The new version is not recorded and the plugin's upgrade SQL does not run, while the page says `all good` and "Success! Everything worked." Seen in 7 of 9 plugin steps on 2026-10-17 (S2, S3, S5, S6). Proven by S3 passing with `opcache.revalidate_freq=0`. Run Manual Upgrades repairs it afterwards. |
+| **Fixed by dtbaker/ucm#29. The in-app updater runs each plugin's database step on stale code.** The page writes a plugin's files in one request and runs its database step in the next. PHP's opcache only re-reads a changed file every `opcache.revalidate_freq` seconds (2 by default, often more on shared hosts), and nothing calls `opcache_invalidate()` after a write, so the second request usually still has the old class. | `class.upgrade.php`, `complete_plugin_installation()` after `install_plugin_update_files()` | The new version is not recorded and the plugin's upgrade SQL does not run, while the page says `all good` and "Success! Everything worked." Seen in 7 of 9 plugin steps on 2026-10-17 (S2, S3, S5, S6). Proven by S3 passing with `opcache.revalidate_freq=0`. Run Manual Upgrades repairs it afterwards. The fix invalidates opcache for every file the updater writes; where the host refuses that (`opcache.restrict_api`), the database step now says `not finished` and changes nothing instead of reporting success. |
 | **A fresh install with no `config.local.php` is a blank HTTP 500, not the setup wizard,** unless the fallback database details in `includes/config.php` happen to connect. On PHP 8.1 and later `mysqli_connect()` throws on failure, and nothing catches it or calls `mysqli_report()`, so the "Connect failed" message in `db_connect()` is never reached. | `init.php:206` `is_installed()` → `includes/plugin_db/db.php:257` | The main install route (unzip and open the site) does not reach the wizard on a normal host, whose fallback is `localhost` / `username` / `ucm`. The same blank 500 is what a site that loses its `config.local.php` shows (S11b). The dev stack and CI never see it, because `docker-compose.yml` sets `UCM_DB_NAME`. |
 | The `corefiles` list names three files the server never sends | `upgrade_server.php`, the `corefiles` list | Every update ends the core row with three `REFUSED: the server sent no contents for this file` lines. `js/jquery-1.8.3.min.js` and `js/jquery-ui-1.9.2.custom.min.js` are not in the release; `temp/.htaccess` is skipped by `is_ignored_path()` (`/temp/`), so an updated install never gets a newer `temp/.htaccess` either. |
 | A core file changed with no plugin bump is never offered | `upgrade_server.php`, the `$do_upgrade` check before `corefiles` | Answers the S4 question: no. A release that changes only core files reaches nobody through the updater. |
@@ -997,7 +1003,9 @@ rm -rf "$UT"
   server response" and the first bytes of what came back.
 - **The installed version on the page or in `ut_version` did not move after an upgrade.**
   The stale code finding. Look at the `Current Version` in the "Processing update" line,
-  then use Run Manual Upgrades.
+  then use Run Manual Upgrades. Release A should include dtbaker/ucm#29; if it does and
+  this still happens, the host is refusing `opcache_invalidate()` and the faq row should
+  say `not finished`.
 - **`unzip` cannot find `ucm-release-b.zip`, but `zip` reported nothing.** A `ZIP` variable
   is set in the shell, and `zip` used it as options. `unset ZIP`.
 - **Playwright never returns.** Its HTML reporter is serving a failure report. Use
@@ -1031,3 +1039,9 @@ rm -rf "$UT"
   line has no `Upgrading` text; S11b shows a real host's error with `ut_last_error`, since
   the test container's `UCM_DB_NAME` keeps the site up; S12 uses the helper. Every S12
   finding still holds. New product findings are under Findings.
+- 2026-10-17: re-ran S2, S3 (four times) and the S5 order check, Mode B, release A from
+  `fix/updater-opcache-invalidate` (dtbaker/ucm#29), default `opcache.revalidate_freq=2`.
+  All passed, so the stale code notes in S2, S3, S5 and Findings now describe the fix and
+  what a build without it looks like. Also checked the fix's backstop by setting
+  `opcache.restrict_api=/nonexistent` on the client: the faq row says `not finished` and
+  the database is left alone until Run Manual Upgrades.
