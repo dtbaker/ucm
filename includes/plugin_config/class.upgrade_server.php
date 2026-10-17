@@ -180,6 +180,89 @@ class ucm_upgrade_server
 	}
 
 	/**
+	 * List a directory from the release file list instead of from the disk.
+	 *
+	 * The server is a live installation, so its folders hold files the release never had:
+	 * dompdf writes font caches into its own plugin folder, and an admin can drop anything
+	 * anywhere. Walking the disk offers all of that to every client as part of the plugin.
+	 * The release list is exactly what was shipped, so a plugin row built from it carries
+	 * the plugin and nothing that grew beside it.
+	 *
+	 * The list is not taken on trust: every path still has to pass is_servable_release_path()
+	 * and be a real file (not a link) on this disk. A path it names that is missing here is
+	 * left out, because a client reports every listed file it gets no contents for as a
+	 * failure.
+	 *
+	 * Same shape as list_directory(): the directory itself first among the folders, every
+	 * parent folder of a listed file, paths relative to the root, sorted.
+	 *
+	 * @param string   $root      Absolute path of the application root, with a trailing slash.
+	 * @param string   $directory Directory relative to the root, with a trailing slash.
+	 * @param string[] $manifest  release_manifest()'s list.
+	 *
+	 * @return array{files: string[], folders: string[]}
+	 */
+	public static function list_release( $root, $directory, array $manifest ) {
+		$files   = array();
+		$folders = array();
+
+		$directory = ltrim( str_replace( '\\', '/', (string) $directory ), '/' );
+		if ( '' === $directory ) {
+			return array( 'files' => $files, 'folders' => $folders );
+		}
+		if ( substr( $directory, - 1 ) !== '/' ) {
+			$directory .= '/';
+		}
+
+		foreach ( $manifest as $path ) {
+			$path = (string) $path;
+			if ( strpos( $path, $directory ) !== 0 || ! self::is_servable_release_path( $path ) ) {
+				continue;
+			}
+			if ( ! is_file( $root . $path ) || is_link( $root . $path ) ) {
+				continue;
+			}
+			$files[] = $path;
+			for ( $parent = dirname( $path ); strlen( $parent ) >= strlen( rtrim( $directory, '/' ) ); $parent = dirname( $parent ) ) {
+				$folders[ $parent . '/' ] = true;
+				if ( $parent . '/' === $directory ) {
+					break;
+				}
+			}
+		}
+		if ( ! $files ) {
+			return array( 'files' => array(), 'folders' => array() );
+		}
+		$folders[ $directory ] = true;
+
+		$files   = array_values( array_unique( $files ) );
+		$folders = array_keys( $folders );
+		sort( $files );
+		sort( $folders );
+
+		return array( 'files' => $files, 'folders' => $folders );
+	}
+
+	/**
+	 * A directory's files as the server should offer them: from the release file list when
+	 * this installation was deployed from a built release, from the disk when it was not.
+	 *
+	 * A git checkout has no list (the development stack, the browser tests that update an
+	 * installation from itself), and there walking the disk is still the right answer.
+	 *
+	 * @param string         $root
+	 * @param string         $directory Relative, with a trailing slash.
+	 * @param string[]|false $manifest  release_manifest()'s answer.
+	 *
+	 * @return array{files: string[], folders: string[]}
+	 */
+	public static function listing( $root, $directory, $manifest ) {
+		return is_array( $manifest )
+			? self::list_release( $root, $directory, $manifest )
+			: self::list_directory( $root, $directory );
+	}
+
+	/**
 	 * @param string   $root
 	 * @param string   $directory Relative, with a trailing slash.
 	 * @param string[] $files
@@ -538,7 +621,7 @@ class ucm_upgrade_server
 		$database_folders = array();
 		$description      = 'Database application update';
 		if ( $send_libraries ) {
-			$listing = self::list_directory( $root, self::LIBRARY_FOLDER );
+			$listing = self::listing( $root, self::LIBRARY_FOLDER, self::release_manifest( $root ) );
 			if ( $listing['files'] ) {
 				$database_files   = array_merge( $database_files, self::files_for_client( $root, $application, $listing['files'], $client_protocol ) );
 				$database_folders = $listing['folders'];
