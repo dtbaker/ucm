@@ -70,6 +70,14 @@ http://localhost:8092 that keeps its own `config.local.php` inside the container
 installing there leaves your development app on :8090 alone. If that container is not
 running, the installer tests skip instead of failing.
 
+## Testing an update end to end
+
+`tests/e2e/upgrade.spec.ts` checks that an installation can update itself from itself.
+To test a real update - a built release installed fresh, a newer version published from a
+local copy of the update server, licence codes, install order, migrations and help - follow
+[docs/local-upgrade-test.md](docs/local-upgrade-test.md). It runs in its own containers on
+:8094 and :8095 and leaves the development app alone.
+
 ## Pointing the app somewhere else
 
 `includes/config.local.php` is the normal place for database settings and the installer
