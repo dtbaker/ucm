@@ -1,13 +1,11 @@
 The 2-Clause BSD License
 
 Components bundled with Ultimate Client Manager under this licence are listed
-in third-party-libraries.html and third-party-libraries.tsv in the folder above
-this one, together with the copyright holder of each.
+in THIRD_PARTY_NOTICES.md, together with the copyright holder of each.
 
 Note for Morris.js: the minified copies of Morris.js shipped inside the
 AdminLTE and Blocks themes carry no licence header of their own. The licence
-recorded here is the licence the Morris.js project publishes upstream. See
-unresolved.txt for how components in that situation are treated.
+recorded here is the licence the Morris.js project publishes upstream.
 
 The terms below apply to each of those components, read with that component's
 own copyright notice in place of the placeholder line.

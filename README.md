@@ -2,7 +2,10 @@
 
 Freelance project invoice CRM.
 
-Please purchase a license from https://codecanyon.net/item/freelance-project-invoice-crm/2621629
+Open source under the [MIT licence](LICENSE). Bundled third-party components keep their own
+licences; see [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md). A packaged release with
+support is also sold on
+[CodeCanyon](https://codecanyon.net/item/freelance-project-invoice-crm/2621629).
 
 ## Development Setup with Docker
 
@@ -82,15 +85,15 @@ npm install && npm run test:e2e
 The full documentation is online at <https://ultimateclientmanager.com/docs/>. Its source
 is in the `ucm-web` repository, not this one.
 
-`Documentation/` and `Licensing/` are the buyer-facing halves of the release archive.
-Both are written by hand and `export-ignore`d, so they land beside `Main Files` in the zip
-rather than inside it.
+`Documentation/` and `Licensing/` are the buyer-facing halves of the release archive. The
+build puts them beside `Main Files` in the zip rather than inside it.
 
 - `Documentation/readme.html` - one short getting-started page: requirements, installing,
   upgrading, and links to the live documentation for everything else. Keep it short; the
   release build fails if anything else appears in that folder.
-- `Licensing/` - `third-party-libraries.tsv` is the source of truth for every bundled
-  component; the web page beside it is generated from that file at build time.
+- `Licensing/` - assembled at build time from `LICENSE`, `THIRD_PARTY_NOTICES.md` and
+  `LICENSES/` at the repository root. Add a row to the notices when you bundle a new
+  library, and its licence text to `LICENSES/` if it is not there yet.
 
 ## Building the release archive
 
@@ -100,8 +103,8 @@ rather than inside it.
 
 Writes `build/ucm-codecanyon.zip` in the three-folder layout CodeCanyon requires, then
 checks it: nothing but those three folders at the root, no development files inside
-`Main Files`, real documentation rather than a placeholder, and a licence manifest whose
-entries all resolve. CI runs the same command.
+`Main Files`, the getting-started page, and third-party notices whose licence texts are
+all present. CI runs the same command.
 
 `Main Files` comes from `git archive`, so only committed files ship and
 [.gitattributes](.gitattributes) decides what stays out. Nothing in the working copy can

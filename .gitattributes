@@ -25,14 +25,16 @@
 /README.md              export-ignore
 /TESTING.md             export-ignore
 
-# Documentation/ and Licensing/ are written for the buyer, but they belong beside
-# "Main Files" in the archive rather than inside it. scripts/build-release.sh copies
-# them to the top level itself, so git archive must leave them out or they would ship
-# twice.
+# Documentation/ and the third-party notices are written for the buyer, but they belong
+# beside "Main Files" in the archive rather than inside it. scripts/build-release.sh puts
+# them there itself (the notices and licence texts go into a Licensing/ folder), so git
+# archive must leave them out or they would ship twice. LICENSE is not listed: the MIT
+# notice travels inside "Main Files" too, with the code it covers.
 /Documentation          export-ignore
 /Documentation/**       export-ignore
-/Licensing              export-ignore
-/Licensing/**           export-ignore
+/THIRD_PARTY_NOTICES.md export-ignore
+/LICENSES               export-ignore
+/LICENSES/**            export-ignore
 
 /.github                export-ignore
 /.github/**             export-ignore
