@@ -173,7 +173,7 @@ jobs:
             --exclude 'js/tiny_mce3.4.4' \
             --exclude-rule generic.nginx.security.request-host-used.request-host-used \
             --sarif --output semgrep.sarif || true
-      - uses: github/codeql-action/upload-sarif@9f759ee644a3e7c15c1390abf49868036c00067b # v3
+      - uses: github/codeql-action/upload-sarif@24c54180a607b1449ed407dd24f251e4e9147c8d # v3
         with:
           sarif_file: semgrep.sarif
         continue-on-error: true
