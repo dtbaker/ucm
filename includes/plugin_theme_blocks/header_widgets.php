@@ -240,7 +240,7 @@ class theme_widget_manager
 						<?php
 
 						uasort( $column_widgets, function ( $a, $b ) {
-							return $a['page_order'] > $b['page_order'];
+							return $a['page_order'] <=> $b['page_order'];
 						} );
 						foreach ( $column_widgets as $column_widget ) {
 							if ( isset( $column_widget['raw'] ) && $column_widget['raw'] ) {

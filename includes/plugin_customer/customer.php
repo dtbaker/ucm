@@ -38,12 +38,13 @@ class module_customer extends module_base
 	public function __construct() {
 		$this->module_name     = 'customer';
 		$this->module_position = 130;
-		$this->version         = 2.492;
+		$this->version         = 2.493;
 	}
 
 	public function init() {
 		$this->links          = array();
 		$this->customer_types = array();
+		//2.493 - 2026-10-17 - customer portal transactions listed in date order again
 		//2.492 - 2026-10-17 - menu icon help names the default theme
 		//2.491 - 2026-10-17 - 4.0.0 relaunch: security token on saves, uploads checked, credit no longer goes missing, escaped output
 		//2.490 - 2018-06-05 - fix for supplier groups
