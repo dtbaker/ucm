@@ -14,7 +14,7 @@ if ( $show_theme_selector ) {
 	$settings = array(
 		array(
 			'key'              => 'theme_name',
-			'default'          => 'default',
+			'default'          => module_theme::default_theme_id(),
 			'type'             => 'select',
 			'options'          => $themes,
 			'options_array_id' => 'name',
@@ -49,7 +49,7 @@ if ( $show_theme_selector ) {
 		),
 	);
 	if ( module_security::is_logged_in() && module_config::c( 'theme_per_user', 0 ) ) {
-		$default_theme = is_dir( 'includes/plugin_theme/themes/metis/' ) ? 'metis' : 'default';
+		$default_theme = module_theme::default_theme_id();
 		$settings[]    = array(
 			'key'              => 'theme_name_' . module_security::get_loggedin_id(),
 			'default'          => module_config::c( 'theme_name', $default_theme ),

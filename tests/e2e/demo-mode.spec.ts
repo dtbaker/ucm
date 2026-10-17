@@ -101,13 +101,19 @@ test.describe( 'The public demo @demo', () => {
 
   test( 'picks a theme from the menu', async ( { page } ) => {
     await login( page );
-    await page.goto( '/?demo_theme=metis' );
+    await page.goto( '/?demo_theme=pro' );
     await page.locator( '#ucm-demo summary' ).click();
     const menu = page.locator( '#ucm-demo .ucm-demo-menu' );
     await expect( menu ).toBeVisible();
-    await expect( menu.locator( 'a.current' ) ).toHaveText( /Metis/ );
+    await expect( menu.locator( 'a.current' ) ).toHaveText( /Legacy/ );
+
+    // The default theme leads the menu and the legacy one closes it.
+    const names = ( await menu.locator( 'a' ).allTextContents() ).map( ( n ) => n.trim() );
+    expect( names[ 0 ] ).toBe( 'Default' );
+    expect( names[ names.length - 1 ] ).toBe( 'Legacy' );
+
     await Promise.all( [
-      page.waitForURL( /demo_theme=pro/ ),
+      page.waitForURL( /demo_theme=metis/ ),
       menu.locator( 'a', { hasText: 'Default' } ).click(),
     ] );
     await expect( page.locator( '#ucm-demo summary' ) ).toContainText( 'Default' );

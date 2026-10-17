@@ -56,15 +56,16 @@ while ( ob_get_level() > $ucm_demo_ob_level ) {
 	$ucm_demo_header_html = ob_get_clean() . $ucm_demo_header_html;
 }
 
+// The default first and the legacy theme last, the same order as Settings > Theme.
 $ucm_demo_themes = array(
-	'pro'            => 'Default',
-	'metis'          => 'Metis',
+	'metis'          => 'Default',
 	'theme_adminlte' => 'AdminLTE',
-	'whitelabel1'    => 'WhiteLabel',
+	'whitelabel1'    => 'White Label',
 );
 if ( is_dir( 'includes/plugin_theme_blocks/' ) ) {
 	$ucm_demo_themes['theme_blocks'] = 'Blocks';
 }
+$ucm_demo_themes['pro'] = 'Legacy';
 $ucm_demo_current = module_theme::get_current_theme();
 $ucm_demo_current_name = isset( $ucm_demo_themes[ $ucm_demo_current ] ) ? $ucm_demo_themes[ $ucm_demo_current ] : 'Default';
 
