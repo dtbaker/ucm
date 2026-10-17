@@ -194,7 +194,7 @@ jobs:
     #   unknown-value-with-script-tag,
     #   react-unsanitized-method    only ever matched the bundled TinyMCE, which is
     #                               excluded with dompdf, htmlpurifier and phpseclib.
-    #   curl-ssl-verifypeer-off     one, in the bundled Authorize.Net library: its pinned
+    #   curl-ssl-verifypeer-off     one, in the bundled Authorize.Net library (since removed): its pinned
     #                               CA bundle expired in 2012 and the documented
     #                               workaround was to stop verifying the peer on a request
     #                               carrying a card number. It verifies against the host's

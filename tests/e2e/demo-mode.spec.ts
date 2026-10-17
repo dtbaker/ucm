@@ -74,6 +74,68 @@ test.describe( 'The public demo @demo', () => {
     expect( loggedIn, 'so should a page behind the login' ).toContain( BANNER );
   } );
 
+  test( 'does not send a visitor to change a password they cannot change', async ( { page } ) => {
+    // Every demo account keeps the install password, and demo mode refuses a change to it.
+    // Off the demo, signing in with that password lands on the account page with a prompt
+    // to change it; on the demo that would happen on every sign-in, for nothing.
+    await login( page );
+    await page.waitForLoadState( 'load' );
+    expect( page.url(), 'signing in should not land on the account page' ).not.toContain( 'user_admin' );
+    await expect( page.locator( 'body' ) ).not.toContainText( 'Please set a password' );
+  } );
+
+  test( 'links to the documentation, GitHub and the store, and nowhere else to buy', async ( { page } ) => {
+    await login( page );
+    const bar = page.locator( '#ucm-demo' );
+    await expect( bar ).toContainText( 'DEMO' );
+    await expect( bar.locator( 'a[href="https://ultimateclientmanager.com/docs/"]' ) ).toHaveCount( 1 );
+    await expect( bar.locator( 'a[href="https://github.com/dtbaker/ucm"]' ) ).toHaveCount( 1 );
+    await expect( bar.locator( 'a', { hasText: 'Buy now' } ) ).toHaveAttribute( 'href', /codecanyon\.net\/item\// );
+
+    // Every theme ships with the product now, so none of them is sold separately any more.
+    for ( const theme of await offeredThemes( page ) ) {
+      const body = await ( await page.request.get( `/?demo_theme=${ theme }` ) ).text();
+      expect( body, `the ${ theme } theme still links to ThemeForest` ).not.toContain( 'themeforest.net' );
+    }
+  } );
+
+  test( 'picks a theme from the menu', async ( { page } ) => {
+    await login( page );
+    await page.goto( '/?demo_theme=pro' );
+    await page.locator( '#ucm-demo summary' ).click();
+    const menu = page.locator( '#ucm-demo .ucm-demo-menu' );
+    await expect( menu ).toBeVisible();
+    await expect( menu.locator( 'a.current' ) ).toHaveText( /Legacy/ );
+
+    // The default theme leads the menu and the legacy one closes it.
+    const names = ( await menu.locator( 'a' ).allTextContents() ).map( ( n ) => n.trim() );
+    expect( names[ 0 ] ).toBe( 'Default' );
+    expect( names[ names.length - 1 ] ).toBe( 'Legacy' );
+
+    await Promise.all( [
+      page.waitForURL( /demo_theme=metis/ ),
+      menu.locator( 'a', { hasText: 'Default' } ).click(),
+    ] );
+    await expect( page.locator( '#ucm-demo summary' ) ).toContainText( 'Default' );
+  } );
+
+  test( 'stays closed once a visitor closes it', async ( { page } ) => {
+    await login( page );
+    await page.locator( '#ucm-demo-hide' ).click();
+    await expect( page.locator( '#ucm-demo' ) ).toBeHidden();
+
+    // Closed from the first paint of the next page, not hidden later by a script.
+    const body = await ( await page.request.get( '/' ) ).text();
+    expect( body ).toMatch( /<body[^>]*class="[^"]*ucm-demo-hidden/ );
+    await page.reload();
+    await expect( page.locator( '#ucm-demo' ) ).toBeHidden();
+
+    await page.locator( '#ucm-demo-show' ).click();
+    await expect( page.locator( '#ucm-demo' ) ).toBeVisible();
+    await page.reload();
+    await expect( page.locator( '#ucm-demo' ) ).toBeVisible();
+  } );
+
   test( 'applies every theme its banner offers', async ( { page } ) => {
     await login( page );
     const themes = await offeredThemes( page );

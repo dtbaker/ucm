@@ -71,9 +71,6 @@
     <exclude-pattern>*/plugin_calendar/wdCalendar/*</exclude-pattern>
     <exclude-pattern>*/plugin_captcha/inc/*</exclude-pattern>
     <exclude-pattern>*/plugin_paymethod_stripe/stripe-php/*</exclude-pattern>
-    <exclude-pattern>*/plugin_paymethod_authorize/anet_php_1.1.8/*</exclude-pattern>
-    <exclude-pattern>*/plugin_paymethod_coinbase/lib/*</exclude-pattern>
-    <exclude-pattern>*/plugin_paymethod_multisafepay/MultiSafepay.combined.php</exclude-pattern>
     <exclude-pattern>*/plugin_ticket/cron/mime_parser.php</exclude-pattern>
     <!-- HTML/template files with no or minimal PHP -->
     <exclude-pattern>*/plugin_change_request/pages/popup_content_0.php</exclude-pattern>
@@ -84,7 +81,6 @@
     <exclude-pattern>*/plugin_invoice/template/credit_note_pdf.php</exclude-pattern>
     <exclude-pattern>*/plugin_invoice/template/invoice_print.php</exclude-pattern>
     <exclude-pattern>*/plugin_invoice/template/invoice_print_basic.php</exclude-pattern>
-    <exclude-pattern>*/plugin_paymethod_authorize/pages/authorize_form_default.php</exclude-pattern>
     <exclude-pattern>*/plugin_file/upload/index.php</exclude-pattern>
     <exclude-pattern>*/plugin_file/upload/plupload/index.php</exclude-pattern>
     <exclude-pattern>*/plugin_statistic/pages/statistic_list.php</exclude-pattern>

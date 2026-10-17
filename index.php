@@ -7,10 +7,9 @@
  * Author: David Baker
  * Email: dtbaker@gmail.com
  * Please send all EMAILS through http://codecanyon.net/user/dtbaker
- * Copyright 2011 David Baker
- * You must have purchased a valid license from CodeCanyon to use this script.
- *
- * If you would like to re-use parts of this system or ideas from this system elsewhere please ask permission first.
+ * Copyright (c) 2011-2026 dtbaker
+ * Released under the MIT licence - see LICENSE. Bundled third-party components keep their
+ * own licences.
  */
 
 $required_php_version = '8.2.0';

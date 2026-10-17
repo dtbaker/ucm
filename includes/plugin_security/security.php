@@ -969,8 +969,10 @@ class module_security extends module_base
 		// The install ships the literal string 'password' rather than a hash, so the
 		// stored value is itself the record of "nobody has ever set one". The code has
 		// always claimed it prompts for a change and never did. Land them on their own
-		// login settings, every time, until they do.
-		if ( $redirect && ucm_password_is_default( isset( $res['password'] ) ? $res['password'] : '' ) ) {
+		// login settings, every time, until they do. Not on the public demo: its accounts
+		// all keep the install password and cannot change it, so the prompt would fire on
+		// every sign-in and send visitors to a page that refuses the change.
+		if ( $redirect && ! _DEMO_MODE && ucm_password_is_default( isset( $res['password'] ) ? $res['password'] : '' ) ) {
 			set_error( _l( 'Please set a password for this account. It is still the one the system was installed with.' ) );
 			// Built rather than taken from module_user::link_open(), which bubbles the
 			// user page under whichever module the link came from.

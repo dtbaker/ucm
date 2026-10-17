@@ -12,9 +12,11 @@ define( '_APPLICATION_ID', 47626 ); // not used any more.
 // with a line below. It is also the cache key on every stylesheet and script, so a release
 // that changes CSS or JavaScript must bump it or browsers keep the old files.
 //
-// This file reaches an existing install as a core file, and core files are only sent along
-// with a plugin update. Bump the version of every plugin whose files changed too, or the
-// in-app updater will not offer the release at all. README.md, under "Releasing".
+// The in-app updater offers the core files (this one among them) to any install that reports
+// an older release, and shows the newest line below as their description. A 3.x install
+// reports none and gets core files only with a plugin update. Plugins are still compared by
+// their own versions: bump every plugin whose files changed too, or its files never arrive.
+// README.md, under "Releasing".
 define( '_SCRIPT_VERSION', '4.0.0' );
 // 4.0.0 - 2026-10-17 - relaunch: PHP 8 rewrite, security and payment fixes, update server in the app, new logo
 // 3.555 - 2022-12-27 - uasort boolean fix

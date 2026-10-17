@@ -32,7 +32,7 @@ and what you should see. Record what you actually saw in the results log at the 
 | Install | The files arrive byte for byte, the version is recorded, a re-check is clean | [S2](#s2-one-plugin-bumped) |
 | Database | A plugin's upgrade SQL runs and changes the schema | [S3](#s3-a-database-migration) |
 | New files | A file that is new on the server is created on the client | [S4](#s4-a-new-file-and-a-core-file) |
-| Core files | Core files ride along with any plugin update, and only then | [S4](#s4-a-new-file-and-a-core-file) |
+| Core files | Core files are offered for a newer release with no plugin bump, and ride along with any plugin update | [S4](#s4-a-new-file-and-a-core-file) |
 | Order | Offers and installs run in the documented order, including the "behind" rules | [S5](#s5-install-order) |
 | Help | Updated bundled help arrives with the help plugin and shows on screen | [S6](#s6-help-documentation) |
 | Messages | Server messages, the changelog text and progress text show, escaped | [S7](#s7-messages-on-the-upgrade-page) |
@@ -384,14 +384,17 @@ ut_offer() {   # what the server offers the client right now, in install order
   php "$TOOLS" plugins-json "$CLIENT" > "$UT/client-plugins.json"
   curl -s -X POST "http://localhost:$UT_API_PORT${UPGRADE_URL#http://$UT_API_IP}" \
     --data-urlencode "installation_code=${1-$UT_CODE}" \
+    --data-urlencode "release_version=${UT_RELEASE-$(php "$TOOLS" release "$CLIENT")}" \
     --data-urlencode "client_protocol=2" \
+    --data-urlencode "libraries=$(shasum -a 256 "$CLIENT/vendor/composer/installed.json" 2>/dev/null | cut -d' ' -f1)" \
     --data-urlencode "current_plugins@$UT/client-plugins.json" | tee "$UT/offer.json" | php "$TOOLS" summarise
 }
 ut_version() { db ucm_install_test -N -e "SELECT val FROM ucm_config WHERE \`key\`='_plugin_version_$1'"; }
 ```
 
 `ut_offer` asks the server the same question the client asks, from the host, so you can
-see the offer without the browser. The upgrade page is still the real test: always check
+see the offer without the browser. It sends the client's release version as the client
+does; `UT_RELEASE= ut_offer` sends none, which is how a 3.x client asks. The upgrade page is still the real test: always check
 the page as well. When the server has nothing to offer it sends an empty answer, not an
 empty list (`upgrade_server.php` does this on purpose, as the old server did), and
 `ut_offer` prints that as `offers: 0`.
@@ -429,7 +432,7 @@ A client identical to its server has nothing to install.
 php "$TOOLS" bump "$SERVER" faq "local upgrade test marker"
 ```
 
-1. `ut_offer`. Expect, in this order: `faq`, then `corefiles`, then `database`. The `faq`
+1. `ut_offer`. Expect, in this order: `corefiles`, then `database`, then `faq`. The `faq`
    line reads `2.150 -> 2.151` (or whatever the current version is, plus 0.001), with the
    description `Update to plugin: faq ( local upgrade test marker (on <today>))`.
 2. On the client, Check for Upgrades. The table shows the same three rows, all ticked. The
@@ -441,9 +444,6 @@ php "$TOOLS" bump "$SERVER" faq "local upgrade test marker"
    continue" when the whole run takes longer than 4 seconds; a short run puts it back to
    "Start the Upgrade" (see [Findings](#findings)).
 
-   The `corefiles` row ends with three lines that look like errors and are expected today:
-   `REFUSED: the server sent no contents for this file:` for `js/jquery-1.8.3.min.js`,
-   `js/jquery-ui-1.9.2.custom.min.js` and `temp/.htaccess`.
 4. Check the files arrived exactly:
 
    ```bash
@@ -508,32 +508,50 @@ column goes in through the real upgrade path.
 printf '\n/* local upgrade test: core file marker */\n' >> "$SERVER/css/styles.css"
 ```
 
-1. `ut_offer`. Expect `offers: 0` (confirmed 2026-10-17), and Check for Upgrades on the
-   page says "No upgrade available at this time." The server only adds the `corefiles` row
-   when some plugin is being offered (`upgrade_server.php`, the `$do_upgrade` check before
-   `corefiles`), so a change to a core file alone never reaches anyone. A release that
-   changes a core file must bump a plugin too.
+1. `ut_offer`. Expect `offers: 0`, and Check for Upgrades on the page says "No upgrade
+   available at this time." Nothing compares file contents: with the same release and the
+   same plugin versions there is nothing to offer.
 
-**Then with a plugin bump and a new file:**
+**Then with a release bump:**
 
 ```bash
+php "$TOOLS" bump-release "$SERVER" "core file alone"
+```
+
+2. `ut_offer`. Expect `corefiles`, then `database`, and no plugin. The `corefiles` line
+   reads `4.0.0 -> 4.0.1` (the client's release, then the server's) with the description
+   `Core application files ( 4.0.1: core file alone (on <today>))`. The server offers the
+   core rows whenever its `_SCRIPT_VERSION` is newer than the release the client sends
+   (`ucm_upgrade_server::offers_core_files()`).
+3. `UT_RELEASE= ut_offer`. Expect `offers: 0`: a 3.x client sends no release, and gets
+   exactly the answer it always got, core files only with a plugin update.
+4. Upgrade on the client. Expect the marker at the end of `"$CLIENT/css/styles.css"`, and
+   `php "$TOOLS" release "$CLIENT"` prints `4.0.1`. The footer shows the new release.
+5. `ut_offer` again. Expect `offers: 0`: the client is on the server's release now.
+
+Run `ut_reset` before the next part.
+
+**A plugin bump and a new file, same release:**
+
+```bash
+printf '\n/* local upgrade test: core file marker */\n' >> "$SERVER/css/styles.css"
 php "$TOOLS" bump "$SERVER" faq "new file and core file"
 printf 'local upgrade test\n' > "$SERVER/includes/plugin_faq/ut-new-file.txt"
 ```
 
-2. `ut_offer`. `corefiles` is offered. In `$UT/offer.json`, check that its `files` list
+6. `ut_offer`. `corefiles` is offered. In `$UT/offer.json`, check that its `files` list
    includes `css/styles.css`, and that the `faq` file list includes `ut-new-file.txt`.
-3. Upgrade on the client.
-4. Expect both on the client:
+7. Upgrade on the client.
+8. Expect both on the client:
 
    ```bash
    cat "$CLIENT/includes/plugin_faq/ut-new-file.txt"
    tail -2 "$CLIENT/css/styles.css"
    ```
 
-5. The progress text lists `File: includes/plugin_faq/ut-new-file.txt` with "this file has
+9. The progress text lists `File: includes/plugin_faq/ut-new-file.txt` with "this file has
    been installed successfully". The client prints those words for every file it writes,
-   new or not, so step 4 is the real proof.
+   new or not, so step 8 is the real proof.
 
 ### S5. Install order
 
@@ -541,8 +559,9 @@ The rules, from `upgrade_server.php`: offers are sorted by plugin name. If the c
 behind on `db` (below 2.13) or `language` (below 2.179), then `db`, `language` and `session`
 are moved to the front and `check_again` is set. If it is behind on `backup` (below 2.111)
 or `config` (below 2.385), only `config`, `backup`, `core`, `theme`, `form` and `db` stay
-ticked; everything else is offered unticked. `corefiles` and `database` always come last
-and stay ticked. The page works through the ticked rows top to bottom; for each one it
+ticked; everything else is offered unticked. `corefiles` and `database` always come first
+and stay ticked, and `config`, which holds the updater, always comes last
+(`ucm_upgrade_server::install_order()`). The page works through the ticked rows top to bottom; for each one it
 writes the files and then runs that plugin's database step, before moving to the next row.
 
 **Name order.**
@@ -551,7 +570,7 @@ writes the files and then runs that plugin's database step, before moving to the
 for p in theme help faq; do php "$TOOLS" bump "$SERVER" $p "order check"; done
 ```
 
-1. `ut_offer`. Expect `faq`, `help`, `theme`, `corefiles`, `database`.
+1. `ut_offer`. Expect `corefiles`, `database`, `faq`, `help`, `theme`.
 2. Upgrade on the client. The "Processing update" lines appear in that same order. Record
    the `Current Version` each one shows: each should be the new version. Before
    dtbaker/ucm#29 some were the old one (the stale code finding; on 2026-10-17 `faq` and
@@ -564,7 +583,7 @@ php "$TOOLS" set-version "$CLIENT" db 2.12
 php "$TOOLS" bump "$SERVER" faq "behind on db"
 ```
 
-3. `ut_offer`. Expect `db` first, then `faq`, `corefiles`, `database`, and `check_again: yes`.
+3. `ut_offer`. Expect `corefiles`, `database`, then `db`, then `faq`, and `check_again: yes`.
    (Checked against the real server code on 2026-10-17: exactly this.)
 4. Upgrade on the client. `db` installs first. The page does **not** ask you to check
    again: the client never reads `check_again` (see [Findings](#findings)). Check for
@@ -920,8 +939,8 @@ it, and each step that meets it says what you will see today.
 | --- | --- | --- |
 | **Fixed by dtbaker/ucm#29. The in-app updater runs each plugin's database step on stale code.** The page writes a plugin's files in one request and runs its database step in the next. PHP's opcache only re-reads a changed file every `opcache.revalidate_freq` seconds (2 by default, often more on shared hosts), and nothing calls `opcache_invalidate()` after a write, so the second request usually still has the old class. | `class.upgrade.php`, `complete_plugin_installation()` after `install_plugin_update_files()` | The new version is not recorded and the plugin's upgrade SQL does not run, while the page says `all good` and "Success! Everything worked." Seen in 7 of 9 plugin steps on 2026-10-17 (S2, S3, S5, S6). Proven by S3 passing with `opcache.revalidate_freq=0`. Run Manual Upgrades repairs it afterwards. The fix invalidates opcache for every file the updater writes; where the host refuses that (`opcache.restrict_api`), the database step now says `not finished` and changes nothing instead of reporting success. |
 | **A fresh install with no `config.local.php` is a blank HTTP 500, not the setup wizard,** unless the fallback database details in `includes/config.php` happen to connect. On PHP 8.1 and later `mysqli_connect()` throws on failure, and nothing catches it or calls `mysqli_report()`, so the "Connect failed" message in `db_connect()` is never reached. | `init.php:206` `is_installed()` → `includes/plugin_db/db.php:257` | The main install route (unzip and open the site) does not reach the wizard on a normal host, whose fallback is `localhost` / `username` / `ucm`. The same blank 500 is what a site that loses its `config.local.php` shows (S11b). The dev stack and CI never see it, because `docker-compose.yml` sets `UCM_DB_NAME`. |
-| The `corefiles` list names three files the server never sends | `upgrade_server.php`, the `corefiles` list | Every update ends the core row with three `REFUSED: the server sent no contents for this file` lines. `js/jquery-1.8.3.min.js` and `js/jquery-ui-1.9.2.custom.min.js` are not in the release; `temp/.htaccess` is skipped by `is_ignored_path()` (`/temp/`), so an updated install never gets a newer `temp/.htaccess` either. |
-| A core file changed with no plugin bump is never offered | `upgrade_server.php`, the `$do_upgrade` check before `corefiles` | Answers the S4 question: no. A release that changes only core files reaches nobody through the updater. |
+| **Fixed by the 3.x upgrade fix.** The `corefiles` list names three files the server never sends | `upgrade_server.php`, the `corefiles` list | Every update ended the core row with three `REFUSED: the server sent no contents for this file` lines. `js/jquery-1.8.3.min.js` and `js/jquery-ui-1.9.2.custom.min.js` are not in the release; `temp/.htaccess` is skipped by `is_ignored_path()` (`/temp/`), so an updated install never gets a newer `temp/.htaccess` either. |
+| **Fixed by the release version check.** A core file changed with no plugin bump is never offered | `upgrade_server.php`, the `$do_upgrade` check before `corefiles` | Answered the S4 question: no. A release that changed only core files reached nobody through the updater. The client now sends `release_version` and the server offers the core rows when its own is newer; a 3.x client still gets them only with a plugin update. |
 | The Upgrade screen's help opens "The plugin system" | `includes/plugin_config/config.help.json`, generated from `ucm-web` `site/src/content/docs/developers/plugins.md` frontmatter | Answers the S6 question: it shows `developers/plugins`; it should show `install/upgrading` ("Upgrading from 2.x"). |
 | The client ignores `check_again` | no reference to it outside `upgrade_server.php` | A client that is behind gets part of its updates and is never told there are more. It has to think of pressing Check for Upgrades again. |
 | "Completed, click here to continue" is hidden on a short run | `includes/plugin_form/js/form.js`, `dtbaker_loading_button()` restores the button text after 4 seconds | A run under 4 seconds ends with the button reading "Start the Upgrade" again, as if nothing happened. |
@@ -956,7 +975,7 @@ Licence gate in the API copy: present | absent
 S1 baseline                     pass | fail | n/a   <notes>
 S2 one plugin bumped            ...
 S3 database migration           ...
-S4 core file alone / new file   ...  (record what the core-file-alone offer was)
+S4 core file alone / release bump / old client / new file   ...
 S5 order: name / db / config    ...
 S6 help: index no bump / index bump / screen map / upgrade-screen article  ...
 S7 messages: changelog / progress / escaping / rate limit  ...
