@@ -70,31 +70,34 @@ jobs:
         run: ./vendor/bin/phpcs -q --report=checkstyle -d memory_limit=2G | cs2pr
 
   phpstan:
-    name: PHPStan (${{ matrix.php }})
+    # One version. It analyses the same code whichever PHP runs it, and the baseline
+    # would catch a version that saw it differently: an entry one version needs and
+    # another does not fails the other as an unmatched ignored error. Run on 8.2-8.5 it
+    # agreed on every run it had. 8.4 is what the baseline is generated with locally.
+    # Whether the code runs on each version is the lint and phpcs jobs' question.
+    name: PHPStan
     runs-on: ubuntu-latest
     timeout-minutes: 20
-    strategy:
-      fail-fast: false
-      matrix:
-        php: ['8.2', '8.3', '8.4', '8.5']
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
       - uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # v2
         with:
-          php-version: ${{ matrix.php }}
+          php-version: '8.4'
           coverage: none
       - uses: ramsey/composer-install@a8d0d959dab41457692a5e2041bd9b757a119e3f # v3
       - name: PHPStan
         run: ./vendor/bin/phpstan analyse --memory-limit=2G --no-progress --error-format=github
 
   phpunit:
+    # The oldest and newest PHP we support. Nothing in tests/unit branches on the PHP
+    # version, so 8.3 and 8.4 sit between two runs that already pass and add nothing.
     name: PHPUnit (${{ matrix.php }})
     runs-on: ubuntu-latest
     timeout-minutes: 10
     strategy:
       fail-fast: false
       matrix:
-        php: ['8.2', '8.3', '8.4', '8.5']
+        php: ['8.2', '8.5']
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
       - uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # v2
