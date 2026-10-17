@@ -296,6 +296,32 @@ async function aQueuedSend( page: Page ): Promise<{ newsletterId: string; sendId
   return { newsletterId, sendId: sendId as string };
 }
 
+/**
+ * Raises a ticket for one test and deletes it afterwards.
+ *
+ * These tests used to open whichever ticket the list showed first, and failed outright
+ * once the development database had none left to show. The subject starts 'Fieldset' so
+ * the leftovers chore catches one that a failed run leaves behind.
+ */
+async function withTicket( page: Page, subject: string, body: ( ticketId: string ) => Promise<void> ): Promise<void> {
+  const ticketId = await createRecord( page, '/?m[]=ticket', {
+    _process: 'save_ticket',
+    ticket_id: 'new',
+    subject,
+    customer_id: await aCustomer( page ),
+    change_user_id: '1',
+    assigned_user_id: '1',
+    status_id: '2',
+    priority: '0',
+    _redirect: '',
+  }, 'ticket_id' );
+  try {
+    await body( ticketId );
+  } finally {
+    await deleteRecord( page, '/?m[]=ticket', 'save_ticket', 'ticket_id', ticketId );
+  }
+}
+
 test.describe( 'Forms moved to generate_fieldset', () => {
   test( 'the data field screen keeps its controls and saves what is typed', async ( { page } ) => {
     await login( page );
@@ -936,31 +962,29 @@ test.describe( 'Forms moved to generate_fieldset', () => {
 
   test( 'the ticket reply form keeps its controls', async ( { page } ) => {
     await login( page );
-    const list = await ( await page.request.get( '/?m[]=ticket&p[]=ticket_admin' ) ).text();
-    const ids = [ ...new Set( [ ...list.matchAll( /ticket_id=(\d+)/g ) ].map( ( m ) => m[ 1 ] ) ) ];
-    expect( ids.length, 'there should be a ticket to reply to' ).toBeGreaterThan( 0 );
+    await withTicket( page, 'Fieldset reply form', async ( ticketId ) => {
+      await page.goto( `/?m[]=ticket&p[]=ticket_admin&ticket_id=${ ticketId }` );
 
-    await page.goto( `/?m[]=ticket&p[]=ticket_admin&ticket_id=${ ids[ 0 ] }` );
+      // The reply block is one table inside a much larger form, so rather than list forty
+      // controls this names the ones that table owns.
+      const form = page.locator( 'form:has(textarea[name="new_ticket_message"])' ).first();
+      for ( const name of [
+        'attachment[]', 'change_status_id', 'assigned_user_id', 'change_user_id',
+        'ticket_cc_staff[*]'.replace( '[*]', '' ), 'ticket_cc', 'ticket_bcc',
+        'private_message', 'canned_response_id',
+      ] ) {
+        await expect( form.locator( `[name^="${ name }"]` ).first(),
+          `the reply block should still have ${ name }` ).toBeAttached();
+      }
 
-    // The reply block is one table inside a much larger form, so rather than list forty
-    // controls this names the ones that table owns.
-    const form = page.locator( 'form:has(textarea[name="new_ticket_message"])' ).first();
-    for ( const name of [
-      'attachment[]', 'change_status_id', 'assigned_user_id', 'change_user_id',
-      'ticket_cc_staff[*]'.replace( '[*]', '' ), 'ticket_cc', 'ticket_bcc',
-      'private_message', 'canned_response_id',
-    ] ) {
-      await expect( form.locator( `[name^="${ name }"]` ).first(),
-        `the reply block should still have ${ name }` ).toBeAttached();
-    }
-
-    // The CC and BCC rows were a <tbody id="ticket_cc_bcc"> that the Show CC/BCC button
-    // reveals. They carry the class now and the button switches on it.
-    const body = await page.content();
-    expect( ( body.match( /<tr[^>]*\bticket_cc_bcc\b/g ) ?? [] ).length,
-      'the cc and bcc rows need the class the button reveals' ).toBe( 3 );
-    expect( body, 'and the button should reveal them by class' )
-      .toContain( "$('.ticket_cc_bcc')" );
+      // The CC and BCC rows were a <tbody id="ticket_cc_bcc"> that the Show CC/BCC button
+      // reveals. They carry the class now and the button switches on it.
+      const body = await page.content();
+      expect( ( body.match( /<tr[^>]*\bticket_cc_bcc\b/g ) ?? [] ).length,
+        'the cc and bcc rows need the class the button reveals' ).toBe( 3 );
+      expect( body, 'and the button should reveal them by class' )
+        .toContain( "$('.ticket_cc_bcc')" );
+    } );
   } );
 
   test( 'the address block keeps its fields', async ( { page } ) => {
@@ -1114,36 +1138,34 @@ test.describe( 'Forms moved to generate_fieldset (priority support)', () => {
   test( 'the ticket screen keeps its priority support block', async ( { page } ) => {
     await login( page );
 
-    const list = await ( await page.request.get( '/?m[]=ticket&p[]=ticket_admin' ) ).text();
-    const ids = Array.from( list.matchAll( /ticket_id=(\d+)/g ) ).map( m => m[ 1 ] );
-    expect( ids.length, 'no tickets to open' ).toBeGreaterThan( 0 );
+    await withTicket( page, 'Fieldset priority support', async ( ticketId ) => {
+      await withTicketPriority( page, async () => {
+        await page.goto( `/?m[]=ticket&p[]=ticket_admin&ticket_id=${ ticketId }` );
+        const body = await page.content();
+        expect( body, 'the priority support block did not render' ).toContain( 'Priority Support' );
 
-    await withTicketPriority( page, async () => {
-      await page.goto( `/?m[]=ticket&p[]=ticket_admin&ticket_id=${ ids[ 0 ] }` );
-      const body = await page.content();
-      expect( body, 'the priority support block did not render' ).toContain( 'Priority Support' );
+        // Which message the block shows depends on whether the ticket already has an
+        // invoice, so assert that it said one of the three things rather than picking one.
+        expect(
+          [ 'Priority Support costs', 'Please pay', 'Thank you for purchasing', 'Current ticket position' ]
+            .some( t => body.includes( t ) ),
+          'the block rendered but said none of the things it can say',
+        ).toBe( true );
 
-      // Which message the block shows depends on whether the ticket already has an
-      // invoice, so assert that it said one of the three things rather than picking one.
-      expect(
-        [ 'Priority Support costs', 'Please pay', 'Thank you for purchasing', 'Current ticket position' ]
-          .some( t => body.includes( t ) ),
-        'the block rendered but said none of the things it can say',
-      ).toBe( true );
+        // The shape the conversion had to preserve: one cell, no header cell. An element
+        // passed to generate_fieldset with 'fields' and no 'title' renders exactly that,
+        // and getting it wrong would put an empty <th> in front of the text.
+        const shape = await page.evaluate( () => {
+          const header = Array.from( document.querySelectorAll( 'h3, h5, .title' ) )
+            .find( h => ( h.textContent || '' ).includes( 'Priority Support' ) );
+          const box = header?.closest( '.box, div' );
+          const row = box?.querySelector( 'table.tableclass_form tbody tr' );
 
-      // The shape the conversion had to preserve: one cell, no header cell. An element
-      // passed to generate_fieldset with 'fields' and no 'title' renders exactly that,
-      // and getting it wrong would put an empty <th> in front of the text.
-      const shape = await page.evaluate( () => {
-        const header = Array.from( document.querySelectorAll( 'h3, h5, .title' ) )
-          .find( h => ( h.textContent || '' ).includes( 'Priority Support' ) );
-        const box = header?.closest( '.box, div' );
-        const row = box?.querySelector( 'table.tableclass_form tbody tr' );
-
-        return row ? { tds: row.querySelectorAll( 'td' ).length, ths: row.querySelectorAll( 'th' ).length } : null;
+          return row ? { tds: row.querySelectorAll( 'td' ).length, ths: row.querySelectorAll( 'th' ).length } : null;
+        } );
+        expect( shape, 'no fieldset row found under the Priority Support heading' ).not.toBeNull();
+        expect( shape ).toEqual( { tds: 1, ths: 0 } );
       } );
-      expect( shape, 'no fieldset row found under the Priority Support heading' ).not.toBeNull();
-      expect( shape ).toEqual( { tds: 1, ths: 0 } );
     } );
   } );
 } );
