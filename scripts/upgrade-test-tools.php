@@ -10,6 +10,8 @@
  *   php scripts/upgrade-test-tools.php help-marker <root> <slug> <text>          put a marker at the start of an article's summary in the help index
  *   php scripts/upgrade-test-tools.php help-map    <root> <plugin> <page> <slug> point one screen in a plugin's screen map at another article
  *   php scripts/upgrade-test-tools.php version     <root> <plugin>               print the plugin's version
+ *   php scripts/upgrade-test-tools.php release     <root>                        print the release version (_SCRIPT_VERSION)
+ *   php scripts/upgrade-test-tools.php bump-release <root> <note>                release version + 0.0.1, with a changelog line
  *   php scripts/upgrade-test-tools.php plugins-json <root>                       every plugin's version, as the client sends it
  *   php scripts/upgrade-test-tools.php summarise   < response.json               the server's answer: message, then each offer in order
  */
@@ -94,6 +96,36 @@ switch ( $cmd ) {
 	case 'version':
 		$file = ut_plugin_file( $root, $argv[3] );
 		echo ut_version_of( file_get_contents( $file ), $file ), "\n";
+		break;
+
+	case 'release':
+	case 'bump-release':
+		$file   = "$root/init.php";
+		$source = file_get_contents( $file );
+		if ( ! preg_match( "#define\\(\\s*'_SCRIPT_VERSION',\\s*'([^']+)'\\s*\\);#", $source, $match ) ) {
+			ut_fail( "no _SCRIPT_VERSION in $file" );
+		}
+		$old = $match[1];
+		if ( 'release' === $cmd ) {
+			echo $old, "\n";
+			break;
+		}
+		$parts = explode( '.', $old );
+		while ( count( $parts ) < 3 ) {
+			$parts[] = '0';
+		}
+		$parts[ count( $parts ) - 1 ] = (string) ( (int) end( $parts ) + 1 );
+		$new  = implode( '.', $parts );
+		$note = isset( $argv[3] ) && strlen( $argv[3] ) ? $argv[3] : 'local upgrade test';
+		// The update server describes the core files with the newest changelog line under the
+		// define, so the new line goes straight below it.
+		$source = str_replace(
+			$match[0],
+			"define( '_SCRIPT_VERSION', '" . $new . "' );\n// " . $new . ' - ' . date( 'Y-m-d' ) . ' - ' . $note,
+			$source
+		);
+		file_put_contents( $file, $source );
+		echo "release: $old -> $new\n";
 		break;
 
 	case 'plugins-json':

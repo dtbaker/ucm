@@ -107,6 +107,10 @@ function ucm_upgrade_server_respond() {
 	$return_base_system_in_zip = ! empty( $_REQUEST['return_base_system_in_zip'] );
 	$requested_plugin          = isset( $_REQUEST['requested_plugin'] ) && is_string( $_REQUEST['requested_plugin'] )
 		? $_REQUEST['requested_plugin'] : false;
+	// The release the client runs, from a client new enough to say. See
+	// ucm_upgrade_server::offers_core_files().
+	$client_release = ucm_upgrade_server::client_release( isset( $_REQUEST['release_version'] ) ? $_REQUEST['release_version'] : null );
+	$server_release = defined( '_SCRIPT_VERSION' ) ? (string) _SCRIPT_VERSION : '';
 
 	// The old one-file installer, and ucm-web/api/download_zip.php: the whole product in one
 	// zip, so a site installed from it is the same as one unzipped from CodeCanyon. It is
@@ -262,18 +266,21 @@ function ucm_upgrade_server_respond() {
 		}
 	}
 
-	if ( $do_upgrade || 'corefiles' === $requested_plugin || 'database' === $requested_plugin ) {
+	if ( ucm_upgrade_server::offers_core_files( $do_upgrade, $requested_plugin, $server_release, $client_release ) ) {
 		$do_upgrade  = true;
 		$new_version = max( $new_version, 2.3 );
+		if ( ucm_upgrade_server::release_is_newer( $server_release, $client_release ) ) {
+			$we_are_recommending_an_item_upgrade = true;
+		}
 
 		$send_libraries = ucm_upgrade_server::client_needs_libraries(
 			ucm_upgrade_server::libraries_fingerprint( $root ),
 			isset( $_REQUEST['libraries'] ) && is_string( $_REQUEST['libraries'] ) ? $_REQUEST['libraries'] : null
 		);
-		$update_plugins = ucm_upgrade_server::install_order(
-			$update_plugins,
-			ucm_upgrade_server::core_rows( $root, $application, $new_version, $we_are_recommending_an_item_upgrade, $send_libraries, $client_protocol )
-		);
+		$core_rows      = ucm_upgrade_server::core_rows( $root, $application, $new_version, $we_are_recommending_an_item_upgrade, $send_libraries, $client_protocol );
+		$init_file      = ucm_upgrade_server::source_path( $root, $application, 'init.php' );
+		$core_rows      = ucm_upgrade_server::label_release( $core_rows, $server_release, $client_release, $init_file ? file_get_contents( $init_file ) : false );
+		$update_plugins = ucm_upgrade_server::install_order( $update_plugins, $core_rows );
 	}
 
 	// Read the bodies, and hash every one of them on the way past.
