@@ -125,7 +125,7 @@ class ucm_stripe_subscriptions
 	 * Which subscription a Stripe invoice belongs to.
 	 *
 	 * The API moved this. Up to 2025-03-31 an Invoice carried `subscription` at the top
-	 * level; from the Basil versions - which is what stripe-php 17 pins - it lives at
+	 * level; from the Basil versions on - stripe-php 17 and later pin one of those - it lives at
 	 * `parent.subscription_details.subscription`. Both are read, newest first, so this
 	 * keeps working whichever version an account's older webhook deliveries were cut on.
 	 *

@@ -49,4 +49,4 @@ GPL-3.0, so that text is there too.
 | jQuery | 2.1.1 | [MIT](LICENSES/MIT.txt) | jQuery Foundation, Inc. | `includes/plugin_theme_adminlte/js/jquery.min.js` |
 | TinyMCE | 3.4.4 | [LGPL-2.1-or-later](LICENSES/LGPL-2.1.txt) | Moxiecode Systems AB | `js/tiny_mce3.4.4` |
 | HTML Purifier (Composer) | v4.19.1 | [LGPL-2.1-or-later](LICENSES/LGPL-2.1.txt) | Edward Z. Yang | `vendor/ezyang/htmlpurifier` |
-| Stripe PHP bindings (Composer) | v17.6.0 | [MIT](LICENSES/MIT.txt) | Stripe, Inc. | `vendor/stripe/stripe-php` |
+| Stripe PHP bindings (Composer) | v22.0.0 | [MIT](LICENSES/MIT.txt) | Stripe, Inc. | `vendor/stripe/stripe-php` |
