@@ -74,6 +74,16 @@ test.describe( 'The public demo @demo', () => {
     expect( loggedIn, 'so should a page behind the login' ).toContain( BANNER );
   } );
 
+  test( 'does not send a visitor to change a password they cannot change', async ( { page } ) => {
+    // Every demo account keeps the install password, and demo mode refuses a change to it.
+    // Off the demo, signing in with that password lands on the account page with a prompt
+    // to change it; on the demo that would happen on every sign-in, for nothing.
+    await login( page );
+    await page.waitForLoadState( 'load' );
+    expect( page.url(), 'signing in should not land on the account page' ).not.toContain( 'user_admin' );
+    await expect( page.locator( 'body' ) ).not.toContainText( 'Please set a password' );
+  } );
+
   test( 'applies every theme its banner offers', async ( { page } ) => {
     await login( page );
     const themes = await offeredThemes( page );
