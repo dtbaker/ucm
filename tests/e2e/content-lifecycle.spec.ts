@@ -1,5 +1,6 @@
 import { test, expect, Page } from '@playwright/test';
 import { login, createRecord, deleteRecord, formAuthKey, aCustomer } from './seed';
+import { describeDiagnostics } from './diagnostics';
 
 /**
  * Lifecycle cover for the last four record types that had none: newsletter, calendar
@@ -62,6 +63,35 @@ test.describe( 'Content lifecycles', () => {
     }
   } );
 
+
+  test( 'a newsletter with no template lists without a PHP diagnostic', async ( { page } ) => {
+    let newsletterId: string | null = null;
+    try {
+      await login( page );
+      const subject = 'Newsletter Test ' + Date.now() + ' no template';
+      newsletterId = await createRecord( page, '/?m[]=newsletter', {
+        _process: 'save_newsletter',
+        newsletter_id: 'new',
+        newsletter_template_id: '0',
+        subject,
+        from_name: 'Lifecycle Sender',
+        from_email: 'sender@example.com',
+        content: 'Body text for the lifecycle test.',
+      }, 'newsletter_id' );
+
+      // The template name is joined in, so with no template it is null - which the list
+      // passed straight to htmlspecialchars().
+      const body = await ( await page.request.get(
+        '/?m[]=newsletter&p[]=newsletter_list_draft&search[generic]=' + encodeURIComponent( subject ),
+        { failOnStatusCode: false } ) ).text();
+      expect( body, 'the draft should be on the list' ).toContain( subject );
+      expect( describeDiagnostics( body ).join( '\n' ), 'the list printed a PHP diagnostic' ).toBe( '' );
+    } finally {
+      if ( newsletterId ) {
+        await deleteRecord( page, '/?m[]=newsletter', 'save_newsletter', 'newsletter_id', newsletterId );
+      }
+    }
+  } );
 
   test( 'a file record keeps the status it was given, and an edit sticks', async ( { page } ) => {
     let fileId: string | null = null;

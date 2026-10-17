@@ -121,7 +121,8 @@ print_heading( $header );
 	$columns['newsletter_template']     = array(
 		'title'    => 'Template',
 		'callback' => function ( $newsletter ) {
-			echo htmlspecialchars( $newsletter['newsletter_template_name'] );
+			// Joined in, so a newsletter with no template has none.
+			echo htmlspecialchars( (string) $newsletter['newsletter_template_name'] );
 		},
 	);
 	$columns['newsletter_action']       = array(

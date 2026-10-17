@@ -16,7 +16,8 @@ class module_newsletter extends module_base
 	public $links;
 	public $newsletter_types;
 
-	public $version = 2.470;
+	public $version = 2.471;
+	// 2.471 - 2026-10-17 - newsletter list no longer warns about a newsletter with no template
 	// 2.470 - 2026-10-17 - 4.0.0 relaunch: member newsletter page crash fixed, delete permission checked, security token on saves
 	// 2.469 - 2021-04-07 - php8 compatibility fix
 	// 2.468 - 2017-05-07 - template file improvements
