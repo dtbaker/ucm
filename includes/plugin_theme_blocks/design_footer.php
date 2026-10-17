@@ -20,7 +20,7 @@ if ( module_security::is_logged_in() ) {
 			<div id="footer">
 				<p>&copy; <?php echo module_config::s('admin_system_name','Ultimate Client Manager'); ?>
 				  - <?php echo date("Y"); ?>
-				  - <?php _e('Version:');?> <?php echo module_config::current_version(); ?>
+				  - <?php _e('Version:');?> <?php echo htmlspecialchars( module_config::product_version() ); ?>
 				  - <?php _e('Time:');?> <?php echo round(microtime(true)-$start_time,5);?>
 				</p>
 			</div>

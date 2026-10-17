@@ -701,6 +701,9 @@ if ( isset( $_REQUEST['process_upgrade'] ) && isset( $_REQUEST['via_ajax'] ) ) {
 			),
 			'elements'       => array(
 				array(
+					'message' => '<strong id="ucm_product_version">' . _l( 'You are running Ultimate Client Manager version %s.', htmlspecialchars( module_config::product_version() ) ) . '</strong>',
+				),
+				array(
 					'message' => _l( 'Please insert your license code(s) below to receive upgrades and new features.' ) . ' ' . _hr( 'Your license code can be found from your CodeCanyon downloads page. <a href="%s">Click here</a> for help.', 'http://dtbaker.net/admin/includes/plugin_envato/images/envato-license-code.gif' )
 				),
 				array(

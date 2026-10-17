@@ -30,7 +30,7 @@ switch ( $display_mode ) {
 		<div id="footer">
 			<p>&copy; <?php echo module_config::s( 'admin_system_name', 'Ultimate Client Manager' ); ?>
 				- <?php echo date( "Y" ); ?>
-				- Version: <?php echo module_config::current_version(); ?>
+				- Version: <?php echo htmlspecialchars( module_config::product_version() ); ?>
 				- Time: <?php echo round( microtime( true ) - $start_time, 5 ); ?>
 			</p>
 		</div>

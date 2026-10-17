@@ -1819,3 +1819,43 @@ function dtbaker_mime_type( $file_name, $file_path = false ) {
 	return $mime;
 }
 
+
+/**
+ * Is a stored logo setting just the logo this product used to ship?
+ *
+ * The Theme Settings page saves every field it shows, including the default logo address,
+ * so many installs have `images/logo.png` stored without anyone ever choosing it. Treating
+ * that value as "not customised" lets those installs pick up the current logo, while a logo
+ * somebody actually uploaded or linked is left alone.
+ *
+ * Only the stock path on this install counts: `/images/logo.png` under the install's own
+ * base path, either relative or on this install's own host. The same file name anywhere
+ * else is somebody's own logo.
+ *
+ * @param string $url       the stored setting
+ * @param string $base_href the install's base address (_BASE_HREF): a path or a full URL
+ * @param string $host      the host this install answers on, compared without case
+ *
+ * @return bool
+ */
+function ucm_is_stock_logo_url( $url, $base_href, $host = '' ) {
+	if ( ! is_string( $url ) || '' === trim( $url ) ) {
+		return false;
+	}
+	$parts = parse_url( trim( $url ) );
+	if ( ! is_array( $parts ) || empty( $parts['path'] ) ) {
+		return false;
+	}
+	if ( ! empty( $parts['host'] ) ) {
+		$base_host = parse_url( (string) $base_href, PHP_URL_HOST );
+		$allowed   = array_filter( array( strtolower( (string) $host ), strtolower( (string) $base_host ) ) );
+		if ( ! in_array( strtolower( $parts['host'] ), $allowed, true ) ) {
+			return false;
+		}
+	}
+	$base_path = parse_url( (string) $base_href, PHP_URL_PATH );
+	$base_path = '/' . trim( is_string( $base_path ) ? $base_path : '', '/' );
+	$expected  = rtrim( $base_path, '/' ) . '/images/logo.png';
+
+	return $parts['path'] === $expected;
+}

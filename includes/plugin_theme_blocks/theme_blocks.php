@@ -17,10 +17,11 @@ class module_theme_blocks extends module_base
 	public function __construct() {
 		$this->module_name     = 'theme_blocks';
 		$this->module_position = 0;
-		$this->version         = 2.129;
+		$this->version         = 2.130;
 	}
 
 	public function init() {
+		//2.130 - 2026-10-17 - new SVG logo and favicon, release version in the footer
 		//2.129 - 2017-01-12 - fieldset settings
 		//2.128 - 2016-12-20 - ajax lookup forms
 		//2.127 - 2015-11-06 - javascript theme improvement

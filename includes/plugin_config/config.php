@@ -11,7 +11,7 @@ class module_config extends module_base
 	public function __construct() {
 		$this->module_name     = 'config';
 		$this->module_position = 40;
-		$this->version         = 2.435;
+		$this->version         = 2.436;
 	}
 
 	public static function can_i( $actions, $name = false, $category = false, $module = false ) {
@@ -27,6 +27,7 @@ class module_config extends module_base
 	}
 
 	public function init() {
+		//2.436 - 2026-10-17 - release version on the upgrade page
 		//2.435 - 2022-12-27 - uasort boolean error fix
 		//2.434 - 2022-10-22 - default to https update url
 		//2.433 - 2019-04-06 - php error fix
@@ -1124,6 +1125,28 @@ public static function js_combine($version, $reinit=false){
 	}
 
 
+	/**
+	 * The release this install is running, as shown to people: _SCRIPT_VERSION in init.php.
+	 *
+	 * This is the one number to quote in support and in the changelog. It is bumped at every
+	 * release, and it lives in init.php, a core file, so it changes on disk whenever an
+	 * update lands.
+	 *
+	 * @return string
+	 */
+	public static function product_version() {
+		return (string) _SCRIPT_VERSION;
+	}
+
+	/**
+	 * The version number this install reports to the update server.
+	 *
+	 * Not the release number: it is a database setting that only an update writes, so a fresh
+	 * install reports the 2.1 default. Kept because the update protocol sends it. For the
+	 * number to show people, use product_version().
+	 *
+	 * @return string|float
+	 */
 	public static function current_version() {
 		return self::c( '_admin_system_version', 2.1 );
 	}
