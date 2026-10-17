@@ -1,0 +1,115 @@
+# Deploys the release build, plus the demo chrome in custom/, to the public demo.
+#
+# Manual only: pick a branch in the "Run workflow" dropdown and that branch is what goes
+# live. It never runs on a push or a merge. The host, account and key live in the `demo`
+# environment's secrets, not in this file.
+#
+# The server keeps its own config.local.php (database, secret, demo mode), its uploads and
+# its SSL challenge folder. Those are excluded from the sync, and rsync does not delete
+# what it excludes, so the exclude list is what protects them. Never add
+# --delete-excluded.
+name: Deploy to demo
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-demo
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    environment: demo
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      # The build runs `composer install` and the lock file is for PHP 8.4.
+      - uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # v2
+        with:
+          php-version: '8.4'
+          coverage: none
+      - name: Build the release archive (same as CI)
+        run: ./scripts/build-release.sh --verify
+      - name: Assemble the demo tree
+        run: |
+          set -euo pipefail
+          mkdir -p deploy
+          rsync -a "build/Main Files/" deploy/
+          rsync -a --exclude README.md custom/ deploy/custom/
+          test -f deploy/vendor/autoload.php
+          test -f deploy/custom/design_header.php
+          test ! -e deploy/includes/config.local.php
+      - name: SSH setup
+        env:
+          DEMO_SSH_KEY: ${{ secrets.DEMO_SSH_KEY }}
+          DEMO_SSH_KNOWN_HOSTS: ${{ secrets.DEMO_SSH_KNOWN_HOSTS }}
+          DEMO_SSH_HOST: ${{ secrets.DEMO_SSH_HOST }}
+          DEMO_SSH_PORT: ${{ secrets.DEMO_SSH_PORT }}
+          DEMO_SSH_USER: ${{ secrets.DEMO_SSH_USER }}
+        run: |
+          set -euo pipefail
+          mkdir -p ~/.ssh && chmod 700 ~/.ssh
+          printf '%s\n' "$DEMO_SSH_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          printf '%s\n' "$DEMO_SSH_KNOWN_HOSTS" > ~/.ssh/known_hosts
+          cat > ~/.ssh/config <<EOF
+          Host demo
+            HostName $DEMO_SSH_HOST
+            Port $DEMO_SSH_PORT
+            User $DEMO_SSH_USER
+            IdentityFile ~/.ssh/deploy_key
+            IdentitiesOnly yes
+            StrictHostKeyChecking yes
+          EOF
+          ssh demo 'echo connected; php -v | head -1'
+      - name: Sync
+        env:
+          DEMO_DEPLOY_PATH: ${{ secrets.DEMO_DEPLOY_PATH }}
+        # --checksum and no -t: the build stamps vendor/ with the time it ran, so comparing
+        # times would resend those files on every run. Comparing content means a repeat
+        # deploy of the same commit transfers (and touches) nothing.
+        # Includes for the files we do ship inside a protected directory come before the
+        # exclude for that directory's contents. The guard files (.htaccess, index.php)
+        # are shipped so a fresh server tree is protected from the first deploy.
+        run: |
+          rsync -rlpgoDz --checksum --delete --itemize-changes \
+            --exclude='/includes/config.local.php' \
+            --exclude='/.well-known/' \
+            --include='/temp/.htaccess' --include='/temp/index.php' --include='/temp/.gitkeep' \
+            --exclude='/temp/*' \
+            --include='/includes/plugin_file/upload/.htaccess' \
+            --include='/includes/plugin_file/upload/index.php' \
+            --include='/includes/plugin_file/upload/plupload/' \
+            --exclude='/includes/plugin_file/upload/*' \
+            --include='/includes/plugin_ticket/attachments/.htaccess' \
+            --include='/includes/plugin_ticket/attachments/index.php' \
+            --exclude='/includes/plugin_ticket/attachments/*' \
+            --include='/includes/plugin_backup/backups/index.php' \
+            --exclude='/includes/plugin_backup/backups/*' \
+            --include='/includes/plugin_data/upload/.htaccess' \
+            --include='/includes/plugin_data/upload/index.php' \
+            --exclude='/includes/plugin_data/upload/*' \
+            --include='/includes/plugin_email/attachments/index.php' \
+            --exclude='/includes/plugin_email/attachments/*' \
+            deploy/ demo:"$DEMO_DEPLOY_PATH/"
+      - name: Clear the asset cache
+        # The combined css/js cache in temp/ is keyed by content, but stale copies pile up.
+        env:
+          DEMO_DEPLOY_PATH: ${{ secrets.DEMO_DEPLOY_PATH }}
+        run: ssh demo "find '$DEMO_DEPLOY_PATH/temp' -maxdepth 1 -name 'cache-*' -delete"
+      - name: Smoke test
+        env:
+          DEMO_URL: ${{ secrets.DEMO_URL }}
+        run: |
+          set -euo pipefail
+          body=$(curl -fsS --max-time 30 "$DEMO_URL/")
+          if grep -qE 'PHP version of [0-9.]+ or above is REQUIRED' <<<"$body"; then
+            echo "The host PHP is below the minimum - fix it in Site Tools"; exit 1
+          fi
+          grep -q 'start theme demo code' <<<"$body" || { echo "Demo banner missing - is _DEMO_MODE set in config.local.php?"; exit 1; }
+          grep -qiE 'Warning:|Fatal error|Deprecated:' <<<"$body" && { echo "PHP diagnostics on the page"; exit 1; }
+          echo OK
