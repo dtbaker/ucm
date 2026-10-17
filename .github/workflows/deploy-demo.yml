@@ -69,11 +69,14 @@ jobs:
       - name: Sync
         env:
           DEMO_DEPLOY_PATH: ${{ secrets.DEMO_DEPLOY_PATH }}
+        # --checksum and no -t: the build stamps vendor/ with the time it ran, so comparing
+        # times would resend those files on every run. Comparing content means a repeat
+        # deploy of the same commit transfers (and touches) nothing.
         # Includes for the files we do ship inside a protected directory come before the
         # exclude for that directory's contents. The guard files (.htaccess, index.php)
         # are shipped so a fresh server tree is protected from the first deploy.
         run: |
-          rsync -az --delete --itemize-changes \
+          rsync -rlpgoDz --checksum --delete --itemize-changes \
             --exclude='/includes/config.local.php' \
             --exclude='/.well-known/' \
             --include='/temp/.htaccess' --include='/temp/index.php' --include='/temp/.gitkeep' \
