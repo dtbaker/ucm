@@ -29,9 +29,3 @@ overrides it either way.
 `scripts/build-release.sh` uses - leaves it out of the item archive. Committed so a deploy
 carries it; excluded so a buyer does not get a header advertising the demo.
 
-## Known, deliberately left alone
-
-`design_footer.php` injects Universal Analytics (`analytics.js`, a UA- property). UA
-stopped processing data in July 2023, so it collects nothing and is a third-party script
-on every demo page doing no work. Replace it with a GA4 tag or delete it - removing the
-demo's analytics is an owner's decision, not a side effect of a refactor.
