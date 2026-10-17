@@ -1021,6 +1021,9 @@ public static function js_combine($version, $reinit=false){
 			'application'           => _APPLICATION_ID,
 			'installation_code'     => module_config::c( '_installation_code' ),
 			'current_version'       => module_config::c( '_admin_system_version', 2.1 ),
+			// The release, so a server that compares releases offers the core files when
+			// only they changed. An old server ignores it and still reads current_version.
+			'release_version'       => _SCRIPT_VERSION,
 			'current_plugins'       => json_encode( $current_plugins ),
 			'current_files'         => json_encode( $current_files ),
 			'client_ip'             => isset( $_SERVER['REMOTE_ADDR'] ) ? $_SERVER['REMOTE_ADDR'] : '',

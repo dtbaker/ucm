@@ -461,6 +461,103 @@ class ucm_upgrade_server
 	}
 
 	/**
+	 * The release a client says it runs, or '' when it did not say.
+	 *
+	 * A 4.x client sends its _SCRIPT_VERSION as `release_version`. A 3.x client sends
+	 * nothing, and a value that is not a version number counts as nothing too.
+	 */
+	public static function client_release( $value ) {
+		if ( ! is_scalar( $value ) ) {
+			return '';
+		}
+		$value = trim( (string) $value );
+		if ( strlen( $value ) > 32 || ! preg_match( '#^\d+(\.\d+)*([.\-+][0-9A-Za-z.\-+]*)?$#', $value ) ) {
+			return '';
+		}
+
+		return $value;
+	}
+
+	/**
+	 * Whether the `corefiles` and `database` rows go into the answer.
+	 *
+	 * They always went with any plugin, and with a request for either row by name. A
+	 * release that changed only core files was offered to nobody, because nothing compared
+	 * releases. A client that sends its release now gets the core files whenever this
+	 * server's release is newer, plugin bump or not. A client that sends none gets exactly
+	 * the old answer.
+	 *
+	 * @param bool         $plugin_offered   Whether any plugin row is in the answer.
+	 * @param string|false $requested_plugin The one row asked for, if any.
+	 * @param string       $server_release   This server's _SCRIPT_VERSION.
+	 * @param string       $client_release   What client_release() made of the request.
+	 */
+	public static function offers_core_files( $plugin_offered, $requested_plugin, $server_release, $client_release ) {
+		if ( $plugin_offered || 'corefiles' === $requested_plugin || 'database' === $requested_plugin ) {
+			return true;
+		}
+
+		return self::release_is_newer( $server_release, $client_release );
+	}
+
+	/** Whether this server's release is newer than the client's. Never, when the client did not say. */
+	public static function release_is_newer( $server_release, $client_release ) {
+		if ( ! strlen( (string) $client_release ) || ! strlen( (string) $server_release ) ) {
+			return false;
+		}
+
+		return version_compare( (string) $server_release, (string) $client_release ) > 0;
+	}
+
+	/**
+	 * The newest changelog line under _SCRIPT_VERSION in init.php, as "<version>: <summary>".
+	 *
+	 * The release changelog sits under the define as `// <version> - <date> - <summary>`,
+	 * newest first. Returns '' when there is no such line.
+	 */
+	public static function release_changelog_line( $init_source ) {
+		if ( ! is_string( $init_source ) ) {
+			return '';
+		}
+		$define = strpos( $init_source, "'_SCRIPT_VERSION'" );
+		if ( false === $define ) {
+			return '';
+		}
+		if ( ! preg_match( '#^[ \t]*//\s*(\d[0-9A-Za-z.\-+]*)\s+-\s+\d\d\d\d-\d\d-\d\d\b.*$#m', $init_source, $match, 0, $define ) ) {
+			return '';
+		}
+		$line = self::changelog_line( $match[0], $match[1] );
+
+		return $match[1] . ( strlen( $line ) ? ': ' . $line : '' );
+	}
+
+	/**
+	 * Label the `corefiles` row with the releases, for a client that sent its own.
+	 *
+	 * The row shows the client's release going to this server's, with the release's
+	 * changelog line, instead of the plugin version number it shows an old client.
+	 *
+	 * @param array<string, array<string, mixed>> $core_rows       From core_rows().
+	 * @param string                              $server_release  This server's _SCRIPT_VERSION.
+	 * @param string                              $client_release  What client_release() made of the request.
+	 * @param string|false                        $init_source     This server's init.php.
+	 *
+	 * @return array<string, array<string, mixed>>
+	 */
+	public static function label_release( array $core_rows, $server_release, $client_release, $init_source ) {
+		if ( ! strlen( (string) $client_release ) || ! strlen( (string) $server_release ) || ! isset( $core_rows['corefiles'] ) ) {
+			return $core_rows;
+		}
+		$line = self::release_changelog_line( $init_source );
+
+		$core_rows['corefiles']['installed_version'] = (string) $client_release;
+		$core_rows['corefiles']['available_version'] = (string) $server_release;
+		$core_rows['corefiles']['description']       = 'Core application files' . ( strlen( $line ) ? ' ( ' . $line . ')' : '' );
+
+		return $core_rows;
+	}
+
+	/**
 	 * Count this request against an IP's allowance.
 	 *
 	 * A counter file per IP per window, which is all a single shared host can rely on - no

@@ -124,11 +124,14 @@ quotes. Every release:
    compares plugin versions and nothing else, so a changed file in a plugin that was not
    bumped never reaches an existing install. The comment is what the update screen shows
    as the description.
-3. **Core files only travel with a plugin update.** `init.php`, `design_header.php`,
-   `includes/functions.php` and the rest of the core list in
-   `includes/plugin_config/upgrade_server.php` are sent whenever any plugin is offered. A
-   release that changes only core files has to bump at least one plugin, or it is never
-   offered.
+3. **Core files travel with the release version.** `init.php`, `design_header.php`,
+   `includes/functions.php` and the rest of the core list (`CORE_FILES` in
+   `includes/plugin_config/class.upgrade_server.php`) are offered whenever the server's
+   `_SCRIPT_VERSION` is newer than the one the install reports, so a release that changes
+   only core files needs step 1 and nothing else. The update screen shows the newest
+   changelog line under `_SCRIPT_VERSION` as their description. They are also sent with
+   any plugin update. A 3.x install reports no release, so it gets core files only with a
+   plugin update.
 4. **Images, `css/` and `js/` outside that core list do not travel at all**, except in a
    fresh zip install. Put new assets inside a plugin, as `includes/plugin_theme/images/`
    does, so they arrive with it.
