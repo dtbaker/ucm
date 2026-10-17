@@ -138,3 +138,27 @@ export async function aFile(page: Page): Promise<string> {
   }, 'file_id');
 }
 
+/** Deletes a record through the app's own confirm-delete, hash and all. */
+export async function deleteRecord(
+  page: Page,
+  postUrl: string,
+  process: string,
+  key: string,
+  id: string,
+): Promise<void> {
+  const { createHash } = await import( 'node:crypto' );
+  await page.request.post( postUrl, {
+    form: {
+      _process: process,
+      [ key ]: id,
+      butt_del: '1',
+      // module_form::confirm_delete() accepts md5( 'delete <key> <value>' ) plus the
+      // literal 'yep', which is how the confirmation screen posts back.
+      _confirm_delete: createHash( 'md5' ).update( `delete ${ key } ${ id }` ).digest( 'hex' ),
+      really_confirm_delete: 'yep',
+      form_auth_key: await formAuthKey( page ),
+      _redirect: '/',
+    },
+    failOnStatusCode: false,
+  } );
+}
