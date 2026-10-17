@@ -2,7 +2,7 @@
     "name": "ucm/ultimate-client-manager",
     "description": "Ultimate Client Manager - Freelance Project Invoice CRM",
     "type": "project",
-    "license": "proprietary",
+    "license": "MIT",
     "require": {
         "php": "^8.2",
         "ezyang/htmlpurifier": "^4.19",

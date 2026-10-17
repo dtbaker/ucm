@@ -1,8 +1,7 @@
 The 3-Clause BSD License
 
 Components bundled with Ultimate Client Manager under this licence are listed
-in third-party-libraries.html and third-party-libraries.tsv in the folder above
-this one, together with the copyright holder of each. The original copyright
+in THIRD_PARTY_NOTICES.md, together with the copyright holder of each. The original copyright
 header is preserved inside every source file as shipped.
 
 The terms below apply to each of those components, read with that component's

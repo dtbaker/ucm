@@ -1,18 +1,6 @@
-The MIT License (MIT)
+MIT License
 
-Several components bundled with Ultimate Client Manager are distributed under
-the MIT licence. The copyright holder differs per component; the holder, the
-version and the upstream address of each are recorded in
-third-party-libraries.html and third-party-libraries.tsv in the folder above
-this one, and the original copyright header is preserved inside every source
-file as shipped.
-
-The terms below apply to each of those components, read with that component's
-own copyright notice in place of the placeholder line.
-
----
-
-Copyright (c) <year> <copyright holder>
+Copyright (c) 2011-2026 dtbaker
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
