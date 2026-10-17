@@ -76,7 +76,8 @@ jobs:
           rsync -az --delete --itemize-changes \
             --exclude='/includes/config.local.php' \
             --exclude='/.well-known/' \
-            --include='/temp/.htaccess' --include='/temp/index.php' --exclude='/temp/*' \
+            --include='/temp/.htaccess' --include='/temp/index.php' --include='/temp/.gitkeep' \
+            --exclude='/temp/*' \
             --include='/includes/plugin_file/upload/.htaccess' \
             --include='/includes/plugin_file/upload/index.php' \
             --include='/includes/plugin_file/upload/plupload/' \
@@ -103,8 +104,8 @@ jobs:
         run: |
           set -euo pipefail
           body=$(curl -fsS --max-time 30 "$DEMO_URL/")
-          if grep -q 'PHP version of 8.4 or above is REQUIRED' <<<"$body"; then
-            echo "The host is not on PHP 8.4 - fix it in Site Tools"; exit 1
+          if grep -qE 'PHP version of [0-9.]+ or above is REQUIRED' <<<"$body"; then
+            echo "The host PHP is below the minimum - fix it in Site Tools"; exit 1
           fi
           grep -q 'start theme demo code' <<<"$body" || { echo "Demo banner missing - is _DEMO_MODE set in config.local.php?"; exit 1; }
           grep -qiE 'Warning:|Fatal error|Deprecated:' <<<"$body" && { echo "PHP diagnostics on the page"; exit 1; }
