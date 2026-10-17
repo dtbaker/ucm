@@ -1551,6 +1551,10 @@ Invoice: <strong>{INVOICE_LINK}</strong>
 				}
 				// remove staff
 				delete_from_db( 'customer_user_rel', 'customer_id', $customer_id );
+				// and the per-customer settings, which save_customer() writes a row of for
+				// every portal option. Nothing else ever removed them, so each deleted
+				// customer left its whole block of settings in customer_config for good.
+				delete_from_db( 'customer_config', 'customer_id', $customer_id );
 				if ( class_exists( 'module_note', false ) ) {
 					module_note::note_delete( "customer", 'customer_id', $customer_id );
 				}

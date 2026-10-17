@@ -1,6 +1,6 @@
 import { test, expect, Page } from '@playwright/test';
 import { describeDiagnostics } from './diagnostics';
-import { aCustomer, formAuthKey, login } from './seed';
+import { aCustomer, deleteRecord, formAuthKey, login } from './seed';
 
 /**
  * A support ticket, from raised to replied to billed to deleted.
@@ -192,67 +192,84 @@ test.describe('Tickets', () => {
   });
 
   test('bills priority support once, however many times it is asked for', async ({ page, browser }) => {
-    test.setTimeout(180000);
-    await login(page);
+    let ticketId: string | null = null;
+    let priorityInvoiceId: string | null = null;
+    try {
+      test.setTimeout(180000);
+      await login(page);
 
-    const customerId = await aCustomer(page);
-    const subject = uniqueName('Ticket priority');
-    await saveTicket(page, {
-      ticket_id: 'new',
-      subject,
-      customer_id: customerId,
-      change_user_id: '1',
-      assigned_user_id: '1',
-      status_id: '2',
-      priority: '0',
-    });
-    const found = await searchTickets(page, subject);
-    expect(found, 'the ticket should be findable by subject').toHaveLength(1);
-    const ticketId = found[0];
-
-    await openTicket(page, ticketId);
-    const publicPath = ((await page.content()).match(
-      /external\/m\.ticket\/h\.public\/i\.\d+\/hash\.[a-f0-9]+/,
-    ) || [])[0];
-    expect(publicPath, 'the ticket should publish a public link').toBeTruthy();
-
-    // The customer asks for priority support twice - a double click, a refresh of the
-    // page it lands on, a second visit inside the cache window. Each has to land on the
-    // same invoice.
-    const customer = await browser.newContext();
-    const customerPage = await customer.newPage();
-    const invoiceUrls: string[] = [];
-    for (let attempt = 0; attempt < 2; attempt++) {
-      const response = await customerPage.request.post('/' + String(publicPath), {
-        form: { _process: 'send_public_ticket', generate_priority_invoice: '1' },
-        maxRedirects: 0,
-        failOnStatusCode: false,
+      const customerId = await aCustomer(page);
+      const subject = uniqueName('Ticket priority');
+      await saveTicket(page, {
+        ticket_id: 'new',
+        subject,
+        customer_id: customerId,
+        change_user_id: '1',
+        assigned_user_id: '1',
+        status_id: '2',
+        priority: '0',
       });
-      const location = response.headers()['location'] || '';
-      expect(location, 'asking for priority support should land on an invoice').toContain('invoice');
-      invoiceUrls.push(location);
+      const found = await searchTickets(page, subject);
+      expect(found, 'the ticket should be findable by subject').toHaveLength(1);
+      ticketId = found[0];
+
+      await openTicket(page, ticketId);
+      const publicPath = ((await page.content()).match(
+        /external\/m\.ticket\/h\.public\/i\.\d+\/hash\.[a-f0-9]+/,
+      ) || [])[0];
+      expect(publicPath, 'the ticket should publish a public link').toBeTruthy();
+
+      // The customer asks for priority support twice - a double click, a refresh of the
+      // page it lands on, a second visit inside the cache window. Each has to land on the
+      // same invoice.
+      const customer = await browser.newContext();
+      const customerPage = await customer.newPage();
+      const invoiceUrls: string[] = [];
+      for (let attempt = 0; attempt < 2; attempt++) {
+        const response = await customerPage.request.post('/' + String(publicPath), {
+          form: { _process: 'send_public_ticket', generate_priority_invoice: '1' },
+          maxRedirects: 0,
+          failOnStatusCode: false,
+        });
+        const location = response.headers()['location'] || '';
+        expect(location, 'asking for priority support should land on an invoice').toContain('invoice');
+        invoiceUrls.push(location);
+      }
+      expect(
+        new URL(invoiceUrls[1], 'http://localhost').searchParams.get('i'),
+        'asking twice must not raise a second invoice for the same ticket',
+      ).toBe(new URL(invoiceUrls[0], 'http://localhost').searchParams.get('i'));
+
+      // The 'i' parameter on the public link is the invoice this ticket raised.
+      priorityInvoiceId = new URL(invoiceUrls[0], 'http://localhost').searchParams.get('i');
+
+      await customerPage.goto(invoiceUrls[0]);
+      await customerPage.waitForLoadState('load');
+      expect(
+        describeDiagnostics(await customerPage.content()),
+        'the priority support invoice should not print PHP diagnostics',
+      ).toEqual([]);
+      const invoiceBody = (await customerPage.locator('body').innerText()).replace(/\s+/g, ' ');
+      expect(invoiceBody, 'the invoice should say which ticket it is for').toContain('Ticket #');
+      expect(invoiceBody, 'and bill something for it').toMatch(/\$[1-9][\d,]*\.\d\d/);
+      await customer.close();
+
+      // --- and the ticket still answers for staff afterwards
+      await openTicket(page, ticketId);
+      expect(
+        describeDiagnostics(await page.content()),
+        'the ticket screen should still be clean after raising the invoice',
+      ).toEqual([]);
+    } finally {
+      // The first test in this file ends by deleting its ticket, which is the thing it is
+      // proving. This one does not, so it has to tidy up: the invoice first, because
+      // deleting the ticket does not take the priority support invoice with it.
+      if (priorityInvoiceId) {
+        await deleteRecord(page, '/?m[]=invoice', 'save_invoice', 'invoice_id', priorityInvoiceId);
+      }
+      if (ticketId) {
+        await deleteRecord(page, '/?m[]=ticket', 'save_ticket', 'ticket_id', ticketId);
+      }
     }
-    expect(
-      new URL(invoiceUrls[1], 'http://localhost').searchParams.get('i'),
-      'asking twice must not raise a second invoice for the same ticket',
-    ).toBe(new URL(invoiceUrls[0], 'http://localhost').searchParams.get('i'));
-
-    await customerPage.goto(invoiceUrls[0]);
-    await customerPage.waitForLoadState('load');
-    expect(
-      describeDiagnostics(await customerPage.content()),
-      'the priority support invoice should not print PHP diagnostics',
-    ).toEqual([]);
-    const invoiceBody = (await customerPage.locator('body').innerText()).replace(/\s+/g, ' ');
-    expect(invoiceBody, 'the invoice should say which ticket it is for').toContain('Ticket #');
-    expect(invoiceBody, 'and bill something for it').toMatch(/\$[1-9][\d,]*\.\d\d/);
-    await customer.close();
-
-    // --- and the ticket still answers for staff afterwards
-    await openTicket(page, ticketId);
-    expect(
-      describeDiagnostics(await page.content()),
-      'the ticket screen should still be clean after raising the invoice',
-    ).toEqual([]);
   });
 });

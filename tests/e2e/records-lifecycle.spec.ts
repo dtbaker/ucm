@@ -116,12 +116,17 @@ test.describe( 'Record lifecycles', () => {
     expect( await fieldValue( page, 'save_website', 'name' ), 'the name should come back as typed' )
       .toBe( name );
 
-    // Delete is deliberately not asserted here. The same helper deletes a vendor and a
-    // member correctly, so the handler is almost certainly fine - website.php:261 calls
-    // confirm_delete() and then delete_website() like the others - but the confirmation
-    // step did not complete from this spec and I could not show it was the application
-    // rather than the harness. Left uncovered and said so, rather than asserting
-    // something unproven or quietly dropping the check.
+    // This used to be left uncovered, with a note saying the confirmation step did not
+    // complete and it was not clear whether the application or the harness was at
+    // fault. It was the application: module_email::hook_website_deleted() declared a
+    // third parameter that module_website::delete_website() never passed, so the hook
+    // raised an ArgumentCountError before the DELETE ran and the website survived
+    // every attempt. With that fixed the delete behaves like the vendor's and the
+    // member's, and is asserted the same way.
+    await deleteThroughConfirmation( page );
+
+    await recordIsGone( page, `/?m[]=website&p[]=website_admin_edit&website_id=${ websiteId }`,
+      'save_website', 'name', name );
   } );
 
   test( 'a member keeps its details, then goes away', async ( { page } ) => {

@@ -1,6 +1,6 @@
 import { test, expect, Page } from '@playwright/test';
 import { DIAGNOSTIC, describeDiagnostics } from './diagnostics';
-import { createRecord, login } from './seed';
+import { createRecord, idNamedOn, login } from './seed';
 
 /**
  * Record ids that go straight back out into the page.
@@ -29,24 +29,42 @@ const PAYLOAD = '"><script>alert(1)</script>';
  */
 type Target = { name: string; marker: string; proven: boolean; url: string | ((page: Page) => Promise<string | null>) };
 
-/** The data field screen insists on a type and a fieldset that exist. Find a pair. */
-async function aDataFieldUrl(page: Page): Promise<string | null> {
-  // Make the pair rather than hunt for one. A fresh install has no data types at all, and
-  // the ids in this development database are not the ids CI will have.
-  const stamp = Date.now();
-  const dataTypeId = await createRecord(page, '/?m[]=data', {
-    _process: 'save_data_type',
-    data_type_id: 'new',
-    data_type_name: 'Escaping Type ' + stamp,
-  }, 'data_type_id');
+/**
+ * The data field screen insists on a type and a fieldset that exist.
+ *
+ * One fixed pair, found again on each run and only made the first time. It used to
+ * stamp the names with Date.now() and make a new pair every run, which left a data
+ * type, a fieldset and the permissions and menu config that come with one behind on
+ * each pass. A fresh install still has none, so it is made when it is missing.
+ */
+const FIXTURE_TYPE = 'Escaping Fixture Type';
+const FIXTURE_GROUP = 'Escaping Fixture Fieldset';
 
-  const groupId = await createRecord(page, '/?m[]=data', {
-    _process: 'save_data_field_group',
-    data_field_group_id: 'new',
-    data_type_id: dataTypeId,
-    name: 'Escaping Fieldset ' + stamp,
-    _redirect: '/',
-  }, 'data_field_group_id');
+async function aDataFieldUrl(page: Page): Promise<string | null> {
+  const typeList = '/?m[]=data&p[]=data_type_admin';
+  let dataTypeId = await idNamedOn(page, typeList, 'data_type_id', FIXTURE_TYPE);
+  if (!dataTypeId) {
+    dataTypeId = await createRecord(page, '/?m[]=data', {
+      _process: 'save_data_type',
+      data_type_id: 'new',
+      data_type_name: FIXTURE_TYPE,
+    }, 'data_type_id');
+  }
+
+  const typePage = `/?m[]=data&p[]=data_type_admin_open&data_type_id=${dataTypeId}`;
+  let groupId = await idNamedOn(page, typePage, 'data_field_group_id', FIXTURE_GROUP);
+  if (!groupId) {
+    groupId = await createRecord(page, '/?m[]=data', {
+      _process: 'save_data_field_group',
+      data_field_group_id: 'new',
+      data_type_id: dataTypeId,
+      // The column is `title`; a `name` here is accepted and dropped, which is why the
+      // fieldsets this spec used to make were all nameless and none of them could be
+      // found again.
+      title: FIXTURE_GROUP,
+      _redirect: '/',
+    }, 'data_field_group_id');
+  }
 
   return `/?m[]=data&p[]=data_type_admin_field_open&data_type_id=${dataTypeId}`
     + `&data_field_group_id=${groupId}&data_field_id=${encodeURIComponent(PAYLOAD)}`;

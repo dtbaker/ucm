@@ -3403,6 +3403,11 @@ Job: <strong>{JOB_NAME}</strong> <br/>
 			$res          = query( $sql );
 			$sql          = "DELETE FROM " . _DB_PREFIX . "invoice_payment WHERE invoice_id = '" . $invoice_id . "'";
 			$res          = query( $sql );
+			// The payment methods offered on the invoice. A row is written per method
+			// per invoice, and nothing removed them, so they outlived every invoice
+			// ever deleted.
+			$sql          = "DELETE FROM " . _DB_PREFIX . "invoice_payment_method WHERE invoice_id = '" . $invoice_id . "'";
+			$res          = query( $sql );
 			$sql          = "UPDATE " . _DB_PREFIX . "invoice SET renew_invoice_id = 0 WHERE renew_invoice_id = '" . $invoice_id . "'";
 			$res          = query( $sql );
 			if ( class_exists( 'module_note', false ) && module_note::is_plugin_enabled() ) {

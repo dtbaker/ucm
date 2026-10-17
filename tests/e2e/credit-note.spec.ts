@@ -1,5 +1,5 @@
 import { test, expect, Page } from '@playwright/test';
-import { aCustomer, createRecord, formAuthKey, login } from './seed';
+import { aCustomer, createRecord, deleteRecord, formAuthKey, login } from './seed';
 import { describeDiagnostics } from './diagnostics';
 
 /**
@@ -29,8 +29,14 @@ async function saveInvoice(page: Page, form: Record<string, string>) {
   });
 }
 
-/** A fresh invoice, cancelled, with a credit note generated against it. */
-async function aCreditNote(page: Page): Promise<string> {
+/**
+ * A fresh invoice, cancelled, with a credit note generated against it.
+ *
+ * Both invoices are pushed onto `made` so the caller can take them away again. Two
+ * tests each call this, so leaving them behind grew the invoice table by four rows a
+ * run - and every screen that lists invoices with it.
+ */
+async function aCreditNote(page: Page, made: string[]): Promise<string> {
   const customerId = await aCustomer(page);
   const invoiceId = await createRecord(page, '/?m[]=invoice', {
     _process: 'save_invoice',
@@ -39,6 +45,7 @@ async function aCreditNote(page: Page): Promise<string> {
     customer_id: customerId,
     _redirect: '',
   }, 'invoice_id');
+  made.push(invoiceId);
 
   // One task on it, so the credit note has a line to draw and a total to discount.
   await saveInvoice(page, {
@@ -65,8 +72,16 @@ async function aCreditNote(page: Page): Promise<string> {
   const creditNoteId = new URL(page.url()).searchParams.get('invoice_id');
   expect(creditNoteId, 'generating a credit note should land on the new record').toBeTruthy();
   expect(creditNoteId, 'the credit note is a new invoice, not the cancelled one').not.toEqual(invoiceId);
+  made.push(String(creditNoteId));
 
   return String(creditNoteId);
+}
+
+/** Removes the invoices a test raised, newest first. */
+async function removeInvoices(page: Page, made: string[]) {
+  for (const id of [...made].reverse()) {
+    await deleteRecord(page, '/?m[]=invoice', 'save_invoice', 'invoice_id', id);
+  }
 }
 
 test.describe('Credit note', () => {
@@ -75,28 +90,38 @@ test.describe('Credit note', () => {
   });
 
   test('opens without printing a PHP warning, notice, deprecation or error', async ({ page }) => {
-    const creditNoteId = await aCreditNote(page);
+    const made: string[] = [];
+    try {
+      const creditNoteId = await aCreditNote(page, made);
 
-    const target = '/?m[]=invoice&p[]=invoice_admin&invoice_id=' + creditNoteId;
-    const response = await page.request.get(target);
-    expect(response.status(), `${target} should load`).toBeLessThan(500);
+      const target = '/?m[]=invoice&p[]=invoice_admin&invoice_id=' + creditNoteId;
+      const response = await page.request.get(target);
+      expect(response.status(), `${target} should load`).toBeLessThan(500);
 
-    const problems = describeDiagnostics(await response.text());
-    expect(problems, `PHP diagnostics on the credit note page:\n` + problems.join('\n')).toEqual([]);
+      const problems = describeDiagnostics(await response.text());
+      expect(problems, `PHP diagnostics on the credit note page:\n` + problems.join('\n')).toEqual([]);
+    } finally {
+      await removeInvoices(page, made);
+    }
   });
 
   test('shows the credit note layout, discount fields included', async ({ page }) => {
-    const creditNoteId = await aCreditNote(page);
-    await page.goto('/?m[]=invoice&p[]=invoice_admin&invoice_id=' + creditNoteId);
+    const made: string[] = [];
+    try {
+      const creditNoteId = await aCreditNote(page, made);
+      await page.goto('/?m[]=invoice&p[]=invoice_admin&invoice_id=' + creditNoteId);
 
-    await expect(page).toHaveTitle(/credit note/i);
-    await expect(page.locator('input[name="_process"][value="save_invoice"]')).toHaveCount(1);
-    await expect(page.locator('body')).toContainText('Credit note test task');
+      await expect(page).toHaveTitle(/credit note/i);
+      await expect(page.locator('input[name="_process"][value="save_invoice"]')).toHaveCount(1);
+      await expect(page.locator('body')).toContainText('Credit note test task');
 
-    // The discount block is what $discounts_allowed gates, and an undefined variable there
-    // is falsey - so the fields quietly going missing is the other half of that bug.
-    await expect(page.locator('input[name="discount_amount"]')).toHaveCount(1);
-    await expect(page.locator('input[name="discount_description"]')).toHaveCount(1);
-    await expect(page.locator('select[name="discount_type"]')).toHaveCount(1);
+      // The discount block is what $discounts_allowed gates, and an undefined variable there
+      // is falsey - so the fields quietly going missing is the other half of that bug.
+      await expect(page.locator('input[name="discount_amount"]')).toHaveCount(1);
+      await expect(page.locator('input[name="discount_description"]')).toHaveCount(1);
+      await expect(page.locator('select[name="discount_type"]')).toHaveCount(1);
+    } finally {
+      await removeInvoices(page, made);
+    }
   });
 });

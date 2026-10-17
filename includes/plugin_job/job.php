@@ -3713,6 +3713,10 @@ Job Name: <strong>{JOB_NAME}</strong> <br/>
 		$res = query( $sql );
 		$sql = "DELETE FROM " . _DB_PREFIX . "task_log WHERE job_id = '" . $job_id . "'";
 		$res = query( $sql );
+		// The job's tax rows, which nothing else removed - every deleted job left its
+		// taxes behind in job_tax.
+		$sql = "DELETE FROM " . _DB_PREFIX . "job_tax WHERE job_id = '" . $job_id . "'";
+		$res = query( $sql );
 		$sql = "UPDATE " . _DB_PREFIX . "job SET renew_job_id = NULL WHERE renew_job_id = '" . $job_id . "'";
 		$res = query( $sql );
 		if ( class_exists( 'module_file', false ) ) {

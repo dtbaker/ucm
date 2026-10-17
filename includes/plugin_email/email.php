@@ -640,7 +640,11 @@ class module_email extends module_base
 		}
 	}
 
-	public static function hook_website_deleted( $callback_name, $website_id, $remove_linked_data ) {
+	// The website module fires this hook with two arguments, not three, so the third has
+	// to have a default - without one, deleting a website died with an ArgumentCountError
+	// before it reached the DELETE, and the website stayed. hook_invoice_deleted() above
+	// already defends itself the same way.
+	public static function hook_website_deleted( $callback_name, $website_id, $remove_linked_data = false ) {
 		if ( (int) $website_id > 0 ) {
 			delete_from_db( 'email', 'website_id', $website_id );
 		}

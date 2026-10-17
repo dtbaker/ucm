@@ -118,6 +118,10 @@ test.describe('Contracts', () => {
 
     await expect(page.locator('body'), 'and the contract should keep a note of who signed it')
       .toContainText('Contract approved by Jane Signatory');
+
+    // The other two tests here end by deleting what they made; this one did not, so it
+    // added a contract and its approval note to the database on every run.
+    await deleteContract(page, contractId, run);
   });
 
   test('will not show or sign a contract on a wrong hash', async ({ page, browser }) => {
@@ -198,8 +202,13 @@ test.describe('Contracts', () => {
     await openContract(page, contractId);
     await expect(page.locator('input[name="approved_by"]').first()).toHaveValue('Signed In Person');
     await expect(page.locator('input[name="date_approved"]').first()).toHaveValue(date);
+    // Trimmed, not whole: display_notes() cuts each note to note_trim_length - 35 by
+    // default - and appends an ellipsis, so the full 37-character message is never on
+    // this screen. The first test in this file asserts its whole string and passes only
+    // because 'Contract approved by Jane Signatory' is exactly 35 characters; one more
+    // and it would have failed the same way for the same non-reason.
     await expect(page.locator('body'), 'approving from the staff side should be noted too')
-      .toContainText('Contract approved by Signed In Person');
+      .toContainText('Contract approved by Signed In Pers');
 
     // --- duplicate, with the button the screen shows
     await Promise.all([

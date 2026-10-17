@@ -1287,6 +1287,12 @@ class module_user extends module_base
 		query( $sql );
 		$sql = "UPDATE " . _DB_PREFIX . "user SET linked_parent_user_id = 0 WHERE linked_parent_user_id = '" . $user_id . "'";
 		query( $sql );
+		// The per-user settings that are keyed by user id rather than held in a column:
+		// which dashboard panels this person had hidden, and their own permissions.
+		// Nothing removed either, so config kept a row for every user ever deleted.
+		delete_from_db( 'config', 'key', '_dashboard_item_hide' . $user_id );
+		$sql = "DELETE FROM `" . _DB_PREFIX . "user_perm` WHERE user_id = '" . (int) $user_id . "'";
+		query( $sql );
 		// get_user() and get_contacts() both cache, so without this the deleted user
 		// keeps turning up on their own screen and in contact lists.
 		module_cache::clear( 'user' );

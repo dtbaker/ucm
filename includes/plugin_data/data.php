@@ -974,10 +974,37 @@ class module_data extends module_base
 					delete_from_db( 'data_record_revision', 'data_record_id', $record['data_record_id'] );
 					delete_from_db( 'data_record', 'data_record_id', $record['data_record_id'] );
 					delete_from_db( 'data_store', 'data_record_id', $record['data_record_id'] );
+					// The who-opened-it rows for this record, which were left behind.
+					delete_from_db( 'data_access', 'data_record_id', $record['data_record_id'] );
 				}
 			}
 			delete_from_db( 'data_field', 'data_type_id', $data_type_id );
 			delete_from_db( 'data_field_group', 'data_type_id', $data_type_id );
+			// The menu position this type was given, which is stored as a config key of
+			// its own. Nothing removed it, so every deleted data type left a dead
+			// custom_data_menu_order_N row in config for good.
+			delete_from_db( 'config', 'key', 'custom_data_menu_order_' . $data_type_id );
+			// Two more rows that are created from the type's *name* rather than its id,
+			// and that nothing removed: the menu entry its link gets, and the permission
+			// the security plugin registers for it. Left behind, the Roles screen goes on
+			// listing a permission for a type that no longer exists, and config collects
+			// a dead menu entry per deleted type.
+			$data_type = self::get_data_type( $data_type_id );
+			if ( ! empty( $data_type['data_type_name'] ) ) {
+				// The same slug plugin.php builds the menu key from.
+				$slug = preg_replace( '#[^a-z0-9-_]#', '', strtolower( 'data-' . $data_type['data_type_name'] ) );
+				delete_from_db( 'config', 'key', '_menu_config_' . $slug );
+
+				$name = db_escape( $data_type['data_type_name'] );
+				// Scoped to this module's own permissions, so a permission another
+				// module happens to have given the same name is left alone.
+				$permissions = qa( "SELECT security_permission_id FROM `" . _DB_PREFIX . "security_permission`"
+					. " WHERE `module` = 'data' AND `category` = 'Data' AND `name` = '" . $name . "'" );
+				foreach ( $permissions as $permission ) {
+					delete_from_db( 'security_role_perm', 'security_permission_id', $permission['security_permission_id'] );
+					delete_from_db( 'security_permission', 'security_permission_id', $permission['security_permission_id'] );
+				}
+			}
 			$sql = "DELETE FROM " . _DB_PREFIX . "data_type WHERE data_type_id = '" . $data_type_id . "' LIMIT 1";
 			query( $sql );
 		}

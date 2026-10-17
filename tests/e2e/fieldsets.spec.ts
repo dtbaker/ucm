@@ -1,6 +1,6 @@
 import { test, expect, Browser, Page } from '@playwright/test';
 import { describeDiagnostics } from './diagnostics';
-import { aCustomer, aFile, anInvoice, createRecord, formAuthKey, login } from './seed';
+import { aCustomer, aFile, anInvoice, createRecord, deleteRecord, formAuthKey, idNamedOn, login } from './seed';
 import { byProcess, expectFields, expectFieldsIn, fieldsIn } from './form-fields';
 
 /**
@@ -18,21 +18,39 @@ import { byProcess, expectFields, expectFieldsIn, fieldsIn } from './form-fields
  *     wired to the handler, not merely present.
  */
 
-/** A data type with a fieldset, so the data field screen has something to open. */
+/**
+ * A data type with a fieldset, so the data field screen has something to open.
+ *
+ * One fixed pair, found again rather than made fresh. Stamping the names meant a new
+ * type and fieldset on every run, and a data type does not cost one row - it brings a
+ * permission, a menu entry and a config row with it.
+ */
+const FIELDSET_TYPE = 'Fieldset Fixture Type';
+const FIELDSET_GROUP = 'Fieldset Fixture Group';
+
 async function aDataFieldGroup( page: Page ): Promise<{ typeId: string; groupId: string }> {
-  const stamp = Date.now() + '-' + Math.floor( Math.random() * 10000 );
-  const typeId = await createRecord( page, '/?m[]=data', {
-    _process: 'save_data_type',
-    data_type_id: 'new',
-    data_type_name: 'Fieldset Type ' + stamp,
-  }, 'data_type_id' );
-  const groupId = await createRecord( page, '/?m[]=data', {
-    _process: 'save_data_field_group',
-    data_field_group_id: 'new',
-    data_type_id: typeId,
-    name: 'Fieldset Group ' + stamp,
-    _redirect: '/',
-  }, 'data_field_group_id' );
+  let typeId = await idNamedOn( page, '/?m[]=data&p[]=data_type_admin', 'data_type_id', FIELDSET_TYPE );
+  if ( ! typeId ) {
+    typeId = await createRecord( page, '/?m[]=data', {
+      _process: 'save_data_type',
+      data_type_id: 'new',
+      data_type_name: FIELDSET_TYPE,
+    }, 'data_type_id' );
+  }
+
+  const typePage = `/?m[]=data&p[]=data_type_admin_open&data_type_id=${ typeId }`;
+  let groupId = await idNamedOn( page, typePage, 'data_field_group_id', FIELDSET_GROUP );
+  if ( ! groupId ) {
+    groupId = await createRecord( page, '/?m[]=data', {
+      _process: 'save_data_field_group',
+      data_field_group_id: 'new',
+      data_type_id: typeId,
+      // The column is `title`; a `name` here is accepted and dropped, so the fieldsets
+      // this helper used to make were nameless and could never be found again.
+      title: FIELDSET_GROUP,
+      _redirect: '/',
+    }, 'data_field_group_id' );
+  }
 
   return { typeId, groupId };
 }
@@ -200,6 +218,44 @@ async function aCustomerGroup( page: Page ): Promise<string> {
  * refuses with "Please select at least 1 person", and the screens below stay empty - which
  * is what made these three look unreachable on a first pass.
  */
+/**
+ * Removes one custom data field.
+ *
+ * Not deleteRecord(): this handler takes `butt_dell` - two Ls, as it is spelt in
+ * data.php - and does not go through confirm_delete() at all. The fields matter now
+ * that the data type above is shared rather than rebuilt, because otherwise every run
+ * adds another field to the same fixture type.
+ */
+async function removeDataField(
+  page: Page,
+  typeId: string,
+  groupId: string,
+  fieldId: string | null,
+) {
+  if ( ! fieldId ) {
+    return;
+  }
+  await page.request.post( '/?m[]=data', {
+    form: {
+      _process: 'save_data_field',
+      data_type_id: typeId,
+      data_field_group_id: groupId,
+      data_field_id: fieldId,
+      butt_dell: '1',
+      form_auth_key: await formAuthKey( page ),
+      _redirect: '/',
+    },
+    failOnStatusCode: false,
+  } );
+}
+
+async function removeNewsletter( page: Page, newsletterId: string | null ) {
+  if ( newsletterId ) {
+    // delete_newsletter() takes the send and its members with it.
+    await deleteRecord( page, '/?m[]=newsletter', 'save_newsletter', 'newsletter_id', newsletterId );
+  }
+}
+
 async function aQueuedSend( page: Page ): Promise<{ newsletterId: string; sendId: string }> {
   const stamp = Date.now() + '-' + Math.floor( Math.random() * 10000 );
 
@@ -288,6 +344,7 @@ test.describe( 'Forms moved to generate_fieldset', () => {
     expect( ids.length, 'the saved field should be listed on the fieldset screen' ).toBeGreaterThan( 0 );
 
     let saved = null;
+    let savedId: string | null = null;
     for ( const id of ids ) {
       const open = `/?m[]=data&p[]=data_type_admin_field_open&data_type_id=${ typeId }`
         + `&data_field_group_id=${ groupId }&data_field_id=${ id }`;
@@ -295,6 +352,7 @@ test.describe( 'Forms moved to generate_fieldset', () => {
       const candidate = page.locator( 'form:has(input[name="_process"][value="save_data_field"])' ).first();
       if ( await candidate.locator( 'input[name="title"]' ).first().inputValue() === title ) {
         saved = candidate;
+        savedId = id;
         break;
       }
     }
@@ -306,6 +364,8 @@ test.describe( 'Forms moved to generate_fieldset', () => {
       .toBe( 'a default' );
     expect( await saved!.locator( 'input[name="required"]' ).first().isChecked(), 'required should have stuck' )
       .toBe( true );
+
+    await removeDataField( page, typeId, groupId, savedId );
   } );
 
   test( 'the import screen keeps its controls', async ( { page } ) => {
@@ -332,32 +392,37 @@ test.describe( 'Forms moved to generate_fieldset', () => {
   } );
 
   test( 'the newsletter send screen keeps its controls', async ( { page } ) => {
-    await login( page );
-    // The screen lists a checkbox per group, so one has to exist for group[*] to appear.
-    await aCustomerGroup( page );
-    const stamp = Date.now();
-    const newsletterId = await createRecord( page, '/?m[]=newsletter', {
-      _process: 'save_newsletter',
-      newsletter_id: 'new',
-      subject: 'Fieldset Newsletter ' + stamp,
-      from_name: 'Fieldset Sender',
-      from_email: 'sender@example.com',
-      content: 'Body text.',
-    }, 'newsletter_id' );
+    let newsletterId: string | null = null;
+    try {
+      await login( page );
+      // The screen lists a checkbox per group, so one has to exist for group[*] to appear.
+      await aCustomerGroup( page );
+      const stamp = Date.now();
+      newsletterId = await createRecord( page, '/?m[]=newsletter', {
+        _process: 'save_newsletter',
+        newsletter_id: 'new',
+        subject: 'Fieldset Newsletter ' + stamp,
+        from_name: 'Fieldset Sender',
+        from_email: 'sender@example.com',
+        content: 'Body text.',
+      }, 'newsletter_id' );
 
-    // start_time is a text input in the source and a hidden one here: the date_time_field
-    // class hands it to a picker widget on load. This reads the page as a person gets it,
-    // which is the thing that has to keep working.
-    await expectFields( page, `/?m[]=newsletter&p[]=newsletter_send&newsletter_id=${ newsletterId }`,
-      'enque_send', [
-        'cancel|input|button',
-        'group[*]|input|checkbox',
-        'ignore|input|text',
-        'newsletter_id|input|hidden',
-        'send_id|input|hidden',
-        'send|input|submit',
-        'start_time|input|hidden',
-      ] );
+      // start_time is a text input in the source and a hidden one here: the date_time_field
+      // class hands it to a picker widget on load. This reads the page as a person gets it,
+      // which is the thing that has to keep working.
+      await expectFields( page, `/?m[]=newsletter&p[]=newsletter_send&newsletter_id=${ newsletterId }`,
+        'enque_send', [
+          'cancel|input|button',
+          'group[*]|input|checkbox',
+          'ignore|input|text',
+          'newsletter_id|input|hidden',
+          'send_id|input|hidden',
+          'send|input|submit',
+          'start_time|input|hidden',
+        ] );
+    } finally {
+      await removeNewsletter( page, newsletterId );
+    }
   } );
 
   test( 'the customer file screen keeps its controls', async ( { page } ) => {
@@ -437,74 +502,95 @@ test.describe( 'Forms moved to generate_fieldset', () => {
   } );
 
   test( 'the newsletter queue keeps its send options', async ( { page } ) => {
-    await login( page );
-    const { newsletterId, sendId } = await aQueuedSend( page );
-    const body = await ( await page.request.get(
-      `/?m[]=newsletter&p[]=newsletter_queue&newsletter_id=${ newsletterId }&send_id=${ sendId }` ) ).text();
+    let newsletterId: string | null = null;
+    try {
+      await login( page );
+      const queued = await aQueuedSend( page );
+      newsletterId = queued.newsletterId;
+      const sendId = queued.sendId;
+      const body = await ( await page.request.get(
+        `/?m[]=newsletter&p[]=newsletter_queue&newsletter_id=${ newsletterId }&send_id=${ sendId }` ) ).text();
 
-    // Read-only rows, so the invariant is the labels rather than a set of controls: a row
-    // dropped by a layout change takes its label off the page with it.
-    // Duplicates is deliberately not here: that row only appears once the newsletter has
-    // been sent before, and this one is new.
-    for ( const label of [ 'Shedule send' ] ) {
-      expect( body, `the send options should still list "${ label }"` ).toContain( label );
+      // Read-only rows, so the invariant is the labels rather than a set of controls: a row
+      // dropped by a layout change takes its label off the page with it.
+      // Duplicates is deliberately not here: that row only appears once the newsletter has
+      // been sent before, and this one is new.
+      for ( const label of [ 'Shedule send' ] ) {
+        expect( body, `the send options should still list "${ label }"` ).toContain( label );
+      }
+
+      // The dynamic field preview below it: one row per placeholder, a checkbox on the ones
+      // past the first five that the extra fields offer, and a Preview button.
+      expect( ( body.match( /\{[A-Z_]+\}/g ) ?? [] ).length,
+        'the preview should list the placeholders' ).toBeGreaterThan( 4 );
+      expect( body, 'and still offer a preview' ).toContain( 'name="pp"' );
+      expect( describeDiagnostics( body ).join( '\n' ), 'the queue printed a PHP diagnostic' ).toBe( '' );
+    } finally {
+      await removeNewsletter( page, newsletterId );
     }
-
-    // The dynamic field preview below it: one row per placeholder, a checkbox on the ones
-    // past the first five that the extra fields offer, and a Preview button.
-    expect( ( body.match( /\{[A-Z_]+\}/g ) ?? [] ).length,
-      'the preview should list the placeholders' ).toBeGreaterThan( 4 );
-    expect( body, 'and still offer a preview' ).toContain( 'name="pp"' );
-    expect( describeDiagnostics( body ).join( '\n' ), 'the queue printed a PHP diagnostic' ).toBe( '' );
   } );
 
   test( 'the newsletter queue watcher keeps its statistics', async ( { page } ) => {
-    await login( page );
-    const { newsletterId, sendId } = await aQueuedSend( page );
-    const body = await ( await page.request.get(
-      `/?m[]=newsletter&p[]=newsletter_queue_watch&newsletter_id=${ newsletterId }&send_id=${ sendId }` ) ).text();
+    let newsletterId: string | null = null;
+    try {
+      await login( page );
+      const queued = await aQueuedSend( page );
+      newsletterId = queued.newsletterId;
+      const sendId = queued.sendId;
+      const body = await ( await page.request.get(
+        `/?m[]=newsletter&p[]=newsletter_queue_watch&newsletter_id=${ newsletterId }&send_id=${ sendId }` ) ).text();
 
-    for ( const label of [ 'Start sending', 'Sent To', 'Viewed By', 'Clicks By', 'Bounces', 'Failures' ] ) {
-      expect( body, `the statistics should still list "${ label }"` ).toContain( label );
+      for ( const label of [ 'Start sending', 'Sent To', 'Viewed By', 'Clicks By', 'Bounces', 'Failures' ] ) {
+        expect( body, `the statistics should still list "${ label }"` ).toContain( label );
+      }
+
+      // These ids are what the page's own polling writes into - newsletter_queue_manual
+      // answers with { '#sent_to': '...' } and the script does $(x).html(d[x]). Lose one and
+      // the figure silently stops updating while the page still looks right.
+      for ( const id of [
+        'sent_to', 'open_rate', 'total_link_clicks', 'bounces', 'failures',
+        'unsubscribed', 'current_status', 'change_status_buttons', 'status',
+      ] ) {
+        expect( body, `the live statistics need #${ id } to exist` ).toContain( `id="${ id }"` );
+      }
+
+      expect( describeDiagnostics( body ).join( '\n' ), 'the watcher printed a PHP diagnostic' ).toBe( '' );
+    } finally {
+      await removeNewsletter( page, newsletterId );
     }
-
-    // These ids are what the page's own polling writes into - newsletter_queue_manual
-    // answers with { '#sent_to': '...' } and the script does $(x).html(d[x]). Lose one and
-    // the figure silently stops updating while the page still looks right.
-    for ( const id of [
-      'sent_to', 'open_rate', 'total_link_clicks', 'bounces', 'failures',
-      'unsubscribed', 'current_status', 'change_status_buttons', 'status',
-    ] ) {
-      expect( body, `the live statistics need #${ id } to exist` ).toContain( `id="${ id }"` );
-    }
-
-    expect( describeDiagnostics( body ).join( '\n' ), 'the watcher printed a PHP diagnostic' ).toBe( '' );
   } );
 
   test( 'the newsletter member statistics keep their controls', async ( { page } ) => {
-    await login( page );
-    const { newsletterId, sendId } = await aQueuedSend( page );
+    let newsletterId: string | null = null;
+    try {
+      await login( page );
+      const queued = await aQueuedSend( page );
+      newsletterId = queued.newsletterId;
+      const sendId = queued.sendId;
 
-    // Queuing the send is what creates newsletter members. Find one the way the screens
-    // link to it, by newsletter_member_id - which is the path that used to die with
-    // "Cannot access offset of type string on string" before reaching the form.
-    const watch = await ( await page.request.get(
-      `/?m[]=newsletter&p[]=newsletter_queue_watch&newsletter_id=${ newsletterId }&send_id=${ sendId }` ) ).text();
-    // The rows are id="newsletter_member_<n>" - that is what the page's own polling
-    // updates, and the only place the ids appear.
-    const ids = [ ...new Set( [ ...watch.matchAll( /newsletter_member_(\d+)/g ) ].map( ( m ) => m[ 1 ] ) ) ];
-    expect( ids.length, 'the queued send should have members' ).toBeGreaterThan( 0 );
+      // Queuing the send is what creates newsletter members. Find one the way the screens
+      // link to it, by newsletter_member_id - which is the path that used to die with
+      // "Cannot access offset of type string on string" before reaching the form.
+      const watch = await ( await page.request.get(
+        `/?m[]=newsletter&p[]=newsletter_queue_watch&newsletter_id=${ newsletterId }&send_id=${ sendId }` ) ).text();
+      // The rows are id="newsletter_member_<n>" - that is what the page's own polling
+      // updates, and the only place the ids appear.
+      const ids = [ ...new Set( [ ...watch.matchAll( /newsletter_member_(\d+)/g ) ].map( ( m ) => m[ 1 ] ) ) ];
+      expect( ids.length, 'the queued send should have members' ).toBeGreaterThan( 0 );
 
-    const url = `/?m[]=newsletter&p[]=newsletter_member&newsletter_member_id=${ ids[ 0 ] }`;
-    const body = await ( await page.request.get( url, { failOnStatusCode: false } ) ).text();
-    expect( body, 'the member screen should not be dying' ).not.toContain( 'Fatal error' );
-    expect( body, 'and should be the member statistics' ).toContain( 'Member Statistics' );
+      const url = `/?m[]=newsletter&p[]=newsletter_member&newsletter_member_id=${ ids[ 0 ] }`;
+      const body = await ( await page.request.get( url, { failOnStatusCode: false } ) ).text();
+      expect( body, 'the member screen should not be dying' ).not.toContain( 'Fatal error' );
+      expect( body, 'and should be the member statistics' ).toContain( 'Member Statistics' );
 
-    await page.goto( url );
-    await expectFieldsIn( page, 'form:has(select[name^="receive_email"])', [
-      'receive_email[*]|select|',
-      'save|input|submit',
-    ] );
+      await page.goto( url );
+      await expectFieldsIn( page, 'form:has(select[name^="receive_email"])', [
+        'receive_email[*]|select|',
+        'save|input|submit',
+      ] );
+    } finally {
+      await removeNewsletter( page, newsletterId );
+    }
   } );
 
   test( 'the recurring transaction screen keeps its controls', async ( { page } ) => {
@@ -601,14 +687,29 @@ test.describe( 'Forms moved to generate_fieldset', () => {
   test( 'the public ticket view keeps its controls', async ( { page } ) => {
     await login( page );
 
+    // A ticket of this test's own, raised against the shared customer. It used to open
+    // whichever ticket the list offered first, which only worked while the database
+    // still held tickets an earlier run had left: the page checks for the "Related To"
+    // and "Customer" rows, and the tickets that survive a clean-up have customer_id 0,
+    // so that block does not render and the failure says nothing about the conversion.
+    const customerId = await aCustomer( page );
+    const ticketId = await createRecord( page, '/?m[]=ticket', {
+      _process: 'save_ticket',
+      ticket_id: 'new',
+      subject: 'Fieldset Public Ticket ' + Date.now(),
+      customer_id: customerId,
+      change_user_id: '1',
+      assigned_user_id: '1',
+      status_id: '2',
+      priority: '0',
+      _redirect: '',
+    }, 'ticket_id' );
+
+    try {
     // The customer's view of a ticket is reached with a hash the admin screen hands out.
     // Taking the link from the page is the point: computing the hash here would test a
     // URL the application never produces.
-    const list = await ( await page.request.get( '/?m[]=ticket&p[]=ticket_admin' ) ).text();
-    const ids = [ ...new Set( [ ...list.matchAll( /ticket_id=(\d+)/g ) ].map( ( m ) => m[ 1 ] ) ) ];
-    expect( ids.length, 'there should be a ticket to open' ).toBeGreaterThan( 0 );
-
-    const open = await ( await page.request.get( `/?m[]=ticket&p[]=ticket_admin&ticket_id=${ ids[ 0 ] }` ) ).text();
+    const open = await ( await page.request.get( `/?m[]=ticket&p[]=ticket_admin&ticket_id=${ ticketId }` ) ).text();
     const link = open.match( /https?:\/\/[^"']*m\.ticket\/h\.public\/i\.\d+\/hash\.[a-f0-9]+/ );
     expect( link, 'the ticket screen should publish a customer link' ).not.toBeNull();
 
@@ -629,6 +730,9 @@ test.describe( 'Forms moved to generate_fieldset', () => {
       expect( body, `the customer should still see "${ label }"` ).toContain( label );
     }
     expect( body, 'the customer view should not be dying' ).not.toContain( 'Fatal error' );
+    } finally {
+      await deleteRecord( page, '/?m[]=ticket', 'save_ticket', 'ticket_id', ticketId );
+    }
   } );
 
   test( 'the invoice payment block keeps its controls and its row hooks', async ( { page } ) => {
@@ -659,75 +763,90 @@ test.describe( 'Forms moved to generate_fieldset', () => {
   } );
 
   test( 'the newsletter editor keeps its dynamic field list', async ( { page } ) => {
-    await login( page );
-    const stamp = Date.now() + '-' + Math.floor( Math.random() * 10000 );
-    const newsletterId = await createRecord( page, '/?m[]=newsletter', {
-      _process: 'save_newsletter',
-      newsletter_id: 'new',
-      subject: 'Dynamic Fields ' + stamp,
-      from_name: 'Fieldset Sender',
-      from_email: 'sender@example.com',
-      content: 'Body text.',
-    }, 'newsletter_id' );
+    let newsletterId: string | null = null;
+    try {
+      await login( page );
+      const stamp = Date.now() + '-' + Math.floor( Math.random() * 10000 );
+      newsletterId = await createRecord( page, '/?m[]=newsletter', {
+        _process: 'save_newsletter',
+        newsletter_id: 'new',
+        subject: 'Dynamic Fields ' + stamp,
+        from_name: 'Fieldset Sender',
+        from_email: 'sender@example.com',
+        content: 'Body text.',
+      }, 'newsletter_id' );
 
-    const body = await ( await page.request.get(
-      `/?m[]=newsletter&p[]=newsletter_edit&newsletter_id=${ newsletterId }` ) ).text();
+      const body = await ( await page.request.get(
+        `/?m[]=newsletter&p[]=newsletter_edit&newsletter_id=${ newsletterId }` ) ).text();
 
-    // Every placeholder is an insert-into-the-editor link, and everything past the first
-    // four is hidden until View All. Both have to survive.
-    const inserters = ( body.match( /onmousedown="var ed=typeof tinymce/g ) ?? [] ).length;
-    expect( inserters, 'each dynamic field should still insert itself into the editor' )
-      .toBeGreaterThan( 4 );
-    expect( body, 'the overflow still needs somewhere to hide' ).toMatch( /dynamic_more/ );
-    expect( body, 'and a View All to reveal it' ).toContain( 'View All' );
-    expect( describeDiagnostics( body ).join( '\n' ), 'the editor printed a PHP diagnostic' ).toBe( '' );
+      // Every placeholder is an insert-into-the-editor link, and everything past the first
+      // four is hidden until View All. Both have to survive.
+      const inserters = ( body.match( /onmousedown="var ed=typeof tinymce/g ) ?? [] ).length;
+      expect( inserters, 'each dynamic field should still insert itself into the editor' )
+        .toBeGreaterThan( 4 );
+      expect( body, 'the overflow still needs somewhere to hide' ).toMatch( /dynamic_more/ );
+      expect( body, 'and a View All to reveal it' ).toContain( 'View All' );
+      expect( describeDiagnostics( body ).join( '\n' ), 'the editor printed a PHP diagnostic' ).toBe( '' );
+    } finally {
+      await removeNewsletter( page, newsletterId );
+    }
   } );
 
   test( 'the custom data search keeps a row per searchable field', async ( { page } ) => {
-    await login( page );
-    const stamp = Date.now() + '-' + Math.floor( Math.random() * 10000 );
-    const typeId = await createRecord( page, '/?m[]=data', {
-      _process: 'save_data_type',
-      data_type_id: 'new',
-      data_type_name: 'Search Type ' + stamp,
-    }, 'data_type_id' );
-    const groupId = await createRecord( page, '/?m[]=data', {
-      _process: 'save_data_field_group',
-      data_field_group_id: 'new',
-      data_type_id: typeId,
-      name: 'Search Fieldset ' + stamp,
-      _redirect: '/',
-    }, 'data_field_group_id' );
-
-    const key = await formAuthKey( page );
-    await page.request.post( '/?m[]=data', {
-      form: {
-        _process: 'save_data_field',
-        data_field_id: 'new',
+    let typeId: string | null = null;
+    try {
+      await login( page );
+      const stamp = Date.now() + '-' + Math.floor( Math.random() * 10000 );
+      typeId = await createRecord( page, '/?m[]=data', {
+        _process: 'save_data_type',
+        data_type_id: 'new',
+        data_type_name: 'Search Type ' + stamp,
+      }, 'data_type_id' );
+      const groupId = await createRecord( page, '/?m[]=data', {
+        _process: 'save_data_field_group',
+        data_field_group_id: 'new',
         data_type_id: typeId,
-        data_field_group_id: groupId,
-        title: 'Searchable Note',
-        order: '1',
-        field_type: 'text',
-        // save_field() zeroes any checkbox it was not sent, and the search screen only
-        // lists fields marked searchable.
-        searchable: '1',
-        show_list: '1',
-        form_auth_key: key,
-      },
-      failOnStatusCode: false,
-    } );
+        name: 'Search Fieldset ' + stamp,
+        _redirect: '/',
+      }, 'data_field_group_id' );
 
-    const body = await ( await page.request.get(
-      `/?m[]=data&p[]=admin_data_search&data_type_id=${ typeId }`, { failOnStatusCode: false } ) ).text();
+      const key = await formAuthKey( page );
+      await page.request.post( '/?m[]=data', {
+        form: {
+          _process: 'save_data_field',
+          data_field_id: 'new',
+          data_type_id: typeId,
+          data_field_group_id: groupId,
+          title: 'Searchable Note',
+          order: '1',
+          field_type: 'text',
+          // save_field() zeroes any checkbox it was not sent, and the search screen only
+          // lists fields marked searchable.
+          searchable: '1',
+          show_list: '1',
+          form_auth_key: key,
+        },
+        failOnStatusCode: false,
+      } );
 
-    expect( ( body.match( /name="search_do\[/g ) ?? [] ).length,
-      'each searchable field needs its tick box' ).toBe( 1 );
-    expect( body, 'the field should be named on its row' ).toContain( 'Searchable Note' );
-    expect( body, 'and the field itself should be there to type into' )
-      .toMatch( /id="search_field_\d+"/ );
-    expect( describeDiagnostics( body ).join( '\n' ), 'the search screen printed a PHP diagnostic' )
-      .toBe( '' );
+      const body = await ( await page.request.get(
+        `/?m[]=data&p[]=admin_data_search&data_type_id=${ typeId }`, { failOnStatusCode: false } ) ).text();
+
+      expect( ( body.match( /name="search_do\[/g ) ?? [] ).length,
+        'each searchable field needs its tick box' ).toBe( 1 );
+      expect( body, 'the field should be named on its row' ).toContain( 'Searchable Note' );
+      expect( body, 'and the field itself should be there to type into' )
+        .toMatch( /id="search_field_\d+"/ );
+      expect( describeDiagnostics( body ).join( '\n' ), 'the search screen printed a PHP diagnostic' )
+        .toBe( '' );
+    } finally {
+      // This one keeps making its own type rather than sharing the fixture, because it
+      // asserts there is exactly one searchable field and a shared type would collect more.
+      // Deleting it takes the fieldset, the field, the permission and the menu row with it.
+      if ( typeId ) {
+        await deleteRecord( page, '/?m[]=data', 'save_data_type', 'data_type_id', typeId );
+      }
+    }
   } );
 
   test( 'the newsletter template editor keeps its placeholder list', async ( { page } ) => {
@@ -866,27 +985,40 @@ test.describe( 'Forms moved to generate_fieldset', () => {
  * rather than recreated for the same reason as the customer group above: the user edit
  * screen renders a checkbox per company.
  */
-async function aCompany( page: Page ): Promise<string> {
-  const COMPANY_NAME = 'Fieldset Company';
-  await page.goto( '/?m[]=company&p[]=company_admin' );
-  const existing = ( await page.content() ).match(
-    new RegExp( `company_id=(\\d+)[^>]*>\\s*${ COMPANY_NAME }` ) );
+async function aCompany( page: Page, staffUserId: string ): Promise<string> {
+  // Looked for on the staff screen itself, because that is the only screen that names a
+  // company id at all: company_admin renders no company_id anywhere, so the regex this
+  // used to run over it could never match and a new company was made on every run - 300
+  // of them, all called 'Fieldset Company'.
+  const onScreen = async () => {
+    const body = await ( await page.request.get( `/?m[]=user&p[]=user_admin&user_id=${ staffUserId }` ) ).text();
+    const found = body.match( /name="user_company\[(\d+)\]"/ );
+
+    return found ? found[ 1 ] : null;
+  };
+
+  const existing = await onScreen();
   if ( existing ) {
-    return existing[ 1 ];
+    return existing;
   }
 
-  return createRecord( page, '/?m[]=company', {
+  // Nothing yet, so make the one row module_company::is_enabled() is waiting for.
+  await createRecord( page, '/?m[]=company', {
     _process: 'save_company',
     company_id: 'new',
-    name: COMPANY_NAME,
+    name: 'Fieldset Company',
     _redirect: '/',
   }, 'company_id' );
+
+  const created = await onScreen();
+  expect( created, 'the staff screen should offer the company that was just created' ).toBeTruthy();
+
+  return String( created );
 }
 
 test.describe( 'Forms moved to generate_fieldset (assigned company)', () => {
   test( 'the staff edit screen keeps its company checkboxes', async ( { page } ) => {
     await login( page );
-    const companyId = await aCompany( page );
 
     // user_admin is the route; user_admin_edit.php is a partial it includes. Asking for
     // p[]=user_admin_edit returns a four byte page, which is what made this block look
@@ -895,6 +1027,7 @@ test.describe( 'Forms moved to generate_fieldset (assigned company)', () => {
     const ids = Array.from( list.matchAll( /user_id=(\d+)/g ) ).map( m => m[ 1 ] );
     expect( ids.length, 'no staff users to open' ).toBeGreaterThan( 0 );
 
+    const companyId = await aCompany( page, ids[ 0 ] );
     const body = await ( await page.request.get( `/?m[]=user&p[]=user_admin&user_id=${ ids[ 0 ] }` ) ).text();
 
     // The premise: with no company row this block does not render at all, and a spec that
@@ -1047,26 +1180,34 @@ test.describe( 'Forms moved to generate_fieldset (group picker)', () => {
   } );
 } );
 
+const PROBE_FIELD = 'Fieldset Probe Field';
+
 /** A data type with one field group and one field in it, reused across runs. */
 async function aDataFieldWithGroup( page: Page ): Promise<{ typeId: string; groupId: string; fieldId: string }> {
   const { typeId, groupId } = await aDataFieldGroup( page );
-  const key = await formAuthKey( page );
-  await page.request.post( '/?m[]=data', {
-    form: {
-      _process: 'save_data_field',
-      data_field_id: 'new',
-      data_type_id: typeId,
-      data_field_group_id: groupId,
-      title: 'Fieldset Probe Field',
-      order: '1',
-      field_type: 'text',
-      // save_field() zeroes any checkbox it was not sent, so without this the field is
-      // hidden from the listing.
-      show_list: '1',
-      form_auth_key: key,
-    },
-    failOnStatusCode: false,
-  } );
+  // Reused, as the comment above always claimed: the field was in fact posted again on
+  // every run, which put another row on the shared fixture type each time.
+  const groupPage = `/?m[]=data&p[]=data_type_admin_group_open&data_type_id=${ typeId }`
+    + `&data_field_group_id=${ groupId }`;
+  if ( ! await idNamedOn( page, groupPage, 'data_field_id', PROBE_FIELD ) ) {
+    const key = await formAuthKey( page );
+    await page.request.post( '/?m[]=data', {
+      form: {
+        _process: 'save_data_field',
+        data_field_id: 'new',
+        data_type_id: typeId,
+        data_field_group_id: groupId,
+        title: PROBE_FIELD,
+        order: '1',
+        field_type: 'text',
+        // save_field() zeroes any checkbox it was not sent, so without this the field is
+        // hidden from the listing.
+        show_list: '1',
+        form_auth_key: key,
+      },
+      failOnStatusCode: false,
+    } );
+  }
 
   // admin_data_open is where render_group.php actually renders the rows; the group admin
   // route answers without them.
@@ -1236,30 +1377,6 @@ async function signedInAs(
   }
 }
 
-/** Deletes a record through the app's own confirm-delete, hash and all. */
-async function deleteRecord(
-  page: Page,
-  postUrl: string,
-  process: string,
-  key: string,
-  id: string,
-): Promise<void> {
-  const { createHash } = await import( 'node:crypto' );
-  await page.request.post( postUrl, {
-    form: {
-      _process: process,
-      [ key ]: id,
-      butt_del: '1',
-      // module_form::confirm_delete() accepts md5( 'delete <key> <value>' ) plus the
-      // literal 'yep', which is how the confirmation screen posts back.
-      _confirm_delete: createHash( 'md5' ).update( `delete ${ key } ${ id }` ).digest( 'hex' ),
-      really_confirm_delete: 'yep',
-      form_auth_key: await formAuthKey( page ),
-      _redirect: '/',
-    },
-    failOnStatusCode: false,
-  } );
-}
 
 
 test.describe( 'Forms moved to generate_fieldset (restricted contact blocks)', () => {

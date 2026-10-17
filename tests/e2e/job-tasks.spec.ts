@@ -1,6 +1,6 @@
 import { test, expect, Page } from '@playwright/test';
 import { describeDiagnostics } from './diagnostics';
-import { aCustomer, formAuthKey, login } from './seed';
+import { aCustomer, deleteRecord, formAuthKey, login } from './seed';
 
 /**
  * A job, its tasks, and the money they add up to.
@@ -143,221 +143,261 @@ async function expectClean(page: Page, step: string) {
   expect(problems, `${step} printed PHP diagnostics:\n` + problems.join('\n')).toEqual([]);
 }
 
+/** Removes the jobs and invoices a test raised. Deleting a job takes its tasks too. */
+async function removeMade(page: Page, jobs: string[], invoices: string[]) {
+  for (const id of [...invoices].reverse()) {
+    await deleteRecord(page, '/?m[]=invoice', 'save_invoice', 'invoice_id', id);
+  }
+  for (const id of [...jobs].reverse()) {
+    await deleteRecord(page, '/?m[]=job', 'save_job', 'job_id', id);
+  }
+}
+
 test.describe('Jobs and tasks', () => {
   test('prices hourly tasks off the job rate, totals them, and taxes the total', async ({ page }) => {
-    test.setTimeout(120000);
-    await login(page);
+    const jobs: string[] = [];
+    const invoices: string[] = [];
+    try {
+      test.setTimeout(120000);
+      await login(page);
 
-    const customerId = await aCustomer(page);
-    const name = uniqueName('Job hourly');
-    const location = await saveJob(page, { job_id: 'new', ...jobFields(name, customerId, '80') });
-    const jobId = new URL(location, 'http://localhost').searchParams.get('job_id');
-    expect(jobId, 'saving a new job should redirect to it').toBeTruthy();
+      const customerId = await aCustomer(page);
+      const name = uniqueName('Job hourly');
+      const location = await saveJob(page, { job_id: 'new', ...jobFields(name, customerId, '80') });
+      const jobId = new URL(location, 'http://localhost').searchParams.get('job_id');
+      expect(jobId, 'saving a new job should redirect to it').toBeTruthy();
+      jobs.push(String(jobId));
 
-    // Two hourly tasks, posted one at a time the way the task form posts them. Neither
-    // carries an amount: the amount is the job's rate times the hours, and that is the
-    // whole point of the hourly task type.
-    for (const [description, hours] of [['Hourly first', '2'], ['Hourly second', '3']]) {
-      await saveJob(page, {
-        job_id: String(jobId),
-        ...jobFields(name, customerId, '80'),
-        'job_task[new][description]': description,
-        'job_task[new][hours]': hours,
-        'job_task[new][manual_task_type]': '-1',
-        'job_task[new][billable_t]': '1',
-        'job_task[new][billable]': '1',
-        'job_task[new][taxable_t]': '1',
-        'job_task[new][taxable]': '1',
-      });
+      // Two hourly tasks, posted one at a time the way the task form posts them. Neither
+      // carries an amount: the amount is the job's rate times the hours, and that is the
+      // whole point of the hourly task type.
+      for (const [description, hours] of [['Hourly first', '2'], ['Hourly second', '3']]) {
+        await saveJob(page, {
+          job_id: String(jobId),
+          ...jobFields(name, customerId, '80'),
+          'job_task[new][description]': description,
+          'job_task[new][hours]': hours,
+          'job_task[new][manual_task_type]': '-1',
+          'job_task[new][billable_t]': '1',
+          'job_task[new][billable]': '1',
+          'job_task[new][taxable_t]': '1',
+          'job_task[new][taxable]': '1',
+        });
+      }
+
+      await openJob(page, String(jobId));
+      await expectClean(page, 'the job screen');
+
+      const rows = await taskRows(page);
+      expect(Object.keys(rows).sort(), 'both tasks should be on the job').toEqual(
+        ['Hourly first', 'Hourly second'],
+      );
+      expect(rows['Hourly first'].text, '2 hours at 80 an hour is 160').toContain('160.00');
+      expect(rows['Hourly second'].text, '3 hours at 80 an hour is 240').toContain('240.00');
+
+      expect(await amountLabelled(page, /^Sub Total:?$/), '160 and 240 sub-total to 400')
+        .toContain('400.00');
+      expect(await amountLabelled(page, /^Tax:?$/), '10% of 400 is 40').toContain('40.00');
+      expect(await amountLabelled(page, /^Total:?$/), '400 plus 40 tax is 440').toContain('440.00');
+
+      const body = (await page.locator('body').innerText()).replace(/\s+/g, ' ');
+      expect(body, '2 and 3 hours is 5 hours of work on the job').toMatch(/5:00 Hours Total/);
+      expect(body, 'and none of it done yet').toMatch(/0:00 Hours Done/);
+
+      // --- the rate is what prices the work, so changing it re-prices every hourly task
+      await saveJob(page, { job_id: String(jobId), ...jobFields(name, customerId, '100') });
+      await openJob(page, String(jobId));
+      const repriced = await taskRows(page);
+      expect(repriced['Hourly first'].text, '2 hours at the new 100 rate is 200').toContain('200.00');
+      expect(repriced['Hourly second'].text, '3 hours at the new 100 rate is 300').toContain('300.00');
+      expect(await amountLabelled(page, /^Sub Total:?$/), 'and the job sub-totals to 500')
+        .toContain('500.00');
+    } finally {
+      await removeMade(page, jobs, invoices);
     }
-
-    await openJob(page, String(jobId));
-    await expectClean(page, 'the job screen');
-
-    const rows = await taskRows(page);
-    expect(Object.keys(rows).sort(), 'both tasks should be on the job').toEqual(
-      ['Hourly first', 'Hourly second'],
-    );
-    expect(rows['Hourly first'].text, '2 hours at 80 an hour is 160').toContain('160.00');
-    expect(rows['Hourly second'].text, '3 hours at 80 an hour is 240').toContain('240.00');
-
-    expect(await amountLabelled(page, /^Sub Total:?$/), '160 and 240 sub-total to 400')
-      .toContain('400.00');
-    expect(await amountLabelled(page, /^Tax:?$/), '10% of 400 is 40').toContain('40.00');
-    expect(await amountLabelled(page, /^Total:?$/), '400 plus 40 tax is 440').toContain('440.00');
-
-    const body = (await page.locator('body').innerText()).replace(/\s+/g, ' ');
-    expect(body, '2 and 3 hours is 5 hours of work on the job').toMatch(/5:00 Hours Total/);
-    expect(body, 'and none of it done yet').toMatch(/0:00 Hours Done/);
-
-    // --- the rate is what prices the work, so changing it re-prices every hourly task
-    await saveJob(page, { job_id: String(jobId), ...jobFields(name, customerId, '100') });
-    await openJob(page, String(jobId));
-    const repriced = await taskRows(page);
-    expect(repriced['Hourly first'].text, '2 hours at the new 100 rate is 200').toContain('200.00');
-    expect(repriced['Hourly second'].text, '3 hours at the new 100 rate is 300').toContain('300.00');
-    expect(await amountLabelled(page, /^Sub Total:?$/), 'and the job sub-totals to 500')
-      .toContain('500.00');
   });
 
   test('completes a task, logs its hours, and bills exactly that task', async ({ page }) => {
-    test.setTimeout(180000);
-    await login(page);
+    const jobs: string[] = [];
+    const invoices: string[] = [];
+    try {
+      test.setTimeout(180000);
+      await login(page);
 
-    const customerId = await aCustomer(page);
-    const name = uniqueName('Job billing');
-    const location = await saveJob(page, { job_id: 'new', ...jobFields(name, customerId, '80') });
-    const jobId = String(new URL(location, 'http://localhost').searchParams.get('job_id'));
+      const customerId = await aCustomer(page);
+      const name = uniqueName('Job billing');
+      const location = await saveJob(page, { job_id: 'new', ...jobFields(name, customerId, '80') });
+      const jobId = String(new URL(location, 'http://localhost').searchParams.get('job_id'));
+      jobs.push(jobId);
 
-    for (const [description, hours] of [['Hourly done', '2'], ['Hourly todo', '3']]) {
+      for (const [description, hours] of [['Hourly done', '2'], ['Hourly todo', '3']]) {
+        await saveJob(page, {
+          job_id: jobId,
+          ...jobFields(name, customerId, '80'),
+          'job_task[new][description]': description,
+          'job_task[new][hours]': hours,
+          'job_task[new][manual_task_type]': '-1',
+          'job_task[new][billable_t]': '1',
+          'job_task[new][billable]': '1',
+          'job_task[new][taxable_t]': '1',
+          'job_task[new][taxable]': '1',
+        });
+      }
+
+      await openJob(page, jobId);
+      const tasks = await taskRows(page);
+      expect(Object.keys(tasks).sort(), 'both tasks should be on the job')
+        .toEqual(['Hourly done', 'Hourly todo']);
+      const taskIds: Record<string, string> = {
+        'Hourly done': tasks['Hourly done'].id,
+        'Hourly todo': tasks['Hourly todo'].id,
+      };
+
+      // --- complete one of them. Completing an hourly task that has no logged time logs
+      // the full estimate against it, which is what "Hours Done" counts.
       await saveJob(page, {
         job_id: jobId,
         ...jobFields(name, customerId, '80'),
-        'job_task[new][description]': description,
-        'job_task[new][hours]': hours,
-        'job_task[new][manual_task_type]': '-1',
-        'job_task[new][billable_t]': '1',
-        'job_task[new][billable]': '1',
-        'job_task[new][taxable_t]': '1',
-        'job_task[new][taxable]': '1',
+        [`job_task[${taskIds['Hourly done']}][description]`]: 'Hourly done',
+        [`job_task[${taskIds['Hourly done']}][hours]`]: '2',
+        [`job_task[${taskIds['Hourly done']}][fully_completed_t]`]: '1',
+        [`job_task[${taskIds['Hourly done']}][fully_completed]`]: '1',
       });
+
+      await openJob(page, jobId);
+      await expectClean(page, 'the job screen after completing a task');
+      const afterComplete = (await page.locator('body').innerText()).replace(/\s+/g, ' ');
+      expect(afterComplete, 'the 2 hour task is done').toMatch(/2:00 Hours Done/);
+      expect(afterComplete, 'and the other 3 hours are not').toMatch(/3:00 Hours \/ 1 Tasks Remain/);
+      expect(afterComplete, '2 completed hours at 80 plus tax is 176 waiting to be invoiced')
+        .toMatch(/Pending \$?176\.00 Invoice/);
+
+      // --- invoice it, through the dialog the job's own button opens
+      await page.locator('#job_generate_invoice_button').click();
+      const boxes = page.locator('.invoice_create_task');
+      await expect(boxes, "the dialog should offer the job's uninvoiced tasks")
+        .toHaveCount(2, { timeout: 20000 });
+      const completedBox = page.locator('.invoice_create_task[name*="' + taskIds['Hourly done'] + '"]');
+      await expect(completedBox, 'a completed task should be ticked for invoicing by default')
+        .toBeChecked();
+      await expect(
+        page.locator('.invoice_create_task[name*="' + taskIds['Hourly todo'] + '"]'),
+        'an unfinished task should not be',
+      ).not.toBeChecked();
+
+      await Promise.all([
+        page.waitForNavigation({ waitUntil: 'load' }),
+        page.locator('.ui-dialog-buttonpane button').filter({ hasText: /^Create$/ }).first().click(),
+      ]);
+      expect(page.url(), 'Create should open a new invoice for the job').toContain('invoice_id=new');
+      await expectClean(page, 'the invoice built from the job');
+
+      const draft = (await page.locator('body').innerText()).replace(/\s+/g, ' ');
+      expect(draft, 'the completed task should be on the invoice').toContain('Hourly done');
+      expect(draft, 'the unfinished one should not').not.toContain('Hourly todo');
+      expect(draft, 'billed at 2 hours times the 80 rate').toContain('160.00');
+
+      await Promise.all([
+        page.waitForNavigation({ waitUntil: 'load' }),
+        page.locator('input[name="butt_save"]').first().click(),
+      ]);
+      await expect(page.locator('body'), 'the invoice should save').toContainText(/saved successfully/i);
+
+      // --- the job now knows it has been invoiced for that work, and will not offer the
+      // same task again.
+      await openJob(page, jobId);
+      const invoiced = (await page.locator('body').innerText()).replace(/\s+/g, ' ');
+      expect(invoiced, 'the job should record what it has invoiced').toMatch(/Invoiced:\s*\$?176\.00/);
+
+      // Deleting the job does not take its invoice with it, and the job lists the one it
+      // raised - this job is new, so there is exactly one and that is the one to remove.
+      const raised = await page.evaluate(() => Array.from(new Set(
+        Array.from(document.querySelectorAll('a[href*="invoice_id="]'))
+          .map((a: any) => (/invoice_id=(\d+)/.exec(a.getAttribute('href') || '') || [])[1])
+          .filter(Boolean))));
+      expect(raised, 'the job should list the one invoice it raised').toHaveLength(1);
+      invoices.push(String(raised[0]));
+
+      await page.locator('#job_generate_invoice_button').click();
+      await expect(
+        page.locator('.invoice_create_task'),
+        'an invoiced task should not be offered for invoicing a second time',
+      ).toHaveCount(1, { timeout: 20000 });
+
+      // --- and it cannot be deleted out from under the invoice that bills it
+      await saveJob(page, {
+        job_id: jobId,
+        ...jobFields(name, customerId, '80'),
+        [`job_task[${taskIds['Hourly done']}][description]`]: '-DELETE-',
+      });
+      await openJob(page, jobId);
+      expect(
+        Object.keys(await taskRows(page)),
+        'a task that has been invoiced must not be deletable',
+      ).toContain('Hourly done');
+    } finally {
+      await removeMade(page, jobs, invoices);
     }
-
-    await openJob(page, jobId);
-    const tasks = await taskRows(page);
-    expect(Object.keys(tasks).sort(), 'both tasks should be on the job')
-      .toEqual(['Hourly done', 'Hourly todo']);
-    const taskIds: Record<string, string> = {
-      'Hourly done': tasks['Hourly done'].id,
-      'Hourly todo': tasks['Hourly todo'].id,
-    };
-
-    // --- complete one of them. Completing an hourly task that has no logged time logs
-    // the full estimate against it, which is what "Hours Done" counts.
-    await saveJob(page, {
-      job_id: jobId,
-      ...jobFields(name, customerId, '80'),
-      [`job_task[${taskIds['Hourly done']}][description]`]: 'Hourly done',
-      [`job_task[${taskIds['Hourly done']}][hours]`]: '2',
-      [`job_task[${taskIds['Hourly done']}][fully_completed_t]`]: '1',
-      [`job_task[${taskIds['Hourly done']}][fully_completed]`]: '1',
-    });
-
-    await openJob(page, jobId);
-    await expectClean(page, 'the job screen after completing a task');
-    const afterComplete = (await page.locator('body').innerText()).replace(/\s+/g, ' ');
-    expect(afterComplete, 'the 2 hour task is done').toMatch(/2:00 Hours Done/);
-    expect(afterComplete, 'and the other 3 hours are not').toMatch(/3:00 Hours \/ 1 Tasks Remain/);
-    expect(afterComplete, '2 completed hours at 80 plus tax is 176 waiting to be invoiced')
-      .toMatch(/Pending \$?176\.00 Invoice/);
-
-    // --- invoice it, through the dialog the job's own button opens
-    await page.locator('#job_generate_invoice_button').click();
-    const boxes = page.locator('.invoice_create_task');
-    await expect(boxes, "the dialog should offer the job's uninvoiced tasks")
-      .toHaveCount(2, { timeout: 20000 });
-    const completedBox = page.locator('.invoice_create_task[name*="' + taskIds['Hourly done'] + '"]');
-    await expect(completedBox, 'a completed task should be ticked for invoicing by default')
-      .toBeChecked();
-    await expect(
-      page.locator('.invoice_create_task[name*="' + taskIds['Hourly todo'] + '"]'),
-      'an unfinished task should not be',
-    ).not.toBeChecked();
-
-    await Promise.all([
-      page.waitForNavigation({ waitUntil: 'load' }),
-      page.locator('.ui-dialog-buttonpane button').filter({ hasText: /^Create$/ }).first().click(),
-    ]);
-    expect(page.url(), 'Create should open a new invoice for the job').toContain('invoice_id=new');
-    await expectClean(page, 'the invoice built from the job');
-
-    const draft = (await page.locator('body').innerText()).replace(/\s+/g, ' ');
-    expect(draft, 'the completed task should be on the invoice').toContain('Hourly done');
-    expect(draft, 'the unfinished one should not').not.toContain('Hourly todo');
-    expect(draft, 'billed at 2 hours times the 80 rate').toContain('160.00');
-
-    await Promise.all([
-      page.waitForNavigation({ waitUntil: 'load' }),
-      page.locator('input[name="butt_save"]').first().click(),
-    ]);
-    await expect(page.locator('body'), 'the invoice should save').toContainText(/saved successfully/i);
-
-    // --- the job now knows it has been invoiced for that work, and will not offer the
-    // same task again.
-    await openJob(page, jobId);
-    const invoiced = (await page.locator('body').innerText()).replace(/\s+/g, ' ');
-    expect(invoiced, 'the job should record what it has invoiced').toMatch(/Invoiced:\s*\$?176\.00/);
-
-    await page.locator('#job_generate_invoice_button').click();
-    await expect(
-      page.locator('.invoice_create_task'),
-      'an invoiced task should not be offered for invoicing a second time',
-    ).toHaveCount(1, { timeout: 20000 });
-
-    // --- and it cannot be deleted out from under the invoice that bills it
-    await saveJob(page, {
-      job_id: jobId,
-      ...jobFields(name, customerId, '80'),
-      [`job_task[${taskIds['Hourly done']}][description]`]: '-DELETE-',
-    });
-    await openJob(page, jobId);
-    expect(
-      Object.keys(await taskRows(page)),
-      'a task that has been invoiced must not be deletable',
-    ).toContain('Hourly done');
   });
 
   test('a save that carries no hourly rate leaves the rate alone', async ({ page }) => {
-    test.setTimeout(120000);
-    await login(page);
+    const jobs: string[] = [];
+    const invoices: string[] = [];
+    try {
+      test.setTimeout(120000);
+      await login(page);
 
-    const customerId = await aCustomer(page);
-    const name = uniqueName('Job rate');
-    const location = await saveJob(page, { job_id: 'new', ...jobFields(name, customerId, '123') });
-    const jobId = String(new URL(location, 'http://localhost').searchParams.get('job_id'));
+      const customerId = await aCustomer(page);
+      const name = uniqueName('Job rate');
+      const location = await saveJob(page, { job_id: 'new', ...jobFields(name, customerId, '123') });
+      const jobId = String(new URL(location, 'http://localhost').searchParams.get('job_id'));
+      jobs.push(jobId);
 
-    await saveJob(page, {
-      job_id: jobId,
-      ...jobFields(name, customerId, '123'),
-      'job_task[new][description]': 'Rate task',
-      'job_task[new][hours]': '2',
-      'job_task[new][manual_task_type]': '-1',
-      'job_task[new][billable_t]': '1',
-      'job_task[new][billable]': '1',
-    });
-
-    await openJob(page, jobId);
-    await expect(page.locator('input[name="hourly_rate"]')).toHaveValue(/123/);
-    expect((await taskRows(page))['Rate task'].text, '2 hours at 123 is 246').toContain('246.00');
-
-    // A partial save - job id and tasks, no hourly rate. This is the shape the job task
-    // importer posts, and it used to be enough to re-price the whole job.
-    const key = await formAuthKey(page);
-    const response = await page.request.post('/?m[]=job', {
-      form: {
-        _process: 'save_job',
+      await saveJob(page, {
         job_id: jobId,
-        'job_task[new][description]': 'Imported task',
-        'job_task[new][hours]': '1',
+        ...jobFields(name, customerId, '123'),
+        'job_task[new][description]': 'Rate task',
+        'job_task[new][hours]': '2',
         'job_task[new][manual_task_type]': '-1',
-        form_auth_key: key,
-      },
-      maxRedirects: 0,
-      failOnStatusCode: false,
-    });
-    expect(
-      describeDiagnostics(await response.text()),
-      'a save that carries only tasks should not print PHP diagnostics',
-    ).toEqual([]);
+        'job_task[new][billable_t]': '1',
+        'job_task[new][billable]': '1',
+      });
 
-    await openJob(page, jobId);
-    await expect(
-      page.locator('input[name="hourly_rate"]'),
-      'a save that never mentioned the hourly rate must not change it',
-    ).toHaveValue(/123/);
-    const rows = await taskRows(page);
-    expect(rows['Rate task'].text, 'and the existing task is still priced at the job rate')
-      .toContain('246.00');
+      await openJob(page, jobId);
+      await expect(page.locator('input[name="hourly_rate"]')).toHaveValue(/123/);
+      expect((await taskRows(page))['Rate task'].text, '2 hours at 123 is 246').toContain('246.00');
+
+      // A partial save - job id and tasks, no hourly rate. This is the shape the job task
+      // importer posts, and it used to be enough to re-price the whole job.
+      const key = await formAuthKey(page);
+      const response = await page.request.post('/?m[]=job', {
+        form: {
+          _process: 'save_job',
+          job_id: jobId,
+          'job_task[new][description]': 'Imported task',
+          'job_task[new][hours]': '1',
+          'job_task[new][manual_task_type]': '-1',
+          form_auth_key: key,
+        },
+        maxRedirects: 0,
+        failOnStatusCode: false,
+      });
+      expect(
+        describeDiagnostics(await response.text()),
+        'a save that carries only tasks should not print PHP diagnostics',
+      ).toEqual([]);
+
+      await openJob(page, jobId);
+      await expect(
+        page.locator('input[name="hourly_rate"]'),
+        'a save that never mentioned the hourly rate must not change it',
+      ).toHaveValue(/123/);
+      const rows = await taskRows(page);
+      expect(rows['Rate task'].text, 'and the existing task is still priced at the job rate')
+        .toContain('246.00');
+    } finally {
+      await removeMade(page, jobs, invoices);
+    }
   });
 
   test('deletes a task, re-totals the job, and deletes the job', async ({ page }) => {
