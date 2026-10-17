@@ -1,0 +1,70 @@
+# Puts the public demo's data back to its snapshot every day, so whatever visitors add,
+# edit or delete does not pile up, and checks that every advertised login still works.
+#
+# It runs custom/demo/reset.php on the server; see that file and custom/README.md for the
+# snapshot it restores and the one-off setup. Run it by hand to reset now, to only repair
+# the logins, or to take a new snapshot of the demo as it is at that moment.
+name: Reset demo
+
+on:
+  schedule:
+    # 18:00 UTC is early morning in Australia, when the demo is quietest.
+    - cron: '0 18 * * *'
+  workflow_dispatch:
+    inputs:
+      action:
+        description: 'restore = reset to the snapshot; repair = fix the logins only; snapshot = save the demo as it is now'
+        type: choice
+        options: [restore, repair, snapshot]
+        default: restore
+
+# The same group as the deploy, so a reset never runs in the middle of one.
+concurrency:
+  group: deploy-demo
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  reset:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment: demo
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: SSH setup
+        env:
+          DEMO_SSH_KEY: ${{ secrets.DEMO_SSH_KEY }}
+          DEMO_SSH_KNOWN_HOSTS: ${{ secrets.DEMO_SSH_KNOWN_HOSTS }}
+          DEMO_SSH_HOST: ${{ secrets.DEMO_SSH_HOST }}
+          DEMO_SSH_PORT: ${{ secrets.DEMO_SSH_PORT }}
+          DEMO_SSH_USER: ${{ secrets.DEMO_SSH_USER }}
+        run: |
+          set -euo pipefail
+          mkdir -p ~/.ssh && chmod 700 ~/.ssh
+          printf '%s\n' "$DEMO_SSH_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          printf '%s\n' "$DEMO_SSH_KNOWN_HOSTS" > ~/.ssh/known_hosts
+          cat > ~/.ssh/config <<EOF
+          Host demo
+            HostName $DEMO_SSH_HOST
+            Port $DEMO_SSH_PORT
+            User $DEMO_SSH_USER
+            IdentityFile ~/.ssh/deploy_key
+            IdentitiesOnly yes
+            StrictHostKeyChecking yes
+          EOF
+          ssh demo 'echo connected; php -v | head -1'
+      - name: Reset
+        env:
+          DEMO_DEPLOY_PATH: ${{ secrets.DEMO_DEPLOY_PATH }}
+          # A scheduled run has no inputs, and restore is what it is for.
+          ACTION: ${{ inputs.action || 'restore' }}
+        run: |
+          case "$ACTION" in restore|repair|snapshot) ;; *) echo "Unknown action: $ACTION"; exit 1;; esac
+          ssh demo "cd '$DEMO_DEPLOY_PATH' && php=/usr/local/php82/bin/php && { [ -x \$php ] || php=php; } && \$php custom/demo/reset.php $ACTION"
+      - name: Every demo login signs in
+        env:
+          DEMO_URL: ${{ secrets.DEMO_URL }}
+        run: ./scripts/demo-login-check.sh "$DEMO_URL"
