@@ -79,13 +79,16 @@ npm install && npm run test:e2e
 
 ## Documentation
 
-`Documentation/` and `Licensing/` are the buyer-facing halves of the release archive.
-They are written by hand, live in the repository, and are `export-ignore`d so they land
-beside `Main Files` in the zip rather than inside it.
+The full documentation is online at <https://ultimateclientmanager.com/docs/>. Its source
+is in the `ucm-web` repository, not this one.
 
-- `Documentation/` - installing, upgrading from 2.x, configuration, the plugin system,
-  the `custom/` override mechanism, payment setup, troubleshooting and the changelog.
-  Plain HTML with no external requests, because it is read out of a zip offline.
+`Documentation/` and `Licensing/` are the buyer-facing halves of the release archive.
+Both are written by hand and `export-ignore`d, so they land beside `Main Files` in the zip
+rather than inside it.
+
+- `Documentation/readme.html` - one short getting-started page: requirements, installing,
+  upgrading, and links to the live documentation for everything else. Keep it short; the
+  release build fails if anything else appears in that folder.
 - `Licensing/` - `third-party-libraries.tsv` is the source of truth for every bundled
   component; the web page beside it is generated from that file at build time.
 
@@ -131,8 +134,8 @@ quotes. Every release:
 
 ## Upgrading
 
-See [Documentation/upgrading.html](Documentation/upgrading.html) for breaking changes
-and migration notes.
+See the [upgrade guide](https://ultimateclientmanager.com/docs/install/upgrading/) for
+breaking changes and migration notes.
 
 ## File Structure
 

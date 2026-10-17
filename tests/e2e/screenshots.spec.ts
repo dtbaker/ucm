@@ -10,8 +10,9 @@ import { login } from './seed';
  *
  *   npx playwright test tests/e2e/screenshots.spec.ts --grep @screenshots
  *
- * Images land in Documentation/images/. The names are referenced by the documentation
- * pages, so keep them if you replace the contents.
+ * Images land in build/screenshots/, which is not committed. The documentation lives in
+ * the ucm-web repository, so copy the ones you want into its site/ and keep the names: the
+ * articles refer to them.
  *
  * Envato's rejection-factors article names pictorial guides specifically, and the pages
  * below are the ones a buyer actually follows step by step.
@@ -63,7 +64,7 @@ test.describe( 'Documentation screenshots @screenshots', () => {
       } );
 
       await page.screenshot( {
-        path: `Documentation/images/${ shot.name }.png`,
+        path: `build/screenshots/${ shot.name }.png`,
         fullPage: false,
       } );
 

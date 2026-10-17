@@ -196,9 +196,9 @@ jobs:
     #                               workaround was to stop verifying the peer on a request
     #                               carrying a card number. It verifies against the host's
     #                               own store now.
-    #   plaintext-http-link         one link left in the credits, now https. The source is
-    #                               docs-site/src/content/docs/reference/credits.md -
-    #                               Documentation/credits.html is generated from it.
+    #   plaintext-http-link         one link left in the credits, now https. The credits
+    #                               page now lives in the online documentation, whose
+    #                               source is the ucm-web repository.
     name: Semgrep (blocking rules)
     runs-on: ubuntu-latest
     timeout-minutes: 15
