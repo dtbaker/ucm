@@ -1,4 +1,4 @@
-<?php if ( $header_logo = module_theme::get_config( 'theme_logo', _BASE_HREF . 'images/logo.png' ) ) { ?>
+<?php if ( $header_logo = module_theme::logo_url() ) { ?>
 	<div class="text-center logo-box">
 		<img src="<?php echo htmlspecialchars( $header_logo ); ?>" border="0"
 		     title="<?php echo htmlspecialchars( module_config::s( 'header_title', 'UCM' ) ); ?>">

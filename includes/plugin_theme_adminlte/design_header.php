@@ -15,7 +15,7 @@ switch ( $display_mode ) {
 			<meta content='width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no' name='viewport'>
 			<title><?php echo $page_title; ?></title>
 
-			<?php $header_favicon = module_theme::get_config( 'theme_favicon', '' );
+			<?php $header_favicon = module_theme::favicon_url();
 			if ( $header_favicon ) { ?>
 				<link rel="icon" href="<?php echo htmlspecialchars( $header_favicon ); ?>">
 			<?php } ?>
@@ -60,7 +60,7 @@ switch ( $display_mode ) {
 			<header class="header">
 				<a href="<?php echo _BASE_HREF; ?>" class="logo">
 					<!-- Add the class icon to your logo image or logo icon to add the margining -->
-					<?php if ( $header_logo = module_theme::get_config( 'theme_logo', _BASE_HREF . 'images/logo.png' ) ) { ?>
+					<?php if ( $header_logo = module_theme::logo_url() ) { ?>
 						<img src="<?php echo htmlspecialchars( $header_logo ); ?>" border="0"
 						     title="<?php echo htmlspecialchars( module_config::s( 'header_title', 'UCM' ) ); ?>">
 					<?php } else { ?>

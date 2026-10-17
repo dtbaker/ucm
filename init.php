@@ -7,6 +7,14 @@ if ( _DEBUG_MODE && ! isset( $debug_info ) ) {
 }
 
 define( '_APPLICATION_ID', 47626 ); // not used any more.
+// The release version: the one number shown to people (the footer, Settings > Upgrade,
+// module_config::product_version()) and quoted in the changelog. Bump it at every release,
+// with a line below. It is also the cache key on every stylesheet and script, so a release
+// that changes CSS or JavaScript must bump it or browsers keep the old files.
+//
+// This file reaches an existing install as a core file, and core files are only sent along
+// with a plugin update. Bump the version of every plugin whose files changed too, or the
+// in-app updater will not offer the release at all. README.md, under "Releasing".
 define( '_SCRIPT_VERSION', '3.556' );
 // 3.555 - 2022-12-27 - uasort boolean fix
 // 3.552 - 2021-04-07 - php 8 magic quotes fix

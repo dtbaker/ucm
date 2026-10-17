@@ -104,6 +104,31 @@ entries all resolve. CI runs the same command.
 [.gitattributes](.gitattributes) decides what stays out. Nothing in the working copy can
 leak in by accident.
 
+## Releasing
+
+The release version is `_SCRIPT_VERSION` in `init.php`. It is the number in the footer and
+on Settings > Upgrade (`module_config::product_version()`), and the one the changelog
+quotes. Every release:
+
+1. **Bump `_SCRIPT_VERSION`** and add a line under it: `// <version> - <date> - <summary>`.
+   It is also the cache key on every stylesheet and script, so skipping it leaves browsers
+   on the old CSS and JavaScript.
+2. **Bump the `$version` of every plugin whose files changed**, with a changelog comment
+   in that plugin's `init()`: `//<version> - <date> - <what changed>`. The in-app updater
+   compares plugin versions and nothing else, so a changed file in a plugin that was not
+   bumped never reaches an existing install. The comment is what the update screen shows
+   as the description.
+3. **Core files only travel with a plugin update.** `init.php`, `design_header.php`,
+   `includes/functions.php` and the rest of the core list in
+   `includes/plugin_config/upgrade_server.php` are sent whenever any plugin is offered. A
+   release that changes only core files has to bump at least one plugin, or it is never
+   offered.
+4. **Images, `css/` and `js/` outside that core list do not travel at all**, except in a
+   fresh zip install. Put new assets inside a plugin, as `includes/plugin_theme/images/`
+   does, so they arrive with it.
+5. Update the changelog, build with `./scripts/build-release.sh --verify`, and run
+   [docs/local-upgrade-test.md](docs/local-upgrade-test.md) against the build.
+
 ## Upgrading
 
 See [UPGRADE.md](UPGRADE.md) for breaking changes and migration notes, and
