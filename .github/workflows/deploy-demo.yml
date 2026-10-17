@@ -123,6 +123,12 @@ jobs:
         env:
           DEMO_DEPLOY_PATH: ${{ secrets.DEMO_DEPLOY_PATH }}
         run: ssh demo "find '$DEMO_DEPLOY_PATH/temp' -maxdepth 1 -name 'cache-*' -delete"
+      - name: Repair the demo logins
+        # The sample customer and staff logins need their password stored as a hash, which
+        # the install data does not do. See custom/demo/reset.php.
+        env:
+          DEMO_DEPLOY_PATH: ${{ secrets.DEMO_DEPLOY_PATH }}
+        run: ssh demo "cd '$DEMO_DEPLOY_PATH' && php=/usr/local/php82/bin/php && { [ -x \$php ] || php=php; } && \$php custom/demo/reset.php repair"
       - name: Smoke test
         env:
           DEMO_URL: ${{ secrets.DEMO_URL }}
@@ -135,3 +141,7 @@ jobs:
           grep -q 'start theme demo code' <<<"$body" || { echo "Demo banner missing - is _DEMO_MODE set in config.local.php?"; exit 1; }
           grep -qiE 'Warning:|Fatal error|Deprecated:' <<<"$body" && { echo "PHP diagnostics on the page"; exit 1; }
           echo OK
+      - name: Every demo login signs in
+        env:
+          DEMO_URL: ${{ secrets.DEMO_URL }}
+        run: ./scripts/demo-login-check.sh "$DEMO_URL"
