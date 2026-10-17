@@ -65,7 +65,7 @@ jobs:
           php-version: '8.4'
           coverage: none
           tools: cs2pr
-      - uses: ramsey/composer-install@a8d0d959dab41457692a5e2041bd9b757a119e3f # v3
+      - uses: ramsey/composer-install@65e4f84970763564f46a70b8a54b90d033b3bdda # v3
       - name: phpcs
         run: ./vendor/bin/phpcs -q --report=checkstyle -d memory_limit=2G | cs2pr
 
@@ -84,7 +84,7 @@ jobs:
         with:
           php-version: '8.4'
           coverage: none
-      - uses: ramsey/composer-install@a8d0d959dab41457692a5e2041bd9b757a119e3f # v3
+      - uses: ramsey/composer-install@65e4f84970763564f46a70b8a54b90d033b3bdda # v3
       - name: PHPStan
         run: ./vendor/bin/phpstan analyse --memory-limit=2G --no-progress --error-format=github
 
@@ -105,7 +105,7 @@ jobs:
           php-version: ${{ matrix.php }}
           extensions: mysqli, mbstring
           coverage: none
-      - uses: ramsey/composer-install@a8d0d959dab41457692a5e2041bd9b757a119e3f # v3
+      - uses: ramsey/composer-install@65e4f84970763564f46a70b8a54b90d033b3bdda # v3
       - run: ./vendor/bin/phpunit
 
   dependencies:
@@ -121,7 +121,7 @@ jobs:
         with:
           php-version: '8.4'
           coverage: none
-      - uses: ramsey/composer-install@a8d0d959dab41457692a5e2041bd9b757a119e3f # v3
+      - uses: ramsey/composer-install@65e4f84970763564f46a70b8a54b90d033b3bdda # v3
       - name: Advisories against anything that ships
         run: composer audit --locked --no-dev
       - name: Advisories against the build tooling
