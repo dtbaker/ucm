@@ -1016,6 +1016,7 @@ public static function js_combine($version, $reinit=false){
 
 		$available_updates = array();
 
+		require_once _UCM_FOLDER . 'includes/plugin_config/class.upgrade_server.php';
 		$post_fields = array(
 			'application'           => _APPLICATION_ID,
 			'installation_code'     => module_config::c( '_installation_code' ),
@@ -1030,6 +1031,9 @@ public static function js_combine($version, $reinit=false){
 			// An old server ignores the field, which is how an install still on the
 			// old protocol receives the update that teaches it this one.
 			'client_protocol'       => 2,
+			// Which vendor/ this install has, so the server only sends its own when
+			// the two differ. See ucm_upgrade_server::client_needs_libraries().
+			'libraries'             => ucm_upgrade_server::libraries_fingerprint( _UCM_FOLDER ),
 		);
 		$url         = module_config::c( 'ucm_upgrade_url', 'https://api.ultimateclientmanager.com/upgrade.php' );
 		if ( $url == 'http://ultimateclientmanager.com/api/upgrade.php' ) {
