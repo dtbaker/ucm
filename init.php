@@ -15,7 +15,8 @@ define( '_APPLICATION_ID', 47626 ); // not used any more.
 // This file reaches an existing install as a core file, and core files are only sent along
 // with a plugin update. Bump the version of every plugin whose files changed too, or the
 // in-app updater will not offer the release at all. README.md, under "Releasing".
-define( '_SCRIPT_VERSION', '3.556' );
+define( '_SCRIPT_VERSION', '4.0.0' );
+// 4.0.0 - 2026-10-17 - relaunch: PHP 8 rewrite, security and payment fixes, update server in the app, new logo
 // 3.555 - 2022-12-27 - uasort boolean fix
 // 3.552 - 2021-04-07 - php 8 magic quotes fix
 // 3.551 - 2017-01-12 - fieldset settings
