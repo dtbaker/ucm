@@ -106,7 +106,7 @@ if ( (int)$data_type_id > 0 ) {
 	                    'type' => 'text',
 	                    'name' => 'data_type_icon',
 	                    'value' => (isset($data_type['data_type_icon'])) ? htmlspecialchars($data_type['data_type_icon']) : '',
-	                    'help' => 'Type the icon name from http://fontawesome.io/icons/ (eg: bell). Compatible with the Metis theme.',
+	                    'help' => 'Type the icon name from http://fontawesome.io/icons/ (eg: bell). Shown in the menu of the default theme.',
 	                ),
 	            ),
 	            'max_entries' => array(

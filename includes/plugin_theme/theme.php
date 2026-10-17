@@ -25,13 +25,14 @@ class module_theme extends module_base
 	public function __construct() {
 		$this->module_name     = 'theme';
 		$this->module_position = 520;
-		$this->version         = 2.408;
+		$this->version         = 2.409;
 		// here because init() doesn't run on install.
 		hook_add( 'plugins_loaded', 'module_theme::hook_plugins_loaded' );
 		hook_add( 'page_header', 'module_theme::hook_page_header' );
 	}
 
 	public function init() {
+		// 2.409 - 2026-10-17 - Metis is now named the Default Theme and listed first; Pro is the Legacy Theme, listed last
 		// 2.408 - 2026-10-17 - new SVG logo and favicon
 		// 2.407 - 2022-12-27 - php8.1 fixes
 		// 2.406 - 2017-05-02 - big changes
@@ -153,12 +154,12 @@ class module_theme extends module_base
 			if ( isset( $_REQUEST['demo_theme'] ) ) {
 				$_SESSION['_demo_theme'] = basename( $_REQUEST['demo_theme'] );
 				if ( ! $_SESSION['_demo_theme'] ) {
-					$_SESSION['_demo_theme'] = module_config::c( 'theme_name', 'default' );
+					$_SESSION['_demo_theme'] = module_config::c( 'theme_name', self::default_theme_id() );
 				}
 			}
-			$current_theme = isset( $_SESSION['_demo_theme'] ) ? $_SESSION['_demo_theme'] : module_config::c( 'theme_name', 'default' );
+			$current_theme = isset( $_SESSION['_demo_theme'] ) ? $_SESSION['_demo_theme'] : module_config::c( 'theme_name', self::default_theme_id() );
 		} else {
-			$current_theme = module_config::c( 'theme_name', is_dir( 'includes/plugin_theme/themes/metis/' ) ? 'metis' : 'default' );
+			$current_theme = module_config::c( 'theme_name', self::default_theme_id() );
 			if ( module_security::is_logged_in() && module_config::c( 'theme_per_user', 0 ) ) {
 				// we allow users to pick their own themes.
 				$current_theme = module_config::c( 'theme_name_' . module_security::get_loggedin_id(), self::$current_theme );
@@ -196,23 +197,46 @@ class module_theme extends module_base
 		}
 	}
 
+	/**
+	 * The theme an install uses until somebody picks one.
+	 *
+	 * That is the theme in the metis folder, which is called the Default Theme. The folder
+	 * keeps its old name because installs store it as their theme_name; renaming it would
+	 * drop every one of them back to the bare stylesheet.
+	 */
+	public static function default_theme_id() {
+		return is_dir( 'includes/plugin_theme/themes/metis/' ) ? 'metis' : 'default';
+	}
+
+	/**
+	 * What each theme folder is called on screen, where the folder name is not the name.
+	 * metis is the default; pro is the old one, kept for installs that still use it.
+	 */
+	private const THEME_NAMES = array(
+		'metis'       => 'Default Theme',
+		'pro'         => 'Legacy Theme',
+		'whitelabel1' => 'White Label',
+	);
+
 	public static function get_available_themes() {
 
+		// The theme with no folder: the bare core stylesheet.
 		$themes        = array(
 			'default' => array(
 				'id'   => 'default',
-				'name' => _l( 'Default Theme' ),
+				'name' => _l( 'Basic Theme' ),
 			),
 		);
 		$theme_folders = glob( 'includes/plugin_theme/themes/*' );
 		if ( is_array( $theme_folders ) ) {
 			foreach ( $theme_folders as $foo ) {
 				if ( is_dir( $foo ) && ! is_file( $foo . '/ucm_ignore' ) ) {
-					$themes[ basename( $foo ) ] = array(
-						'id'        => basename( $foo ),
-						'name'      => _l( ucwords( str_replace( '_', ' ', basename( $foo ) ) ) ),
+					$id            = basename( $foo );
+					$themes[ $id ] = array(
+						'id'        => $id,
+						'name'      => _l( isset( self::THEME_NAMES[ $id ] ) ? self::THEME_NAMES[ $id ] : ucwords( str_replace( '_', ' ', $id ) ) ),
 						'base_dir'  => rtrim( $foo, '/' ) . '/',
-						'init_file' => 'includes/plugin_theme/themes/' . basename( $foo ) . '/init.php',
+						'init_file' => 'includes/plugin_theme/themes/' . $id . '/init.php',
 					);
 				}
 			}
@@ -229,6 +253,17 @@ class module_theme extends module_base
 			}
 		}
 
+		// The default first and the legacy theme last, so the list reads in order of
+		// what to pick.
+		$first = self::default_theme_id();
+		if ( isset( $themes[ $first ] ) ) {
+			$themes = array( $first => $themes[ $first ] ) + $themes;
+		}
+		if ( isset( $themes['pro'] ) ) {
+			$legacy = $themes['pro'];
+			unset( $themes['pro'] );
+			$themes['pro'] = $legacy;
+		}
 
 		return $themes;
 	}

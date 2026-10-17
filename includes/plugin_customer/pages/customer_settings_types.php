@@ -77,7 +77,7 @@ if ( isset( $_REQUEST['customer_type_id'] ) && $_REQUEST['customer_type_id'] ) {
 					'type'  => 'text',
 					'name'  => 'menu_icon',
 					'value' => $customer_type['menu_icon'],
-					'help'  => 'Type the icon name from http://fontawesome.io/icons/ (eg: bell). Compatible with the Metis theme.'
+					'help'  => 'Type the icon name from http://fontawesome.io/icons/ (eg: bell). Shown in the menu of the default theme.'
 				),
 			)
 		);
