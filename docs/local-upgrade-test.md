@@ -120,7 +120,7 @@ export UCM=$(git rev-parse --show-toplevel)
 # Mode A only. Beside the main checkout, which is not $UCM/.. when this is a git worktree.
 export UCM_WEB="$(dirname "$(git rev-parse --path-format=absolute --git-common-dir)")/../ucm-web"
 export UT="$HOME/ucm-upgrade-test"          # scratch space; deleted at the end
-export REF=2026-revive-2                    # the branch or tag to build release A from
+export REF=master                           # the branch or tag to build release A from
 export UT_CODE=local-upgrade-test-code      # throwaway licence code, lower case
 export UT_NET=172.31.250.0/24 UT_API_IP=172.31.250.10 UT_CLIENT_IP=172.31.250.20 UT_LEGACY_IP=172.31.250.30
 export UT_CLIENT_PORT=8110 UT_API_PORT=8111 UT_LEGACY_PORT=8112
