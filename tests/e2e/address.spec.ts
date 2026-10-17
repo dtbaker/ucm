@@ -1,4 +1,5 @@
 import { test, expect, Page } from '@playwright/test';
+import { deleteRecord } from './seed';
 
 /**
  * The address block on the customer form is saved by a hook rather than by the customer
@@ -50,5 +51,18 @@ test.describe('Customer address', () => {
     await expect(page.locator('input[name$="[suburb]"]').first()).toHaveValue('Testville');
     // An address id means the row was found again, rather than a fresh orphan being made.
     await expect(page.locator('input[name$="[address_id]"]').first()).not.toHaveValue('');
+
+    // And take it away again, address, contact and all. This test cannot reuse a
+    // customer - the whole point is to save a new one and read the address back - so
+    // the only way it does not add a customer per run is to delete the one it made.
+    await deleteRecord(
+      page, '/?m[]=customer', 'save_customer', 'customer_id', String(customerId),
+      { extra: { delete_others: '1' } },
+    );
+    await page.goto('/?m[]=customer&p[]=customer_admin_list&customer_type_id=0&search[generic]=' + encodeURIComponent(name));
+    await expect(
+      page.getByRole('link', { name }),
+      'the customer this test made should be gone again',
+    ).toHaveCount(0);
   });
 });

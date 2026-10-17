@@ -991,9 +991,23 @@ class module_newsletter extends module_base
 
 		$sql = "DELETE FROM " . _DB_PREFIX . "newsletter WHERE newsletter_id = '" . $newsletter_id . "' LIMIT 1";
 		query( $sql );
-		$sql = "DELETE FROM `" . _DB_PREFIX . "newsletter_send` WHERE newsletter_id = '" . $newsletter_id . "' LIMIT 1";
+		// Each send's own rows first, while the send rows are still here to name them.
+		// This was the "todo - empty the newsletter_send_member newsletter_link and
+		// newsletter_image and newsletter_link_open tables based on the newsletter_send
+		// ids": a newsletter sent to a group of 200 left 200 rows in
+		// newsletter_send_member behind for good, with nothing pointing at them.
+		$sends = qa( "SELECT send_id FROM `" . _DB_PREFIX . "newsletter_send`"
+			. " WHERE newsletter_id = '" . $newsletter_id . "'" );
+		foreach ( $sends as $send ) {
+			$send_id = (int) $send['send_id'];
+			foreach ( array( 'newsletter_send_member', 'newsletter_link', 'newsletter_link_open', 'newsletter_image' ) as $table ) {
+				query( "DELETE FROM `" . _DB_PREFIX . $table . "` WHERE send_id = '" . $send_id . "'" );
+			}
+		}
+		// No LIMIT: a newsletter can have been sent more than once, and the limit left
+		// every send after the first behind.
+		$sql = "DELETE FROM `" . _DB_PREFIX . "newsletter_send` WHERE newsletter_id = '" . $newsletter_id . "'";
 		query( $sql );
-		// todo - empty the newsletter_send_member newsletter_link and newsletter_image and newsletter_link_open tables based on the newsletter_send ids.
 		$sql = "DELETE FROM `" . _DB_PREFIX . "newsletter_campaign_newsletter` WHERE newsletter_id = '" . $newsletter_id . "' LIMIT 1";
 		query( $sql );
 		module_file::delete_files( 'newsletter', $newsletter_id );

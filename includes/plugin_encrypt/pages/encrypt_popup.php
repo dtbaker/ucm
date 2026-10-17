@@ -27,13 +27,25 @@ if ( ! $encrypt_field_id && module_encrypt::can_i( 'create', 'Encrypts' ) ) {
 	if ( ! $encrypt_field_name || ! $page_name ) {
 		die( 'Unable to encrypt this field. Sorry' );
 	}
-	// ready to create our field!
-	// for now we just create an entry in the db ready to go.
-	$encrypt_field_id = update_insert( 'encrypt_field_id', 0, 'encrypt_field', array(
-		'page_name'      => $page_name,
-		'field_name'     => $encrypt_field_name,
-		'encrypt_key_id' => 0,
+	// Use the field this page and field name already have, if there is one. Opening the
+	// popup is a GET, and without this look-up every open inserted another row - click
+	// the padlock on the same field twice and the table has two entries for it.
+	// module_encrypt::save_encrypt_value() has always found the field this way first.
+	$existing_field = get_single( 'encrypt_field', array( 'page_name', 'field_name' ), array(
+		$page_name,
+		$encrypt_field_name,
 	) );
+	if ( $existing_field && ! empty( $existing_field['encrypt_field_id'] ) ) {
+		$encrypt_field_id = $existing_field['encrypt_field_id'];
+	} else {
+		// ready to create our field!
+		// for now we just create an entry in the db ready to go.
+		$encrypt_field_id = update_insert( 'encrypt_field_id', 0, 'encrypt_field', array(
+			'page_name'      => $page_name,
+			'field_name'     => $encrypt_field_name,
+			'encrypt_key_id' => 0,
+		) );
+	}
 }
 if ( ! $encrypt_field_id ) {
 	die( 'no encrypt field id' );

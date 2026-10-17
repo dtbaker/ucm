@@ -351,6 +351,28 @@ const MODULES: ModuleCase[] = [
  */
 let created: { mod: ModuleCase; id: string } | null = null;
 
+/** A fixture name nothing else in the database can collide with. */
+function stamped(prefix: string): string {
+  return `${prefix} ${Date.now().toString(36)}${Math.floor(Math.random() * 1e4)}`;
+}
+
+/** The ids a list links to, once its own search has narrowed it to one record. */
+async function idsFromSearch(page: Page, listUrl: string, term: string, key: string): Promise<string[]> {
+  await page.goto(listUrl + '&search[generic]=' + encodeURIComponent(term));
+
+  return page.evaluate((idKey) => {
+    const ids = new Set<string>();
+    document.querySelectorAll(`a[href*="${idKey}="]`).forEach((a: any) => {
+      const found = new RegExp(idKey + '=(\\d+)').exec(a.getAttribute('href') || '');
+      if (found && found[1] !== '0') {
+        ids.add(found[1]);
+      }
+    });
+
+    return Array.from(ids);
+  }, key);
+}
+
 test.describe('Form auth key, per module', () => {
   test.beforeEach(async ({ page }) => {
     created = null;
@@ -496,16 +518,36 @@ test.describe('Form auth key, popups', () => {
     const form = modal.locator('form:has(textarea[name="note"]), form:has([name="note"])').first();
     await expect(form.locator('input[name="form_auth_key"]').first()).toBeAttached();
 
-    await form.locator('[name="note"]').first().fill('CSRF popup note');
+    const note = stamped('CSRF popup note');
+    await form.locator('[name="note"]').first().fill(note);
     await modal.getByRole('button', { name: 'Save note' }).click();
 
-    await expect(page.locator('body')).toContainText('CSRF popup note');
+    await expect(page.locator('body')).toContainText(note);
     await expect(page.locator('body')).not.toContainText(/invalid or expired form submission/i);
 
-    // This note is left behind, unlike the fixtures above. The only delete a note has is
-    // the trash link on its row, and that goes to handle_hook( 'note_delete' ), which
-    // calls note_delete( owner_table, owner_id ) with no note id - so it would take every
-    // note on the customer with it, not the one this test made.
+    // The trash link on the row does take just this note. It goes to note_admin with
+    // do_delete and the row's note_id, which calls note_delete( table, owner, note_id )
+    // - the three argument form. The two argument call that would empty the customer is
+    // handle_hook( 'note_delete' ), which fires when the customer itself is deleted, not
+    // from this link. Checked by putting three notes on the customer and pressing the
+    // middle one's link: the other two stayed.
+    page.on('dialog', d => d.accept());
+    const customerPage = '/?m[]=customer&p[]=customer_admin_edit&customer_id=' + customerId;
+    const row = page.locator('tr', { hasText: note }).first();
+    await expect(row.locator('a.note_delete'), 'the note should be listed with a delete link')
+      .toHaveCount(1);
+    await Promise.all([
+      page.waitForNavigation({ waitUntil: 'load' }),
+      row.locator('a.note_delete').first().click(),
+    ]);
+
+    // Checked back on the customer screen, not on wherever the delete redirected to:
+    // asserting against the landing page passes whether or not anything was removed.
+    await page.goto(customerPage);
+    await expect(
+      page.locator('tr', { hasText: note }),
+      'the note this test added should be gone from the customer',
+    ).toHaveCount(0);
   });
 
   test('saving a note is refused without a token', async ({ page }) => {
@@ -606,19 +648,27 @@ test.describe('Form auth key, popups', () => {
   });
 
   test('the invoice form still saves', async ({ page }) => {
-    await page.goto('/?m[]=invoice&p[]=invoice_admin&invoice_id=new&customer_id=1');
-    const form = page.locator('form:has(input[name="_process"][value="save_invoice"])');
-    await expect(form.locator('input[name="form_auth_key"]').first()).toBeAttached();
+    // Named for this run, which is what makes it findable again: saving an invoice goes
+    // back to the list rather than to the invoice, so there is no id in the response,
+    // and scanning the list is no good because it pages at twenty. The list's own
+    // search takes the stamped name and returns exactly this invoice.
+    const name = stamped('CSRF Test Invoice');
+    let doomed: string[] = [];
+    try {
+      await page.goto('/?m[]=invoice&p[]=invoice_admin&invoice_id=new&customer_id=1');
+      const form = page.locator('form:has(input[name="_process"][value="save_invoice"])');
+      await expect(form.locator('input[name="form_auth_key"]').first()).toBeAttached();
 
-    await form.locator('[name="name"]').first().fill('CSRF Test Invoice');
-    await form.locator('input[type="submit"][name="butt_save"]').first().click();
+      await form.locator('[name="name"]').first().fill(name);
+      await form.locator('input[type="submit"][name="butt_save"]').first().click();
 
-    await expect(page.locator('body')).toContainText(/invoice saved successfully/i);
-
-    // This invoice is left behind too. Saving one goes back to the invoice list rather
-    // than to the invoice, and finding it again means reading a list that is already
-    // thousands of rows long - it wants a fixture that names itself, which is a change to
-    // more of the suite than this one.
+      await expect(page.locator('body')).toContainText(/invoice saved successfully/i);
+    } finally {
+      doomed = await idsFromSearch(page, '/?m[]=invoice&p[]=invoice_admin', name, 'invoice_id');
+      expect(doomed, 'the invoice this test saved should be findable again, exactly once')
+        .toHaveLength(1);
+      await deleteRecord(page, '/?m[]=invoice', 'save_invoice', 'invoice_id', doomed[0]);
+    }
   });
 
   test('saving an invoice is refused without a token', async ({ page }) => {

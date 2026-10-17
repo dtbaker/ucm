@@ -50,19 +50,63 @@ export async function createRecord(page: Page, url: string, body: Record<string,
   return String(id);
 }
 
+/** The customer the suites share, and the contact on it. */
+export const SEED_CUSTOMER = 'CSRF Seed Customer';
+export const SEED_CONTACT = 'CSRF Seed Contact';
+
+/**
+ * The customer every suite that needs one works against.
+ *
+ * One named record, found again each run and made the first time. It used to take
+ * whichever customer happened to be first on the list, which was fine on a database
+ * full of old test data and not fine anywhere else: several suites need the customer
+ * to have a primary contact with an email - the read-only contact block reads the
+ * name, and queueing a newsletter to a group needs an address to send to - and
+ * whatever the list offered first was not required to have either. Once the leftovers
+ * were cleared and the list started returning a customer with no contact, four tests
+ * failed, none of them on anything the application had done wrong.
+ *
+ * Taking a named record of our own also means the suites stop editing, adding notes to
+ * and raising invoices against whichever real customer sorted first on a development
+ * database.
+ */
 export async function aCustomer(page: Page): Promise<string> {
   // customer_admin is the filter page; customer_admin_list is where the rows are.
-  const existing = await existingId(page, '/?m[]=customer&p[]=customer_admin_list&customer_type_id=0', 'customer_id');
-  if (existing) {
+  const list = '/?m[]=customer&p[]=customer_admin_list&customer_type_id=0'
+    + '&search[generic]=' + encodeURIComponent(SEED_CUSTOMER);
+  const existing = await idNamedOn(page, list, 'customer_id', SEED_CUSTOMER);
+  if (existing && await hasPrimaryContact(page, existing)) {
     return existing;
   }
-  return createRecord(page, '/?m[]=customer', {
+  // save_customer() only reaches the block that creates the primary contact when
+  // user_id is present in the request - the real form posts it empty for a new one.
+  // Without it the customer saves with no contact at all.
+  const fields = {
     _process: 'save_customer',
-    customer_id: 'new',
-    customer_name: 'CSRF Seed Customer',
-    name: 'CSRF Seed Contact',
+    customer_name: SEED_CUSTOMER,
+    name: SEED_CONTACT,
     email: 'csrf-seed@example.com',
-  }, 'customer_id');
+    user_id: '',
+  };
+  if (existing) {
+    // It is there but has lost its contact - give it one rather than making a second.
+    await createRecord(page, '/?m[]=customer', { ...fields, customer_id: existing }, 'customer_id');
+
+    return existing;
+  }
+
+  return createRecord(page, '/?m[]=customer', { ...fields, customer_id: 'new' }, 'customer_id');
+}
+
+/** Whether this customer's form comes back with a primary contact name on it. */
+async function hasPrimaryContact(page: Page, customerId: string): Promise<boolean> {
+  await page.goto('/?m[]=customer&p[]=customer_admin_edit&customer_id=' + customerId);
+  const name = page.locator('input[name="name"]').first();
+  if (!(await name.count())) {
+    return false;
+  }
+
+  return (await name.inputValue()).trim() !== '';
 }
 
 /**
@@ -113,6 +157,9 @@ export async function addressIdOn(page: Page, customerId: string): Promise<strin
 }
 
 export async function anInvoice(page: Page): Promise<string> {
+  // invoice_admin, not invoice_admin_list: the list page sets no $invoice_safe of its
+  // own and dies when it is reached directly, so asking for it finds no invoice and
+  // raises a fresh one every run. invoice_admin includes the list itself.
   const existing = await existingId(page, '/?m[]=invoice&p[]=invoice_admin', 'invoice_id');
   if (existing) {
     return existing;
@@ -163,6 +210,19 @@ export async function deleteRecord(
     confirmKey?: string;
     /** the delete button's name, where it is not butt_del */
     button?: string;
+    /**
+     * Anything else the module's own confirm screen asks for. The customer's asks
+     * whether to take the linked records - its invoices, jobs and websites - and
+     * without delete_others those outlive the customer they belonged to.
+     */
+    extra?: Record<string, string>;
+    /**
+     * A token to use instead of fetching one. get_secure_key() hashes the session id,
+     * so it holds for the whole session; a caller deleting in bulk passes it in rather
+     * than making this load a page per record, which is what made the cleanup chore
+     * take twenty seconds a row.
+     */
+    authKey?: string;
   } = {},
 ): Promise<void> {
   const confirmKey = options.confirmKey || key;
@@ -177,11 +237,62 @@ export async function deleteRecord(
       [options.button || 'butt_del']: '1',
       _confirm_delete: createHash('md5').update(`delete ${confirmKey} ${confirmValue}`).digest('hex'),
       really_confirm_delete: 'yep',
-      form_auth_key: await formAuthKey(page),
+      form_auth_key: options.authKey ?? await formAuthKey(page),
       _redirect: '/',
+      ...(options.extra || {}),
     },
+    // The delete is done by the time the handler redirects, and following that redirect
+    // means rendering a whole page per record.
+    maxRedirects: 0,
     failOnStatusCode: false,
   });
+}
+
+/**
+ * The id a save landed on, from the address bar.
+ *
+ * A test that means to delete what it made has to know what it made, and a cleanup
+ * that quietly deletes nothing is worse than no cleanup at all - it reads as if the
+ * leak were fixed. So this returns null rather than guessing, and callers assert on it.
+ */
+export function idInUrl(url: string, key: string): string | null {
+  const value = new URL(url, 'http://localhost').searchParams.get(key);
+
+  return value && /^[1-9]\d*$/.test(value) ? value : null;
+}
+
+/**
+ * The id of a record listed on `listUrl` whose row carries `name`.
+ *
+ * For the suites that want one fixed record rather than a new one per run. It matches
+ * on the row's text rather than the link's, because several of these lists put the
+ * name in one cell and the link in another, and returns null rather than guessing - a
+ * reuse helper that quietly returns the wrong record is worse than one that makes a
+ * new one, and two earlier attempts at reuse in this suite failed exactly that way.
+ */
+export async function idNamedOn(
+  page: Page,
+  listUrl: string,
+  key: string,
+  name: string,
+): Promise<string | null> {
+  await page.goto(listUrl);
+
+  return page.evaluate(({ idKey, wanted }) => {
+    const links = Array.from(document.querySelectorAll(`a[href*="${idKey}="]`));
+    for (const a of links as any[]) {
+      const row = a.closest('tr') || a.parentElement;
+      if (!row || !(row.textContent || '').includes(wanted)) {
+        continue;
+      }
+      const found = new RegExp(idKey + '=(\\d+)').exec(a.getAttribute('href') || '');
+      if (found && found[1] !== '0') {
+        return found[1];
+      }
+    }
+
+    return null;
+  }, { idKey: key, wanted: name });
 }
 
 /**

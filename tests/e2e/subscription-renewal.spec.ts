@@ -1,6 +1,6 @@
 import { test, expect, Page } from '@playwright/test';
 import { describeDiagnostics } from './diagnostics';
-import { createRecord, formAuthKey, login } from './seed';
+import { createRecord, deleteRecord, formAuthKey, login } from './seed';
 
 /**
  * A subscription, from attaching it to a customer through to the second renewal
@@ -93,186 +93,202 @@ async function subscriberTotals(page: Page, subscriptionId: string, customerName
 
 test.describe('Subscription renewal', () => {
   test('bills the right money on the right dates, twice, and records the payment', async ({ page }) => {
-    test.setTimeout(180000);
-    await login(page);
+    let subscriptionId: string | null = null;
+    let customerId: string | null = null;
+    try {
+      test.setTimeout(180000);
+      await login(page);
 
-    const stamp = Date.now().toString(36);
-    const customerName = `SubRenew ${stamp}`;
-    const subscriptionName = `SubRenew ${stamp}`;
+      const stamp = Date.now().toString(36);
+      const customerName = `SubRenew ${stamp}`;
+      const subscriptionName = `SubRenew ${stamp}`;
 
-    // $120.00 a month at 10%. automatic_renew is left off on purpose: with it on the
-    // panel says "this will renew on ..." instead of offering the button, and the cron
-    // would be the only way in.
-    const subscriptionId = await createRecord(page, '/?m[]=subscription', {
-      _process: 'save_subscription',
-      subscription_id: 'new',
-      name: subscriptionName,
-      amount: '120',
-      currency_id: '1',
-      days: '0',
-      months: '1',
-      years: '0',
-      'settings[tax_name]': 'TAX',
-      'settings[tax_amount]': '10',
-      'settings[tax_type]': '0',
-      'settings[trial_price_adjust]': '0',
-      invoice_prior_days: '0',
-      default_automatic_renew: '1',
-      default_automatic_email: '1',
-    }, 'subscription_id');
+      // $120.00 a month at 10%. automatic_renew is left off on purpose: with it on the
+      // panel says "this will renew on ..." instead of offering the button, and the cron
+      // would be the only way in.
+      subscriptionId = await createRecord(page, '/?m[]=subscription', {
+        _process: 'save_subscription',
+        subscription_id: 'new',
+        name: subscriptionName,
+        amount: '120',
+        currency_id: '1',
+        days: '0',
+        months: '1',
+        years: '0',
+        'settings[tax_name]': 'TAX',
+        'settings[tax_amount]': '10',
+        'settings[tax_type]': '0',
+        'settings[trial_price_adjust]': '0',
+        invoice_prior_days: '0',
+        default_automatic_renew: '1',
+        default_automatic_email: '1',
+      }, 'subscription_id');
 
-    const customerId = await createRecord(page, '/?m[]=customer', {
-      _process: 'save_customer',
-      customer_id: 'new',
-      customer_name: customerName,
-      name: `${customerName} Contact`,
-      email: `subrenew-${stamp}@example.com`,
-    }, 'customer_id');
-
-    const start = today();
-    const key = await formAuthKey(page);
-
-    // --- attach it, starting today
-    await page.request.post('/?m[]=customer', {
-      form: {
+      customerId = await createRecord(page, '/?m[]=customer', {
         _process: 'save_customer',
-        customer_id: customerId,
+        customer_id: 'new',
         customer_name: customerName,
-        member_subscriptions_save: '1',
-        [`subscription[${subscriptionId}]`]: '1',
-        [`subscription_start_date[${subscriptionId}]`]: iso(start),
-        form_auth_key: key,
-      },
-      maxRedirects: 0,
-      failOnStatusCode: false,
-    });
+        name: `${customerName} Contact`,
+        email: `subrenew-${stamp}@example.com`,
+      }, 'customer_id');
 
-    await page.goto('/?m[]=customer&p[]=customer_admin_open&customer_id=' + customerId);
-    await page.waitForLoadState('load');
-    const panel = describeDiagnostics(await page.content());
-    expect(
-      panel,
-      'the customer screen printed PHP diagnostics with a subscription on it:\n' + panel.join('\n'),
-    ).toEqual([]);
-    await expect(
-      page.locator('body'),
-      'a subscription starting today should be due today',
-    ).toContainText('Next due date is: ' + printed(start));
+      const start = today();
+      const key = await formAuthKey(page);
 
-    // --- two renewals in a row. The second is where a read-modify-write would show.
-    for (const period of [0, 1]) {
-      const billedFor = addMonths(start, period);
-      const nextDue = addMonths(start, period + 1);
-
-      const generated = await page.request.post('/?m[]=customer', {
+      // --- attach it, starting today
+      await page.request.post('/?m[]=customer', {
         form: {
           _process: 'save_customer',
           customer_id: customerId,
           customer_name: customerName,
           member_subscriptions_save: '1',
           [`subscription[${subscriptionId}]`]: '1',
-          subscription_add_payment: subscriptionId,
-          subscription_add_payment_date: iso(billedFor),
-          subscription_add_payment_amount: '120',
-          form_auth_key: key,
-        },
-        maxRedirects: 0,
-        failOnStatusCode: false,
-      });
-      const location = generated.headers()['location'] || '';
-      const invoiceId = new URL(location, 'http://localhost').searchParams.get('invoice_id');
-      expect(invoiceId, `renewal ${period + 1} should land on the invoice it created`).toBeTruthy();
-
-      await page.goto('/?m[]=invoice&p[]=invoice_admin&invoice_id=' + invoiceId);
-      await page.waitForLoadState('load');
-      const problems = describeDiagnostics(await page.content());
-      expect(
-        problems,
-        `renewal ${period + 1}'s invoice screen printed PHP diagnostics:\n` + problems.join('\n'),
-      ).toEqual([]);
-
-      // The line's description carries the period it covers, which runs from the date it
-      // is billed for up to the day before the next one is due.
-      const lastDay = new Date(nextDue.getTime());
-      lastDay.setDate(lastDay.getDate() - 1);
-      await expect(
-        page.locator('body'),
-        'the line should name the subscription and the period it covers',
-      ).toContainText(`${subscriptionName} (${printed(billedFor)} to ${printed(lastDay)})`);
-      expect(
-        await amountLabelled(page, /^Sub:?$/),
-        `renewal ${period + 1} should bill 120 before tax`,
-      ).toContain('120');
-      expect(
-        await amountLabelled(page, /^Tax:?$/),
-        `renewal ${period + 1} should add 10% tax`,
-      ).toContain('12.00');
-      expect(
-        await amountLabelled(page, /^Total:?$/),
-        `renewal ${period + 1} should total 132 - 120 plus 10%`,
-      ).toContain('132');
-      expect(
-        await amountLabelled(page, /^Due:?$/),
-        `renewal ${period + 1} should be entirely outstanding`,
-      ).toContain('132');
-
-      // --- before it is paid the subscription counts it as owed
-      const owing = await subscriberTotals(page, subscriptionId, customerName);
-      expect(owing, 'the customer should be listed under the subscription').toBeTruthy();
-      expect(
-        owing!.unpaid,
-        'an unpaid renewal should show on the subscription as unpaid',
-      ).toContain(`$${(120 * 1).toFixed(2)}`);
-
-      // --- pay it in full
-      await page.request.post('/?m[]=invoice', {
-        form: {
-          _process: 'save_invoice',
-          invoice_id: String(invoiceId),
-          _redirect: '',
-          add_payment: 'go',
-          'invoice_invoice_payment[new][date_paid]': iso(billedFor),
-          'invoice_invoice_payment[new][method]': 'Bank Transfer',
-          'invoice_invoice_payment[new][amount]': '132',
-          'invoice_invoice_payment[new][currency_id]': '1',
+          [`subscription_start_date[${subscriptionId}]`]: iso(start),
           form_auth_key: key,
         },
         maxRedirects: 0,
         failOnStatusCode: false,
       });
 
-      await page.goto('/?m[]=invoice&p[]=invoice_admin&invoice_id=' + invoiceId);
-      await page.waitForLoadState('load');
-      expect(
-        await amountLabelled(page, /^Due:?$/),
-        `renewal ${period + 1} should be settled`,
-      ).toContain('0.00');
-
-      // --- and the subscription knows. This reads subscription_history.paid_date, which
-      // the invoice_paid hook writes from the invoice row. Served a cached invoice there
-      // the hook records 0000-00-00 and every cent of this shows under Total Unpaid.
-      const settled = await subscriberTotals(page, subscriptionId, customerName);
-      const received = (120 * (period + 1)).toFixed(2);
-      expect(
-        settled!.invoices,
-        `the subscription should have ${period + 1} invoice(s) against this customer`,
-      ).toBe(String(period + 1));
-      expect(
-        settled!.received,
-        `after ${period + 1} paid renewal(s) the subscription should have received $${received}`,
-      ).toContain(`$${received}`);
-      expect(
-        settled!.unpaid,
-        'and nothing should still be showing as unpaid',
-      ).not.toMatch(/\d/);
-
-      // --- the next due date moved on by exactly one month
       await page.goto('/?m[]=customer&p[]=customer_admin_open&customer_id=' + customerId);
       await page.waitForLoadState('load');
+      const panel = describeDiagnostics(await page.content());
+      expect(
+        panel,
+        'the customer screen printed PHP diagnostics with a subscription on it:\n' + panel.join('\n'),
+      ).toEqual([]);
       await expect(
         page.locator('body'),
-        `after renewal ${period + 1} the next due date should be ${printed(nextDue)}`,
-      ).toContainText('Next due date is: ' + printed(nextDue));
+        'a subscription starting today should be due today',
+      ).toContainText('Next due date is: ' + printed(start));
+
+      // --- two renewals in a row. The second is where a read-modify-write would show.
+      for (const period of [0, 1]) {
+        const billedFor = addMonths(start, period);
+        const nextDue = addMonths(start, period + 1);
+
+        const generated = await page.request.post('/?m[]=customer', {
+          form: {
+            _process: 'save_customer',
+            customer_id: customerId,
+            customer_name: customerName,
+            member_subscriptions_save: '1',
+            [`subscription[${subscriptionId}]`]: '1',
+            subscription_add_payment: subscriptionId,
+            subscription_add_payment_date: iso(billedFor),
+            subscription_add_payment_amount: '120',
+            form_auth_key: key,
+          },
+          maxRedirects: 0,
+          failOnStatusCode: false,
+        });
+        const location = generated.headers()['location'] || '';
+        const invoiceId = new URL(location, 'http://localhost').searchParams.get('invoice_id');
+        expect(invoiceId, `renewal ${period + 1} should land on the invoice it created`).toBeTruthy();
+
+        await page.goto('/?m[]=invoice&p[]=invoice_admin&invoice_id=' + invoiceId);
+        await page.waitForLoadState('load');
+        const problems = describeDiagnostics(await page.content());
+        expect(
+          problems,
+          `renewal ${period + 1}'s invoice screen printed PHP diagnostics:\n` + problems.join('\n'),
+        ).toEqual([]);
+
+        // The line's description carries the period it covers, which runs from the date it
+        // is billed for up to the day before the next one is due.
+        const lastDay = new Date(nextDue.getTime());
+        lastDay.setDate(lastDay.getDate() - 1);
+        await expect(
+          page.locator('body'),
+          'the line should name the subscription and the period it covers',
+        ).toContainText(`${subscriptionName} (${printed(billedFor)} to ${printed(lastDay)})`);
+        expect(
+          await amountLabelled(page, /^Sub:?$/),
+          `renewal ${period + 1} should bill 120 before tax`,
+        ).toContain('120');
+        expect(
+          await amountLabelled(page, /^Tax:?$/),
+          `renewal ${period + 1} should add 10% tax`,
+        ).toContain('12.00');
+        expect(
+          await amountLabelled(page, /^Total:?$/),
+          `renewal ${period + 1} should total 132 - 120 plus 10%`,
+        ).toContain('132');
+        expect(
+          await amountLabelled(page, /^Due:?$/),
+          `renewal ${period + 1} should be entirely outstanding`,
+        ).toContain('132');
+
+        // --- before it is paid the subscription counts it as owed
+        const owing = await subscriberTotals(page, subscriptionId, customerName);
+        expect(owing, 'the customer should be listed under the subscription').toBeTruthy();
+        expect(
+          owing!.unpaid,
+          'an unpaid renewal should show on the subscription as unpaid',
+        ).toContain(`$${(120 * 1).toFixed(2)}`);
+
+        // --- pay it in full
+        await page.request.post('/?m[]=invoice', {
+          form: {
+            _process: 'save_invoice',
+            invoice_id: String(invoiceId),
+            _redirect: '',
+            add_payment: 'go',
+            'invoice_invoice_payment[new][date_paid]': iso(billedFor),
+            'invoice_invoice_payment[new][method]': 'Bank Transfer',
+            'invoice_invoice_payment[new][amount]': '132',
+            'invoice_invoice_payment[new][currency_id]': '1',
+            form_auth_key: key,
+          },
+          maxRedirects: 0,
+          failOnStatusCode: false,
+        });
+
+        await page.goto('/?m[]=invoice&p[]=invoice_admin&invoice_id=' + invoiceId);
+        await page.waitForLoadState('load');
+        expect(
+          await amountLabelled(page, /^Due:?$/),
+          `renewal ${period + 1} should be settled`,
+        ).toContain('0.00');
+
+        // --- and the subscription knows. This reads subscription_history.paid_date, which
+        // the invoice_paid hook writes from the invoice row. Served a cached invoice there
+        // the hook records 0000-00-00 and every cent of this shows under Total Unpaid.
+        const settled = await subscriberTotals(page, subscriptionId, customerName);
+        const received = (120 * (period + 1)).toFixed(2);
+        expect(
+          settled!.invoices,
+          `the subscription should have ${period + 1} invoice(s) against this customer`,
+        ).toBe(String(period + 1));
+        expect(
+          settled!.received,
+          `after ${period + 1} paid renewal(s) the subscription should have received $${received}`,
+        ).toContain(`$${received}`);
+        expect(
+          settled!.unpaid,
+          'and nothing should still be showing as unpaid',
+        ).not.toMatch(/\d/);
+
+        // --- the next due date moved on by exactly one month
+        await page.goto('/?m[]=customer&p[]=customer_admin_open&customer_id=' + customerId);
+        await page.waitForLoadState('load');
+        await expect(
+          page.locator('body'),
+          `after renewal ${period + 1} the next due date should be ${printed(nextDue)}`,
+        ).toContainText('Next due date is: ' + printed(nextDue));
+      }
+    } finally {
+      // The customer first: delete_customer() takes its invoices, payments and notes with
+      // it, and the subscription_history rows hang off those. Then the subscription itself.
+      if (customerId) {
+        await deleteRecord(
+          page, '/?m[]=customer', 'save_customer', 'customer_id', customerId,
+          { extra: { delete_others: '1' } },
+        );
+      }
+      if (subscriptionId) {
+        await deleteRecord(page, '/?m[]=subscription', 'save_subscription', 'subscription_id', subscriptionId);
+      }
     }
   });
 });

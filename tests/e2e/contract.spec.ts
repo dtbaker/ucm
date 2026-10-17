@@ -118,6 +118,10 @@ test.describe('Contracts', () => {
 
     await expect(page.locator('body'), 'and the contract should keep a note of who signed it')
       .toContainText('Contract approved by Jane Signatory');
+
+    // The other two tests here end by deleting what they made; this one did not, so it
+    // added a contract and its approval note to the database on every run.
+    await deleteContract(page, contractId, run);
   });
 
   test('will not show or sign a contract on a wrong hash', async ({ page, browser }) => {

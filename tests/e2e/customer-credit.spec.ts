@@ -1,5 +1,5 @@
 import { test, expect, Page } from '@playwright/test';
-import { createRecord, formAuthKey, login } from './seed';
+import { createRecord, deleteRecord, formAuthKey, login } from './seed';
 
 /**
  * Customer credit: overpay an invoice, put the difference on the customer's account,
@@ -85,68 +85,81 @@ async function amountLabelled(page: Page, label: RegExp): Promise<string | null>
 
 test.describe('Customer credit', () => {
   test('two overpayments both land on the account, and the next invoice spends them', async ({ page }) => {
-    test.setTimeout(180000);
-    await login(page);
+    let customerId: string | null = null;
+    try {
+      test.setTimeout(180000);
+      await login(page);
 
-    const customerId = await createRecord(page, '/?m[]=customer', {
-      _process: 'save_customer',
-      customer_id: 'new',
-      customer_name: `Credit Customer ${Date.now().toString(36)}`,
-      name: 'Credit',
-      email: `credit-${Date.now()}@example.com`,
-    }, 'customer_id');
+      customerId = await createRecord(page, '/?m[]=customer', {
+        _process: 'save_customer',
+        customer_id: 'new',
+        customer_name: `Credit Customer ${Date.now().toString(36)}`,
+        name: 'Credit',
+        email: `credit-${Date.now()}@example.com`,
+      }, 'customer_id');
 
-    expect(
-      Number(await creditOnScreen(page, customerId)),
-      'a new customer should start with no credit',
-    ).toBe(0);
+      expect(
+        Number(await creditOnScreen(page, customerId)),
+        'a new customer should start with no credit',
+      ).toBe(0);
 
-    // --- a 10 invoice paid 60, with the 50 assigned to the account
-    const first = await overpaidInvoice(page, customerId, '10', '60');
-    await post(page, 'invoice', { _process: 'assign_credit_to_customer', invoice_id: first });
-    expect(
-      Number(await creditOnScreen(page, customerId)),
-      'the overpayment should be on the account',
-    ).toBe(50);
+      // --- a 10 invoice paid 60, with the 50 assigned to the account
+      const first = await overpaidInvoice(page, customerId, '10', '60');
+      await post(page, 'invoice', { _process: 'assign_credit_to_customer', invoice_id: first });
+      expect(
+        Number(await creditOnScreen(page, customerId)),
+        'the overpayment should be on the account',
+      ).toBe(50);
 
-    // --- and another, paid 40. This is the one that used to discard the first.
-    const second = await overpaidInvoice(page, customerId, '10', '40');
-    await post(page, 'invoice', { _process: 'assign_credit_to_customer', invoice_id: second });
-    expect(
-      Number(await creditOnScreen(page, customerId)),
-      'a second overpayment should add to the account, not replace what was there',
-    ).toBe(80);
+      // --- and another, paid 40. This is the one that used to discard the first.
+      const second = await overpaidInvoice(page, customerId, '10', '40');
+      await post(page, 'invoice', { _process: 'assign_credit_to_customer', invoice_id: second });
+      expect(
+        Number(await creditOnScreen(page, customerId)),
+        'a second overpayment should add to the account, not replace what was there',
+      ).toBe(80);
 
-    // --- spend it
-    const third = await createRecord(page, '/?m[]=invoice', {
-      _process: 'save_invoice',
-      invoice_id: 'new',
-      name: 'Credit spend test',
-      customer_id: customerId,
-      _redirect: '',
-    }, 'invoice_id');
-    await post(page, 'invoice', {
-      _process: 'save_invoice',
-      invoice_id: third,
-      'invoice_invoice_item[new][description]': 'Big one',
-      'invoice_invoice_item[new][amount]': '100',
-      'invoice_invoice_item[new][manual_task_type]': '-1',
-    });
-    await post(page, 'invoice', {
-      _process: 'save_invoice',
-      invoice_id: third,
-      apply_credit_from_customer: 'do',
-    });
+      // --- spend it
+      const third = await createRecord(page, '/?m[]=invoice', {
+        _process: 'save_invoice',
+        invoice_id: 'new',
+        name: 'Credit spend test',
+        customer_id: customerId,
+        _redirect: '',
+      }, 'invoice_id');
+      await post(page, 'invoice', {
+        _process: 'save_invoice',
+        invoice_id: third,
+        'invoice_invoice_item[new][description]': 'Big one',
+        'invoice_invoice_item[new][amount]': '100',
+        'invoice_invoice_item[new][manual_task_type]': '-1',
+      });
+      await post(page, 'invoice', {
+        _process: 'save_invoice',
+        invoice_id: third,
+        apply_credit_from_customer: 'do',
+      });
 
-    await page.goto('/?m[]=invoice&p[]=invoice_admin&invoice_id=' + third);
-    await page.waitForLoadState('load');
-    expect(
-      await amountLabelled(page, /^Due:?$/),
-      '80 of credit against a 100 invoice should leave 20 due',
-    ).toContain('20');
-    expect(
-      Number(await creditOnScreen(page, customerId)),
-      'and the account should be empty again',
-    ).toBe(0);
+      await page.goto('/?m[]=invoice&p[]=invoice_admin&invoice_id=' + third);
+      await page.waitForLoadState('load');
+      expect(
+        await amountLabelled(page, /^Due:?$/),
+        '80 of credit against a 100 invoice should leave 20 due',
+      ).toContain('20');
+      expect(
+        Number(await creditOnScreen(page, customerId)),
+        'and the account should be empty again',
+      ).toBe(0);
+    } finally {
+      // The customer this test made, and with it the three invoices, their payments and
+      // their notes: delete_customer() takes the linked records with it, which is why this
+      // deletes the customer rather than chasing each invoice.
+      if (customerId) {
+        await deleteRecord(
+          page, '/?m[]=customer', 'save_customer', 'customer_id', customerId,
+          { extra: { delete_others: '1' } },
+        );
+      }
+    }
   });
 });

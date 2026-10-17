@@ -1,5 +1,5 @@
 import { test, expect, Page } from '@playwright/test';
-import { aCustomer, createRecord, formAuthKey, login } from './seed';
+import { aCustomer, createRecord, deleteRecord, formAuthKey, login } from './seed';
 
 /**
  * The arithmetic an invoicing product exists to do.
@@ -51,76 +51,89 @@ async function openInvoice(page: Page, invoiceId: string) {
   await page.waitForLoadState('load');
 }
 
+/** Removes the invoices this spec raised, newest first. */
+async function removeInvoices(page: Page, made: string[]) {
+  for (const id of [...made].reverse()) {
+    await deleteRecord(page, '/?m[]=invoice', 'save_invoice', 'invoice_id', id);
+  }
+}
+
 test.describe('Invoice arithmetic', () => {
   test('adds its lines up, and takes a payment off the balance', async ({ page }) => {
-    test.setTimeout(120000);
-    await login(page);
+    const made: string[] = [];
+    try {
+      test.setTimeout(120000);
+      await login(page);
 
-    const customerId = await aCustomer(page);
-    const invoiceId = await createRecord(page, '/?m[]=invoice', {
-      _process: 'save_invoice',
-      invoice_id: 'new',
-      name: 'Invoice arithmetic test',
-      customer_id: customerId,
-      _redirect: '',
-    }, 'invoice_id');
+      const customerId = await aCustomer(page);
+      const invoiceId = await createRecord(page, '/?m[]=invoice', {
+        _process: 'save_invoice',
+        invoice_id: 'new',
+        name: 'Invoice arithmetic test',
+        customer_id: customerId,
+        _redirect: '',
+      }, 'invoice_id');
+      made.push(invoiceId);
 
-    // Two lines, added one at a time the way the form posts them.
-    for (const [description, amount] of [['Widget', '100'], ['Gadget', '50']]) {
+      // Two lines, added one at a time the way the form posts them.
+      for (const [description, amount] of [['Widget', '100'], ['Gadget', '50']]) {
+        await saveInvoice(page, {
+          invoice_id: invoiceId,
+          'invoice_invoice_item[new][description]': description,
+          'invoice_invoice_item[new][amount]': amount,
+          'invoice_invoice_item[new][manual_task_type]': '-1',
+        });
+      }
+
+      await openInvoice(page, invoiceId);
+      await expect(page.locator('body')).toContainText('Widget');
+      await expect(page.locator('body')).toContainText('Gadget');
+      expect(
+        await amountLabelled(page, /^Total:?$/),
+        '100 and 50 should total 150',
+      ).toContain('150');
+
+      // Pay part of it.
       await saveInvoice(page, {
         invoice_id: invoiceId,
-        'invoice_invoice_item[new][description]': description,
-        'invoice_invoice_item[new][amount]': amount,
-        'invoice_invoice_item[new][manual_task_type]': '-1',
+        // save_invoice() only takes a new payment when this says so.
+        add_payment: 'go',
+        'invoice_invoice_payment[new][amount]': '50',
+        'invoice_invoice_payment[new][method]': 'Cheque',
+        'invoice_invoice_payment[new][date_paid]': new Date().toISOString().slice(0, 10),
       });
+
+      await openInvoice(page, invoiceId);
+      expect(
+        await amountLabelled(page, /^Paid:?$/),
+        'the payment should be recorded against the invoice',
+      ).toContain('50');
+      expect(
+        await amountLabelled(page, /^Due:?$/),
+        'a 50 payment against a 150 invoice should leave 100 due',
+      ).toContain('100');
+
+      // And the rest.
+      await saveInvoice(page, {
+        invoice_id: invoiceId,
+        add_payment: 'go',
+        'invoice_invoice_payment[new][amount]': '100',
+        'invoice_invoice_payment[new][method]': 'Cheque',
+        'invoice_invoice_payment[new][date_paid]': new Date().toISOString().slice(0, 10),
+      });
+
+      await openInvoice(page, invoiceId);
+      expect(
+        await amountLabelled(page, /^Paid:?$/),
+        'both payments should be recorded',
+      ).toContain('150');
+      const due = await amountLabelled(page, /^Due:?$/);
+      expect(
+        due === null || /^0(\.0+)?$/.test(due.replace(/[^0-9.]/g, '')),
+        `a fully paid invoice should have nothing due, got ${due}`,
+      ).toBeTruthy();
+    } finally {
+      await removeInvoices(page, made);
     }
-
-    await openInvoice(page, invoiceId);
-    await expect(page.locator('body')).toContainText('Widget');
-    await expect(page.locator('body')).toContainText('Gadget');
-    expect(
-      await amountLabelled(page, /^Total:?$/),
-      '100 and 50 should total 150',
-    ).toContain('150');
-
-    // Pay part of it.
-    await saveInvoice(page, {
-      invoice_id: invoiceId,
-      // save_invoice() only takes a new payment when this says so.
-      add_payment: 'go',
-      'invoice_invoice_payment[new][amount]': '50',
-      'invoice_invoice_payment[new][method]': 'Cheque',
-      'invoice_invoice_payment[new][date_paid]': new Date().toISOString().slice(0, 10),
-    });
-
-    await openInvoice(page, invoiceId);
-    expect(
-      await amountLabelled(page, /^Paid:?$/),
-      'the payment should be recorded against the invoice',
-    ).toContain('50');
-    expect(
-      await amountLabelled(page, /^Due:?$/),
-      'a 50 payment against a 150 invoice should leave 100 due',
-    ).toContain('100');
-
-    // And the rest.
-    await saveInvoice(page, {
-      invoice_id: invoiceId,
-      add_payment: 'go',
-      'invoice_invoice_payment[new][amount]': '100',
-      'invoice_invoice_payment[new][method]': 'Cheque',
-      'invoice_invoice_payment[new][date_paid]': new Date().toISOString().slice(0, 10),
-    });
-
-    await openInvoice(page, invoiceId);
-    expect(
-      await amountLabelled(page, /^Paid:?$/),
-      'both payments should be recorded',
-    ).toContain('150');
-    const due = await amountLabelled(page, /^Due:?$/);
-    expect(
-      due === null || /^0(\.0+)?$/.test(due.replace(/[^0-9.]/g, '')),
-      `a fully paid invoice should have nothing due, got ${due}`,
-    ).toBeTruthy();
   });
 });

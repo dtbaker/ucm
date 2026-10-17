@@ -59,12 +59,22 @@ test.describe( 'Security role permissions', () => {
     }, GRID );
     expect( offered, 'the role form offered no permission checkboxes' ).toBeGreaterThan( 0 );
 
-    // The table has outgrown max_input_vars long since. A form that still posts one field
-    // per box cannot save this, which is the failure these tests exist for.
-    expect(
-      offered,
-      'this install is too small to show the bug - the grid is under max_input_vars',
-    ).toBeGreaterThan( 1000 );
+    // A grid smaller than max_input_vars cannot show the bug: a form of one field per
+    // box still fits, so saving it proves nothing either way. That is a fact about the
+    // install, not a fault in it, so this stops rather than fails.
+    //
+    // It used to be an assertion, back when the permission table sat at 1300 rows. Most
+    // of those were the suite's own: has_feature_access() registers a row per data type,
+    // the browser suites made a data type on nearly every run and never removed it, and
+    // delete_data_type() did not take the permission with it even when they did. With
+    // both fixed the table is ~600 rows and the grid is 981 controls - just under.
+    //
+    // The second test below is the one that holds the regression on any install: it
+    // builds its own over-long post rather than relying on the table being big enough.
+    test.skip(
+      offered <= 1000,
+      `this install is too small to show the bug - ${ offered } controls, under max_input_vars`,
+    );
 
     // By name, not by class: the metis theme renders its own action bar and does not
     // carry generate_form_actions()' save_button class through. It also prints the bar
