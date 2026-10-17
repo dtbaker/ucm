@@ -1,8 +1,7 @@
 <?php
 
-
-class module_log extends module_base {
-
+class module_log extends module_base
+{
 	public static $log = array();
 	public static $show_log = false;
 	public static $start_time = 0;
@@ -19,14 +18,17 @@ class module_log extends module_base {
 		return __CLASS__;
 	}
 
-	public function init() {
-		$this->module_name     = "log";
-		$this->module_position = 1;
+	public function __construct() {
+		$this->module_name     = 'log';
+		$this->module_position = 280;
 		$this->version         = 2.1;
+	}
+
+	public function init() {
 		// 2.1 - 2018-04-01 - log integration
 	}
 
-	public static function log( $owner_table, $owner_id, $sub_section, $user_id = false, $comment, $data ) {
+	public static function log( $owner_table, $owner_id, $sub_section, $comment, $data, $user_id = false ) {
 
 		if ( ! module_config::c( 'log_history_for_' . $owner_table, 1 ) ) {
 			return;
@@ -82,10 +84,10 @@ class module_log extends module_base {
 		$fields = get_fields( 'log' );
 		if ( ! isset( $fields['sub_section'] ) ) {
 			$sql .= 'ALTER TABLE  `' . _DB_PREFIX . 'log` ADD  `sub_section` VARCHAR(255) NOT NULL DEFAULT \'\' AFTER `user_id`;';
-		}else{
+		} else {
 			self::add_table_index( 'log', 'sub_section' );
 		}
-		if(!self::db_table_exists('log_field')){
+		if (!self::db_table_exists('log_field')) {
 			$sql .= 'CREATE TABLE `' . _DB_PREFIX . 'log_field` (
 		`log_field_id` int(11) NOT NULL auto_increment,
 		`owner_table` VARCHAR(255) NOT NULL DEFAULT \'\',
@@ -150,6 +152,5 @@ class module_log extends module_base {
 		return ob_get_clean();
 
 	}
-
 }
 

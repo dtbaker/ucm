@@ -1,0 +1,35 @@
+includes:
+    - phpstan-baseline.neon
+
+parameters:
+    level: 2
+    paths:
+        - includes/
+        - ajax.php
+        - cron.php
+        - ext.php
+        - index.php
+        - init.php
+    # These are defined as literals so PHPStan can see they exist, but their real value
+    # comes from the environment, or from whether the installer has run yet - the demo
+    # deployment sets UCM_DEMO_MODE. Without
+    # this, PHPStan takes the literal fallback as the truth, decides every demo-only
+    # branch is dead code, and stops checking the paths the demo is the only user of.
+    dynamicConstantNames:
+        - _DEMO_MODE
+        - _BLOCK_EMAILS
+        - _UCM_CONFIGURED
+
+    # Third-party code bundled into the repo. Same list as phpcs.xml.dist.
+    excludePaths:
+        - includes/plugin_pdf/dompdf/*
+        - includes/plugin_encrypt/phpseclib/*
+        - includes/plugin_email/class.*
+        - includes/plugin_security/htmlpurifier/*
+        - includes/plugin_captcha/inc/*
+        - includes/plugin_paymethod_stripe/stripe-php/*
+        - includes/plugin_paymethod_authorize/anet_php_1.1.8/*
+        - includes/plugin_paymethod_coinbase/lib/*
+        - includes/plugin_paymethod_multisafepay/MultiSafepay.combined.php
+        - includes/plugin_ticket/cron/mime_parser.php
+        - includes/plugin_file/upload/plupload/*

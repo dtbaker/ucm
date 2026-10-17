@@ -33,7 +33,7 @@ if ( isset( $_REQUEST['language_id'] ) ) {
 
 	?>
 
-	<form action="" method="post">
+	<?php module_form::print_form_open_tag( array( 'action' => '' ) ); ?>
 
 		<table width="100%" border="0" cellspacing="0" cellpadding="2" class="tableclass tableclass_rows">
 			<thead>
@@ -52,7 +52,7 @@ if ( isset( $_REQUEST['language_id'] ) ) {
 				}
 				$languages_attributes[ $language_code ] = $language['language_name'];
 				?>
-				<tr class="<?php echo ( $c ++ % 2 ) ? "odd" : "even"; ?>">
+				<tr class="<?php echo ( $c++ % 2 ) ? "odd" : "even"; ?>">
 					<td class="row_action">
 						<a
 							href="<?php echo htmlspecialchars( $_SERVER['REQUEST_URI'] ) . ( strpos( $_SERVER['REQUEST_URI'], '?' ) === false ? '?' : '&' ); ?>language_id=<?php echo $language['language_id']; ?>"><?php echo htmlspecialchars( $language['language_code'] ); ?></a>
@@ -67,17 +67,21 @@ if ( isset( $_REQUEST['language_id'] ) ) {
 			<?php } ?>
 			</tbody>
 		</table>
-	</form>
-	<form action="" method="post" id="language_reset">
-		<?php module_form::print_form_auth(); ?>
+	<?php module_form::print_form_close_tag(); ?>
+	<?php module_form::print_form_open_tag( array(
+		'action' => '',
+		'id'     => 'language_reset',
+	) ); ?>
 		<input type="hidden" name="_process" value="language_reset">
 		<input type="hidden" name="really" value="yes">
-	</form>
-	<form action="" method="post" id="language_duplicate">
-		<?php module_form::print_form_auth(); ?>
+	<?php module_form::print_form_close_tag(); ?>
+	<?php module_form::print_form_open_tag( array(
+		'action' => '',
+		'id'     => 'language_duplicate',
+	) ); ?>
 		<input type="hidden" name="_process" value="language_duplicate_remove">
 		<input type="hidden" name="really" value="yep">
-	</form>
+	<?php module_form::print_form_close_tag(); ?>
 
 	<?php
 

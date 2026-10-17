@@ -3,9 +3,15 @@
 define( '_CALENDAR_ACCESS_ALL', 'All calendar entries in system' ); // do not change string
 define( '_CALENDAR_ACCESS_ASSIGNED', 'Only from Customers or assigned items' ); // do not change string
 
-class module_calendar extends module_base {
+class module_calendar extends module_base
+{
+	public $links;
 
-	var $links;
+	public function __construct() {
+		$this->module_name     = 'calendar';
+		$this->module_position = 100;
+		$this->version         = 2.238;
+	}
 
 	public static function can_i( $actions, $name = false, $category = false, $module = false ) {
 		if ( ! $module ) {
@@ -20,11 +26,7 @@ class module_calendar extends module_base {
 	}
 
 	function init() {
-		$this->links           = array();
-		$this->module_name     = "calendar";
-		$this->module_position = 4.1;
-
-		$this->version = 2.238;
+		$this->links = array();
 		// 2.238 - 2017-05-02 - calendar staff name
 		// 2.237 - 2016-10-06 - fix for multi-day events
 		// 2.236 - 2016-07-10 - big update to mysqli
@@ -106,6 +108,11 @@ class module_calendar extends module_base {
 
 
 	public function process() {
+		// Every form that reaches here is posted from a UCM page, so it carries the
+		// form auth key. Refuse anything that does not - see module_form::check_secure_key().
+		if ( ! module_form::check_secure_key() ) {
+			module_form::reject_invalid_form_auth();
+		}
 
 		if ( "ajax_calendar" == $_REQUEST['_process'] && module_calendar::can_i( 'view', 'Calendar' ) ) {
 			// ajax functions from wdCalendar. copied from the datafeed.php sample files.
@@ -220,6 +227,35 @@ class module_calendar extends module_base {
 		return md5( 'secret hash for staff member ' . $staff_id . ' with secret ' . _UCM_SECRET );
 	}
 
+	/**
+	 * Escape a value for a calendar feed TEXT field.
+	 *
+	 * The feeds are plain text, not HTML, so htmlspecialchars() is the wrong tool - it
+	 * would leave the characters that actually matter alone and mangle apostrophes in a
+	 * customer's name. RFC 5545 reserves four: a backslash, a semicolon, a comma and a
+	 * line break.
+	 *
+	 * Without this, a comma in a subject - or in a company name, which is how these
+	 * subjects are built - ends the field early and the rest of it reads as another
+	 * property. A line break is worse: it can introduce a property of the attacker's
+	 * choosing, or a whole second event, into a feed the customer's calendar trusts.
+	 *
+	 * @param string $value
+	 *
+	 * @return string
+	 */
+	public static function ical_text( $value ) {
+		if ( ! is_string( $value ) ) {
+			$value = (string) $value;
+		}
+		// Backslash first, or the escapes added below get escaped again.
+		$value = str_replace( '\\', '\\\\', $value );
+		$value = str_replace( array( ';', ',' ), array( '\\;', '\\,' ), $value );
+
+		// Any of the three line endings becomes the literal \n the format asks for.
+		return str_replace( array( "\r\n", "\r", "\n" ), '\\n', $value );
+	}
+
 	public static function link_calendar( $calendar_type, $options = array(), $h = false ) {
 		if ( $h ) {
 			return md5( 's3cret7hash for calendar ' . _UCM_SECRET . ' ' . $calendar_type . serialize( $options ) );
@@ -240,11 +276,11 @@ class module_calendar extends module_base {
 		switch ( $hook ) {
 			case 'ical':
 				$calendar_type = ( isset( $_REQUEST['i'] ) ) ? $_REQUEST['i'] : false;
-				$options       = ( isset( $_REQUEST['o'] ) ) ? (array) unserialize( base64_decode( $_REQUEST['o'] ) ) : array();
-				$hash          = ( isset( $_REQUEST['hash'] ) ) ? trim( $_REQUEST['hash'] ) : false;
+				$options       = ( isset( $_REQUEST['o'] ) ) ? ucm_unserialize_options( $_REQUEST['o'] ) : array();
+				$hash          = ucm_request_string( 'hash' );
 				if ( $calendar_type && $hash ) {
 					$correct_hash = $this->link_calendar( $calendar_type, $options, true );
-					if ( $correct_hash == $hash ) {
+					if ( hash_equals( $correct_hash, $hash ) ) {
 
 						if ( ob_get_level() ) {
 							ob_end_clean();
@@ -345,22 +381,49 @@ class module_calendar extends module_base {
 
 		return ob_get_clean();
 	}
-
-
 }
 
 if ( ! function_exists( 'js2PhpTime' ) ) {
+	/**
+	 * Turn the date the calendar sends into a timestamp.
+	 *
+	 * This used to return an empty string for anything it did not recognise, and the
+	 * callers hand the result straight to date(), which on PHP 8 is a TypeError rather
+	 * than a quiet zero - so one unexpected date killed the whole feed and the calendar
+	 * came up blank with a fatal error in the response body.
+	 *
+	 * It also only understood m/d/Y. A plain Y-m-d is the obvious thing for anything other
+	 * than the bundled script to send, so it is accepted too, and anything still
+	 * unrecognised falls back to today rather than to a value date() cannot use.
+	 *
+	 * @param string $jsdate
+	 *
+	 * @return int
+	 */
 	function js2PhpTime( $jsdate ) {
-		$ret = '';
-		if ( preg_match( '@(\d+)/(\d+)/(\d+)\s+(\d+):(\d+)@', $jsdate, $matches ) == 1 ) {
-			$ret = mktime( $matches[4], $matches[5], 0, $matches[1], $matches[2], $matches[3] );
-			//echo $matches[4] ."-". $matches[5] ."-". 0  ."-". $matches[1] ."-". $matches[2] ."-". $matches[3];
-		} else if ( preg_match( '@(\d+)/(\d+)/(\d+)@', $jsdate, $matches ) == 1 ) {
-			$ret = mktime( 0, 0, 0, $matches[1], $matches[2], $matches[3] );
-			//echo 0 ."-". 0 ."-". 0 ."-". $matches[1] ."-". $matches[2] ."-". $matches[3];
+		$jsdate = is_string( $jsdate ) ? $jsdate : '';
+
+		// m/d/Y with a time.
+		if ( preg_match( '@^(\d+)/(\d+)/(\d+)\s+(\d+):(\d+)@', $jsdate, $matches ) == 1 ) {
+			return (int) mktime( (int) $matches[4], (int) $matches[5], 0, (int) $matches[1], (int) $matches[2], (int) $matches[3] );
+		}
+		// Y-m-d, with or without a time.
+		if ( preg_match( '@^(\d{4})-(\d{1,2})-(\d{1,2})(?:[\sT](\d{1,2}):(\d{2}))?@', $jsdate, $matches ) == 1 ) {
+			return (int) mktime(
+				isset( $matches[4] ) ? (int) $matches[4] : 0,
+				isset( $matches[5] ) ? (int) $matches[5] : 0,
+				0,
+				(int) $matches[2],
+				(int) $matches[3],
+				(int) $matches[1]
+			);
+		}
+		// m/d/Y.
+		if ( preg_match( '@^(\d+)/(\d+)/(\d+)@', $jsdate, $matches ) == 1 ) {
+			return (int) mktime( 0, 0, 0, (int) $matches[1], (int) $matches[2], (int) $matches[3] );
 		}
 
-		return $ret;
+		return time();
 	}
 }
 
@@ -447,7 +510,6 @@ function listCalendarByRange( $sd, $ed ) {
 					if ( isset( $result['staff_ids'] ) && count( $result['staff_ids'] ) ) {
 						switch ( $calendar_data_access ) {
 							case _CALENDAR_ACCESS_ALL:
-
 								break;
 							case _CALENDAR_ACCESS_ASSIGNED:
 							default:
@@ -505,7 +567,6 @@ function listCalendarByRange( $sd, $ed ) {
 				} else {
 					switch ( $calendar_data_access ) {
 						case _CALENDAR_ACCESS_ALL:
-
 							break;
 						case _CALENDAR_ACCESS_ASSIGNED:
 						default:
@@ -524,7 +585,6 @@ function listCalendarByRange( $sd, $ed ) {
 			if ( count( $calendar_event['staff_ids'] ) ) {
 				switch ( $calendar_data_access ) {
 					case _CALENDAR_ACCESS_ALL:
-
 						break;
 					case _CALENDAR_ACCESS_ASSIGNED:
 					default:

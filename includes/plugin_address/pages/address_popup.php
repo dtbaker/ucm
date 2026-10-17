@@ -9,13 +9,13 @@ if ( $address_id ) {
 	//module_address::print_address_form($address_id);
 	// do a form as well.
 	?>
-	<form action="<?php echo $module->link(); ?>" method="post">
+	<?php module_form::print_form_open_tag( array( 'action' => $module->link() ) ); ?>
 		<input type="hidden" name="_process" value="save_from_popup">
 		<input type="hidden" name="_redirect" class="redirect" value="">
 		<?php
 		handle_hook( "address_block", $module, $address_data['address_type'], $address_data['owner_table'], false, $address_data['owner_id'] );
 		?>
-	</form>
+	<?php module_form::print_form_close_tag(); ?>
 	<?php
 }
 // exit so ajax load doesn't do everything

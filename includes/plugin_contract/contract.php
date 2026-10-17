@@ -1,6 +1,5 @@
 <?php
 
-
 define( '_CONTRACT_ACCESS_ALL', 'All contracts in system' );
 define( '_CONTRACT_ACCESS_CUSTOMER', 'Contracts from customers I have access to' );
 
@@ -8,12 +7,16 @@ define( '_CUSTOM_DATA_HOOK_LOCATION_CONTRACT_FOOTER', 10 );
 define( '_CUSTOM_DATA_HOOK_LOCATION_CONTRACT_SIDEBAR', 11 );
 
 
-class module_contract extends module_base {
-
+class module_contract extends module_base
+{
 	public $links;
 	public $contract_types;
 
-	public $version = 2.11;
+	public function __construct() {
+		$this->module_name     = 'contract';
+		$this->module_position = 120;
+		$this->version         = 2.11;
+	}
 	//2.11 - 2017-07-28 - terminate date
 	//2.1 - 2017-07-23 - initial release
 
@@ -31,10 +34,8 @@ class module_contract extends module_base {
 	}
 
 	public function init() {
-		$this->links           = array();
-		$this->contract_types  = array();
-		$this->module_name     = "contract";
-		$this->module_position = 15.99;
+		$this->links          = array();
+		$this->contract_types = array();
 
 		module_config::register_css( 'contract', 'contract.css' );
 		module_config::register_js( 'contract', 'contract.js' );
@@ -111,7 +112,7 @@ background-color:#f9f9f9;
 <table style="width: 100%;" border="0" cellspacing="0" cellpadding="1" align="center">
 <tbody>
 <tr>
-<td colspan="2" align="left" valign="top"><img title="Logo" src="http://ultimateclientmanager.com/images/logo_ucm.png" alt="Logo" width="202" height="60" /></td>
+<td colspan="2" align="left" valign="top"><!-- Put your own logo here --></td>
 <td colspan="2" align="left" valign="top"><span class="style11">CONTRACT</span></td>
 </tr>
 <tr>
@@ -279,7 +280,6 @@ Thank you,<br><br>
 				// see finance for example of widget usage.
 				break;
 			case "home_alerts":
-
 				$cache_timeout = module_config::c( 'cache_objects', 60 );
 				$cache_key     = 'home_alerts_' . module_security::get_loggedin_id();
 
@@ -650,10 +650,10 @@ Thank you,<br><br>
 				ob_start();
 
 				$contract_id = ( isset( $_REQUEST['i'] ) ) ? (int) $_REQUEST['i'] : false;
-				$hash        = ( isset( $_REQUEST['hash'] ) ) ? trim( $_REQUEST['hash'] ) : false;
+				$hash        = ucm_request_string( 'hash' );
 				if ( $contract_id && $hash ) {
 					$correct_hash = $this->link_public_print( $contract_id, true );
-					if ( $correct_hash == $hash ) {
+					if ( hash_equals( $correct_hash, $hash ) ) {
 						// check contract still exists.
 						$contract_data = $this->get_contract( $contract_id );
 						if ( ! $contract_data || $contract_data['contract_id'] != $contract_id ) {
@@ -696,10 +696,10 @@ Thank you,<br><br>
 				break;
 			case 'public':
 				$contract_id = ( isset( $_REQUEST['i'] ) ) ? (int) $_REQUEST['i'] : false;
-				$hash        = ( isset( $_REQUEST['hash'] ) ) ? trim( $_REQUEST['hash'] ) : false;
+				$hash        = ucm_request_string( 'hash' );
 				if ( $contract_id && $hash ) {
 					$correct_hash = $this->link_public( $contract_id, true );
-					if ( $correct_hash == $hash ) {
+					if ( hash_equals( $correct_hash, $hash ) ) {
 						// all good to print a receipt for this payment.
 						$contract_data = $this->get_contract( $contract_id );
 
@@ -762,6 +762,11 @@ Thank you,<br><br>
 
 
 	public function process() {
+		// Every form that reaches here is posted from a UCM page, so it carries the
+		// form auth key. Refuse anything that does not - see module_form::check_secure_key().
+		if ( ! module_form::check_secure_key() ) {
+			module_form::reject_invalid_form_auth();
+		}
 		$errors = array();
 		if ( isset( $_REQUEST['butt_del'] ) && $_REQUEST['butt_del'] && $_REQUEST['contract_id'] ) {
 			$data = self::get_contract( $_REQUEST['contract_id'] );
@@ -770,7 +775,7 @@ Thank you,<br><br>
 				set_message( "contract deleted successfully" );
 				redirect_browser( $this->link_open( false ) );
 			}
-		} else if ( "save_contract" == $_REQUEST['_process'] ) {
+		} elseif ( "save_contract" == $_REQUEST['_process'] ) {
 
 
 			$contract_id = $this->save_contract( $_REQUEST['contract_id'], $_POST );
@@ -914,7 +919,6 @@ Thank you,<br><br>
 
 		switch ( self::get_contract_access_permissions() ) {
 			case _CONTRACT_ACCESS_ALL:
-
 				break;
 			case _CONTRACT_ACCESS_CUSTOMER:
 				// tie in with customer permissions to only get contracts from customers we can access.
@@ -1000,7 +1004,6 @@ Thank you,<br><br>
 		if ( $contract && isset( $contract['contract_id'] ) && $contract['contract_id'] == $contract_id ) {
 			switch ( self::get_contract_access_permissions() ) {
 				case _CONTRACT_ACCESS_ALL:
-
 					break;
 				case _CONTRACT_ACCESS_CUSTOMER:
 					// tie in with customer permissions to only get contracts from customers we can access.
@@ -1156,7 +1159,7 @@ Thank you,<br><br>
 						set_message( 'Changed this Contract to match the Website customer' );
 					}
 					$data['customer_id'] = $website['customer_id'];
-				} else if ( isset( $data['customer_id'] ) && $data['customer_id'] > 0 ) {
+				} elseif ( isset( $data['customer_id'] ) && $data['customer_id'] > 0 ) {
 					// set the website customer id to this as well.
 					update_insert( 'website_id', $website['website_id'], 'website', array( 'customer_id' => $data['customer_id'] ) );
 				}
@@ -1314,7 +1317,15 @@ Thank you,<br><br>
 		$sql = "DELETE FROM " . _DB_PREFIX . "contract WHERE contract_id = '" . $contract_id . "' LIMIT 1";
 		$res = query( $sql );
 		if ( class_exists( 'module_file', false ) ) {
-			$sql = "UPDATE " . _DB_PREFIX . "file SET contract_id = 0 WHERE contract_id = '" . $contract_id . "'";
+			// There is no `contract_id` column on the file table and there never has been
+			// - a file belongs to a contract through the generic owner_table/owner_id pair,
+			// the way it does for a newsletter. The old query named a column that does not
+			// exist, so every contract delete printed "Unknown column 'contract_id' in
+			// 'where clause'" into the page, which then stopped redirect_browser() sending
+			// its header: the user was left looking at a SQL error instead of the list,
+			// with no "deleted successfully" message, and the files stayed attached.
+			$sql = "UPDATE " . _DB_PREFIX . "file SET owner_id = 0, owner_table = '' ";
+			$sql .= " WHERE owner_table = 'contract' AND owner_id = '" . $contract_id . "'";
 			query( $sql );
 		}
 
@@ -1437,7 +1448,7 @@ Thank you,<br><br>
 		if ( isset( $extra_options['duplicates'] ) && $extra_options['duplicates'] == 'ignore' && $row['customer_id'] > 0 ) {
 			// don't update customer record with new one.
 
-		} else if ( ( isset( $row['customer_name'] ) && strlen( trim( $row['customer_name'] ) ) > 0 ) || $row['customer_id'] > 0 ) {
+		} elseif ( ( isset( $row['customer_name'] ) && strlen( trim( $row['customer_name'] ) ) > 0 ) || $row['customer_id'] > 0 ) {
 			// update customer record with new one.
 			$row['customer_id'] = update_insert( 'customer_id', $row['customer_id'], 'customer', $row );
 
@@ -1503,7 +1514,7 @@ Thank you,<br><br>
 		// first we find any matching existing contracts. skipping duplicates if option is set.
 		foreach ( $data as $rowid => $row ) {
 			if ( self::handle_import_row( $row, false, $add_to_group, $extra_options ) ) {
-				$count ++;
+				$count++;
 			}
 		}
 
@@ -1683,7 +1694,6 @@ Thank you,<br><br>
 
 		return ob_get_clean();
 	}
-
 }
 
 

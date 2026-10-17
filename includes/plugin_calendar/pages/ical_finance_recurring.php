@@ -66,8 +66,8 @@ UID:' . md5( mt_rand( 1, 100 ) ) . '@ultimateclientmanager.com
 		echo 'DTSTAMP:' . date( 'Ymd' ) . 'T090000Z
 DTSTART;VALUE=DATE:' . date( 'Ymd', $time ) . '
 DTEND;VALUE=DATE:' . date( 'Ymd', strtotime( '+1 day', $time ) ) . '
-SUMMARY:' . ( $recurring['type'] == 'i' ? '+' . dollar( $recurring['amount'] ) : '' ) . ( $recurring['type'] == 'e' ? '-' . dollar( $recurring['amount'] ) : '' ) . " " . $recurring['name'] . '
-DESCRIPTION:' . preg_replace( '#[\r\n]+#', "<br>", $recurring['description'] ) . ' <br><a href="' . module_finance::link_open_recurring( $recurring['finance_recurring_id'] ) . '">' . _( 'Open Link' ) . '</a>
+SUMMARY:' . ( $recurring['type'] == 'i' ? '+' . dollar( $recurring['amount'] ) : '' ) . ( $recurring['type'] == 'e' ? '-' . dollar( $recurring['amount'] ) : '' ) . " " . module_calendar::ical_text( $recurring['name'] ) . '
+DESCRIPTION:' . module_calendar::ical_text( $recurring['description'] ) . '\\n' . module_finance::link_open_recurring( $recurring['finance_recurring_id'] ) . '
 END:VEVENT
 ';
 

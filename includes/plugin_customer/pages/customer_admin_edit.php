@@ -66,10 +66,14 @@ if ( class_exists( 'module_security', false ) ) {
 }
 
 
+module_form::print_form_open_tag( array(
+	'id'      => 'customer_form',
+	'process' => 'save_customer',
+	'hidden'  => array(
+		'customer_id' => $customer_id,
+	),
+) );
 ?>
-<form action="" method="post" id="customer_form">
-	<input type="hidden" name="_process" value="save_customer"/>
-	<input type="hidden" name="customer_id" value="<?php echo $customer_id; ?>"/>
 	<input type="hidden" name="_redirect" value="" id="form_redirect"/>
 
 	<?php
@@ -90,8 +94,6 @@ if ( class_exists( 'module_security', false ) ) {
 			)
 		)
 	);
-
-	module_form::print_form_auth();
 
 	//!(int)$customer['customer_id'] &&
 	if ( isset( $_REQUEST['move_user_id'] ) && (int) $_REQUEST['move_user_id'] > 0 && module_customer::can_i( 'create', 'Customers' ) ) {
@@ -249,14 +251,10 @@ if ( class_exists( 'module_security', false ) ) {
 	if ( $customer['primary_user_id'] ) {
 
 		if ( ! module_user::can_i( 'view', 'All ' . $page_type_single . ' Contacts', 'Customer', 'customer' ) && $customer['primary_user_id'] != module_security::get_loggedin_id() ) {
-			ob_start();
-			echo '<div class="content_box_wheader"><table width="100%" border="0" cellspacing="0" cellpadding="2" class="tableclass tableclass_form"><tbody><tr><td>';
-			_e( 'Details hidden' );
-			echo '</td></tr></tbody></table></div>';
 			$responsive_summary   = array();
 			$responsive_summary[] = htmlspecialchars( $customer['customer_name'] );
 			$fieldset_data        = array(
-				'heading'         => array(
+				'heading'  => array(
 					'type'       => 'h3',
 					'title'      => 'Primary Contact Details',
 					'responsive' => array(
@@ -264,8 +262,15 @@ if ( class_exists( 'module_security', false ) ) {
 						'summary' => implode( ', ', $responsive_summary ),
 					),
 				),
-				'class'           => 'tableclass tableclass_form tableclass_full',
-				'elements_before' => ob_get_clean(),
+				'class'    => 'tableclass tableclass_form tableclass_full',
+				// One cell, no title: an element with 'fields' and no 'title' is exactly that.
+				// The content_box_wheader wrapper goes - the fieldset is the box, which is what
+				// every other fieldset on this screen already relies on.
+				'elements' => array(
+					'hidden' => array(
+						'fields' => array( htmlspecialchars( _l( 'Details hidden' ) ) ),
+					),
+				),
 			);
 			if ( $customer['primary_user_id'] ) {
 				$fieldset_data['heading']['button'] = array(
@@ -275,16 +280,17 @@ if ( class_exists( 'module_security', false ) ) {
 			}
 			echo module_form::generate_fieldset( $fieldset_data );
 			unset( $fieldset_data );
-		} else if ( ! module_user::can_i( 'edit', 'All ' . $page_type_single . ' Contacts', 'Customer', 'customer' ) && $customer['primary_user_id'] != module_security::get_loggedin_id() ) {
+		} elseif ( ! module_user::can_i( 'edit', 'All ' . $page_type_single . ' Contacts', 'Customer', 'customer' ) && $customer['primary_user_id'] != module_security::get_loggedin_id() ) {
 			// no permissions to edit.
-			ob_start();
-			echo '<div class="content_box_wheader"><table width="100%" border="0" cellspacing="0" cellpadding="2" class="tableclass tableclass_form"><tbody><tr><td>';
+			// The cell used to be empty. An inner ob_start() captured the summary into
+			// $short_user_details, which was only ever used for the responsive heading, so
+			// nothing was echoed between the <td> and its close - a staff member who may view
+			// but not edit contacts got a "Primary Contact Details" box with nothing in it.
 			ob_start();
 			module_user::print_contact_summary( $customer['primary_user_id'], 'text', array( 'name', 'last_name', 'email' ) );
 			$short_user_details = ob_get_clean();
-			echo '</td></tr></tbody></table></div>';
 			$fieldset_data = array(
-				'heading'         => array(
+				'heading'  => array(
 					'type'       => 'h3',
 					'title'      => 'Primary Contact Details',
 					'responsive' => array(
@@ -292,8 +298,15 @@ if ( class_exists( 'module_security', false ) ) {
 						'summary' => htmlspecialchars( $short_user_details ),
 					),
 				),
-				'class'           => 'tableclass tableclass_form tableclass_full',
-				'elements_before' => ob_get_clean(),
+				'class'    => 'tableclass tableclass_form tableclass_full',
+				'elements' => array(
+					'contact' => array(
+						// Already escaped: print_contact_summary() runs htmlspecialchars over each
+						// field it joins, so escaping again here would print &amp; for an ampersand
+						// in somebody's name.
+						'fields' => array( $short_user_details ),
+					),
+				),
 			);
 			if ( $customer['primary_user_id'] ) {
 				$fieldset_data['heading']['button'] = array(
@@ -360,7 +373,7 @@ if ( class_exists( 'module_security', false ) ) {
 				_hr( 'Assign a staff member to this customer. Staff members are users who have EDIT permissions on Job Tasks. Click the plus sign to add more staff members. You can apply the "Only Assigned Staff" permission in User Role settings to restrict staff members to these customers.' ),
 			)
 		);
-	} else if ( module_customer::get_customer_data_access() == _CUSTOMER_ACCESS_STAFF ) {
+	} elseif ( module_customer::get_customer_data_access() == _CUSTOMER_ACCESS_STAFF ) {
 		$staff_members    = module_user::get_staff_members();
 		$staff_member_rel = array();
 		foreach ( $staff_members as $staff_member ) {
@@ -665,8 +678,4 @@ if ( class_exists( 'module_security', false ) ) {
 	);
 	echo module_form::generate_form_actions( $form_actions );
 
-	?>
-
-
-</form>
-
+	module_form::print_form_close_tag();

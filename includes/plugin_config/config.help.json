@@ -1,0 +1,14 @@
+{
+	"_generated": "Written by docs-site/scripts/build-app-artifacts.mjs. Edit the article frontmatter, not this file.",
+	"article": "running/configuration",
+	"pages": {
+		"config-config_admin": "running/configuration",
+		"config-config_basic_settings": "running/configuration",
+		"config-config_cron": "running/scheduled-tasks",
+		"config-config_generate": "running/configuration",
+		"config-config_menu": "running/configuration",
+		"config-config_payment": "running/payment-methods",
+		"config-config_settings": "running/configuration",
+		"config-config_upgrade": "developers/plugins"
+	}
+}

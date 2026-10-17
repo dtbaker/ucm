@@ -22,7 +22,7 @@
 		<p><?php echo _l( 'Please enter your email address below to reset your password.' ); ?></p>
 
 
-		<form action="" method="post">
+		<?php module_form::print_form_open_tag( array( 'action' => '' ) ); ?>
 			<input type="hidden" name="_process_reset" value="true">
 			<table width="100%" class="tableclass">
 				<tr>
@@ -54,14 +54,14 @@
 				</tr>
 			</table>
 			<?php hook_handle_callback( 'forgot_password_screen' ); ?>
-		</form>
+		<?php module_form::print_form_close_tag(); ?>
 	<?php }else{ ?>
 		<h2><?php echo _l( 'Please Login' ); ?> </h2>
 		<p><?php echo _l( 'Welcome to %s - Please Login Below', module_config::s( 'admin_system_name' ) ); ?></p>
 
 	<?php ob_start(); ?>
 
-		<form action="" method="post">
+		<?php module_form::print_form_open_tag( array( 'action' => '' ) ); ?>
 			<input type="hidden" name="_process_login" value="true">
 			<table width="100%" class="tableclass">
 				<tr>
@@ -117,7 +117,7 @@
 				</tr>
 			</table>
 			<?php hook_handle_callback( 'login_screen' ); ?>
-		</form>
+		<?php module_form::print_form_close_tag(); ?>
 	<?php $login_form = ob_get_clean(); ?>
 
 	<?php

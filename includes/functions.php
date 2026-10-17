@@ -1,5 +1,422 @@
 <?php
 
+/**
+ * Hash a password using bcrypt (PHP password_hash).
+ * Replaces legacy MD5 hashing.
+ */
+function ucm_password_hash( $password ) {
+	return password_hash( $password, PASSWORD_DEFAULT );
+}
+
+/**
+ * Verify a password against a stored hash.
+ *
+ * Supports both password_hash (bcrypt/argon2) and legacy MD5 for backwards compatibility.
+ * Returns true if password matches. When MD5 matches, consider rehashing on next save.
+ *
+ * $user_id is needed for the shipped default password, which is only honoured for the
+ * administrator - see the branch at the end. A caller that cannot say which account it is
+ * checking gets no default-password path at all, which is the safe way round.
+ *
+ * @param string   $password what was typed
+ * @param string   $hash     what is stored
+ * @param int|null $user_id  the account the hash belongs to
+ *
+ * @return bool
+ */
+function ucm_password_verify( $password, $hash, $user_id = null ) {
+	if ( empty( $hash ) ) {
+		return false;
+	}
+	// password_hash format: $2y$... or $argon2...
+	if ( preg_match( '/^\$[2ay]|\$argon2/', $hash ) ) {
+		return password_verify( $password, $hash );
+	}
+	// Legacy MD5 (32 hex chars)
+	if ( strlen( $hash ) === 32 && ctype_xdigit( $hash ) ) {
+		// NOTE: do not re-add a `$password === $hash` branch here. It allowed the stored
+		// MD5 to be replayed as the password itself, turning any database read into an
+		// account takeover (pass-the-hash).
+		return hash_equals( $hash, md5( $password ) );
+	}
+
+	// The shipped install data stores the literal string 'password' rather than a hash,
+	// so a brand new install can be logged into before anybody has set one. That is only
+	// ever meant to be the administrator: the sample contact, user and staff accounts are
+	// demonstration data and nobody should be signing in as them. Restricting it here
+	// closes those accounts on existing installs too, without touching their database.
+	if ( $password === 'password' && $hash === 'password' && 1 === (int) $user_id ) {
+		return true;
+	}
+
+	return false;
+}
+
+/**
+ * Is this stored value the password the install shipped with, rather than a real one?
+ *
+ * Any password that has actually been set is stored as a hash, so the literal string is
+ * itself the "never been changed" flag - there is nothing else to record.
+ *
+ * @param string $hash
+ *
+ * @return bool
+ */
+function ucm_password_is_default( $hash ) {
+	return is_string( $hash ) && 'password' === $hash;
+}
+
+/**
+ * Safely decode a base64+serialized options blob from untrusted input.
+ *
+ * These blobs are passed around in links and form fields. Calling unserialize() on them
+ * directly allows PHP object injection: an attacker supplies a serialized object of any
+ * class present at runtime and its destructor/wakeup runs. allowed_classes=false makes
+ * any object decode to __PHP_Incomplete_Class instead, which is inert.
+ *
+ * Always returns an array, so callers can treat the result uniformly.
+ *
+ * @param mixed $data Base64 encoded serialized data, typically straight from $_REQUEST.
+ *
+ * @return array
+ */
+function ucm_unserialize_options( $data ) {
+	if ( ! is_string( $data ) || $data === '' ) {
+		return array();
+	}
+	$decoded = base64_decode( $data, true );
+	if ( $decoded === false || $decoded === '' ) {
+		return array();
+	}
+	$result = @unserialize( $decoded, array( 'allowed_classes' => false ) );
+
+	// Every caller expects an options array. Anything else - including the
+	// __PHP_Incomplete_Class stand-in an object payload decodes to - is thrown away
+	// rather than cast, so none of it reaches calling code.
+	return is_array( $result ) ? $result : array();
+}
+
+/**
+ * Extensions never accepted from an upload, because the web server may hand them to an
+ * interpreter. The upload folders also carry a deny-all .htaccess, but that only protects
+ * Apache - this list is the part that still holds on nginx, or if a folder is moved.
+ */
+function ucm_blocked_upload_extensions() {
+	return array(
+		'php', 'php3', 'php4', 'php5', 'php7', 'php8', 'phps', 'phtml', 'phar', 'pht',
+		'cgi', 'pl', 'py', 'rb', 'sh', 'bash',
+		'asp', 'aspx', 'jsp', 'jspx',
+		'exe', 'dll', 'so', 'bat', 'cmd', 'com', 'msi', 'scr',
+		'htaccess', 'htpasswd',
+	);
+}
+
+/**
+ * Check an entry from $_FILES before it is moved into place.
+ *
+ * Returns an error string, or false when the upload is acceptable. Callers decide whether
+ * to abort or skip the file.
+ *
+ * @param string $file_name  Client supplied name.
+ * @param string $tmp_name   Temporary path PHP wrote the upload to.
+ * @param int    $max_bytes  Size ceiling. 0 uses the configured default.
+ *
+ * @return string|false
+ */
+function ucm_upload_error( $file_name, $tmp_name, $max_bytes = 0 ) {
+	if ( ! $file_name || ! $tmp_name || ! is_uploaded_file( $tmp_name ) ) {
+		return 'That file did not upload correctly.';
+	}
+
+	if ( ! $max_bytes ) {
+		$max_bytes = (int) module_config::c( 'upload_max_bytes', 20 * 1024 * 1024 );
+	}
+	$size = @filesize( $tmp_name );
+	if ( $size === false || $size <= 0 ) {
+		return 'That file is empty.';
+	}
+	if ( $size > $max_bytes ) {
+		return 'That file is larger than the ' . round( $max_bytes / 1024 / 1024 ) . 'MB limit.';
+	}
+
+	// Check every dot-separated part, so "shell.php.jpg" is caught as well as "shell.php".
+	$parts = array_slice( explode( '.', strtolower( $file_name ) ), 1 );
+	foreach ( $parts as $part ) {
+		if ( in_array( $part, ucm_blocked_upload_extensions(), true ) ) {
+			return 'That file type is not accepted.';
+		}
+	}
+
+	return false;
+}
+
+/**
+ * Build an unguessable on-disk name for an upload, keeping the original extension.
+ *
+ * The old scheme was md5( time() . $name ), which is guessable: the timestamp is narrow
+ * and in some folders was printed in the name itself.
+ */
+function ucm_upload_filename( $file_name ) {
+	$extension = strtolower( pathinfo( $file_name, PATHINFO_EXTENSION ) );
+	if ( $extension && ! preg_match( '/^[a-z0-9]{1,10}$/', $extension ) ) {
+		$extension = '';
+	}
+	if ( $extension && in_array( $extension, ucm_blocked_upload_extensions(), true ) ) {
+		$extension = '';
+	}
+
+	return bin2hex( random_bytes( 16 ) ) . ( $extension ? '.' . $extension : '' );
+}
+
+/**
+ * Check if a hash is legacy MD5 (should be rehashed).
+ */
+function ucm_password_needs_rehash( $hash ) {
+	if ( empty( $hash ) ) {
+		return false;
+	}
+
+	return strlen( $hash ) === 32 && ctype_xdigit( $hash );
+}
+
+/**
+ * Is this request the browser fetching something in the background, rather than a person
+ * loading a page?
+ *
+ * Used to decide whether a logged-out request should get the login screen or a plain
+ * "not logged in" answer. Handing a login page to a script or XHR request is worse than
+ * useless: the caller tries to parse it, fails in some confusing way, and the real
+ * problem - the session expired - never surfaces.
+ *
+ * @return bool
+ */
+function ucm_is_background_request() {
+	if ( isset( $_REQUEST['display_mode'] ) && $_REQUEST['display_mode'] === 'ajax' ) {
+		return true;
+	}
+	if ( ! empty( $_SERVER['HTTP_X_REQUESTED_WITH'] ) && strtolower( $_SERVER['HTTP_X_REQUESTED_WITH'] ) === 'xmlhttprequest' ) {
+		return true;
+	}
+	// Browsers say what they want the response for. "document" and "iframe" are real
+	// page loads and should still get the login screen.
+	if ( ! empty( $_SERVER['HTTP_SEC_FETCH_DEST'] ) ) {
+		return in_array( $_SERVER['HTTP_SEC_FETCH_DEST'], array( 'empty', 'script', 'json' ), true );
+	}
+
+	return false;
+}
+
+/**
+ * Answer a background request that needs a login, and stop.
+ *
+ * Sends 401 and a short JSON body instead of the login page, so the caller can tell the
+ * difference between "no data" and "you are logged out".
+ */
+function ucm_send_auth_required() {
+	while ( ob_get_level() ) {
+		@ob_end_clean();
+	}
+	if ( ! headers_sent() ) {
+		header( 'HTTP/1.1 401 Unauthorized' );
+		header( 'Content-Type: application/json; charset=utf-8' );
+	}
+	echo json_encode( array(
+		'error'   => 'not_logged_in',
+		'message' => 'Your session has expired. Please log in again.',
+	) );
+	exit;
+}
+
+/**
+ * Resolve one directory name inside a fixed root, or false.
+ *
+ * basename() looks like it does this job and does not. basename( '..' ) is '..', so a name
+ * of ".." concatenated onto a root and handed to is_dir() passes - the parent directory
+ * exists - and the caller walks one level up out of the root it meant to stay in. That
+ * mattered in the newsletter templates, where the resolved directory is include()d.
+ *
+ * Returns the single safe folder name (not a path), so the caller can keep building the
+ * relative string it was already using - some of them turn it into a URL.
+ *
+ * @param string $root  directory the name must stay inside
+ * @param string $name  untrusted name, possibly with path separators in it
+ *
+ * @return string|false
+ */
+function ucm_contained_dir( $root, $name ) {
+	$folder = basename( (string) $name );
+	if ( strlen( $folder ) < 2 || '..' === $folder ) {
+		return false;
+	}
+	$root_real = realpath( $root );
+	$candidate = realpath( rtrim( $root, '/\\' ) . DIRECTORY_SEPARATOR . $folder );
+	if ( ! $root_real || ! $candidate || ! is_dir( $candidate ) ) {
+		return false;
+	}
+	if ( $candidate === $root_real ) {
+		return false;
+	}
+	if ( 0 !== strpos( $candidate . DIRECTORY_SEPARATOR, $root_real . DIRECTORY_SEPARATOR ) ) {
+		return false;
+	}
+
+	return $folder;
+}
+
+/**
+ * JSON for a <script> block.
+ *
+ * json_encode() leaves `<`, `>` and `&` alone, which is fine in a JSON response and not
+ * fine inline in a page: a string containing `</script>` closes the block early and the
+ * rest of the value is parsed as markup. The JSON_HEX_* flags write those characters as
+ * \u escapes, which JSON.parse and every JS engine read back as the same string.
+ *
+ * Use this anywhere the result is printed between <script> tags. Plain json_encode() is
+ * still the right call for an AJAX response, where there is no surrounding markup.
+ *
+ * @param mixed $value
+ *
+ * @return string
+ */
+function ucm_json_for_script( $value ) {
+	return json_encode(
+		$value,
+		JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT
+	);
+}
+
+/**
+ * Read a request value that is meant to be a plain string, such as a link hash.
+ *
+ * Anything in $_REQUEST is an array whenever the query string says so - "?hash[]=x" - and
+ * PHP 8 throws a TypeError the moment one of those reaches trim() or any other string
+ * function. Every public link in the app is checked by comparing a hash from the query
+ * string, so that crash is reachable by anyone, on a page that needs no login.
+ *
+ * Returns '' for anything that is not a string, which then fails whatever check it was on
+ * its way to.
+ *
+ * @param string $key name in $_REQUEST
+ *
+ * @return string
+ */
+function ucm_request_string( $key ) {
+	if ( ! isset( $_REQUEST[ $key ] ) || ! is_string( $_REQUEST[ $key ] ) ) {
+		return '';
+	}
+
+	return trim( $_REQUEST[ $key ] );
+}
+
+/**
+ * Make a value safe to put inside backticks as a table or column name.
+ *
+ * db_escape() is the wrong tool for this and always has been:
+ * mysqli_real_escape_string() does not escape a backtick, so a name that contains one
+ * breaks straight out of the quoting. Anything outside letters, digits and underscore is
+ * dropped. A name that is left with nothing produces empty backticks, which the database
+ * refuses - a loud failure rather than a quiet injection.
+ *
+ * @param string $identifier table or column name
+ *
+ * @return string
+ */
+function db_identifier( $identifier ) {
+	if ( is_array( $identifier ) || is_object( $identifier ) ) {
+		return '';
+	}
+
+	return preg_replace( '/[^A-Za-z0-9_]/', '', (string) $identifier );
+}
+
+/**
+ * The ids generate_fieldset() gives the elements a caller did not name.
+ *
+ * The id is the title with everything but letters and digits removed. A fieldset renders
+ * one element per id and stores the id so a role can be told to hide that field, so two
+ * titles reducing to the same id meant one of the two fields silently never appeared -
+ * which is what happened to "Additional Charge (as %)" and "Additional Charge (as $)" on
+ * the payment settings pages.
+ *
+ * Collisions are resolved from the titles alone, never from their position, because an
+ * id already stored against a role must not move just because the fields were rendered
+ * in a different order. Of the titles sharing a slug the first in sort order keeps it,
+ * and the rest get a suffix taken from the title. A title that collides with nothing
+ * keeps exactly the id it has always had.
+ *
+ * @param array<int|string,string> $titles element key => title
+ *
+ * @return array<int|string,string> the same keys, mapped to ids
+ */
+function ucm_form_element_ids( $titles ) {
+	if ( ! is_array( $titles ) ) {
+		return array();
+	}
+
+	// Which distinct titles want each slug.
+	$wanted = array();
+	foreach ( $titles as $title ) {
+		$slug = preg_replace( '#[^a-zA-Z0-9]#', '', (string) $title );
+		$wanted[ $slug ][ (string) $title ] = true;
+	}
+	$keeps_the_slug = array();
+	foreach ( $wanted as $slug => $claimants ) {
+		$claimants = array_keys( $claimants );
+		sort( $claimants, SORT_STRING );
+		$keeps_the_slug[ $slug ] = $claimants[0];
+	}
+
+	$ids = array();
+	foreach ( $titles as $key => $title ) {
+		$title       = (string) $title;
+		$slug        = preg_replace( '#[^a-zA-Z0-9]#', '', $title );
+		$ids[ $key ] = ( $keeps_the_slug[ $slug ] === $title )
+			? $slug
+			: $slug . '_' . substr( md5( $title ), 0, 6 );
+	}
+
+	return $ids;
+}
+
+/**
+ * Build an ORDER BY fragment from a column name and an optional direction.
+ *
+ * Escaping cannot make an ORDER BY fragment safe - the whole point of the clause is that
+ * it is SQL, not a value - so this validates instead. The result is always either a
+ * single backticked column with an optional ASC/DESC, or an empty string.
+ *
+ * @param string $order           e.g. "name", "email_id DESC"
+ * @param array  $allowed_columns column names to accept, or empty to accept any
+ *                                well-formed name
+ *
+ * @return string "`name` DESC", or "" when the input is not something we recognise
+ */
+function db_order_by( $order, $allowed_columns = array() ) {
+	if ( is_array( $order ) || is_object( $order ) ) {
+		return '';
+	}
+	$parts = preg_split( '/\s+/', trim( (string) $order ), - 1, PREG_SPLIT_NO_EMPTY );
+	if ( ! $parts || count( $parts ) > 2 ) {
+		return '';
+	}
+	$column = $parts[0];
+	// Some of these columns are reserved words, so callers already quote them.
+	if ( strlen( $column ) > 2 && '`' === $column[0] && '`' === substr( $column, - 1 ) ) {
+		$column = substr( $column, 1, - 1 );
+	}
+	if ( ! strlen( $column ) || db_identifier( $column ) !== $column ) {
+		return '';
+	}
+	if ( $allowed_columns && ! in_array( $column, $allowed_columns, true ) ) {
+		return '';
+	}
+	$direction = isset( $parts[1] ) ? strtoupper( $parts[1] ) : '';
+	if ( $direction && 'ASC' !== $direction && 'DESC' !== $direction ) {
+		return '';
+	}
+
+	return '`' . $column . '`' . ( $direction ? ' ' . $direction : '' );
+}
 
 function get_yes_no() {
 	$data = array(
@@ -112,7 +529,7 @@ function print_multi_select_box( $data, $id, $cur = array(), $blank = true, $arr
 		       id="multi_<?php echo $x; ?>" <?php echo in_array( $key, $cur ) ? ' checked' : ''; ?>>
 		<label for="multi_<?php echo $x; ?>"><?php echo htmlspecialchars( $printval ); ?></label> <br/>
 		<?php
-		$x ++;
+		$x++;
 	}
 	if ( $hidden ) {
 		echo '</div>';
@@ -167,6 +584,7 @@ function input_date( $date, $include_time = false ) {
 						break;
 					}
 				}
+				// no break
 			case 2:
 				if ( preg_match( '#^\d{2,4}([-/])\d?\d\1\d?\d(.*)$#', $date, $matches ) ) {
 					$time_bits = $matches[2];
@@ -178,6 +596,7 @@ function input_date( $date, $include_time = false ) {
 						break;
 					}
 				}
+				// no break
 			case 3:
 				if ( preg_match( '#^\d?\d([-/])\d?\d\1\d{2,4}(.*)$#', $date, $matches ) ) {
 					$time_bits = $matches[2];
@@ -190,6 +609,7 @@ function input_date( $date, $include_time = false ) {
 						break;
 					}
 				}
+				// no break
 			case 4:
 				if ( preg_match( '#^\d?\d([-/\.])\d?\d\1\d{2,4}(.*)$#', $date, $matches ) ) {
 					$time_bits = $matches[2];
@@ -201,6 +621,7 @@ function input_date( $date, $include_time = false ) {
 						break;
 					}
 				}
+				// no break
 			default:
 				$date = date( 'Y-m-d' . ( ( $include_time ) ? ' H:i:s' : '' ), strtotime( $date ) );
 		}
@@ -405,7 +826,7 @@ function process_alert( $check_date, $item, $alert_days_in_future = false ) {
 			if ( $days == 0 ) {
 				$alert_field = " " . _l( 'today!' );
 				$warning     = true;
-			} else if ( $days < $alert_days_in_future ) {
+			} elseif ( $days < $alert_days_in_future ) {
 				$alert_field = " " . _l( 'in %s days', $days );
 			}
 		}
@@ -457,7 +878,7 @@ function print_header_message() {
 					foreach ( $_SESSION['_message'] as $msg ) {
 						if ( count( $_SESSION['_message'] ) > 1 ) {
 							echo "<strong>#$x</strong> ";
-							$x ++;
+							$x++;
 						}
 						echo nl2br( ( $msg ) ) . "<br>";
 					}
@@ -490,6 +911,58 @@ function print_header_message() {
 }
 
 
+/**
+ * The header message box: markup that starts hidden, which JavaScript fades in and then
+ * (when header_messages_fade_out is on) fades back out again a few seconds later.
+ *
+ * The auto-dismiss clock starts once the message has actually been painted and the tab is
+ * visible, rather than at DOM ready. Config > Settings lays out a few thousand rows before
+ * it paints anything, and a background tab paints nothing at all, so a timer started at
+ * DOM ready can run out before the message has been on screen for a single frame - the
+ * save works and the confirmation is simply never seen.
+ *
+ * Both the default header and the metis theme header draw this, so it lives here rather
+ * than being copied into each of them.
+ */
+function print_header_message_popdown() {
+	?>
+	<div>
+		<div style="position:absolute; z-index:1004; margin-left:367px;width:293px; display:none;"
+		     id="message_popdown">
+			<?php if ( print_header_message() ) { ?>
+				<script type="text/javascript">
+                    $('#message_popdown').fadeIn('slow');
+					<?php if ( module_config::c( 'header_messages_fade_out', 1 ) ) { ?>
+                    $(function () {
+                        var hide = function () {
+                            setTimeout(function () {
+                                $('#message_popdown').fadeOut();
+                            }, 4000);
+                        };
+                        var startWhenSeen = function () {
+                            if (document.hidden) {
+                                // Nothing is being painted - wait until the tab comes back.
+                                $(document).one('visibilitychange', startWhenSeen);
+                            } else if (window.requestAnimationFrame) {
+                                // Two frames: the first is scheduled, the second runs after it painted.
+                                window.requestAnimationFrame(function () {
+                                    window.requestAnimationFrame(hide);
+                                });
+                            } else {
+                                hide();
+                            }
+                        };
+                        startWhenSeen();
+                    });
+					<?php } ?>
+				</script>
+			<?php } ?>
+		</div>
+	</div>
+	<?php
+}
+
+
 function send_error( $message ) {
 	//echo $message;exit;
 	mail( _ERROR_EMAIL, "Admin System Notification (" . date( "Y-m-d H:i:s" ) . ")", $message . "\n\n" . var_export( $_REQUEST, true ) . "\n\n" . var_export( $_SERVER, true ) );
@@ -509,8 +982,15 @@ function _h( $text ) {
 	if ( ! module_config::c( 'show_help', 1 ) || get_display_mode() == 'mobile' ) {
 		return '';
 	}
-	$help_id = md5( $text );
-	$argv    = func_get_args();
+	// The id is the hash of the help text, so the same topic used twice on one page used
+	// to emit the id twice. Number the repeats - the modal's content selector is built
+	// from the same value just below, so each icon still opens its own copy.
+	static $help_seen = array();
+
+	$hash               = md5( $text );
+	$help_seen[ $hash ] = isset( $help_seen[ $hash ] ) ? $help_seen[ $hash ] + 1 : 1;
+	$help_id            = $hash . ( $help_seen[ $hash ] > 1 ? '_' . $help_seen[ $hash ] : '' );
+	$argv               = func_get_args();
 	?> <a href="#"
 	      data-ajax-modal='{"type":"inline","content":"#help_<?php echo $help_id; ?>","buttons":"close","title":"<?php _e( 'Help' ); ?>"}'
 	      class="" style="display:inline-block;"><i class="fa fa-question"></i></a>
@@ -518,6 +998,47 @@ function _h( $text ) {
 		<?php print call_user_func_array( '_l', $argv ); ?>
 	</div>
 	<?php
+}
+
+/**
+ * A question mark that opens the documentation article for a screen.
+ *
+ * _h() above takes the help text itself and shows it in a popup. This one takes the
+ * slug of an article on the documentation site, so the text lives in one place rather
+ * than being written out again next to every field.
+ *
+ * @param string $slug  article slug, or '' for whichever article covers this screen
+ * @param string $label optional text beside the icon
+ */
+function _help( $slug = '', $label = '' ) {
+	if ( ! class_exists( 'module_help', false ) || ! module_help::is_plugin_enabled() ) {
+		return;
+	}
+	print module_help::help_link( $slug, $label );
+}
+
+/**
+ * The href, target and rel of a header button, as attributes.
+ *
+ * A header button is an id and an icon that JavaScript binds a handler to, so every
+ * theme wrote it out as <a href="#">. A button that knows where it goes - the help
+ * button does - can say so here instead, and then it is a real link: it survives a
+ * middle click, a click before the JavaScript has loaded, and no JavaScript at all.
+ *
+ * @param array $header_button one entry from the header_buttons filter
+ *
+ * @return string
+ */
+function header_button_link_attributes( $header_button ) {
+	$href = ( isset( $header_button['href'] ) && strlen( $header_button['href'] ) ) ? $header_button['href'] : '#';
+	$out  = ' href="' . htmlspecialchars( $href ) . '"';
+	foreach ( array( 'target', 'rel' ) as $attribute ) {
+		if ( ! empty( $header_button[ $attribute ] ) ) {
+			$out .= ' ' . $attribute . '="' . htmlspecialchars( $header_button[ $attribute ] ) . '"';
+		}
+	}
+
+	return $out;
 }
 
 function _e( $text ) {
@@ -666,7 +1187,7 @@ function process_pagination( $rows, $per_page = 20, $page_number = 0, $table_id 
 		unset( $rows );
 		$total = mysqli_num_rows( $db_resource );
 
-	} else if ( is_array( $rows ) ) {
+	} elseif ( is_array( $rows ) ) {
 		// we have the rows in an array.
 		$total = count( $rows );
 	} else {
@@ -751,7 +1272,7 @@ function process_pagination( $rows, $per_page = 20, $page_number = 0, $table_id 
 
 			if ( isset( $_REQUEST[ 'pg' . $table_id ] ) ) {
 				$page_number = $_REQUEST[ 'pg' . $table_id ];
-			} else if ( $_SESSION['_table_page_num'][ $table_id ]['total_count'] == $total ) {
+			} elseif ( $_SESSION['_table_page_num'][ $table_id ]['total_count'] == $total ) {
 				$page_number = $_SESSION['_table_page_num'][ $table_id ]['page_number'];
 			}
 			$_SESSION['_table_page_num'][ $table_id ]['page_number'] = $page_number;
@@ -770,7 +1291,7 @@ function process_pagination( $rows, $per_page = 20, $page_number = 0, $table_id 
 				if ( $row_data ) {
 					$data['rows'] [] = $row_data;
 				}
-				$x ++;
+				$x++;
 			}
 			unset( $row_data );
 		} else {
@@ -816,7 +1337,7 @@ function process_pagination( $rows, $per_page = 20, $page_number = 0, $table_id 
 					echo ' ... ';
 				}
 			}
-			for ( $x = $rangestart; $x <= $rangeend; $x ++ ) {
+			for ( $x = $rangestart; $x <= $rangeend; $x++ ) {
 				if ( $x == $page_number ) {
 					?>
 					<span><a href="<?= $request_uri; ?>pg<?php echo $table_id; ?>=<?= $x; ?>#t_<?php echo $table_id; ?>"
@@ -946,6 +1467,11 @@ function redirect_browser( $url, $hard = false ) {
 	$original_url = $url;
 	if ( $hard ) {
 		header( 'HTTP/1.1 301 Moved Permanently' );
+	}
+	// an empty url means "back to the start" - two callers pass one. Reading $url[0] on
+	// it warns under E_ALL, and the warning lands in the body of the redirect.
+	if ( ! strlen( $url ) ) {
+		$url = _BASE_HREF;
 	}
 	if ( ! preg_match( '/^https?:/', $url ) && $url[0] != "/" && $url[0] != "?" ) {
 		$url = _BASE_HREF . $url;
@@ -1106,7 +1632,7 @@ function file_exists_ip( $filename ) {
 
 	if ( false !== strpos( $include_path, PATH_SEPARATOR ) ) {
 		if ( false !== ( $temp = explode( PATH_SEPARATOR, $include_path ) ) && count( $temp ) > 0 ) {
-			for ( $n = 0; $n < count( $temp ); $n ++ ) {
+			for ( $n = 0; $n < count( $temp ); $n++ ) {
 				if ( false !== @file_exists( $temp[ $n ] . $filename ) ) {
 					return true;
 				}
@@ -1137,7 +1663,7 @@ function frndlyfilesize( $filesize ) {
 
 		while ( ( $filesize / $decr ) > 0.9 ) {
 			$filesize = $filesize / $decr;
-			$step ++;
+			$step++;
 		}
 
 		return round( $filesize, 2 ) . ' ' . $prefix[ $step ];
@@ -1293,6 +1819,43 @@ function dtbaker_mime_type( $file_name, $file_path = false ) {
 	return $mime;
 }
 
-@include_once( 'old.php' );
-@include_once( 'pro.php' );
-@include_once( 'dev.php' );
+
+/**
+ * Is a stored logo setting just the logo this product used to ship?
+ *
+ * The Theme Settings page saves every field it shows, including the default logo address,
+ * so many installs have `images/logo.png` stored without anyone ever choosing it. Treating
+ * that value as "not customised" lets those installs pick up the current logo, while a logo
+ * somebody actually uploaded or linked is left alone.
+ *
+ * Only the stock path on this install counts: `/images/logo.png` under the install's own
+ * base path, either relative or on this install's own host. The same file name anywhere
+ * else is somebody's own logo.
+ *
+ * @param string $url       the stored setting
+ * @param string $base_href the install's base address (_BASE_HREF): a path or a full URL
+ * @param string $host      the host this install answers on, compared without case
+ *
+ * @return bool
+ */
+function ucm_is_stock_logo_url( $url, $base_href, $host = '' ) {
+	if ( ! is_string( $url ) || '' === trim( $url ) ) {
+		return false;
+	}
+	$parts = parse_url( trim( $url ) );
+	if ( ! is_array( $parts ) || empty( $parts['path'] ) ) {
+		return false;
+	}
+	if ( ! empty( $parts['host'] ) ) {
+		$base_host = parse_url( (string) $base_href, PHP_URL_HOST );
+		$allowed   = array_filter( array( strtolower( (string) $host ), strtolower( (string) $base_host ) ) );
+		if ( ! in_array( strtolower( $parts['host'] ), $allowed, true ) ) {
+			return false;
+		}
+	}
+	$base_path = parse_url( (string) $base_href, PHP_URL_PATH );
+	$base_path = '/' . trim( is_string( $base_path ) ? $base_path : '', '/' );
+	$expected  = rtrim( $base_path, '/' ) . '/images/logo.png';
+
+	return $parts['path'] === $expected;
+}

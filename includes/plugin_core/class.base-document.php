@@ -10,8 +10,8 @@ define( '_ARCHIVED_SEARCH_NONARCHIVED', 1 );
 define( '_ARCHIVED_SEARCH_ARCHIVED', 2 );
 define( '_ARCHIVED_SEARCH_BOTH', 3 );
 
-class UCMBaseDocument extends UCMBaseSingle {
-
+class UCMBaseDocument extends UCMBaseSingle
+{
 	public $document_type = 'invoice'; // quote, job
 	public $enable_tax = true;
 	public $enable_task_numbers = true;
@@ -159,7 +159,7 @@ class UCMBaseDocument extends UCMBaseSingle {
 							}
 						}
 
-						$this_document_number ++;
+						$this_document_number++;
 					}
 				} while ( count( $documents ) );
 
@@ -194,7 +194,7 @@ class UCMBaseDocument extends UCMBaseSingle {
 							// first loop, start with A
 							$suffix_ascii2 = 65; // set 2nd suffix to A, work with this.
 						} else {
-							$suffix_ascii2 ++; // move from A to B
+							$suffix_ascii2++; // move from A to B
 						}
 
 					}
@@ -205,7 +205,7 @@ class UCMBaseDocument extends UCMBaseSingle {
 					} else {
 						$this_document_number = $document_number . ( $suffix_ascii2 ? chr( $suffix_ascii2 ) : '' ) . chr( $suffix_ascii );
 					}
-					$suffix_ascii ++;
+					$suffix_ascii++;
 				} while ( count( $invoices ) && $suffix_ascii <= 91 && $suffix_ascii2 <= 90 ); //90 is Z
 				$default_number = $document_number . $default_number;
 			}
@@ -220,6 +220,25 @@ class UCMBaseDocument extends UCMBaseSingle {
 
 	public function is_document_locked() {
 		return false;
+	}
+
+	/**
+	 * Whether this document can carry a discount.
+	 *
+	 * A deposit invoice against a job and a contract are both for a fixed amount, so the
+	 * discount fields are left off those. Everything else, credit notes included, can be
+	 * discounted - a credit note is an ordinary invoice record and get_invoice() applies
+	 * its discount to the totals the same way.
+	 */
+	public function discounts_allowed() {
+		if ( $this->document_type == 'job' && $this->get( 'deposit_job_id' ) ) {
+			return false;
+		}
+		if ( $this->document_type == 'contract' ) {
+			return false;
+		}
+
+		return true;
 	}
 
 	public function generate_calendar_fieldset() {
@@ -479,7 +498,7 @@ class UCMBaseDocument extends UCMBaseSingle {
 					}
 				),
 			);*/
-		} else if ( ! class_exists( 'module_website', false ) && module_config::c( 'show_ucm_ads', 1 ) ) {
+		} elseif ( ! class_exists( 'module_website', false ) && module_config::c( 'show_ucm_ads', 1 ) ) {
 
 			$fieldset_data['elements']['website_id'] = array(
 				'title'  => module_config::c( 'project_name_single', 'Website' ),
@@ -521,15 +540,7 @@ class UCMBaseDocument extends UCMBaseSingle {
 			);
 		}
 
-		$discounts_allowed = true;
-		if ( $this->document_type == 'job' && $this->get( 'deposit_job_id' ) ) {
-			$discounts_allowed = false;
-		}
-		if ( $this->document_type == 'contract' ) {
-			$discounts_allowed = false;
-		}
-
-		if ( $discounts_allowed ) {
+		if ( $this->discounts_allowed() ) {
 
 			$self                                         = $this;
 			$fieldset_data['elements']['discount_amount'] = array(
@@ -553,8 +564,8 @@ class UCMBaseDocument extends UCMBaseSingle {
 				'fields' => array(
 					function () use ( $self ) {
 						echo $self->is_document_locked() ?
-							htmlspecialchars( $self->get( 'discount_description' ) ) :
-							'<input type="text" name="discount_description" value="' . htmlspecialchars( $self->get( 'discount_description' ) ) . '" style="width:80px;">';
+							htmlspecialchars( $self->get( 'discount_description' ) ?? '' ) :
+							'<input type="text" name="discount_description" value="' . htmlspecialchars( $self->get( 'discount_description' ) ?? '' ) . '" style="width:80px;">';
 					}
 				),
 			);
@@ -595,11 +606,10 @@ class UCMBaseDocument extends UCMBaseSingle {
 		// return an object for this particular job task.
 
 	}
-
 }
 
-class UCMBaseTask extends UCMBaseSingle {
-
+class UCMBaseTask extends UCMBaseSingle
+{
 	public function __construct( $document = false, $id = false ) {
 
 		$this->document = $document;
@@ -782,5 +792,4 @@ class UCMBaseTask extends UCMBaseSingle {
 		return module_form::generate_fieldset( $this->get_fieldset_data() );
 
 	}
-
 }

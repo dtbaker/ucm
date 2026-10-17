@@ -1,0 +1,197 @@
+{
+	"index": {
+		"title": "Ultimate Client Manager",
+		"summary": "A self hosted CRM, quoting, invoicing and job tracking system that runs on ordinary PHP and MySQL hosting. No monthly fee, no external service, and your data stays in your own database.",
+		"featured": false
+	},
+	"install/requirements": {
+		"title": "Requirements",
+		"summary": "Check these before you upload anything. Most shared hosting accounts sold today meet all of them, but the PHP version is the one that catches people out.",
+		"featured": false
+	},
+	"install/installing": {
+		"title": "Installing",
+		"summary": "Upload the files, create a database, open the site in a browser and answer the setup wizard. On a typical shared hosting account the whole thing takes about ten minutes, and most of that is waiting for the upload.",
+		"featured": true
+	},
+	"install/upgrading": {
+		"title": "Upgrading from 2.x",
+		"summary": "This is the largest update the product has had. It moves from PHP 5 to PHP 8.2 or newer, changes where your database settings live, and removes some features that no longer work. Read the whole page before you touch your live site.",
+		"featured": false
+	},
+	"running/configuration": {
+		"title": "Configuration",
+		"summary": "Almost everything is configured through the Settings screens and stored in the database. A small number of low level values live in a file, because they are needed before the database is available.",
+		"featured": false
+	},
+	"running/scheduled-tasks": {
+		"title": "Scheduled tasks",
+		"summary": "Some work has to happen whether or not anyone is looking at the site. A scheduled task &mdash; a cron job &mdash; is what makes that happen. Setting it up takes a couple of minutes and the application tells you exactly what to paste.",
+		"featured": true
+	},
+	"running/payment-methods": {
+		"title": "Payment methods",
+		"summary": "A payment method is how a customer settles an invoice. Some are online gateways that take the money and mark the invoice paid by themselves; others simply tell the customer where to send a bank transfer and wait for you to confirm it.",
+		"featured": false
+	},
+	"using/dashboard": {
+		"title": "The dashboard",
+		"summary": "What the home screen shows, who sees what, and how to rearrange it.",
+		"featured": true
+	},
+	"using/customers": {
+		"title": "Customers and leads",
+		"summary": "Customers are the record everything else hangs off. This is how to create one, what the fields are for, and how leads differ.",
+		"featured": true
+	},
+	"using/contacts": {
+		"title": "Contacts",
+		"summary": "The people at a customer. Who gets emailed, who can log in, and how to move a contact to a different customer.",
+		"featured": false
+	},
+	"using/customer-portal": {
+		"title": "The customer portal",
+		"summary": "Letting your customers log in to see their own quotes, invoices and tickets, and the public signup form.",
+		"featured": false
+	},
+	"using/quotes": {
+		"title": "Quotes",
+		"summary": "Build a quote from your product list, send it for approval, and turn the approved one into a job or an invoice.",
+		"featured": true
+	},
+	"using/jobs": {
+		"title": "Jobs and tasks",
+		"summary": "Break work into tasks, assign them to staff, track time against them, and invoice what was done.",
+		"featured": true
+	},
+	"using/invoices": {
+		"title": "Invoices",
+		"summary": "Create an invoice, send it, record a payment, and chase the ones that are late.",
+		"featured": true
+	},
+	"using/credit-notes": {
+		"title": "Credit notes",
+		"summary": "The right way to reverse part or all of an invoice that has already gone out.",
+		"featured": false
+	},
+	"using/recurring-invoices": {
+		"title": "Recurring invoices and subscriptions",
+		"summary": "Billing the same customer the same amount on a schedule, without remembering to do it.",
+		"featured": false
+	},
+	"using/timers": {
+		"title": "Timers",
+		"summary": "Recording time against a task, a ticket or a quote, and getting it onto an invoice.",
+		"featured": false
+	},
+	"using/tickets": {
+		"title": "Support tickets",
+		"summary": "A ticket queue that can collect replies straight out of an email mailbox.",
+		"featured": true
+	},
+	"using/products": {
+		"title": "Products",
+		"summary": "A catalogue of the things you sell, so quotes and invoices are built by picking rather than typing.",
+		"featured": false
+	},
+	"using/finance": {
+		"title": "Finance",
+		"summary": "Income and expenses in one place, recurring entries for bills you know are coming, and where the summary figures come from.",
+		"featured": false
+	},
+	"using/files": {
+		"title": "Files",
+		"summary": "Attaching files to records, sharing them with a customer, and where they are stored on disk.",
+		"featured": false
+	},
+	"using/templates": {
+		"title": "Templates",
+		"summary": "Every piece of text the system sends or prints, editable without touching code.",
+		"featured": true
+	},
+	"using/newsletters": {
+		"title": "Newsletters",
+		"summary": "Sending bulk email to your own lists, and why it goes out in batches.",
+		"featured": false
+	},
+	"using/websites": {
+		"title": "Websites and projects",
+		"summary": "A grouping under a customer, for when one customer has several ongoing things.",
+		"featured": false
+	},
+	"using/contracts": {
+		"title": "Contracts",
+		"summary": "A document sent for approval and signature, which can then become a job and an invoice.",
+		"featured": false
+	},
+	"using/suppliers": {
+		"title": "Suppliers and vendors",
+		"summary": "Two different things with confusingly similar names, and what each is for.",
+		"featured": false
+	},
+	"using/custom-data": {
+		"title": "Custom data forms",
+		"summary": "Building your own forms for information this product does not model.",
+		"featured": false
+	},
+	"using/extra-fields": {
+		"title": "Extra fields",
+		"summary": "Adding your own fields to customers, jobs, invoices and tickets.",
+		"featured": false
+	},
+	"using/staff-and-permissions": {
+		"title": "Staff and permissions",
+		"summary": "Adding staff, what the roles control, and why the first user is different from everyone else.",
+		"featured": true
+	},
+	"using/calendar": {
+		"title": "Calendar",
+		"summary": "Seeing jobs, tasks and finance dates on a calendar, and subscribing to them from your own software.",
+		"featured": false
+	},
+	"using/faq": {
+		"title": "FAQ",
+		"summary": "A self-service question and answer list for your customers, embeddable on your own site.",
+		"featured": false
+	},
+	"using/backups": {
+		"title": "Backups",
+		"summary": "What the built-in backup does, what it does not do, and why you need a second copy somewhere else.",
+		"featured": true
+	},
+	"using/currencies": {
+		"title": "Currencies",
+		"summary": "Billing a customer in their own currency, and what the system currency is for.",
+		"featured": false
+	},
+	"using/help-system": {
+		"title": "The help system",
+		"summary": "Where the help button gets its text, what it sends over the internet, and how to turn the internet part off.",
+		"featured": true
+	},
+	"developers/plugins": {
+		"title": "The plugin system",
+		"summary": "Nearly all of Ultimate Client Manager is plugins. The core is small: it loads the plugins, connects to the database, and gets out of the way. Everything you think of as a feature &mdash; customers, invoices, tickets, even the themes &mdash; is a plugin.",
+		"featured": false
+	},
+	"developers/customising": {
+		"title": "Customising",
+		"summary": "You can change almost any screen, template or stylesheet in the product without editing a single file you were shipped. Do it this way and your changes survive every future update untouched.",
+		"featured": false
+	},
+	"reference/troubleshooting": {
+		"title": "Troubleshooting",
+		"summary": "Start here before asking for help. Most problems are one of a small number of things, and this page covers them in the order they come up.",
+		"featured": true
+	},
+	"reference/changelog": {
+		"title": "Changelog",
+		"summary": "What changed in this release. Security fixes are marked, as are the changes that need you to do something.",
+		"featured": false
+	},
+	"reference/credits": {
+		"title": "Credits and licences",
+		"summary": "Ultimate Client Manager stands on a lot of other people&rsquo;s work. This page credits it and tells you where to find the licence terms that come with each piece.",
+		"featured": false
+	}
+}

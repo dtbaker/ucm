@@ -1,8 +1,7 @@
 <?php
 
-
-class module_paymethod_other extends module_base {
-
+class module_paymethod_other extends module_base
+{
 	public static function can_i( $actions, $name = false, $category = false, $module = false ) {
 		if ( ! $module ) {
 			$module = __CLASS__;
@@ -15,14 +14,16 @@ class module_paymethod_other extends module_base {
 		return __CLASS__;
 	}
 
+	public function __construct() {
+		$this->module_name     = 'paymethod_other';
+		$this->module_position = 370;
+		$this->version         = 2.12;
+	}
+
 	function init() {
-		$this->version = 2.12;
 		//2.1 - new option that can be used for cheque/check payments
 		//2.11 - 2014-11-27 - updated defaults
 		//2.12 - 2015-03-14 - better default payment method options
-
-		$this->module_name     = "paymethod_other";
-		$this->module_position = 8899;
 
 		if ( class_exists( 'module_template', false ) ) {
 			module_template::init_template( 'paymethod_other', 'Hello,
@@ -102,6 +103,22 @@ Amount: <strong>{AMOUNT}</strong>', 'Details displayed on the invoice payments a
 	}
 
 
+	/**
+	 * The stable identifier for this payment method, never the admin-editable label.
+	 *
+	 * @return string
+	 */
+	public static function get_payment_method_key() {
+		return 'other';
+	}
+
+	/**
+	 * @return bool
+	 */
+	public function is_deprecated() {
+		return false;
+	}
+
 	public static function get_payment_method_name() {
 		return module_config::s( 'payment_method_other_label', 'Other' );
 	}
@@ -149,5 +166,4 @@ Amount: <strong>{AMOUNT}</strong>', 'Details displayed on the invoice payments a
 		echo $template->render( 'pretty_html' );
 		exit;
 	}
-
 }

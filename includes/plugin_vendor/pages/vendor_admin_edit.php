@@ -43,10 +43,14 @@ if ( class_exists( 'module_security', false ) ) {
 }
 
 
+module_form::print_form_open_tag( array(
+	'id'      => 'vendor_form',
+	'process' => 'save_vendor',
+	'hidden'  => array(
+		'vendor_id' => $vendor_id,
+	),
+) );
 ?>
-<form action="" method="post" id="vendor_form">
-	<input type="hidden" name="_process" value="save_vendor"/>
-	<input type="hidden" name="vendor_id" value="<?php echo $vendor_id; ?>"/>
 	<input type="hidden" name="_redirect" value="" id="form_redirect"/>
 
 	<?php
@@ -64,8 +68,6 @@ if ( class_exists( 'module_security', false ) ) {
 			)
 		)
 	);
-
-	module_form::print_form_auth();
 
 	//!(int)$vendor['vendor_id'] &&
 	if ( isset( $_REQUEST['move_user_id'] ) && (int) $_REQUEST['move_user_id'] > 0 && module_vendor::can_i( 'create', 'Vendors' ) ) {
@@ -177,17 +179,20 @@ if ( class_exists( 'module_security', false ) ) {
 	if ( $vendor['primary_user_id'] ) {
 
 		if ( ! module_user::can_i( 'view', 'All ' . $page_type_single . ' Contacts', 'Vendor', 'vendor' ) && $vendor['primary_user_id'] != module_security::get_loggedin_id() ) {
-			ob_start();
-			echo '<div class="content_box_wheader"><table width="100%" border="0" cellspacing="0" cellpadding="2" class="tableclass tableclass_form"><tbody><tr><td>';
-			_e( 'Details hidden' );
-			echo '</td></tr></tbody></table></div>';
 			$fieldset_data = array(
-				'heading'         => array(
+				'heading'  => array(
 					'type'  => 'h3',
 					'title' => 'Primary Contact Details',
 				),
-				'class'           => 'tableclass tableclass_form tableclass_full',
-				'elements_before' => ob_get_clean(),
+				'class'    => 'tableclass tableclass_form tableclass_full',
+				// One cell, no title: an element with 'fields' and no 'title' is exactly that.
+				// The content_box_wheader wrapper goes - the fieldset is the box, which is what
+				// every other fieldset on this screen already relies on.
+				'elements' => array(
+					'hidden' => array(
+						'fields' => array( htmlspecialchars( _l( 'Details hidden' ) ) ),
+					),
+				),
 			);
 			if ( $vendor['primary_user_id'] ) {
 				$fieldset_data['heading']['button'] = array(
@@ -197,19 +202,25 @@ if ( class_exists( 'module_security', false ) ) {
 			}
 			echo module_form::generate_fieldset( $fieldset_data );
 			unset( $fieldset_data );
-		} else if ( ! module_user::can_i( 'edit', 'All ' . $page_type_single . ' Contacts', 'Vendor', 'vendor' ) && $vendor['primary_user_id'] != module_security::get_loggedin_id() ) {
-			ob_start();
+		} elseif ( ! module_user::can_i( 'edit', 'All ' . $page_type_single . ' Contacts', 'Vendor', 'vendor' ) && $vendor['primary_user_id'] != module_security::get_loggedin_id() ) {
 			// no permissions to edit.
-			echo '<div class="content_box_wheader"><table width="100%" border="0" cellspacing="0" cellpadding="2" class="tableclass tableclass_form"><tbody><tr><td>';
+			ob_start();
 			module_user::print_contact_summary( $vendor['primary_user_id'], 'text', array( 'name', 'last_name', 'email' ) );
-			echo '</td></tr></tbody></table></div>';
-			$fieldset_data = array(
-				'heading'         => array(
+			$short_user_details = ob_get_clean();
+			$fieldset_data      = array(
+				'heading'  => array(
 					'type'  => 'h3',
 					'title' => 'Primary Contact Details',
 				),
-				'class'           => 'tableclass tableclass_form tableclass_full',
-				'elements_before' => ob_get_clean(),
+				'class'    => 'tableclass tableclass_form tableclass_full',
+				'elements' => array(
+					'contact' => array(
+						// Already escaped: print_contact_summary() runs htmlspecialchars over each
+						// field it joins, so escaping again here would print &amp; for an ampersand
+						// in somebody's name.
+						'fields' => array( $short_user_details ),
+					),
+				),
 			);
 			if ( $vendor['primary_user_id'] ) {
 				$fieldset_data['heading']['button'] = array(
@@ -243,7 +254,7 @@ if ( class_exists( 'module_security', false ) ) {
 					'class' => 'tableclass tableclass_form tableclass_full',
 					'elements' => array(),
 			);
-	
+
 			if(module_vendor::can_i('edit','Vendor Credit')){
 					$fieldset_data['elements']['credit'] = array(
 							'title' => _l('Credit'),
@@ -304,7 +315,7 @@ if ( class_exists( 'module_security', false ) ) {
 							);
 					}
 			}
-	
+
 			echo module_form::generate_fieldset($fieldset_data);
 	*/
 
@@ -398,8 +409,4 @@ if ( class_exists( 'module_security', false ) ) {
 	);
 	echo module_form::generate_form_actions( $form_actions );
 
-	?>
-
-
-</form>
-
+	module_form::print_form_close_tag();

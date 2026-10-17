@@ -5,7 +5,7 @@ $invoice_safe = true;
 if ( isset( $_REQUEST['print'] ) ) {
 	include( module_theme::include_ucm( "includes/plugin_invoice/pages/invoice_admin_print.php" ) );
 	//include('invoice_admin_print.php');
-} else if ( isset( $_REQUEST['invoice_id'] ) ) {
+} elseif ( isset( $_REQUEST['invoice_id'] ) ) {
 
 	if ( isset( $_REQUEST['email'] ) ) {
 		include( module_theme::include_ucm( "includes/plugin_invoice/pages/invoice_admin_email.php" ) );
@@ -25,4 +25,3 @@ if ( isset( $_REQUEST['print'] ) ) {
 	//include("invoice_admin_list.php");
 
 }
-

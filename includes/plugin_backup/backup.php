@@ -2,11 +2,15 @@
 
 define( '_BACKUP_BASE_DIR', ( defined( '_UCM_FILE_STORAGE_DIR' ) ? _UCM_FILE_STORAGE_DIR : '' ) . 'includes/plugin_backup/backups/' );
 
-class module_backup extends module_base {
-
+class module_backup extends module_base
+{
 	public $links;
 
-	public $version = 2.117;
+	public function __construct() {
+		$this->module_name     = 'backup';
+		$this->module_position = 90;
+		$this->version         = 2.117;
+	}
 	// 2.117 - 2017-05-02 - backup fix
 	// 2.116 - 2017-05-02 - backup fix
 	// 2.115 - 2016-07-10 - big update to mysqli
@@ -31,9 +35,7 @@ class module_backup extends module_base {
 	}
 
 	public function init() {
-		$this->links           = array();
-		$this->module_name     = "backup";
-		$this->module_position = 30;
+		$this->links = array();
 
 		module_config::register_js( 'backup', 'backup.js' );
 		module_config::register_css( 'backup', 'backup.css' );
@@ -182,12 +184,12 @@ class module_backup extends module_base {
 				$result['error'] = 'Backup failure';
 				header( "Content-type: text/javascript" );
 				$backup_id         = ( isset( $_REQUEST['i'] ) ) ? (int) $_REQUEST['i'] : false;
-				$hash              = ( isset( $_REQUEST['hash'] ) ) ? trim( $_REQUEST['hash'] ) : false;
+				$hash              = ucm_request_string( 'hash' );
 				$backup_file_check = ( isset( $_POST['backup_file'] ) ) ? trim( $_POST['backup_file'] ) : false;
 				$backup_type       = ( isset( $_POST['backup_type'] ) ) ? trim( $_POST['backup_type'] ) : false;
 				if ( $backup_id > 0 && $hash && $backup_file_check && $backup_type ) {
 					$correct_hash = $this->link_external_backup( $backup_id, true );
-					if ( $correct_hash == $hash ) {
+					if ( hash_equals( $correct_hash, $hash ) ) {
 						// all good to print a receipt for this payment.
 						$backup_data = $this->get_backup( $backup_id );
 						if ( $backup_data && $backup_data['backup_id'] == $backup_id && $backup_data['backup_file'] && $backup_data['backup_file'] == $backup_file_check ) {
@@ -222,7 +224,7 @@ class module_backup extends module_base {
 												}
 											}
 											break;
-										case 'database';
+										case 'database':
 											//
 											$table_name = isset( $_POST['name'] ) ? $_POST['name'] : false;
 											if ( $table_name ) {
@@ -309,7 +311,7 @@ class module_backup extends module_base {
 				}
 				$sql = "";
 				$sql .= 'INSERT INTO `' . $table . '` VALUES(';
-				for ( $j = 0; $j < $num_fields; $j ++ ) {
+				for ( $j = 0; $j < $num_fields; $j++ ) {
 					//$row[ $j ] = addslashes( $row[ $j ] );
 					//$row[ $j ] = preg_replace( "#n#", "n", $row[ $j ] );
 					if ( isset( $row[ $j ] ) ) {
@@ -322,7 +324,7 @@ class module_backup extends module_base {
 					}
 				}
 				$sql .= ");\n";
-				$record_count ++;
+				$record_count++;
 				if ( module_config::c( 'backup_gz', 1 ) && function_exists( 'gzopen' ) && function_exists( 'gzwrite' ) ) {
 					gzwrite( $handle, $sql );
 				} else {
@@ -396,14 +398,14 @@ class module_backup extends module_base {
 										$exists[ $zip_dest ] = true;
 										$zip->addEmptyDir( 'files/' . $zip_dest );
 									}
-								} else if ( is_file( $file ) && ! strpos( $file, 'backup/backups/' ) ) {
+								} elseif ( is_file( $file ) && ! strpos( $file, 'backup/backups/' ) ) {
 									//$zip->addFromString('files/'.str_replace($source . '/', '', $file), file_get_contents($file));
 									//$zip->addFile($file,'files/'.str_replace($source . '/', '', $file));
 									$zip_dest = str_replace( $source, '', $file );
 									if ( ! isset( $exists[ $zip_dest ] ) ) {
 										$exists[ $zip_dest ] = true;
 										$zip->addFile( $file, 'files/' . $zip_dest );
-										$file_count ++;
+										$file_count++;
 									}
 								}
 								//if($x++>100)break;
@@ -448,7 +450,6 @@ class module_backup extends module_base {
 
 		return $sql;
 	}
-
 }
 
 

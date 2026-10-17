@@ -20,7 +20,7 @@ ob_start();
 				$c = 0;
 				foreach ( $transactions as $transaction ) {
 					?>
-					<tr class="<?php echo ( $c ++ % 2 ) ? "odd" : "even"; ?>">
+					<tr class="<?php echo ( $c++ % 2 ) ? "odd" : "even"; ?>">
 						<td class="row_action">
 							<?php echo print_date( $transaction['transaction_date'] ); ?>
 						</td>

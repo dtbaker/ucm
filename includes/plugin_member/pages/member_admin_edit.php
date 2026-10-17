@@ -30,12 +30,14 @@ if ( class_exists( 'module_security', false ) ) {
 
 $module->page_title = _l( 'Member: %s', htmlspecialchars( $member['first_name'] . ' ' . $member['last_name'] ) );
 
-?>
-<form action="" method="post" id="member_form">
-	<input type="hidden" name="_process" value="save_member"/>
-	<input type="hidden" name="member_id" value="<?php echo $member_id; ?>"/>
+module_form::print_form_open_tag( array(
+	'id'      => 'member_form',
+	'process' => 'save_member',
+	'hidden'  => array(
+		'member_id' => $member_id,
+	),
+) );
 
-	<?php
 	module_form::set_required( array(
 			'fields' => array(
 				'first_name' => 'Name',
@@ -185,8 +187,4 @@ $module->page_title = _l( 'Member: %s', htmlspecialchars( $member['first_name'] 
 	);
 	echo module_form::generate_form_actions( $form_actions );
 
-	?>
-
-
-</form>
-
+	module_form::print_form_close_tag();

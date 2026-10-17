@@ -19,7 +19,10 @@ $messages = qa( $sql );
 
 ?>
 
-<form action="" method="post" id="statistic_form">
+<?php module_form::print_form_open_tag( array(
+	'action' => '',
+	'id'     => 'statistic_form',
+) ); ?>
 	<?php
 	$search_bar = array(
 		'elements' => array(
@@ -43,7 +46,7 @@ $messages = qa( $sql );
 	);
 	echo module_form::search_bar( $search_bar ); ?>
 
-</form>
+<?php module_form::print_form_close_tag(); ?>
 
 <p>&nbsp;</p>
 
@@ -79,7 +82,7 @@ $messages = qa( $sql );
 			}
 		}
 		?>
-		<tr class="<?php echo ( $c ++ % 2 ) ? "odd" : "even"; ?>">
+		<tr class="<?php echo ( $c++ % 2 ) ? "odd" : "even"; ?>">
 			<td class="row_action" nowrap="">
 				<?php echo module_user::link_open( $staff_member['user_id'], true ); ?>
 			</td>
@@ -103,7 +106,7 @@ $messages = qa( $sql );
 				$r = 0;
 				foreach ( $tickets as $ticket ) {
 					if ( $ticket['status_id'] == _TICKET_STATUS_RESOLVED_ID ) {
-						$r ++;
+						$r++;
 					}
 				}
 				echo $r;

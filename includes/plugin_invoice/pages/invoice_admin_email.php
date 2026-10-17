@@ -1,5 +1,6 @@
 <?php
-if ( ! $invoice_safe ) {
+
+if ( empty( $invoice_safe ) ) {
 	die( 'failed' );
 }
 $invoice_id = (int) $_REQUEST['invoice_id'];
@@ -19,10 +20,10 @@ $template_prefix        = isset( $invoice['invoice_template_email'] ) && strlen(
 if ( isset( $invoice['credit_note_id'] ) && $invoice['credit_note_id'] ) {
 	$original_template_name = $template_name = 'credit_note_email';
 	$template_type          = 'credit_note'; // this is used in our new json based hook feature
-} else if ( $invoice['date_paid'] && $invoice['date_paid'] != '0000-00-00' ) {
+} elseif ( $invoice['date_paid'] && $invoice['date_paid'] != '0000-00-00' ) {
 	$original_template_name = $template_name = $template_prefix . '_paid';
 	$template_type          = 'paid'; // this is used in our new json based hook feature
-} else if ( $invoice['overdue'] && $invoice['date_sent'] && $invoice['date_sent'] != '0000-00-00' ) {
+} elseif ( $invoice['overdue'] && $invoice['date_sent'] && $invoice['date_sent'] != '0000-00-00' ) {
 	$original_template_name = $template_name = $template_prefix . '_overdue';
 	$template_type          = 'overdue'; // this is used in our new json based hook feature
 } else {
@@ -74,7 +75,7 @@ if ( $invoice['customer_id'] ) {
 			}
 		}
 	}
-} else if ( $invoice['member_id'] ) {
+} elseif ( $invoice['member_id'] ) {
 	$member                   = module_member::get_member( $invoice['member_id'] );
 	$to                       = array( $member );
 	$replace['customer_name'] = $member['first_name'];
@@ -121,4 +122,3 @@ module_email::print_compose(
 		),
 	)
 );
-?>

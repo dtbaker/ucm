@@ -45,11 +45,11 @@ if ( ! isset( $for_email ) || ! $for_email ) {
 		</th>
 		<th><?php _e( module_config::c( 'invoice_amount_name', 'Amount' ) ); ?></th>
 		<?php if ( module_config::c( 'job_show_due_date', 1 ) ) {
-			$colspan ++; ?>
+			$colspan++; ?>
 			<th nowrap="nowrap"><?php _e( 'Due Date' ); ?></th>
 		<?php } ?>
 		<?php if ( module_config::c( 'job_show_done_date', 1 ) ) {
-			$colspan ++; ?>
+			$colspan++; ?>
 			<th nowrap="nowrap"><?php _e( 'Done Date' ); ?></th>
 		<?php } ?>
 		<th nowrap="nowrap">%</th>
@@ -59,7 +59,7 @@ if ( ! isset( $for_email ) || ! $for_email ) {
 	<?php
 	$c = 0;
 	foreach ( $job_tasks as $task_id => $task_data ) {
-		$c ++;
+		$c++;
 		// todo-move this into a method so we can update it via ajax.
 		$percentage    = module_job::get_percentage( $task_data );
 		$task_due_time = strtotime( $task_data['date_due'] );

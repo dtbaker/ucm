@@ -1,6 +1,6 @@
 <?php
 
-if ( ! $contract_safe ) {
+if ( empty( $contract_safe ) ) {
 	die( 'denied' );
 }
 
@@ -45,12 +45,17 @@ if ( class_exists( 'module_security', false ) ) {
     });
 </script>
 
-<form action="" method="post" id="contract_form">
-	<input type="hidden" name="_process" value="save_contract"/>
+<?php
+module_form::print_form_open_tag( array(
+	'id'      => 'contract_form',
+	'process' => 'save_contract',
+	'hidden'  => array(
+		'contract_id' => $contract_id,
+		'customer_id' => $contract['customer_id'],
+	),
+) );
+?>
 	<input type="hidden" name="_redirect" value="" id="form_redirect"/>
-	<input type="hidden" name="contract_id" value="<?php echo $contract_id; ?>"/>
-	<input type="hidden" name="customer_id" value="<?php echo $contract['customer_id']; ?>"/>
-
 
 	<?php
 	hook_handle_callback( 'layout_column_half', 1, '35' );
@@ -201,21 +206,20 @@ if ( class_exists( 'module_security', false ) ) {
 	// files
 	if ( $contract_id > 0 ) {
 		ob_start();
-		$files = module_file::get_files( array( 'contract_id' => $contract_id ), true );
+		// A file belongs to a contract through owner_table/owner_id, the way it does for a
+		// newsletter. There is no `contract_id` column on the file table, and
+		// module_file::get_files() only honours the keys it recognises - so searching on
+		// `contract_id` was not a filter at all and this counted, and linked to, every
+		// file in the installation as though all of them belonged to this contract.
+		$file_owner = array( 'owner_table' => 'contract', 'owner_id' => $contract_id );
+		$files      = module_file::get_files( $file_owner, true );
 		if ( count( $files ) > 0 ) {
 			?>
 			<a href="<?php
 
 			echo module_file::link_generate( false, array(
-				'arguments' => array(
-					'contract_id' => $contract['contract_id'],
-				),
-				'data'      => array(
-					// we do this to stop the 'customer_id' coming through
-					// so we link to the full contract page, not the customer contract page.
-
-					'contract_id' => $contract['contract_id'],
-				),
+				'arguments' => $file_owner,
+				'data'      => $file_owner,
 			) ); ?>"><?php echo _l( 'View all %d files in this contract', count( $files ) ); ?></a>
 			<?php
 		} else {
@@ -224,9 +228,7 @@ if ( class_exists( 'module_security', false ) ) {
 		echo '<br/>';
 		?>
 		<a href="<?php echo module_file::link_generate( 'new', array(
-			'arguments' => array(
-				'contract_id' => $contract['contract_id'],
-			)
+			'arguments' => $file_owner,
 		) ); ?>"><?php _e( 'Add New File' ); ?></a>
 		<?php
 		$fieldset_data['elements']['files'] = array(
@@ -486,5 +488,6 @@ if ( class_exists( 'module_security', false ) ) {
 	hook_handle_callback( 'custom_data_hook_location', _CUSTOM_DATA_HOOK_LOCATION_CONTRACT_FOOTER, 'contract', $contract_id, $contract );
 
 
-	hook_handle_callback( 'layout_column_half', 'end' ); ?>
-</form>
+	hook_handle_callback( 'layout_column_half', 'end' );
+
+	module_form::print_form_close_tag();

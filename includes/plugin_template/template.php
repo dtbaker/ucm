@@ -1,8 +1,7 @@
 <?php
 
-
-class module_template extends module_base {
-
+class module_template extends module_base
+{
 	public $values = array();
 	public $tags = array();
 	public $content = '';
@@ -11,8 +10,19 @@ class module_template extends module_base {
 
 	public $template_id;
 	public $template_key;
+	public $create_user_id;
+	public $update_user_id;
+	public $date_created;
+	public $date_updated;
+	public $id;
 
 	private static $_templates;
+
+	public function __construct() {
+		$this->module_name     = 'template';
+		$this->module_position = 510;
+		$this->version         = 2.260;
+	}
 
 	public static function can_i( $actions, $name = false, $category = false, $module = false ) {
 		if ( ! $module ) {
@@ -27,11 +37,7 @@ class module_template extends module_base {
 	}
 
 	function init() {
-		$this->links           = array();
-		$this->module_name     = "template";
-		$this->module_position = 28;
-
-		$this->version = 2.260;
+		$this->links = array();
 		//2.260 - 2019-04-06 - php error fix
 		//2.259 - 2015-11-06 - javascript template improvement
 		//2.258 - 2015-07-29 - delete template button
@@ -222,6 +228,11 @@ class module_template extends module_base {
 	}
 
 	public function process() {
+		// Every form that reaches here is posted from a UCM page, so it carries the
+		// form auth key. Refuse anything that does not - see module_form::check_secure_key().
+		if ( ! module_form::check_secure_key() ) {
+			module_form::reject_invalid_form_auth();
+		}
 		if ( 'save_template' == $_REQUEST['_process'] ) {
 
 			if ( ! module_config::can_i( 'edit', 'Settings' ) ) {
@@ -249,6 +260,7 @@ class module_template extends module_base {
 			}
 			foreach ( $tags_to_add as $key => $val ) {
 				if ( ! is_array( $val ) ) {
+					$val = $val ?? '';
 					if ( strlen( $val ) > 30 ) {
 						$val = substr( $val, 0, 30 ) . '...';
 					}
@@ -297,7 +309,7 @@ class module_template extends module_base {
 			);
 			if ( $type == 'text' && stripos( $data['content'], '<br' ) === false && stripos( $data['content'], '<p>' ) === false && stripos( $data['content'], '<table' ) === false ) {
 				$data['content'] = nl2br( $content );
-			} else if ( $type == 'code' ) {
+			} elseif ( $type == 'code' ) {
 				$data['wysiwyg'] = 0;
 			}
 			update_insert( 'template_id', ( $template && $template['template_id'] ) ? $template['template_id'] : 'new', 'template', $data );
@@ -332,7 +344,7 @@ class module_template extends module_base {
 		$template = new self();
 		if ( isset( self::$_templates[ $template_key ] ) ) {
 			$data = self::$_templates[ $template_key ];
-		} else if ( self::db_table_exists( 'template' ) ) {
+		} elseif ( self::db_table_exists( 'template' ) ) {
 			$data = get_single( "template", "template_key", $template_key );
 		} else {
 			$data = array();
@@ -529,6 +541,7 @@ class module_template extends module_base {
 			if ( is_array( $val ) ) {
 				continue;
 			}
+			$val = $val ?? '';
 			// if this isn't a html field we add newlines.
 			if ( ! preg_match( '#<[^>]+>#', $val ) ) {
 				// raw text. nl2br
@@ -547,9 +560,9 @@ class module_template extends module_base {
 					$mathval = $originalval;
 					if ( $matches[2][ $i ] == '-' ) {
 						$mathval = $mathval - $matches[3][ $i ];
-					} else if ( $matches[2][ $i ] == '+' ) {
+					} elseif ( $matches[2][ $i ] == '+' ) {
 						$mathval = $mathval + $matches[3][ $i ];
-					} else if ( $matches[2][ $i ] == '*' ) {
+					} elseif ( $matches[2][ $i ] == '*' ) {
 						$mathval = $mathval * $matches[3][ $i ];
 					}
 
@@ -719,6 +732,5 @@ class module_template extends module_base {
 
 		return ob_get_clean();
 	}
-
 }
 

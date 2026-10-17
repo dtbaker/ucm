@@ -39,7 +39,7 @@ if ( $retry_failures && $send['total_fail_count'] <= 0 ) {
 $start_time = $send['start_time'];
 ?>
 
-<form action="" method="post">
+<?php module_form::print_form_open_tag( array( 'action' => '' ) ); ?>
 	<input type="hidden" name="newsletter_id" value="<?php echo (int) $newsletter_id; ?>">
 	<input type="hidden" name="send_id" value="<?php echo (int) $send_id; ?>">
 	<input type="hidden" name="_process" value="modify_send">
@@ -83,10 +83,10 @@ $start_time = $send['start_time'];
 						$sent_to_members    = 0;
 						while ( $send_member = mysqli_fetch_assoc( $send_members ) ) {
 							if ( $send_member['open_time'] ) {
-								$open_count ++;
+								$open_count++;
 							}
 							?>
-							<tr class="<?php echo $x ++ % 2 ? 'odd' : 'even'; ?>"
+							<tr class="<?php echo $x++ % 2 ? 'odd' : 'even'; ?>"
 							    id="newsletter_member_<?php echo $send_member['newsletter_member_id']; ?>">
 								<td><?php echo htmlspecialchars( $send_member['company_name'] ); ?></td>
 								<td><?php echo htmlspecialchars( $send_member['first_name'] . ' ' . $send_member['last_name'] ); ?></td>
@@ -100,9 +100,9 @@ $start_time = $send['start_time'];
 
 									if ( module_config::c( 'newsletter_doubleoptin_bypass', 0 ) && isset( $send_member['blacklist_reason'] ) && $send_member['blacklist_reason'] == 'doubleoptin' ) {
 										_e( 'No' );
-									} else if ( $send_member['unsubscribe_time'] ) {
+									} elseif ( $send_member['unsubscribe_time'] ) {
 										echo print_date( $send_member['unsubscribe_time'], true );
-									} else if ( $send_member['unsubscribe_time2'] ) {
+									} elseif ( $send_member['unsubscribe_time2'] ) {
 										echo print_date( $send_member['unsubscribe_time2'], true );
 									} else {
 										_e( 'No' );
@@ -114,12 +114,12 @@ $start_time = $send['start_time'];
 										case _NEWSLETTER_STATUS_NEW:
 											// hasnt been processed yet
 											break;
-										case _NEWSLETTER_STATUS_SENT;
+										case _NEWSLETTER_STATUS_SENT:
 											// sent!
 											_e( 'sent' );
 											break;
-										case _NEWSLETTER_STATUS_PENDING;
-										case _NEWSLETTER_STATUS_PAUSED;
+										case _NEWSLETTER_STATUS_PENDING:
+										case _NEWSLETTER_STATUS_PAUSED:
 											// pending send..
 											_e( 'pending' );
 											break;
@@ -220,116 +220,128 @@ $start_time = $send['start_time'];
 					'type'  => 'h3',
 					'title' => 'Send Statistics',
 				) ); ?>
-				<table class="tableclass tableclass_form tableclass_full">
-					<tbody>
-					<tr>
-						<th class="width1"><?php _e( 'Start sending' ); ?></th>
-						<td>
-							<?php if ( $start_time <= time() ) {
-								_e( 'Now' );
-							} else {
-								echo print_date( $start_time, true );
-							} ?>
-						</td>
-					</tr>
-					<tr>
-						<th><?php _e( 'Sent To' ); ?></th>
-						<td id="sent_to">
-							<?php echo _l( '%s of %s', (int) $send['total_sent_count'], (int) $send['total_member_count'] ); ?>
-						</td>
-					</tr>
-					<tr>
-						<th><?php _e( 'Viewed By' ); ?></th>
-						<td id="open_rate">
-							<?php echo _l( '%s (%s%%)', (int) $send['total_open_count'], round( ( $send['total_open_count'] / $send['total_member_count'] ) * 100 ) ); ?>
-						</td>
-					</tr>
-					<tr>
-						<th><?php _e( 'Clicks By' ); ?></th>
-						<td id="total_link_clicks">
-							<?php echo _l( '%s (%s%%)', (int) $send['total_link_clicks'], round( ( $send['total_link_clicks'] / $send['total_member_count'] ) * 100 ) ); ?>
-							<?php if ( $statistics ) { ?>
-								<a
-									href="<?php echo module_newsletter::link_statistics_link_clicks( $newsletter_id, $send_id, false, $send ); ?>"><?php _e( 'View Link Clicks' ); ?></a>
-							<?php } ?>
-						</td>
-					</tr>
-					<tr>
-						<th><?php _e( 'Bounces' ); ?></th>
-						<td id="bounces">
-							<?php echo _l( '%s (%s%%)', (int) $send['total_bounce_count'], round( ( $send['total_bounce_count'] / $send['total_member_count'] ) * 100 ) ); ?>
-						</td>
-					</tr>
-					<tr>
-						<th><?php _e( 'Failures' ); ?></th>
-						<td id="failures">
-							<?php echo _l( '%s (%s%%)', (int) $send['total_fail_count'], round( ( $send['total_fail_count'] / $send['total_member_count'] ) * 100 ) ); ?>
-							<?php if ( isset( $statistics ) && $statistics && (int) $send['total_fail_count'] > 0 && ! isset( $_REQUEST['retry_failures'] ) ) { ?>
-								<a
-									href="<?php echo module_newsletter::link_queue_watch( $newsletter_id, $send_id ); ?>&retry_failures=1"><?php _e( 'Retry failed emails' ); ?></a>
-							<?php } ?>
-						</td>
-					</tr>
-					<tr>
-						<th><?php _e( 'Unsubscribed' ); ?></th>
-						<td id="unsubscribed">
-							<?php echo _l( '%s (%s%%)', (int) $send['total_unsubscribe_count'], round( ( $send['total_unsubscribe_count'] / $send['total_member_count'] ) * 100 ) ); ?>
-						</td>
-					</tr>
-					<tr>
-						<th><?php _e( 'Current status' ); ?></th>
-						<td id="current_status">
-							<?php
-							switch ( $send['status'] ) {
-								case _NEWSLETTER_STATUS_NEW:
-									_e( 'Not started' );
-									break;
-								case _NEWSLETTER_STATUS_PAUSED:
-									_e( 'Paused' );
-									?>
-									<br>
-									<input type="button" name="delete" value="<?php echo _l( 'Delete Send' ); ?>"
-									       class="submit_button delete_button"
-									       onclick="$('#status').val('delete'); $(this).parents('form')[0].submit();">
-									<?php
-									break;
-								case _NEWSLETTER_STATUS_PENDING:
-									_e( 'Currently sending (waiting from CRON job)' );
-									break;
-								case _NEWSLETTER_STATUS_SENT:
-									_e( 'All sent' );
-									break;
-								default:
-									_e( 'Unknown??' );
-							}
-							?>
-						</td>
-					</tr>
-					<tr id="change_status_buttons">
-						<td colspan="2" align="center">
-							<input type="hidden" name="status" id="status" value="<?php echo (int) $send['status']; ?>">
-							<?php if ( $send['status'] == _NEWSLETTER_STATUS_PENDING ) {
-								// sending is in progress... offer a pause button.
-								?>
-								<input type="button" name="cancel" value="<?php echo _l( 'Pause Sending' ); ?>" class="submit_button"
-								       onclick="$('#status').val(<?php echo _NEWSLETTER_STATUS_PAUSED; ?>); $(this).parents('form')[0].submit();">
-							<?php } else if ( $send['status'] == _NEWSLETTER_STATUS_NEW ) {
-								// sending hasn't started yet - offer a start button.
-								?>
-								<input type="button" name="resume" value="<?php echo _l( 'Start Sending' ); ?>" class="submit_button"
-								       onclick="$('#status').val(<?php echo _NEWSLETTER_STATUS_PENDING; ?>); $(this).parents('form')[0].submit();">
-							<?php } else if ( $send['status'] == _NEWSLETTER_STATUS_PAUSED ) {
-								// sending paused.. offer a resume button
-								?>
-								<input type="button" name="cancel" value="<?php echo _l( 'Resume Sending' ); ?>" class="submit_button"
-								       onclick="$('#status').val(<?php echo _NEWSLETTER_STATUS_PENDING; ?>); $(this).parents('form')[0].submit();">
-							<?php } else { ?>
-								<!-- send complete -->
-							<?php } ?>
-						</td>
-					</tr>
-					</tbody>
-				</table>
+				<?php
+				// Every id below moves off its <td> and onto a span inside the cell. The page
+				// polls newsletter_queue_manual, which answers with { '#sent_to': '...' } and
+				// the script does $(x).html(d[x]) - a span takes that identically, and a
+				// fieldset does not hand out cell ids. tests/e2e/fieldsets.spec.ts checks each
+				// one still exists, because losing one stops a figure updating while the page
+				// goes on looking correct.
+				$percent_of_members = static function ( $count ) use ( $send ) {
+					$total = (int) $send['total_member_count'];
+
+					return _l( '%s (%s%%)', (int) $count, $total ? round( ( $count / $total ) * 100 ) : 0 );
+				};
+				$live = static function ( $id, $content ) {
+					return '<span id="' . $id . '">' . $content . '</span>';
+				};
+
+				$stat_elements = array(
+					'start_time'        => array(
+						'title'  => _l( 'Start sending' ),
+						'fields' => array(
+							$start_time <= time() ? _l( 'Now' ) : print_date( $start_time, true ),
+						),
+					),
+					'sent_to'           => array(
+						'title'  => _l( 'Sent To' ),
+						'fields' => array(
+							$live( 'sent_to', _l( '%s of %s',
+								(int) $send['total_sent_count'], (int) $send['total_member_count'] ) ),
+						),
+					),
+					'open_rate'         => array(
+						'title'  => _l( 'Viewed By' ),
+						'fields' => array(
+							$live( 'open_rate', $percent_of_members( $send['total_open_count'] ) ),
+						),
+					),
+					'total_link_clicks' => array(
+						'title'  => _l( 'Clicks By' ),
+						'fields' => array(
+							$live( 'total_link_clicks', $percent_of_members( $send['total_link_clicks'] ) )
+							. ( $statistics
+								? ' <a href="' . htmlspecialchars( module_newsletter::link_statistics_link_clicks( $newsletter_id, $send_id, false, $send ) ) . '">'
+								  . _l( 'View Link Clicks' ) . '</a>'
+								: '' ),
+						),
+					),
+					'bounces'           => array(
+						'title'  => _l( 'Bounces' ),
+						'fields' => array(
+							$live( 'bounces', $percent_of_members( $send['total_bounce_count'] ) ),
+						),
+					),
+					'failures'          => array(
+						'title'  => _l( 'Failures' ),
+						'fields' => array(
+							$live( 'failures', $percent_of_members( $send['total_fail_count'] ) )
+							. ( ( isset( $statistics ) && $statistics && (int) $send['total_fail_count'] > 0 && ! isset( $_REQUEST['retry_failures'] ) )
+								? ' <a href="' . htmlspecialchars( module_newsletter::link_queue_watch( $newsletter_id, $send_id ) . '&retry_failures=1' ) . '">'
+								  . _l( 'Retry failed emails' ) . '</a>'
+								: '' ),
+						),
+					),
+					'unsubscribed'      => array(
+						'title'  => _l( 'Unsubscribed' ),
+						'fields' => array(
+							$live( 'unsubscribed', $percent_of_members( $send['total_unsubscribe_count'] ) ),
+						),
+					),
+				);
+
+				switch ( $send['status'] ) {
+					case _NEWSLETTER_STATUS_NEW:
+						$status_text = _l( 'Not started' );
+						break;
+					case _NEWSLETTER_STATUS_PAUSED:
+						$status_text = _l( 'Paused' ) . '<br>'
+						               . '<input type="button" name="delete" value="' . htmlspecialchars( _l( 'Delete Send' ) ) . '"'
+						               . ' class="submit_button delete_button"'
+						               . ' onclick="$(\'#status\').val(\'delete\'); $(this).parents(\'form\')[0].submit();">';
+						break;
+					case _NEWSLETTER_STATUS_PENDING:
+						$status_text = _l( 'Currently sending (waiting from CRON job)' );
+						break;
+					case _NEWSLETTER_STATUS_SENT:
+						$status_text = _l( 'All sent' );
+						break;
+					default:
+						$status_text = _l( 'Unknown??' );
+				}
+				$stat_elements['current_status'] = array(
+					'title'  => _l( 'Current status' ),
+					'fields' => array( $live( 'current_status', $status_text ) ),
+				);
+
+				// The buttons sat on a <tr id="change_status_buttons"> that the script hides.
+				// A fieldset does not hand out row ids either, so the id goes on a div around
+				// the buttons - hiding that hides what the script meant to hide.
+				$status_buttons = '<input type="hidden" name="status" id="status" value="' . (int) $send['status'] . '">';
+				if ( $send['status'] == _NEWSLETTER_STATUS_PENDING ) {
+					// sending is in progress... offer a pause button.
+					$status_buttons .= '<input type="button" name="cancel" value="' . htmlspecialchars( _l( 'Pause Sending' ) ) . '"'
+					                   . ' class="submit_button" onclick="$(\'#status\').val(' . _NEWSLETTER_STATUS_PAUSED . '); $(this).parents(\'form\')[0].submit();">';
+				} elseif ( $send['status'] == _NEWSLETTER_STATUS_NEW ) {
+					// sending hasn't started yet - offer a start button.
+					$status_buttons .= '<input type="button" name="resume" value="' . htmlspecialchars( _l( 'Start Sending' ) ) . '"'
+					                   . ' class="submit_button" onclick="$(\'#status\').val(' . _NEWSLETTER_STATUS_PENDING . '); $(this).parents(\'form\')[0].submit();">';
+				} elseif ( $send['status'] == _NEWSLETTER_STATUS_PAUSED ) {
+					// sending paused.. offer a resume button
+					$status_buttons .= '<input type="button" name="cancel" value="' . htmlspecialchars( _l( 'Resume Sending' ) ) . '"'
+					                   . ' class="submit_button" onclick="$(\'#status\').val(' . _NEWSLETTER_STATUS_PENDING . '); $(this).parents(\'form\')[0].submit();">';
+				} else {
+					$status_buttons .= '<!-- send complete -->';
+				}
+				$stat_elements['change_status'] = array(
+					'message' => '<div id="change_status_buttons">' . $status_buttons . '</div>',
+				);
+
+				echo module_form::generate_fieldset( array(
+					'class'    => 'tableclass tableclass_form tableclass_full',
+					'elements' => $stat_elements,
+				) );
+				?>
 
 				<div id="manual_send_block"
 				     style="<?php echo ( $send['status'] != _NEWSLETTER_STATUS_PENDING && ! $retry_failures ) ? 'display:none;' : ''; ?>">
@@ -339,7 +351,7 @@ $start_time = $send['start_time'];
 					) ); ?>
 					<script type="text/javascript">
               var run_manual_send = false;
-							<?php if($retry_failures || $retry_pending){ ?>
+							<?php if ($retry_failures || $retry_pending) { ?>
               $(function () {
                   start_send_manual();
               });
@@ -434,4 +446,4 @@ $start_time = $send['start_time'];
 		</tbody>
 	</table>
 
-</form>
+<?php module_form::print_form_close_tag();

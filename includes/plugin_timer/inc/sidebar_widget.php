@@ -49,7 +49,8 @@ if ( count( $timers ) ) {
 			$ucmtimer = new UCMTimer( $timer['timer_id'] );
 			?>
 			<span data-timer-id="<?php echo (int) $timer['timer_id']; ?>" data-timer-field="status">
-                <?php echo $ucmtimer->get_status_text();; ?>
+                <?php echo $ucmtimer->get_status_text();
+; ?>
             </span>
 			<?php
 
@@ -62,7 +63,8 @@ if ( count( $timers ) ) {
 			$ucmtimer = new UCMTimer( $timer['timer_id'] );
 			?>
 			<span data-timer-id="<?php echo (int) $timer['timer_id']; ?>" data-timer-field="duration">
-                <?php echo $ucmtimer->get_total_time();; ?>
+                <?php echo $ucmtimer->get_total_time();
+; ?>
             </span>
 			<?php
 		},
@@ -187,12 +189,12 @@ echo module_form::generate_fieldset( $fieldset_data );
 
 <script type="text/javascript">
     ucm.set_var('timer_customer_id', '<?php echo (int) $options['customer_id'];?>');
-		<?php if(! empty( $options['owner_child_id'] )){ ?>
+		<?php if (! empty( $options['owner_child_id'] )) { ?>
     ucm.set_var('timer_owner_child_id', '<?php echo (int) $options['owner_child_id'];?>');
 		<?php } ?>
     $(function () {
         ucm.timer.load_page_timers('<?php echo $options['owner_table'];?>', <?php echo (int) $options['owner_id'];?> );
-			<?php if(empty( $options['avoid_automatic'] )){ ?>
+			<?php if (empty( $options['avoid_automatic'] )) { ?>
         ucm.timer.automatic_page_timer('<?php echo $options['owner_table'];?>', <?php echo (int) $options['owner_id'];?> );
 			<?php } ?>
     });

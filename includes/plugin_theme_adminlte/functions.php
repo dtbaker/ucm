@@ -218,7 +218,7 @@ function adminlte_search_bar( $callback, $options ) {
 										$field['class'] .= ' form-control input-sm';
 										module_form::generate_form_element( $field );
 										echo ' ';
-									} else if ( is_closure( $field ) ) {
+									} elseif ( is_closure( $field ) ) {
 										$field();
 									} else {
 										echo $field . ' ';
@@ -286,7 +286,7 @@ function adminlte_extra_fields_output( $callback, $html, $owner_table, $owner_id
 					, $html );
 			}
 		}
-	} else if ( module_theme::get_config( 'adminlte_formstyle', 'table' ) == 'long' ) {
+	} elseif ( module_theme::get_config( 'adminlte_formstyle', 'table' ) == 'long' ) {
 		$html = str_replace( 'tbody', 'div', $html );
 		if ( preg_match_all( '#<tr([^>]*)>(.*)</tr>#imsU', $html, $matches ) ) {
 			// convert these into <divs>
@@ -347,13 +347,13 @@ function adminlte_generate_fieldset( $callback, $options ) {
 	     data-fieldset-settings="<?php echo htmlspecialchars( json_encode( $fieldset_settings ), ENT_QUOTES, 'UTF-8' ); ?>"
 	     data-fieldset-id="<?php echo $fieldset_id; ?>" id="<?php echo $fieldset_id; ?>">
 		<div class="box-header">
-			<?php if ( $options['heading'] ){
+			<?php if ( $options['heading'] ) {
 				if ( ! isset( $options['heading']['type'] ) || $options['heading']['type'] != 'h3' ) {
 					$options['heading']['type'] = 'h3';
 				}
 				$options['heading']['class'] = 'box-title';
 				print_heading( $options['heading'] );
-			}else if ( $options['title'] ){ ?>
+			} elseif ( $options['title'] ) { ?>
 			<<?php echo $options['title_type']; ?>
 			class="box-title"><?php _e( $options['title'] ); ?></<?php echo $options['title_type']; ?>>
 		<?php } ?>
@@ -392,7 +392,7 @@ function adminlte_generate_fieldset( $callback, $options ) {
 								<th colspan="2" class="text-center">
 									<?php if ( isset( $element['message'] ) ) { ?>
 										<?php echo $element['message']; ?>
-									<?php } else if ( isset( $element['warning'] ) ) { ?>
+									<?php } elseif ( isset( $element['warning'] ) ) { ?>
 										<span class="error_text"><?php echo $element['warning']; ?></span>
 									<?php } ?>
 								</th>
@@ -413,7 +413,7 @@ function adminlte_generate_fieldset( $callback, $options ) {
 													// treat this as a call to the form generate option
 													module_form::generate_form_element( $field );
 													echo ' ';
-												} else if ( is_closure( $field ) ) {
+												} elseif ( is_closure( $field ) ) {
 													$field();
 												} else {
 													echo $field . ' ';
@@ -439,7 +439,7 @@ function adminlte_generate_fieldset( $callback, $options ) {
 				</table> <!-- /.elements -->
 				<?php
 				// end table layout
-			} else if ( module_theme::get_config( 'adminlte_formstyle', 'table' ) == 'div' ) {
+			} elseif ( module_theme::get_config( 'adminlte_formstyle', 'table' ) == 'div' ) {
 				?>
 				<div class="<?php echo $options['class']; ?>">
 					<?php
@@ -468,7 +468,7 @@ function adminlte_generate_fieldset( $callback, $options ) {
 								<div class="text-center">
 									<?php if ( isset( $element['message'] ) ) { ?>
 										<?php echo $element['message']; ?>
-									<?php } else if ( isset( $element['warning'] ) ) { ?>
+									<?php } elseif ( isset( $element['warning'] ) ) { ?>
 										<span class="error_text"><?php echo $element['warning']; ?></span>
 									<?php } ?>
 								</div>
@@ -541,7 +541,7 @@ function adminlte_generate_fieldset( $callback, $options ) {
 															// treat this as a call to the form generate option
 															module_form::generate_form_element( $field );
 															echo ' ';
-														} else if ( is_closure( $field ) ) {
+														} elseif ( is_closure( $field ) ) {
 															$field();
 														} else {
 															echo $field . ' ';
@@ -577,7 +577,7 @@ function adminlte_generate_fieldset( $callback, $options ) {
 					?>
 				</div> <!-- /.elements -->
 				<?php
-			} else if ( module_theme::get_config( 'adminlte_formstyle', 'table' ) == 'long' ) {
+			} elseif ( module_theme::get_config( 'adminlte_formstyle', 'table' ) == 'long' ) {
 				?>
 				<div class="<?php echo $options['class']; ?>">
 					<?php
@@ -606,7 +606,7 @@ function adminlte_generate_fieldset( $callback, $options ) {
 								<div class="text-center">
 									<?php if ( isset( $element['message'] ) ) { ?>
 										<?php echo $element['message']; ?>
-									<?php } else if ( isset( $element['warning'] ) ) { ?>
+									<?php } elseif ( isset( $element['warning'] ) ) { ?>
 										<span class="error_text"><?php echo $element['warning']; ?></span>
 									<?php } ?>
 								</div>
@@ -627,14 +627,13 @@ function adminlte_generate_fieldset( $callback, $options ) {
 													case 'check':
 													case 'checkbox':
 													case 'wysiwyg':
-
 														break;
 													default:
 														$field['class'] .= ' form-control ';
 												}
 												module_form::generate_form_element( $field );
 												echo ' ';
-											} else if ( is_closure( $field ) ) {
+											} elseif ( is_closure( $field ) ) {
 												$field();
 											} else {
 												echo $field . ' ';

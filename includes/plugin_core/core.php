@@ -1,7 +1,12 @@
 <?php
 
-
-class module_core extends module_base {
+class module_core extends module_base
+{
+	public function __construct() {
+		$this->module_name     = 'core';
+		$this->module_position = 1;
+		$this->version         = 2.154;
+	}
 
 	public static function can_i( $actions, $name = false, $category = false, $module = false ) {
 		if ( ! $module ) {
@@ -16,10 +21,6 @@ class module_core extends module_base {
 	}
 
 	public function init() {
-		$this->module_name     = "core";
-		$this->module_position = 0;
-
-		$this->version = 2.154;
 		//2.154 - 2022-12-27 - php8.1 fixes
 		//2.153 - 2018-04-01 - core fixes
 		//2.152 - 2017-07-26 - bug fixes
@@ -59,7 +60,6 @@ class module_core extends module_base {
 		//2.1 - 2013-04-21 - initial release
 
 	}
-
 }
 
 /* placeholder module to contain various functions used through out the system */
@@ -146,7 +146,7 @@ if ( ! function_exists( 'decimal_time_in' ) ) {
 			$hours   = (int) $bits[0];
 			$minutes = isset( $bits[1] ) ? preg_replace( '#[^0-9]#', '', $bits[1] ) : 0;
 			if ( $minutes >= 60 ) {
-				$hours ++;
+				$hours++;
 				$minutes = $minutes - 60;
 			}
 			$value = number_out( $hours + ( $minutes / 60 ) );
@@ -159,15 +159,15 @@ if ( ! function_exists( 'decimal_time_in' ) ) {
 if ( ! function_exists( 'decimal_time_out' ) ) {
 	function decimal_time_out( $value ) {
 		if ( module_config::c( 'task_time_as_hours_minutes', 1 ) ) {
-			$bits    = explode( '.', $value );
+			$bits    = explode( '.', (string) ( $value ?? '' ) );
 			$hours   = (int) $bits[0];
 			$minutes = isset( $bits[1] ) ? preg_replace( '#[^0-9]#', '', $bits[1] ) : 0;
 			$minutes = round( ( "." . $minutes ) * 60 );
 			if ( $minutes <= 0 ) {
 				$minutes = '00';
-			} else if ( $minutes < 10 ) {
+			} elseif ( $minutes < 10 ) {
 				$minutes = '0' . $minutes;
-			} else if ( $minutes >= 60 ) {
+			} elseif ( $minutes >= 60 ) {
 				$minutes = '00';
 			} else {
 				$minutes = str_pad( $minutes, 2, '0', STR_PAD_RIGHT );
@@ -247,7 +247,7 @@ if ( ! function_exists( 'currency' ) ) {
 		}
 		if ( module_config::c( 'currency_show_code_always', 0 ) ) {
 			$data .= ' ' . $currency_code;
-		} else if ( $show_name && module_config::c( 'currency_show_non_default', 1 ) ) {
+		} elseif ( $show_name && module_config::c( 'currency_show_non_default', 1 ) ) {
 			$data .= ' ' . $currency_code;
 		}
 

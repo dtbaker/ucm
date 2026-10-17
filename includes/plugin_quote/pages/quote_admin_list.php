@@ -1,6 +1,6 @@
 <?php
 
-if ( ! $quote_safe ) {
+if ( empty( $quote_safe ) ) {
 	die( 'denied' );
 }
 
@@ -164,7 +164,7 @@ print_heading( $header );
 ?>
 
 
-<form action="" method="post">
+<?php module_form::print_form_open_tag( array( 'action' => '' ) ); ?>
 
 	<?php $search_bar = array(
 		'elements' => array(
@@ -381,4 +381,4 @@ print_heading( $header );
 
 	?>
 
-</form>
+<?php module_form::print_form_close_tag();

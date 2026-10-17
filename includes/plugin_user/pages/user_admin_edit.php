@@ -1,6 +1,6 @@
 <?php
 
-if ( ! $user_safe ) {
+if ( empty( $user_safe ) ) {
 	die( 'fail' );
 }
 
@@ -82,21 +82,20 @@ if ( isset( $user['email'] ) && strlen( $user['email'] ) > 3 ) {
 	}
 }
 
+module_form::print_form_open_tag( array(
+	'autocomplete' => 'off',
+	'process'      => 'save_user',
+	'hidden'       => array(
+		'user_id'     => $user_id,
+		'customer_id' => $user['customer_id'],
+	),
+) );
 ?>
-
-
-<form action="" method="post" autocomplete="off">
-	<input type="hidden" name="_process" value="save_user"/>
 	<!-- <input type="hidden" name="_redirect" value="<?php echo $module->link( "", array( "saved"   => true,
 	                                                                                       "user_id" => ( (int) $user_id ) ? $user_id : ''
 	) ); ?>" /> -->
-	<input type="hidden" name="user_id" value="<?php echo $user_id; ?>"/>
-	<input type="hidden" name="customer_id" value="<?php echo $user['customer_id']; ?>"/>
-
 
 	<?php
-
-	module_form::print_form_auth();
 
 	module_form::prevent_exit( array(
 			'valid_exits' => array(
@@ -201,7 +200,4 @@ if ( isset( $user['email'] ) && strlen( $user['email'] ) > 3 ) {
 	);
 	echo module_form::generate_form_actions( $form_actions );
 
-	?>
-
-
-</form>
+	module_form::print_form_close_tag();

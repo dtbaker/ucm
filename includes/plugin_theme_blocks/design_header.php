@@ -2,12 +2,10 @@
 
 switch ( $display_mode ) {
 	case 'ajax':
-
 		break;
 	case 'iframe':
 	case 'normal':
 	default:
-
 		$page_widgets = new theme_widget_manager( $page_unique_id );
 		?>
 		<!DOCTYPE html>
@@ -17,7 +15,7 @@ switch ( $display_mode ) {
 			<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 			<meta name="viewport" content="width=device-width, initial-scale=1.0">
 			<title><?php echo $page_title; ?></title>
-			<?php $header_favicon = module_theme::get_config( 'theme_favicon', '' );
+			<?php $header_favicon = module_theme::favicon_url();
 			if ( $header_favicon ) { ?>
 				<link rel="icon" href="<?php echo htmlspecialchars( $header_favicon ); ?>">
 			<?php } ?>
@@ -34,7 +32,7 @@ switch ( $display_mode ) {
 					color: <?php echo htmlspecialchars(module_theme::get_config('blocks_menu_fg','#1f3334'));?>;
 				}
 
-				<?php if(module_theme::get_config('blocks_menu_collapse','allow') != 'allow'){ ?>
+				<?php if (module_theme::get_config('blocks_menu_collapse','allow') != 'allow') { ?>
 				nav a.menu-btn {
 					display: none;
 				}
@@ -43,7 +41,7 @@ switch ( $display_mode ) {
 					padding: 0;
 				}
 
-				<?php }else{ ?>
+				<?php } else { ?>
 				body.box-large {
 					padding: 0 0 0<?php echo module_theme::get_config('blocks_boxstyle','box-large') == 'box-large' ? '61px' : '35px';?>;
 				}
@@ -114,7 +112,7 @@ switch ( $display_mode ) {
 				<div class="user left clearfix headerlogo">
 					<a href="<?php echo _BASE_HREF; ?>" class="logo">
 						<!-- Add the class icon to your logo image or logo icon to add the margining -->
-						<?php if ( $header_logo = module_theme::get_config( 'theme_logo', _BASE_HREF . 'images/logo.png' ) ) { ?>
+						<?php if ( $header_logo = module_theme::logo_url() ) { ?>
 							<img src="<?php echo htmlspecialchars( $header_logo ); ?>" border="0"
 							     title="<?php echo htmlspecialchars( module_config::s( 'header_title', 'UCM' ) ); ?>">
 						<?php } else { ?>
@@ -184,7 +182,8 @@ switch ( $display_mode ) {
 									</ul>
 								</div>
 							<?php } else { ?>
-								<a href="#" class="options" id="<?php echo $header_button['id']; ?>">
+								<a<?php echo header_button_link_attributes( $header_button ); ?>
+									class="options" id="<?php echo $header_button['id']; ?>">
 									<!-- <?php echo $header_button['title']; ?> -->
 									<i class="fa fa-<?php echo $header_button['fa-icon']; ?>"></i>
 								</a>
@@ -199,14 +198,14 @@ switch ( $display_mode ) {
 						<?php } ?>
 						<a href="<?php echo _BASE_HREF; ?>index.php?_logout=true" class="options"><i
 								class="fa fa-power-off"></i></a>
-						<form action="<?php echo _BASE_HREF; ?>?p=search_results" method="post">
+						<?php module_form::print_form_open_tag( array( 'action' => _BASE_HREF . '?p=search_results' ) ); ?>
 							<input type="text" name="quick_search" class="form-control"
 							       value="<?php echo isset( $_REQUEST['quick_search'] ) ? htmlspecialchars( $_REQUEST['quick_search'] ) : ''; ?>"
 							       placeholder="<?php _e( 'Quick Search:' ); ?>"/>
 							<button type="submit">
 								<i class="fa fa-search"></i>
 							</button>
-						</form>
+						<?php module_form::print_form_close_tag(); ?>
 					</div>
 				<?php } ?>
 			</header>
@@ -280,7 +279,7 @@ switch ( $display_mode ) {
 		<div id="inner-content">
 
 		<?php
-	} else{
+	} else {
 		// not logged in
 	    ?>
         <body class="bg-black theme-blocks" id="login-page">

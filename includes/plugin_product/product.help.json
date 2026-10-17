@@ -1,26 +1,19 @@
 {
-  "title": "Products",
-  "description": "Products can easily be added to a Quote, Job or Invoice. ",
-  "topics": [
-    {
-      "title": "Product Documentation",
-      "url": "http://ultimateclientmanager.com/support/documentation-wiki/products/",
-      "wordpress_post_id": 6245
-    },
-    {
-      "title": "Supplier/Vendor Documentation",
-      "url": "http://ultimateclientmanager.com/support/documentation-wiki/suppliers/",
-      "wordpress_post_id": 12138
-    }
-  ],
-  "api_endpoints": [
-    {
-      "endpoint": "product",
-      "method": "list",
-      "description": "List available products"
-    }
-  ],
-  "config": {
-    "product_show_category_in_tasks": "If this is set to 0 then the product category will not display when the product is added to a job/invoice task listing. Default is 1"
-  }
+	"_generated": "Written by docs-site/scripts/build-app-artifacts.mjs. Edit the article frontmatter, not this file.",
+	"title": "Products",
+	"description": "Products can easily be added to a Quote, Job or Invoice. ",
+	"config": {
+		"product_show_category_in_tasks": "If this is set to 0 then the product category will not display when the product is added to a job/invoice task listing. Default is 1"
+	},
+	"article": "using/products",
+	"pages": {
+		"product-product_admin": "using/products",
+		"product-product_admin_category": "using/products",
+		"product-product_admin_category_edit": "using/products",
+		"product-product_admin_category_list": "using/products",
+		"product-product_admin_edit": "using/products",
+		"product-product_admin_list": "using/products",
+		"product-product_settings": "using/products",
+		"product-product_supplier_admin": "using/products"
+	}
 }

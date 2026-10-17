@@ -1,5 +1,6 @@
 <?php
-if ( ! $job_safe ) {
+
+if ( empty( $job_safe ) ) {
 	die( 'failed' );
 }
 if ( ! module_job::can_i( 'edit', 'Jobs' ) ) {
@@ -83,4 +84,3 @@ module_email::print_compose(
 		'cancel_url'  => module_job::link_open( $job_id ),
 	)
 );
-

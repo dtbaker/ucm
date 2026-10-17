@@ -27,12 +27,14 @@ if ( class_exists( 'module_security', false ) ) {
 	module_security::sanatise_data( 'product', $product_category );
 }
 
-?>
-<form action="" method="post" id="product_category_form">
-	<input type="hidden" name="_process" value="save_product_category"/>
-	<input type="hidden" name="product_category_id" value="<?php echo (int) $product_category_id; ?>"/>
+module_form::print_form_open_tag( array(
+	'id'      => 'product_category_form',
+	'process' => 'save_product_category',
+	'hidden'  => array(
+		'product_category_id' => (int) $product_category_id,
+	),
+) );
 
-	<?php
 	module_form::set_required( array(
 			'fields' => array(
 				'name' => 'Name',
@@ -94,7 +96,5 @@ if ( class_exists( 'module_security', false ) ) {
 		),
 	);
 	echo module_form::generate_form_actions( $form_actions );
-	?>
 
-</form>
-
+	module_form::print_form_close_tag();

@@ -1,4 +1,5 @@
 <?php
+
 if ( ! module_change_request::can_i( 'edit', 'Change Requests' ) ) {
 	die( 'no perms' );
 }
@@ -77,4 +78,3 @@ module_email::print_compose(
 		'cancel_url'  => module_website::link_open( $website_data['website_id'] ),
 	)
 );
-?>

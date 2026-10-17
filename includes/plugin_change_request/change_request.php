@@ -4,8 +4,8 @@ define( '_CHANGE_REQUEST_STATUS_NEW', 1 );
 define( '_CHANGE_REQUEST_STATUS_COMPLETE', 2 );
 define( '_CHANGE_REQUEST_STATUS_DELETE', 3 );
 
-class module_change_request extends module_base {
-
+class module_change_request extends module_base
+{
 	public $links;
 	public $change_request_types;
 	public $change_request_id;
@@ -22,12 +22,15 @@ class module_change_request extends module_base {
 		return __CLASS__;
 	}
 
+	public function __construct() {
+		$this->module_name     = 'change_request';
+		$this->module_position = 30;
+		$this->version         = 2.298;
+	}
+
 	public function init() {
 		$this->links                = array();
 		$this->change_request_types = array();
-		$this->module_name          = "change_request";
-		$this->module_position      = 30;
-		$this->version              = 2.298;
 		// 2.298 - 2021-04-07 - php8 compatibility fix
 		// 2.297 - 2016-07-10 - big update to mysqli
 		// 2.296 - 2015-06-14 - fix for newer fancybox version
@@ -205,8 +208,6 @@ Change request details:<br><br>
 	public function handle_hook( $hook, &$calling_module = false ) {
 		switch ( $hook ) {
 			case "home_alerts":
-
-
 				$alerts = array();
 				if ( module_config::c( 'change_request_alerts', 1 ) && class_exists( 'module_website', false ) ) {
 					$cache_key     = "home_alerts_" . module_security::get_loggedin_id();
@@ -277,6 +278,11 @@ Change request details:<br><br>
 
 
 	public function process() {
+		// Every form that reaches here is posted from a UCM page, so it carries the
+		// form auth key. Refuse anything that does not - see module_form::check_secure_key().
+		if ( ! module_form::check_secure_key() ) {
+			module_form::reject_invalid_form_auth();
+		}
 		/*if(isset($_REQUEST['butt_del']) && $_REQUEST['butt_del'] && $_REQUEST['change_request_id']){
 			$data = self::get_change_request($_REQUEST['change_request_id']);
             if(module_form::confirm_delete('change_request_id',"Really delete change request: ".$data['name'],self::link_open($_REQUEST['change_request_id']))){
@@ -345,6 +351,9 @@ Change request details:<br><br>
 		if ( $change_request && $change_request['change_request_id'] == $change_request_id ) {
 			$sql = "DELETE FROM " . _DB_PREFIX . "change_request WHERE change_request_id = '" . $change_request_id . "' LIMIT 1";
 			query( $sql );
+			// get_change_requests() caches, so without this the deleted request keeps
+			// coming back.
+			module_cache::clear( 'change_request' );
 		}
 	}
 
@@ -456,7 +465,7 @@ Change request details:<br><br>
 				// load up the full script to be injected into our clients website.
 				$website_id = isset( $_REQUEST['i'] ) ? (int) $_REQUEST['i'] : false;
 				$change_request_id = $change_id = isset( $_REQUEST['change_id'] ) ? (int) $_REQUEST['change_id'] : false;
-				$hash = isset( $_REQUEST['hash'] ) ? $_REQUEST['hash'] : false;
+				$hash = ucm_request_string( 'hash' );
 				$type = isset( $_REQUEST['type'] ) ? $_REQUEST['type'] : false;
 
 				if ( $type == 'popupjs' ) {
@@ -467,7 +476,7 @@ Change request details:<br><br>
 					header( "Content-type: text/javascript" );
 				}
 
-				if ( $website_id && $hash && module_change_request::link_popup( $website_id, true ) == $hash ) {
+				if ( $website_id && $hash && hash_equals( module_change_request::link_popup( $website_id, true ), $hash ) ) {
 
 
 					$change_history = module_change_request::get_remaining_changes( $website_id );
@@ -713,13 +722,13 @@ Change request details:<br><br>
 			case 'script':
 				// load up the full script to be injected into our clients website.
 				$website_id = isset( $_REQUEST['i'] ) ? (int) $_REQUEST['i'] : false;
-				$hash = isset( $_REQUEST['hash'] ) ? $_REQUEST['hash'] : false;
+				$hash = ucm_request_string( 'hash' );
 				@ob_end_clean();
 				header( "Expires: Mon, 26 Jul 1997 05:00:00 GMT" );
 				header( "Cache-Control: no-cache" );
 				header( "Pragma: no-cache" );
 				header( "Content-type: text/javascript" );
-				if ( $website_id && $hash && module_change_request::link_script( $website_id, true ) == $hash ) {
+				if ( $website_id && $hash && hash_equals( module_change_request::link_script( $website_id, true ), $hash ) ) {
 					include( "js/client.js" );
 					$client_url = isset( $_REQUEST['url'] ) ? $_REQUEST['url'] : false;
 					if ( $client_url ) {
@@ -796,8 +805,8 @@ Change request details:<br><br>
 				break;
 			case 'public':
 				$website_id = isset( $_REQUEST['i'] ) ? (int) $_REQUEST['i'] : false;
-				$hash       = isset( $_REQUEST['hash'] ) ? $_REQUEST['hash'] : false;
-				if ( $website_id && $hash && module_change_request::link_public( $website_id, true ) == $hash ) {
+				$hash       = ucm_request_string( 'hash' );
+				if ( $website_id && $hash && hash_equals( module_change_request::link_public( $website_id, true ), $hash ) ) {
 					// correct!
 
 					// redirect to website with our "change_request" url parameter, that is picked up by the included text.
@@ -864,6 +873,4 @@ Change request details:<br><br>
 		<?php
 		return ob_get_clean();
 	}
-
-
 }

@@ -1,0 +1,39 @@
+# Keep an eye on the things we do not write ourselves.
+#
+# GitHub is already reporting advisories against this repository. Most of them are in
+# development tooling rather than anything that ships, but nobody can tell that at a
+# glance, and the warning on every push trains people to ignore it.
+#
+# This matters more over time: as the hand-copied libraries in includes/ move to Composer
+# (see docs/proposals/vendor-extraction.md), this is what turns "I hope somebody notices a
+# CVE" into a pull request.
+version: 2
+updates:
+  - package-ecosystem: composer
+    directory: "/"
+    schedule:
+      interval: weekly
+    # Wait before proposing a brand new release. A compromised package is usually
+    # pulled within a day or two of publication, and this is the window in which that
+    # happens - without it, Dependabot would hand us the bad version first.
+    cooldown:
+      default-days: 7
+    open-pull-requests-limit: 5
+
+  - package-ecosystem: npm
+    directory: "/"
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 7
+    open-pull-requests-limit: 5
+
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: monthly
+    cooldown:
+      default-days: 7
+    # The workflow pins actions to a commit, with the version in a comment. Dependabot
+    # understands that shape and updates both together.
+    open-pull-requests-limit: 5

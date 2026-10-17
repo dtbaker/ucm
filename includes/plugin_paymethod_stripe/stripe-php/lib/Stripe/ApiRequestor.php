@@ -2,6 +2,9 @@
 
 class Stripe_ApiRequestor {
 	public $apiKey;
+	// Declared rather than created on the fly: PHP 8.2 deprecated dynamic properties,
+	// and on a host with display_errors on the notice printed onto the payment page.
+	public $_apiKey;
 
 	public function __construct( $apiKey = null ) {
 		$this->_apiKey = $apiKey;

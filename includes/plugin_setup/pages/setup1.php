@@ -19,20 +19,58 @@ if ( isset( $_REQUEST['save'] ) ) {
 	$db_user   = $_REQUEST['db_user'];
 	$db_pass   = $_REQUEST['db_pass'];
 	$db_prefix = $_REQUEST['db_prefix'];
-	$link      = mysqli_connect( $db_host, $db_user, $db_pass, $db_name );
-	if ( ! $link || mysqli_connect_errno() ) {
-		set_error( "Sorry there was an error connecting to the mysql database. Please ensure the details you entered are correct and try again.\n The error was: <strong>" . mysqli_connect_error() . "</strong> \nPlease contact your hosting provider if you need assistance with database connection details." );
+	// mysqli throws on a failed connection since PHP 8.1, so a mistyped password was a
+	// blank 500 rather than the message below.
+	try {
+		$link          = mysqli_connect( $db_host, $db_user, $db_pass, $db_name );
+		$connect_error = $link ? '' : mysqli_connect_error();
+	} catch ( mysqli_sql_exception $e ) {
+		$link          = false;
+		$connect_error = $e->getMessage();
+	}
+	if ( ! $link ) {
+		set_error( "Sorry there was an error connecting to the mysql database. Please ensure the details you entered are correct and try again.\n The error was: <strong>" . h( (string) $connect_error ) . "</strong> \nPlease contact your hosting provider if you need assistance with database connection details." );
 		print_header_message();
 	} else {
 		// db worked! woop woop
-		// save these settings to the db.
-		$config_file = file_get_contents( _UCM_FOLDER . 'includes/config.php' );
-		$config_file = preg_replace( "#define\('_DB_SERVER','[^']*'\)#", "define('_DB_SERVER','$db_host')", $config_file );
-		$config_file = preg_replace( "#define\('_DB_NAME','[^']*'\)#", "define('_DB_NAME','$db_name')", $config_file );
-		$config_file = preg_replace( "#define\('_DB_USER','[^']*'\)#", "define('_DB_USER','$db_user')", $config_file );
-		$config_file = preg_replace( "#define\('_DB_PASS','[^']*'\)#", "define('_DB_PASS','$db_pass')", $config_file );
-		$config_file = preg_replace( "#define\('_DB_PREFIX','[^']*'\)#", "define('_DB_PREFIX','$db_prefix')", $config_file );
-		if ( file_put_contents( _UCM_FOLDER . 'includes/config.php', $config_file ) ) {
+		// Write credentials to includes/config.local.php, which config.php loads before
+		// its own defaults.
+		//
+		// This used to preg_replace the define() lines inside includes/config.php itself.
+		// That broke silently when config.php was reformatted: the pattern stopped
+		// matching, file_put_contents still returned a truthy byte count for the unchanged
+		// file, so setup advanced to step 2 looking healthy while the credentials were
+		// never saved. Writing a separate file avoids depending on config.php's formatting,
+		// and keeps the user's database password out of a tracked, shippable file.
+		$config_local = defined( '_UCM_CONFIG_LOCAL' ) ? _UCM_CONFIG_LOCAL : _UCM_FOLDER . 'includes/config.local.php';
+		$existing     = is_file( $config_local ) ? file_get_contents( $config_local ) : '';
+
+		$generated = "<?php\n"
+		             . "/**\n"
+		             . " * Local configuration for UCM. Written by the installer.\n"
+		             . " * This file is loaded before the defaults in includes/config.php.\n"
+		             . " * Keep it out of version control - it holds your database password.\n"
+		             . " */\n\n"
+		             . "define( '_DB_SERVER', " . var_export( $db_host, true ) . " );\n"
+		             . "define( '_DB_NAME', " . var_export( $db_name, true ) . " );\n"
+		             . "define( '_DB_USER', " . var_export( $db_user, true ) . " );\n"
+		             . "define( '_DB_PASS', " . var_export( $db_pass, true ) . " );\n"
+		             . "define( '_DB_PREFIX', " . var_export( $db_prefix, true ) . " );\n";
+
+		// A per-install secret, so capability tokens are not derived from the install path.
+		// Preserve any existing value - regenerating it would invalidate every token and
+		// link already issued by this install.
+		if ( preg_match( "#define\(\s*'_UCM_SECRET'\s*,\s*'([^']+)'\s*\)#", $existing, $secret_match ) ) {
+			$ucm_secret = $secret_match[1];
+		} else {
+			$ucm_secret = bin2hex( random_bytes( 32 ) );
+		}
+		$generated .= "define( '_UCM_SECRET', " . var_export( $ucm_secret, true ) . " );\n";
+
+		if ( file_put_contents( $config_local, $generated ) === false ) {
+			set_error( 'Could not write to ' . h( $config_local ) . '. Please make the includes/ folder writable and try again.' );
+			print_header_message();
+		} else {
 			redirect_browser( '?m=setup&step=2' );
 		}
 	}
@@ -46,7 +84,18 @@ if ( isset( $_REQUEST['save'] ) ) {
 	<em>Please contact your hosting provider for assistance with creating a database.</em>
 </p>
 
-<form action="?m=setup&amp;step=<?php echo $step; ?>&amp;save=true" method="post">
+<?php
+// No token on the setup wizard. Minting one writes a secure_hash row through
+// module_config::save_config(), and this step is where the database credentials are
+// still being entered - the config table does not exist yet, so asking for a token
+// here replaces the form with "Table 'ucm_config' doesn't exist". There is nothing to
+// protect either: the installer refuses to run once _UCM_INSTALLED is set unless you
+// are logged in (see the guard at the top of each step).
+module_form::print_form_open_tag( array(
+	'action' => '?m=setup&step=' . $step . '&save=true',
+	'auth'   => false,
+) );
+?>
 	<?php
 	module_form::set_required( array(
 		'fields' => array(
@@ -58,40 +107,29 @@ if ( isset( $_REQUEST['save'] ) ) {
 	) );
 	?>
 
-	<table class="tableclass tableclass_form">
-		<tbody>
-		<tr>
-			<th class="width2"><?php echo _l( 'Database Host:' ); ?></th>
-			<td>
-				<input type="text" name="db_host" value="<?php echo h( $db_host ); ?>">
-			</td>
-		</tr>
-		<tr>
-			<th><?php echo _l( 'Database Prefix:' ); ?></th>
-			<td>
-				<input type="text" name="db_prefix" value="<?php echo h( $db_prefix ); ?>">
-			</td>
-		</tr>
-		<tr>
-			<th><?php echo _l( 'Database Name:' ); ?></th>
-			<td>
-				<input type="text" name="db_name" value="<?php echo h( $db_name ); ?>">
-			</td>
-		</tr>
-		<tr>
-			<th><?php echo _l( 'Database Username:' ); ?></th>
-			<td>
-				<input type="text" name="db_user" value="<?php echo h( $db_user ); ?>">
-			</td>
-		</tr>
-		<tr>
-			<th><?php echo _l( 'Database Password:' ); ?></th>
-			<td>
-				<input type="text" name="db_pass" value="<?php echo h( $db_pass ); ?>">
-			</td>
-		</tr>
-		</tbody>
-	</table>
+	<?php
+	$db_elements = array();
+	foreach ( array(
+		'db_host'   => _l( 'Database Host:' ),
+		'db_prefix' => _l( 'Database Prefix:' ),
+		'db_name'   => _l( 'Database Name:' ),
+		'db_user'   => _l( 'Database Username:' ),
+		'db_pass'   => _l( 'Database Password:' ),
+	) as $db_field => $db_label ) {
+		$db_elements[ $db_field ] = array(
+			'title' => $db_label,
+			'field' => array(
+				'type'  => 'text',
+				'name'  => $db_field,
+				'value' => $$db_field,
+			),
+		);
+	}
+	echo module_form::generate_fieldset( array(
+		'class'    => 'tableclass tableclass_form',
+		'elements' => $db_elements,
+	) );
+	?>
 	<input type="submit" name="next" value="Next Step &raquo;" class="submit_button btn btn-success">
 
-</form>
+<?php module_form::print_form_close_tag();

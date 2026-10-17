@@ -70,7 +70,7 @@ ob_start();
 						}
 						?>
 					</td>
-				<?php } else if ( isset( $r['finance_id'] ) ) { ?>
+				<?php } elseif ( isset( $r['finance_id'] ) ) { ?>
 					<td colspan="3">
 						<?php echo module_finance::link_open( $r['finance_id'], true ); ?>
 

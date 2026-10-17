@@ -12,7 +12,10 @@ if ( empty( $embed_form ) && $allow_search ) {
 	?>
 
 
-	<form action="" method="post" id="custom_data_form">
+	<?php module_form::print_form_open_tag( array(
+		'action' => '',
+		'id'     => 'custom_data_form',
+	) ); ?>
 
 	<?php
 
@@ -137,7 +140,7 @@ if ( empty( $embed_form ) && $allow_search ) {
 							break;
 						}
 					}
-				} else if ( $data_field['type'] == 'wysiwyg' ) {
+				} elseif ( $data_field['type'] == 'wysiwyg' ) {
 					$data_field['type'] = 'text';
 				} else {
 
@@ -158,7 +161,7 @@ if ( empty( $embed_form ) && $allow_search ) {
 							$data_field2
 						)
 					);
-				} else if ( $data_field['type'] != 'file' ) {
+				} elseif ( $data_field['type'] != 'file' ) {
 					$search_bar['elements'][] = array(
 						'title' => $data_field['title'],
 						'field' => $data_field
@@ -212,11 +215,11 @@ if ( isset( $_REQUEST['search_field'] ) ) {
 											if ( $search_date >= $from_date && $search_date <= $to_date ) {
 												$match = true;
 											}
-										} else if ( $from_date ) {
+										} elseif ( $from_date ) {
 											if ( $search_date >= $from_date ) {
 												$match = true;
 											}
-										} else if ( $to_date ) {
+										} elseif ( $to_date ) {
 											if ( $search_date <= $to_date ) {
 												$match = true;
 											}
@@ -267,19 +270,19 @@ if ( isset( $_REQUEST['search_field'] ) ) {
 								case 'data_record_id':
 									if ( $data_field_value != $data['data_record_id'] ) {
 										unset( $datas[ $data_id ] );
-										continue;
+										continue 2;
 									}
 									break;
 								case 'created_date_time':
 									if ( input_date( $data_field_value, true ) != input_date( $data['date_created'], true ) ) {
 										unset( $datas[ $data_id ] );
-										continue;
+										continue 2;
 									}
 									break;
 								case 'created_date':
 									if ( input_date( $data_field_value ) != input_date( $data['date_created'] ) ) {
 										unset( $datas[ $data_id ] );
-										continue;
+										continue 2;
 									}
 									break;
 								case 'created_time':
@@ -288,13 +291,13 @@ if ( isset( $_REQUEST['search_field'] ) ) {
 								case 'updated_date_time':
 									if ( input_date( $data_field_value, true ) != input_date( $data['date_updated'], true ) ) {
 										unset( $datas[ $data_id ] );
-										continue;
+										continue 2;
 									}
 									break;
 								case 'updated_date':
 									if ( input_date( $data_field_value ) != input_date( $data['date_updated'] ) ) {
 										unset( $datas[ $data_id ] );
-										continue;
+										continue 2;
 									}
 									break;
 								case 'updated_time':
@@ -303,13 +306,13 @@ if ( isset( $_REQUEST['search_field'] ) ) {
 								case 'created_by':
 									if ( $data_field_value != $data['create_user_id'] ) {
 										unset( $datas[ $data_id ] );
-										continue;
+										continue 2;
 									}
 									break;
 								case 'updated_by':
 									if ( $data_field_value != $data['update_user_id'] ) {
 										unset( $datas[ $data_id ] );
-										continue;
+										continue 2;
 									}
 									break;
 								default:
@@ -320,23 +323,23 @@ if ( isset( $_REQUEST['search_field'] ) ) {
 
 											if ( ! in_array( $data_field_value, $foo ) ) {
 												unset( $datas[ $data_id ] );
-												continue;
+												continue 2;
 											}
 										} else {
 
 											if ( $settings && $settings['field_type'] && $settings['field_type'] == 'text' ) {
 												if ( strpos( strtolower( trim( $data_items[ $data_field_id ]['data_text'] ) ), strtolower( $data_field_value ) ) === false ) {
 													unset( $datas[ $data_id ] );
-													continue;
+													continue 2;
 												}
-											} else if ( strtolower( trim( $data_items[ $data_field_id ]['data_text'] ) ) != strtolower( $data_field_value ) ) {
+											} elseif ( strtolower( trim( $data_items[ $data_field_id ]['data_text'] ) ) != strtolower( $data_field_value ) ) {
 												unset( $datas[ $data_id ] );
-												continue;
+												continue 2;
 											}
 										}
 									} else {
 										unset( $datas[ $data_id ] );
-										continue;
+										continue 2;
 									}
 							}
 						}
@@ -552,5 +555,5 @@ $table_manager->print_table();
 
 
 if ( empty( $embed_form ) && $allow_search ) {
-	?> </form> <?php
+	?> <?php module_form::print_form_close_tag(); ?> <?php
 }

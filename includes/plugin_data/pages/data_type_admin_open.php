@@ -1,14 +1,14 @@
 <?php
-if(!module_data::can_i('edit',_MODULE_DATA_NAME)){
+if (!module_data::can_i('edit',_MODULE_DATA_NAME)) {
 	die("access denied");
 }
 
 
 
 $data_type_id = $_REQUEST['data_type_id'];
-if( (int)$data_type_id > 0 ){
+if ( (int)$data_type_id > 0 ) {
 	$data_type = $module->get_data_type($data_type_id);
-}else{
+} else {
 	$data_type = array();
 }
 
@@ -17,14 +17,17 @@ if( (int)$data_type_id > 0 ){
 ?>
 
 
-<form action="" method="post" enctype="multipart/form-data">
+<?php module_form::print_form_open_tag( array(
+	'action'  => '',
+	'enctype' => 'multipart/form-data',
+) ); ?>
 <input type="hidden" name="_process" value="save_data_type" />
-<input type="hidden" name="_redirect" value="<?php echo $module->link("",array("saved"=>true,"data_type_id"=>((int)$data_type_id)?$data_type_id:'')); ?>" />
-<input type="hidden" name="data_type_id" value="<?php echo $data_type_id; ?>" />
+<input type="hidden" name="_redirect" value="<?php echo $module->link("",array("saved" => true,"data_type_id" => ((int)$data_type_id) ? $data_type_id : '')); ?>" />
+<input type="hidden" name="data_type_id" value="<?php echo htmlspecialchars( (string) $data_type_id, ENT_QUOTES, 'UTF-8' ); ?>" />
 
     <?php
 
-    if($data_type_id=='import'){
+    if ($data_type_id == 'import') {
         $fieldset_data = array(
 	        'heading' => array(
 	            'main' => true,
@@ -58,15 +61,15 @@ if( (int)$data_type_id > 0 ){
 	                'name' => 'cancel',
 	                'value' => _l('Cancel'),
 	                'class' => 'submit_button',
-	                'onclick' => "window.location.href='".$module->link()."';",
+	                'onclick' => "window.location.href='" . $module->link() . "';",
 	            ),
 	        ),
 	    );
 	    echo module_form::generate_form_actions($form_actions);
-    }else{
+    } else {
 		$templates = array();
-		foreach(module_template::get_templates() as $template){
-		    $templates[$template['template_key']] = $template['template_key'] .' ('.$template['description'].')';
+		foreach (module_template::get_templates() as $template) {
+		    $templates[$template['template_key']] = $template['template_key'] . ' (' . $template['description'] . ')';
 		}
 	    $header_buttons = array();
 	    $fieldset_data = array(
@@ -83,7 +86,7 @@ if( (int)$data_type_id > 0 ){
 	                'field' => array(
 	                    'type' => 'text',
 	                    'name' => 'data_type_name',
-	                    'value' => (isset($data_type['data_type_name']))?htmlspecialchars($data_type['data_type_name']):'',
+	                    'value' => (isset($data_type['data_type_name'])) ? htmlspecialchars($data_type['data_type_name']) : '',
 	                ),
 	            ),
 	            'hook' => array(
@@ -93,7 +96,7 @@ if( (int)$data_type_id > 0 ){
 	                    'name' => 'data_type_menu',
 	                    'options' => module_data::get_menu_locations(),
 	                    'blank' => false,
-	                    'value' => (isset($data_type['data_type_menu']))?htmlspecialchars($data_type['data_type_menu']):'',
+	                    'value' => (isset($data_type['data_type_menu'])) ? htmlspecialchars($data_type['data_type_menu']) : '',
 	                    'help' => 'This is where your custom data type will display within the system. Main will put it in the main menu. Customer will put it underneath a customer menu. None will hide this from the menu system all together',
 	                ),
 	            ),
@@ -102,7 +105,7 @@ if( (int)$data_type_id > 0 ){
 	                'field' => array(
 	                    'type' => 'text',
 	                    'name' => 'data_type_icon',
-	                    'value' => (isset($data_type['data_type_icon']))?htmlspecialchars($data_type['data_type_icon']):'',
+	                    'value' => (isset($data_type['data_type_icon'])) ? htmlspecialchars($data_type['data_type_icon']) : '',
 	                    'help' => 'Type the icon name from http://fontawesome.io/icons/ (eg: bell). Compatible with the Metis theme.',
 	                ),
 	            ),
@@ -111,7 +114,7 @@ if( (int)$data_type_id > 0 ){
 	                'field' => array(
 	                    'type' => 'select',
 	                    'name' => 'max_entries',
-	                    'value' => (isset($data_type['max_entries']))?(int)$data_type['max_entries']:0,
+	                    'value' => (isset($data_type['max_entries'])) ? (int)$data_type['max_entries'] : 0,
 	                    'blank' => false,
 	                    'options' => array(
 	                        0 => _l('Multiple Entries (default)'),
@@ -125,7 +128,7 @@ if( (int)$data_type_id > 0 ){
 	                'field' => array(
 	                    'type' => 'select',
 	                    'name' => 'print_pdf_template',
-	                    'value' => (isset($data_type['print_pdf_template']))?$data_type['print_pdf_template']:'',
+	                    'value' => (isset($data_type['print_pdf_template'])) ? $data_type['print_pdf_template'] : '',
 	                    'options' => $templates,
 	                    'blank' => _l(' - disable Print to PDF - '),
 	                    'help' => 'These are all the available templates in the system. Create your own ( Settings > Templates ) and select it here. A Print PDF button will be available for each data record.'
@@ -136,7 +139,7 @@ if( (int)$data_type_id > 0 ){
 	                'field' => array(
 	                    'type' => 'select',
 	                    'name' => 'email_template',
-	                    'value' => (isset($data_type['email_template']))?$data_type['email_template']:'',
+	                    'value' => (isset($data_type['email_template'])) ? $data_type['email_template'] : '',
 	                    'options' => $templates,
 	                    'blank' => _l(' - disable Email - '),
 	                    'help' => 'These are all the available templates in the system. Create your own ( Settings > Templates ) and select it here. An email button will be available for each data record.'
@@ -172,7 +175,7 @@ if( (int)$data_type_id > 0 ){
 	                'name' => 'cancel',
 	                'value' => _l('Cancel'),
 	                'class' => 'submit_button',
-	                'onclick' => "window.location.href='".$module->link()."';",
+	                'onclick' => "window.location.href='" . $module->link() . "';",
 	            ),
 	        ),
 	    );
@@ -183,7 +186,7 @@ if( (int)$data_type_id > 0 ){
 
 <p>&nbsp;</p>
 <?php
-if((int)$data_type_id > 0){
+if ((int)$data_type_id > 0) {
 	$data_field_groups = $module->get_data_field_groups($data_type_id);
 
 
@@ -199,28 +202,28 @@ if((int)$data_type_id > 0){
 	    </thead>
 	    <tbody>
 	    <?php
-        if(!count($data_field_groups)){
+        if (!count($data_field_groups)) {
             ?>
             <tr>
                 <td colspan="2" align="center">
-                    <a href="<?php echo $module->link("",array('data_type_id'=>$data_type_id,'data_field_group_id'=>'new'));?>" class="uibutton">
-                        <?php if(isset($button['type']) && $button['type'] == 'add'){ ?> <img src="<?php echo _BASE_HREF;?>images/add.png" width="10" height="10" alt="add" border="0" /> <?php } ?>
+                    <a href="<?php echo $module->link("",array('data_type_id' => $data_type_id,'data_field_group_id' => 'new'));?>" class="uibutton">
+                        <?php if (isset($button['type']) && $button['type'] == 'add') { ?> <img src="<?php echo _BASE_HREF;?>images/add.png" width="10" height="10" alt="add" border="0" /> <?php } ?>
                         <span><?php echo _l('Create New Fieldset');?></span>
                     </a>
                 </td>
             </tr>
             <?php
-        }else{
-	    $c=0;
-		foreach($data_field_groups as $data){ 
+        } else {
+	    $c = 0;
+		foreach ($data_field_groups as $data) {
 			$data_field_group = $module->get_data_field_group($data['data_field_group_id']);
 			?>
-	        <tr class="<?php echo ($c++%2)?"odd":"even"; ?>">
-	            <td class="row_action"><a href="<?php echo $module->link('',array("data_type_id"=>$data_type['data_type_id'],"data_field_group_id"=>$data_field_group['data_field_group_id'])); ?>"><?php echo htmlspecialchars($data_field_group['title']); ?></a></td>
+	        <tr class="<?php echo ($c++ % 2) ? "odd" : "even"; ?>">
+	            <td class="row_action"><a href="<?php echo $module->link('',array("data_type_id" => $data_type['data_type_id'],"data_field_group_id" => $data_field_group['data_field_group_id'])); ?>"><?php echo htmlspecialchars($data_field_group['title']); ?></a></td>
 	            <td>
                     <?php $data_fields = $module->get_data_fields($data['data_field_group_id']);
                     $data_field_names = array();
-                    foreach($data_fields as $data_field){
+                    foreach ($data_fields as $data_field) {
                         $data_field_names[] = htmlspecialchars($data_field['title']);
                     }
                     echo implode(', ',$data_field_names);
@@ -236,7 +239,7 @@ if((int)$data_type_id > 0){
 
     $header_buttons = array();
     $header_buttons[] = array(
-        'url' => $module->link("",array('data_type_id'=>$data_type_id,'data_field_group_id'=>'new')),
+        'url' => $module->link("",array('data_type_id' => $data_type_id,'data_field_group_id' => 'new')),
         'title' => 'Create New',
         'type' => 'add',
     );
@@ -254,3 +257,6 @@ if((int)$data_type_id > 0){
     echo module_form::generate_fieldset($fieldset_data);
     unset($fieldset_data);
 }
+
+// Opened at the top of this page and never closed until now.
+module_form::print_form_close_tag();

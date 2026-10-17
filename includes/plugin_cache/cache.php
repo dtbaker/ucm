@@ -1,8 +1,7 @@
 <?php
 
-
-class module_cache extends module_base {
-
+class module_cache extends module_base
+{
 	private static $_use_memcache = false;
 	private static $_memcache_instance = false;
 	private static $_memcache_prefix = '';
@@ -10,6 +9,12 @@ class module_cache extends module_base {
 	private static $_memcache_timeout = 60;
 
 	private static $cache_store = array();
+
+	public function __construct() {
+		$this->module_name     = 'cache';
+		$this->module_position = 10;
+		$this->version         = 2.232;
+	}
 
 	public static function can_i( $actions, $name = false, $category = false, $module = false ) {
 		if ( ! $module ) {
@@ -27,9 +32,6 @@ class module_cache extends module_base {
 	private static $_db_cache = array();
 
 	public function init() {
-		$this->module_name     = "cache";
-		$this->module_position = 1;
-		$this->version         = 2.232;
 		// 2.232 - 2016-12-20 - speed improvements
 		// 2.231 - 2016-12-18 - speed improvements
 		// 2.230 - 2016-07-10 - big update to mysqli
@@ -50,7 +52,7 @@ class module_cache extends module_base {
 		if ( module_security::get_loggedin_id() ) {
 			// use memcache if it exists
 			if ( class_exists( 'Memcache', false ) && module_config::c( 'cache_enabled', 1 ) && module_config::c( 'memcache_active', 0 ) ) {
-				self::$_memcache_instance = new Memcache;
+				self::$_memcache_instance = new Memcache();
 				if ( self::$_memcache_instance->connect( module_config::c( 'memcache_address', '127.0.0.1' ), module_config::c( 'memcache_port', '11211' ) ) ) { //module_config::c('memcache_address','localhost'), )){
 					self::$_memcache_prefix = md5( session_id() . _UCM_SECRET . _DB_PREFIX . _DB_NAME . _DB_USER . _DB_PASS );
 					// what version of information are we requesting (inremented each time something is deleted, inserted or updated)
@@ -299,12 +301,20 @@ class module_cache extends module_base {
 			// we have to clear this entire group, not just the individual key
 			// add in an expiry time for this cache group
 			self::$_cache_expiry[ $group ] = time();
-			// for sessions and memcache.
-			if ( self::$_use_memcache ) {
-				// no way to delete all entries from a memcache based on "group", so we use the 'cache' expiry table above to invalidate entries across the system.
+			// Record the expiry whichever backend is in use. Deleting the rows is not
+			// enough on its own: another request that is part way through has the group
+			// in memory and writes it back when it finishes (shutdown_write_cached_data),
+			// which puts the rows this just deleted straight back with their old
+			// contents. get() checks this expiry, so a resurrected row is refused.
+			//
+			// Demonstrated before this line existed: open a customer in one request, and
+			// while it is still running rename the customer in another. The row reads
+			// the new name, the customer's own screen keeps rendering the old one.
+			if ( self::db_table_exists( 'cache' ) ) {
 				$sql = "REPLACE INTO `" . _DB_PREFIX . "cache` SET `cache_group` = '" . db_escape( $group ) . "', `expire_time` = " . time();
 				query( $sql );
-			} else {
+			}
+			if ( ! self::$_use_memcache ) {
 				// session mode, remove all cache elements from this item.
 				if ( self::db_table_exists( 'cache_store' ) ) {
 					$sql = "DELETE FROM `" . _DB_PREFIX . "cache_store` WHERE `cache_group` = '" . db_escape( $group ) . "'";// AND `create_user_id` = ".module_security::get_loggedin_id();
@@ -430,5 +440,4 @@ class module_cache extends module_base {
 		<?php
 		return ob_get_clean();
 	}
-
 }

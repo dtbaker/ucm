@@ -1,5 +1,5 @@
 <script type="text/javascript">
-	<?php if(module_config::c( 'dashboard_alerts_as_tabs', 1 )){ ?>
+	<?php if (module_config::c( 'dashboard_alerts_as_tabs', 1 )) { ?>
   $(function () {
       $('#dashboard_tabs').tabs({
           collapsible: true
@@ -15,9 +15,12 @@
       $('#hide_item_form')[0].submit();
   }
 </script>
-<form action="" method="post" id="hide_item_form">
+<?php module_form::print_form_open_tag( array(
+	'action' => '',
+	'id'     => 'hide_item_form',
+) ); ?>
 	<input type="hidden" name="hide_item" value="" id="hide_item">
-</form>
+<?php module_form::print_form_close_tag(); ?>
 <div id="dashboard_tabs">
 	<?php if ( module_config::c( 'dashboard_alerts_as_tabs', 1 ) ) { ?>
 		<ul>
@@ -26,7 +29,7 @@
 			foreach ( $dashboard_alerts as $key => $val ) { ?>
 				<li><a href="#tabs-<?php echo $x; ?>"><?php echo $key; ?> (<?php echo count( $val ); ?>)</a></li>
 				<?php
-				$x ++;
+				$x++;
 			} ?>
 		</ul>
 		<?php
@@ -55,7 +58,7 @@
 						$y = 0;
 						foreach ( $alerts as $alert ) {
 							?>
-							<tr class="<?php echo ( $y ++ % 2 ) ? 'even' : 'odd'; ?>">
+							<tr class="<?php echo ( $y++ % 2 ) ? 'even' : 'odd'; ?>">
 								<?php foreach ( module_dashboard::$group_settings[ $key ]['columns'] as $column_key => $column_title ) { ?>
 									<td><?php echo isset( $alert[ $column_key ] ) ? $alert[ $column_key ] : ''; ?></td>
 								<?php } ?>
@@ -89,7 +92,7 @@
 						$y = 0;
 						foreach ( $alerts as $alert ) {
 							?>
-							<tr class="<?php echo ( $y ++ % 2 ) ? 'even' : 'odd'; ?>">
+							<tr class="<?php echo ( $y++ % 2 ) ? 'even' : 'odd'; ?>">
 								<td class="row_action">
 									<a href="<?php echo $alert['link']; ?>"><?php echo htmlspecialchars( $alert['item'] ); ?></a>
 								</td>
@@ -123,10 +126,10 @@
 					<?php } ?>
 					</tbody>
 				</table>
-			<?php } // end old method 
+			<?php } // end old method
 			?>
 		</div>
 		<?php
-		$x ++;
+		$x++;
 	} ?>
 </div>

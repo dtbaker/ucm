@@ -5,6 +5,18 @@ if ( ! module_config::can_i( 'edit', 'Settings' ) ) {
 	redirect_browser( _BASE_HREF );
 }
 
+// Authorize.Net is the one method an upgrade switches off by itself, so an install that
+// had it on gets told so in those words rather than being left to wonder.
+$authorize_was_enabled = module_config::c( 'payment_method_authorize_was_enabled', false );
+
+module_invoice::print_deprecated_payment_method_notice(
+	module_paymethod_authorize::get_payment_method_name(),
+	_l( 'It collects raw card numbers on your own server, which puts you in PCI DSS SAQ D - the most demanding level of PCI compliance, and not one a self-hosted install can realistically meet.' ),
+	$authorize_was_enabled
+		? '<strong>' . _l( 'Upgrading turned this payment method off.' ) . '</strong> ' . _l( 'An earlier version let a payer choose the amount their own card was charged, so an invoice could be marked paid in full for a cent. That hole is fixed, but the method is being retired rather than modernised, so it was switched off rather than left on. Every setting below is exactly as you left it, and you can turn it back on if you need to.' )
+		: ''
+);
+
 print_heading( 'Authorize Settings' ); ?>
 
 
@@ -74,5 +86,7 @@ print_heading( 'Authorize Settings' ); ?>
 <p><strong>Please use SSL on your website (eg: https://) in order to use Authorize.net</strong></p>
 <p>To change how the Authorize credit card form looks please go to Settings > Templates and look for
 	'authorize_credit_card_form'.</p>
-<p>If you get "cannot connect" errors when making a payment please try going to Settings > Advanced and changing
-	'payment_method_authorize_ssl_verify' from 1 to 0</p>
+<p>If you get "cannot connect" errors when making a payment, your server cannot verify Authorize.net's
+	certificate. Ask your host to update the certificate authority bundle PHP uses. This page used to tell you
+	to turn 'payment_method_authorize_ssl_verify' off instead; that setting no longer disables the check,
+	because turning it off sent the card number over a connection nothing had checked.</p>

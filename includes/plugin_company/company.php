@@ -1,6 +1,5 @@
 <?php
 
-
 if ( defined( 'COMPANY_UNIQUE_CONFIG' ) && COMPANY_UNIQUE_CONFIG && function_exists( 'hook_add' ) ) {
 	// here so we catch config vars sooner rather than later
 	hook_add( 'config_init_vars', 'module_company::hook_config_init_vars' );
@@ -12,10 +11,15 @@ define( '_COMPANY_ACCESS_CONTACT', 'Only companies I am assigned to as a contact
 
 // todo: remove the two "Only Companies" entries from security database that would have been added to early adopters
 
-class module_company extends module_base {
+class module_company extends module_base
+{
+	public $links;
 
-	var $links;
-	public $version = 2.143;
+	public function __construct() {
+		$this->module_name     = 'company';
+		$this->module_position = 10;
+		$this->version         = 2.143;
+	}
 	// 2.143 - 2016-07-10 - big update to mysqli
 	// 2.142 - 2014-07-21 - fix for custom company configurations
 	// 2.141 - 2014-07-21 - company permission improvement
@@ -49,10 +53,7 @@ class module_company extends module_base {
 	}
 
 	function init() {
-		$this->links           = array();
-		$this->module_name     = "company";
-		$this->module_position = 10;
-
+		$this->links = array();
 
 		if ( self::can_i( 'edit', 'Company' ) ) {
 			$this->links[] = array(
@@ -127,6 +128,11 @@ class module_company extends module_base {
 
 
 	public function process() {
+		// Every form that reaches here is posted from a UCM page, so it carries the
+		// form auth key. Refuse anything that does not - see module_form::check_secure_key().
+		if ( ! module_form::check_secure_key() ) {
+			module_form::reject_invalid_form_auth();
+		}
 		if ( isset( $_REQUEST['butt_del'] ) && $_REQUEST['butt_del'] && $_REQUEST['company_id'] && self::can_i( 'delete', 'Company' ) ) {
 			$data = self::get_company( $_REQUEST['company_id'] );
 			if ( $data && $data['company_id'] == $_REQUEST['company_id'] && module_form::confirm_delete( 'company_id', "Really delete company: " . $data['name'], self::link_open( $_REQUEST['company_id'] ) ) ) {
@@ -134,7 +140,7 @@ class module_company extends module_base {
 				set_message( "company deleted successfully" );
 				redirect_browser( $this->link_open( false ) );
 			}
-		} else if ( 'save_company' == $_REQUEST['_process'] && self::can_i( 'edit', 'Company' ) ) {
+		} elseif ( 'save_company' == $_REQUEST['_process'] && self::can_i( 'edit', 'Company' ) ) {
 			$company_id = update_insert( 'company_id', $_REQUEST['company_id'], 'company', $_POST );
 			set_message( 'Company saved successfully' );
 			redirect_browser( $this->link_open( $company_id ) );
@@ -163,7 +169,6 @@ class module_company extends module_base {
 			$company_access = self::get_company_data_access();
 			switch ( $company_access ) {
 				case _COMPANY_ACCESS_ALL:
-
 					break;
 				case _COMPANY_ACCESS_ASSIGNED:
 				case _COMPANY_ACCESS_CONTACT:
@@ -242,7 +247,6 @@ class module_company extends module_base {
 			$company_access = self::get_company_data_access();
 			switch ( $company_access ) {
 				case _COMPANY_ACCESS_ALL:
-
 					break;
 				case _COMPANY_ACCESS_ASSIGNED:
 					// we only want companies that are directly linked with the currently logged in user contact (from the staff user account settings area)
@@ -298,7 +302,7 @@ class module_company extends module_base {
 		}
 	}
 
-	static $get_companys_cache = false;
+	public static $get_companys_cache = false;
 
 	public static function get_companys( $search = false ) {
 		if ( self::$get_companys_cache !== false ) {
@@ -310,7 +314,6 @@ class module_company extends module_base {
 		$company_access = self::get_company_data_access();
 		switch ( $company_access ) {
 			case _COMPANY_ACCESS_ALL:
-
 				break;
 			case _COMPANY_ACCESS_ASSIGNED:
 				// we only want companies that are directly linked with the currently logged in user contact (from the staff user account settings area)
@@ -333,7 +336,7 @@ class module_company extends module_base {
 		return self::$get_companys_cache;
 	}
 
-	static $get_companys_access_restrictions_cache = false;
+	public static $get_companys_access_restrictions_cache = false;
 
 	public static function get_companys_access_restrictions() {
 		if ( self::$get_companys_access_restrictions_cache !== false ) {
@@ -345,7 +348,6 @@ class module_company extends module_base {
 		$company_access = self::get_company_data_access();
 		switch ( $company_access ) {
 			case _COMPANY_ACCESS_ALL:
-
 				break;
 			case _COMPANY_ACCESS_ASSIGNED:
 				// we only want companies that are directly linked with the currently logged in user contact (from the staff user account settings area)
@@ -370,7 +372,6 @@ class module_company extends module_base {
 		self::$get_companys_access_restrictions_cache = array();
 		switch ( $company_access ) {
 			case _COMPANY_ACCESS_ALL:
-
 				break;
 			case _COMPANY_ACCESS_ASSIGNED:
 				// we only want companies that are directly linked with the currently logged in user contact (from the staff user account settings area)
@@ -387,7 +388,7 @@ class module_company extends module_base {
 					if ( (int) $r['user_id1'] > 0 && $r['user_id1'] == module_security::get_loggedin_id() ) {
 						// this is an assigned user! add this company to the list.
 						self::$get_companys_access_restrictions_cache[ $r['company_id'] ] = $r['company_id'];
-					} else if ( (int) $r['user_id2'] > 0 && $r['user_id2'] == module_security::get_loggedin_id() ) {
+					} elseif ( (int) $r['user_id2'] > 0 && $r['user_id2'] == module_security::get_loggedin_id() ) {
 						// this is an assigned user! add this company to the list.
 						self::$get_companys_access_restrictions_cache[ $r['company_id'] ] = $r['company_id'];
 					}
@@ -684,6 +685,4 @@ PRIMARY KEY  (`company_id`, `user_id`)
 
 		return $sql;
 	}
-
-
 }

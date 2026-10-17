@@ -1,9 +1,14 @@
 <?php
 
+class module_import_export extends module_base
+{
+	public $links;
 
-class module_import_export extends module_base {
-
-	var $links;
+	public function __construct() {
+		$this->module_name     = 'import_export';
+		$this->module_position = 240;
+		$this->version         = 2.242;
+	}
 
 	public static function can_i( $actions, $name = false, $category = false, $module = false ) {
 		if ( ! $module ) {
@@ -18,11 +23,7 @@ class module_import_export extends module_base {
 	}
 
 	function init() {
-		$this->links           = array();
-		$this->module_name     = "import_export";
-		$this->module_position = 8882;
-
-		$this->version = 2.242;
+		$this->links = array();
 		// 2.2 - exporting groups to CSV (started with customer export)
 		// 2.21 - clear 'eys' value from form after generation - support for a non parent() form submission (eg: from finance list)
 		// 2.22 - import options moved to a hidden form submit, rather than a long GET url. better!
@@ -46,11 +47,16 @@ class module_import_export extends module_base {
 	}
 
 
-	static $pagination_options = array();
+	public static $pagination_options = array();
 
 	public static function run_pagination_hook( &$rows ) {
 
 		if ( isset( $_REQUEST['import_export_go'] ) && $_REQUEST['import_export_go'] == 'yes' ) {
+			// Exporting dumps every row on screen into a CSV, so it is submitted from the
+			// list page with the form auth key published next to the hidden go field below.
+			if ( ! module_form::check_secure_key() ) {
+				module_form::reject_invalid_form_auth();
+			}
 			// we are posting back tot his script with a go!
 			if ( $rows instanceof mysqli_result ) {
 				$new_rows = array();
@@ -112,7 +118,6 @@ class module_import_export extends module_base {
 								echo '"';
 								switch ( $extra_field['field_type'] ) {
 									case 'reference':
-
 										$reference = @json_decode( $extra_field['options'], true );
 										if ( ! is_array( $reference ) ) {
 											$reference = array();
@@ -194,16 +199,17 @@ class module_import_export extends module_base {
             <strong><?php _e( 'Export all these results:' ); ?></strong><br/>
             <input type="hidden" name="import_export_go" id="import_export_go" value="">
             <input type="button" name="import_export_button" id="import_export_button"
-                   value="<?php _e( 'Export CSV File' ); ?>">
+                   value="<?php _e( 'Export CSV File' ); ?>"<?php module_form::print_form_auth_attributes(); ?>>
             <script type="text/javascript">
                 $(function () {
                     $('#import_export_button').click(function () {
                         $('#import_export_go').val('yes');
-			                <?php if(isset( self::$pagination_options['parent_form'] ) && self::$pagination_options['parent_form']){ ?>
-                        $('#<?php echo self::$pagination_options['parent_form'];?>').append($('#import_export_go').clone());
-                        $('#<?php echo self::$pagination_options['parent_form'];?>')[0].submit();
-			                <?php }else{ ?>
-                        $('#import_export_go').parents('form')[0].submit();
+			                <?php if (isset( self::$pagination_options['parent_form'] ) && self::$pagination_options['parent_form']) { ?>
+                        var $target = $('#<?php echo self::$pagination_options['parent_form'];?>');
+                        $target.append($('#import_export_go').clone());
+                        ucm.submit_guarded_form($target, $(this).data('form-auth-key'));
+			                <?php } else { ?>
+                        ucm.submit_guarded(this);
 			                <?php } ?>
 
                         $('#import_export_popdown').css('display', 'none');
@@ -221,6 +227,23 @@ class module_import_export extends module_base {
 		self::$pagination_options                 = $options;
 	}
 
+	/**
+	 * The import options travel out to the browser as a JSON blob and come back in the
+	 * request, so by the time the import page reads the callback name out of them it is
+	 * request data, not ours. Every caller of import_link() names a module import
+	 * handler, so insist on that shape before calling it - the same guard
+	 * module_email::send_email() puts on its success callback.
+	 *
+	 * @param mixed $callback
+	 *
+	 * @return bool
+	 */
+	public static function is_import_callback( $callback ) {
+		return is_string( $callback )
+		       && preg_match( '#^module_[a-z0-9_]+::[a-z0-9_]+$#i', $callback )
+		       && is_callable( $callback );
+	}
+
 	public static function import_link( $options = array() ) {
 		$m = get_display_mode();
 		if ( $m == 'mobile' || $m == 'iframe' ) {
@@ -228,18 +251,22 @@ class module_import_export extends module_base {
 		}
 
 		if ( module_config::c( 'import_method', 1 ) ) {
+			module_form::print_form_open_tag( array(
+				'action' => link_generate( array(
+					array(
+						'page'   => 'import',
+						'module' => 'import_export'
+					)
+				) ),
+				'style'  => 'display:none;',
+				'id'     => 'import_form',
+				'hidden' => array(
+					'import_options' => module_config::c( 'import_export_base64', 1 ) ? base64_encode( json_encode( $options ) ) : json_encode( $options ),
+				),
+			) );
 			?>
-			<form action="<?php echo link_generate( array(
-				array(
-					'page'   => 'import',
-					'module' => 'import_export'
-				)
-			) ); ?>" method="post" style="display:none;" id="import_form"><input type="submit" name="buttongo"
-			                                                                     value="go"><input type="hidden"
-			                                                                                       name="import_options"
-			                                                                                       value='<?php
-			                                                                                       echo module_config::c( 'import_export_base64', 1 ) ? base64_encode( json_encode( $options ) ) : addcslashes( json_encode( $options ), "'" ); ?>'>
-			</form> <?php
+			<input type="submit" name="buttongo" value="go"><?php
+			module_form::print_form_close_tag();
 			$url = 'javascript:document.forms.import_form.submit();';
 		} else {
 			//oldway:

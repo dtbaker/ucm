@@ -28,9 +28,8 @@ print_heading( $header );
 ?>
 
 
-<form action="" method="post">
+<?php module_form::print_form_open_tag( array( 'action' => '' ) ); ?>
 
-	<?php module_form::print_form_auth(); ?>
 
 	<?php $search_bar = array(
 		'elements' => array(
@@ -125,4 +124,4 @@ print_heading( $header );
 	$table_manager->pagination = true;
 	$table_manager->print_table();
 	?>
-</form>
+<?php module_form::print_form_close_tag();

@@ -1,4 +1,4 @@
-<form action="" method="post">
+<?php module_form::print_form_open_tag( array( 'action' => '' ) ); ?>
 
 	<input type="hidden" name="_config_settings_hook" value="save_config">
 
@@ -11,7 +11,6 @@
 		)
 	);
 
-	module_form::print_form_auth();
 
 	$fieldset_data = array(
 		'elements' => array(),
@@ -23,7 +22,7 @@
 				'title' => $settings['title'],
 				'type'  => 'h3',
 			);
-		} else if ( isset( $settings['heading'] ) ) {
+		} elseif ( isset( $settings['heading'] ) ) {
 			$fieldset_data['heading'] = $settings['heading'];
 		}
 		$settings = $settings['settings'];
@@ -63,4 +62,4 @@
 
 	?>
 
-</form>
+<?php module_form::print_form_close_tag();

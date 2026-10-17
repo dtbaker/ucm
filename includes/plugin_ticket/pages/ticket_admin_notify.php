@@ -1,5 +1,6 @@
 <?php
-if ( ! $ticket_safe ) {
+
+if ( empty( $ticket_safe ) ) {
 	die( 'failed' );
 }
 $ticket_id = (int) $_REQUEST['ticket_id'];
@@ -34,4 +35,3 @@ module_email::print_compose(
 		'cancel_url'  => module_ticket::link_open( $ticket_id ),
 	)
 );
-?>

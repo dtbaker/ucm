@@ -30,7 +30,7 @@ if ( isset( $use_master_key ) && ( $use_master_key == 'customer_id' || $use_mast
 		if ( $customer_data['primary_user_id'] == $user_id ) {
 			$primary = true;
 		}
-	} else if ( $use_master_key == 'vendor_id' ) {
+	} elseif ( $use_master_key == 'vendor_id' ) {
 		$vendor_data = module_vendor::get_vendor( $user[ $use_master_key ] );
 		if ( $vendor_data['primary_user_id'] == $user_id ) {
 			$primary = true;
@@ -54,7 +54,7 @@ if ( isset( $use_master_key ) && ( $use_master_key == 'customer_id' || $use_mast
 			_hr( 'This users details will be used as a primary point of contact for this customer. These details will display in the main customer listing for this customer. Also if you send an invoice or a newsletter to this "customer" then this email address will be used.' ),
 		)
 	);
-} else if ( isset( $show_more_button ) && $show_more_button ) {
+} elseif ( isset( $show_more_button ) && $show_more_button ) {
 	$fieldset_data['heading']['button'] = array(
 		'title' => 'More',
 		'url'   => module_user::link_open_contact( $user_id, false )

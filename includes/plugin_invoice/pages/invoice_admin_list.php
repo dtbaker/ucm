@@ -1,5 +1,5 @@
 <?php
-if ( ! $invoice_safe ) {
+if ( empty( $invoice_safe ) ) {
 	die( 'failed' );
 }
 
@@ -209,9 +209,8 @@ print_heading( $header );
 ?>
 
 
-	<form action="" method="post">
+	<?php module_form::print_form_open_tag( array( 'action' => '' ) ); ?>
 
-		<?php module_form::print_form_auth(); ?>
 
 		<?php $search_bar = array(
 			'elements' => array(
@@ -372,11 +371,11 @@ print_heading( $header );
 			'callback' => function ( $invoice ) {
 				if ( $invoice['credit_note_id'] ) {
 					echo _l( 'N/A' );
-				} else if ( $invoice['date_paid'] && $invoice['date_paid'] != '0000-00-00' ) { ?>
+				} elseif ( $invoice['date_paid'] && $invoice['date_paid'] != '0000-00-00' ) { ?>
 					<?php echo print_date( $invoice['date_paid'] ); ?>
-				<?php } else if ( ( $invoice['date_cancel'] && $invoice['date_cancel'] != '0000-00-00' ) ) { ?>
+				<?php } elseif ( ( $invoice['date_cancel'] && $invoice['date_cancel'] != '0000-00-00' ) ) { ?>
 					<span class="error_text"><?php _e( 'Cancelled' ); ?></span>
-				<?php } else if ( $invoice['overdue'] ) { ?>
+				<?php } elseif ( $invoice['overdue'] ) { ?>
 					<span class="error_text"
 					      style="font-weight: bold; text-decoration: underline;"><?php _e( 'Overdue' ); ?></span>
 				<?php } else { ?>
@@ -385,7 +384,7 @@ print_heading( $header );
 			},
 		);
 		if ( class_exists( 'module_website', false ) && module_website::is_plugin_enabled() && module_website::can_i( 'view', module_config::c( 'project_name_plural', 'Websites' ) ) ) {
-			$colspan ++;
+			$colspan++;
 			$columns['invoice_website'] = array(
 				'title'    => module_config::c( 'project_name_single', 'Website' ),
 				'callback' => function ( $invoice ) {
@@ -420,7 +419,7 @@ print_heading( $header );
 			);
 		}
 		if ( ! isset( $_REQUEST['customer_id'] ) && module_customer::can_i( 'view', 'Customers' ) ) {
-			$colspan ++;
+			$colspan++;
 			$columns['invoice_customer'] = array(
 				'title'    => 'Customer',
 				'callback' => function ( $invoice ) {
@@ -458,7 +457,7 @@ print_heading( $header );
 			} );
 		}
 		if ( module_invoice::can_i( 'edit', 'Invoices' ) ) {
-			$colspan2 ++;// used in the footer
+			$colspan2++;// used in the footer
 			$columns['row_bulk_action'] = array(
 				'title'    => ' ',
 				'callback' => function ( $invoice ) {
@@ -505,13 +504,19 @@ print_heading( $header );
 		$table_manager->print_table();
 
 		?>
-	</form>
+	<?php module_form::print_form_close_tag(); ?>
 
 <?php if ( function_exists( 'convert_html2pdf' ) && get_display_mode() != 'mobile' ) { ?>
-	<form action="<?php echo module_invoice::link_generate( false, array( 'arguments' => array( 'print' => 1 ) ) ); ?>"
-	      method="post">
+	<?php module_form::print_form_open_tag( array( 'action' => ( module_invoice::link_generate( false, array( 'arguments' => array( 'print' => 1 ) ) ) ) ) ); ?>
 		<input type="hidden" name="invoice_ids" value="<?php echo implode( ",", $all_invoice_ids ); ?>">
-		<input type="submit" name="butt_print" value="<?php echo _l( 'Export all results as PDF' ); ?>"
-		       class="submit_button"/>
-	</form>
+		<?php echo module_form::generate_form_actions( array(
+			'elements' => array(
+				array(
+					'type'  => 'save_button',
+					'name'  => 'butt_print',
+					'value' => _l( 'Export all results as PDF' ),
+				),
+			),
+		) ); ?>
+	<?php module_form::print_form_close_tag(); ?>
 <?php } ?>

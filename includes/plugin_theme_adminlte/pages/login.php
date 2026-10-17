@@ -1,4 +1,4 @@
-<?php if ( $header_logo = module_theme::get_config( 'theme_logo', _BASE_HREF . 'images/logo.png' ) ) { ?>
+<?php if ( $header_logo = module_theme::logo_url() ) { ?>
 	<div class="text-center logo-box">
 		<img src="<?php echo htmlspecialchars( $header_logo ); ?>" border="0"
 		     title="<?php echo htmlspecialchars( module_config::s( 'header_title', 'UCM' ) ); ?>">
@@ -21,12 +21,15 @@
 		</div>
 	</div>
 
-<?php } else if ( isset( $_REQUEST['forgot_password'] ) ) { ?>
+<?php } elseif ( isset( $_REQUEST['forgot_password'] ) ) { ?>
 
 	<div id="forgot" class="tab-pane">
 		<div class="form-box" id="forgot-box">
 			<div class="header"><?php _e( 'Reset Password' ); ?></div>
-			<form action="" class="form-signin" method="post">
+			<?php module_form::print_form_open_tag( array(
+				'action' => '',
+				'class'  => 'form-signin',
+			) ); ?>
 				<input type="hidden" name="_process_reset" value="true">
 				<div class="body bg-gray">
 					<p
@@ -47,14 +50,17 @@
 					<p><a href="?login"><?php _e( 'Back to Login' ); ?></a></p>
 				</div>
 				<?php hook_handle_callback( 'login_screen' ); ?>
-			</form>
+			<?php module_form::print_form_close_tag(); ?>
 		</div>
 	</div>
 <?php } else { ?>
 	<div id="login" class="tab-pane active">
 		<div class="form-box" id="login-box">
 			<div class="header"><?php _e( 'Sign In' ); ?></div>
-			<form action="" class="form-signin" method="post">
+			<?php module_form::print_form_open_tag( array(
+				'action' => '',
+				'class'  => 'form-signin',
+			) ); ?>
 				<input type="hidden" name="_process_login" value="true">
 				<?php if ( _DEMO_MODE ) { ?>
 					<div class="body bg-gray">
@@ -101,7 +107,7 @@
 					</p>
 				</div>
 				<?php hook_handle_callback( 'login_screen' ); ?>
-			</form>
+			<?php module_form::print_form_close_tag(); ?>
 		</div>
 	</div>
 	<script type="text/javascript">

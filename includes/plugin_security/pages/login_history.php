@@ -28,9 +28,6 @@ hook_handle_callback( 'layout_column_half', 1 );
 				Date/Time
 			</th>
 			<th>IP Address</th>
-			<?php if ( module_config::c( 'session_show_hostname', 1 ) ) { ?>
-				<th>Host</th>
-			<?php } ?>
 			<th>User</th>
 		</tr>
 		</thead>
@@ -39,24 +36,14 @@ hook_handle_callback( 'layout_column_half', 1 );
 		$sql     = "SELECT * FROM `" . _DB_PREFIX . "security_login` l LEFT JOIN `" . _DB_PREFIX . "user` u ON l.user_id = u.user_id ORDER BY user_login_id DESC LIMIT 30";
 		$history = qa( $sql );
 		foreach ( $history as $h ) {
-			if ( module_config::c( 'session_show_hostname', 1 ) && ! _DEMO_MODE ) {
-				if ( ! isset( $ips[ $h['ip_address'] ] ) ) {
-					$ips[ $h['ip_address'] ] = @gethostbyaddr( $h['ip_address'] );
-				}
-			}
 			?>
 			<tr>
 				<td>
 					<?php echo print_date( $h['time'], true ); ?>
 				</td>
 				<td>
-					<?php echo _DEMO_MODE ? 'Hidden in demo ' : $h['ip_address']; ?>
+					<?php echo _DEMO_MODE ? 'Hidden in demo ' : htmlspecialchars( $h['ip_address'] ); ?>
 				</td>
-				<?php if ( module_config::c( 'session_show_hostname', 1 ) ) { ?>
-					<td>
-						<?php echo _DEMO_MODE ? 'Hidden in demo ' : $ips[ $h['ip_address'] ]; ?>
-					</td>
-				<?php } ?>
 				<td>
 					<?php echo module_user::link_open( $h['user_id'], true ); ?>
 				</td>
@@ -78,9 +65,6 @@ hook_handle_callback( 'layout_column_half', 2 ); ?>
 			<th>Last Activity</th>
 			<th>Start Date/Time</th>
 			<th>IP Address</th>
-			<?php if ( module_config::c( 'session_show_hostname', 1 ) ) { ?>
-				<th>Host</th>
-			<?php } ?>
 			<th>User</th>
 			<th>Logged in</th>
 			<th>Action</th>
@@ -98,11 +82,6 @@ hook_handle_callback( 'layout_column_half', 2 ); ?>
 		$sql     = "SELECT * FROM `" . _DB_PREFIX . "session` s LEFT JOIN `" . _DB_PREFIX . "user` u ON s.user_id = u.user_id WHERE s.user_id > 0 ORDER BY last_access DESC LIMIT 30";
 		$history = qa( $sql );
 		foreach ( $history as $h ) {
-			if ( module_config::c( 'session_show_hostname', 1 ) && ! _DEMO_MODE ) {
-				if ( ! isset( $ips[ $h['ip_address'] ] ) ) {
-					$ips[ $h['ip_address'] ] = @gethostbyaddr( $h['ip_address'] );
-				}
-			}
 			?>
 			<tr style="<?php echo $h['session_id'] == session_id() ? 'font-weight:bold; background:#EFEFEF' : ''; ?>">
 				<td>
@@ -112,13 +91,8 @@ hook_handle_callback( 'layout_column_half', 2 ); ?>
 					<?php echo print_date( $h['created'], true ); ?>
 				</td>
 				<td>
-					<?php echo _DEMO_MODE ? 'Hidden in demo ' : $h['ip_address']; ?>
+					<?php echo _DEMO_MODE ? 'Hidden in demo ' : htmlspecialchars( $h['ip_address'] ); ?>
 				</td>
-				<?php if ( module_config::c( 'session_show_hostname', 1 ) ) { ?>
-					<td>
-						<?php echo _DEMO_MODE ? 'Hidden in demo ' : $ips[ $h['ip_address'] ]; ?>
-					</td>
-				<?php } ?>
 				<td>
 					<?php echo module_user::link_open( $h['user_id'], true ); ?>
 				</td>
@@ -128,7 +102,7 @@ hook_handle_callback( 'layout_column_half', 2 ); ?>
 				<td>
 					<?php if ( $h['session_id'] == session_id() ) { ?>
 						Current
-					<?php } else if ( $h['logged_in'] ) { ?>
+					<?php } elseif ( $h['logged_in'] ) { ?>
 						<a href="<?php
 						$url = preg_replace( '#[?&]end=.*#', '', $_SERVER['REQUEST_URI'] );
 						$url .= strpos( $url, '?' ) === false ? '?' : '&';

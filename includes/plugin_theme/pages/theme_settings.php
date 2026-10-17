@@ -22,7 +22,7 @@ if ( $show_theme_selector ) {
 		),
 		array(
 			'key'         => _THEME_CONFIG_PREFIX . 'theme_logo',
-			'default'     => _BASE_HREF . 'images/logo.png',
+			'default'     => module_theme::default_logo_url(),
 			'type'        => 'text',
 			'description' => 'URL for header logo',
 		),
@@ -70,11 +70,10 @@ if ( $show_theme_selector ) {
 
 ?>
 
-<form action="" method="post">
+<?php module_form::print_form_open_tag( array( 'action' => '' ) ); ?>
 	<input type="hidden" name="_config_settings_hook" value="save_config">
 
 	<?php
-	module_form::print_form_auth();
 	module_form::prevent_exit( array(
 			'valid_exits' => array(
 				// selectors for the valid ways to exit this form.
@@ -114,7 +113,7 @@ if ( $show_theme_selector ) {
 			$c = 0;
 			if ( isset( $style['v'] ) && is_array( $style['v'] ) ) {
 				foreach ( $style['v'] as $k => $v ) {
-					$c ++;
+					$c++;
 					?>
 					<tr class="<?php echo $x % 2 ? 'odd' : 'even'; ?>">
 						<?php if ( $c == 1 ) { ?>
@@ -125,7 +124,7 @@ if ( $show_theme_selector ) {
 						</td>
 						<td>
 							<?php switch ( $k ) {
-								default;
+								default:
 									?>
 									<input type="text"
 									       name="config[_theme_<?php echo htmlspecialchars( module_theme::$current_theme . $style['r'] . '_' . $k ); ?>]"
@@ -142,9 +141,9 @@ if ( $show_theme_selector ) {
 						</td>
 					</tr>
 					<?php
-					$r ++;
+					$r++;
 				}
-			} else if ( isset( $style['elements'] ) && is_array( $style['elements'] ) ) {
+			} elseif ( isset( $style['elements'] ) && is_array( $style['elements'] ) ) {
 				?>
 
 				<tr class="<?php echo $x % 2 ? 'odd' : 'even'; ?>">
@@ -157,7 +156,7 @@ if ( $show_theme_selector ) {
 				</tr>
 				<?php
 			}
-			$x ++;
+			$x++;
 		} ?>
 
 		</tbody>
@@ -183,5 +182,4 @@ if ( $show_theme_selector ) {
 	unset( $fieldset_data );
 	?>
 
-</form>
-
+<?php module_form::print_form_close_tag();

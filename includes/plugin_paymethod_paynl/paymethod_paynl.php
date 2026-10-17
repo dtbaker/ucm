@@ -1,9 +1,7 @@
 <?php
 
-
-class module_paymethod_paynl extends module_base {
-
-
+class module_paymethod_paynl extends module_base
+{
 	public static function can_i( $actions, $name = false, $category = false, $module = false ) {
 		if ( ! $module ) {
 			$module = __CLASS__;
@@ -16,18 +14,20 @@ class module_paymethod_paynl extends module_base {
 		return __CLASS__;
 	}
 
-	function init() {
+	public function __construct() {
+		$this->module_name     = 'paymethod_paynl';
+		$this->module_position = 380;
 		$this->version         = 2.2;
-		$this->module_name     = "paymethod_paynl";
-		$this->module_position = 8882;
+	}
 
+	function init() {
 		// 2.1 - 2015-03-14 - new payment gateway
 		// 2.2 - 2017-03-25 - cron speed up
 	}
 
 	public function pre_menu() {
 
-		if ( module_config::can_i( 'view', 'Settings' ) ) {
+		if ( module_config::can_i( 'view', 'Settings' ) && self::show_settings_page() ) {
 			$this->links[] = array(
 				"name"                => "PayNL",
 				"p"                   => "paynl_settings",
@@ -36,6 +36,24 @@ class module_paymethod_paynl extends module_base {
 				'menu_include_parent' => 1,
 			);
 		}
+	}
+
+	/**
+	 * Whether this install should see the settings page at all.
+	 *
+	 * Retired, so it is hidden from a fresh install - but an install that is using it,
+	 * that was using it before an upgrade turned it off, or that has payment history
+	 * against it keeps the page, because that is where the explanation lives and where
+	 * the credentials can still be read.
+	 *
+	 * @return bool
+	 */
+	public static function show_settings_page() {
+		if ( self::is_enabled() || module_config::c( 'payment_method_paynl_was_enabled', false ) ) {
+			return true;
+		}
+
+		return module_invoice::payment_method_has_history( self::get_payment_method_key(), array( 'paynl', 'PayNL', self::get_payment_method_name() ) );
 	}
 
 	public function handle_hook( $hook ) {
@@ -71,7 +89,7 @@ class module_paymethod_paynl extends module_base {
 
 		if ( $dollar_limit == 'above' && $invoice_data['total_amount_due'] < $dollar_value ) {
 			return false;
-		} else if ( $dollar_limit == 'below' && $invoice_data['total_amount_due'] > $dollar_value ) {
+		} elseif ( $dollar_limit == 'below' && $invoice_data['total_amount_due'] > $dollar_value ) {
 			return false;
 		}
 		if ( strlen( $cur ) > 1 ) {
@@ -90,6 +108,26 @@ class module_paymethod_paynl extends module_base {
 	public function set_allowed_for_invoice( $invoice_id, $allowed = 1 ) {
 		$sql = "REPLACE INTO `" . _DB_PREFIX . "invoice_payment_method` SET `invoice_id` = " . (int) $invoice_id . ", `payment_method` = 'paynl', `enabled` = " . (int) $allowed;
 		query( $sql );
+	}
+
+	/**
+	 * The stable identifier for this payment method, never the admin-editable label.
+	 *
+	 * @return string
+	 */
+	public static function get_payment_method_key() {
+		return 'paynl';
+	}
+
+	/**
+	 * Retired. The method still works everywhere it is already in use - it starts
+	 * payments, answers its notification endpoint, and its history renders unchanged -
+	 * but a fresh install never sees it.
+	 *
+	 * @return bool
+	 */
+	public function is_deprecated() {
+		return true;
 	}
 
 	public static function get_payment_method_name() {
@@ -212,8 +250,20 @@ class module_paymethod_paynl extends module_base {
 		if ( ! $token ) {
 			return;
 		}
-		$sql = "SELECT * FROM `" . _DB_PREFIX . "invoice_payment` ip WHERE 1 ";
-		$sql .= " AND  `method` = 'paynl' ";
+		// This used to be `method` = 'paynl', the lowercase factory default of an
+		// admin-editable label. Renaming the payment method in settings stopped
+		// reconciliation for good, and because Pay.nl has no webhook this cron is the
+		// only way one of its payments is ever recorded. Match the stable key, and keep
+		// matching the label for rows written before method_key existed.
+		$label  = db_escape( self::get_payment_method_name() );
+		$fields = get_fields( 'invoice_payment' );
+		$sql    = "SELECT * FROM `" . _DB_PREFIX . "invoice_payment` ip WHERE 1 ";
+		if ( isset( $fields['method_key'] ) ) {
+			$sql .= " AND ( `method_key` = '" . db_escape( self::get_payment_method_key() ) . "' OR ( `method_key` = '' AND `method` IN ( 'paynl', '" . $label . "' ) ) ) ";
+		} else {
+			// Pre-upgrade database, the column is not there yet.
+			$sql .= " AND `method` IN ( 'paynl', '" . $label . "' ) ";
+		}
 		$sql .= " AND  `date_paid` = '0000-00-00' ";
 		$sql .= " AND  `other_id` != '' ";
 		foreach ( qa( $sql ) as $payment ) {
@@ -249,7 +299,7 @@ class module_paymethod_paynl extends module_base {
 						) );
 						module_invoice::save_invoice( $payment['invoice_id'], array() );
 						break;
-					case 'CANCEL';
+					case 'CANCEL':
 						update_insert( "invoice_payment_id", $payment['invoice_payment_id'], "invoice_payment", array(
 							'other_id' => '', // stops cron hitting it agagin
 						) );
@@ -262,6 +312,4 @@ class module_paymethod_paynl extends module_base {
 			}
 		}
 	}
-
-
 }

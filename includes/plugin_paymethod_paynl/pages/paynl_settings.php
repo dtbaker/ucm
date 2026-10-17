@@ -5,6 +5,12 @@ if ( ! module_config::can_i( 'edit', 'Settings' ) ) {
 	redirect_browser( _BASE_HREF );
 }
 
+module_invoice::print_deprecated_payment_method_notice(
+	module_paymethod_paynl::get_payment_method_name(),
+	_l( 'Pay.nl calls the API this uses its Legacy API and advises moving to its new platform. It also has no webhook, so payments are only ever recorded by the hourly cron - on an install without cron configured, they are never recorded at all.' ),
+	''
+);
+
 print_heading( 'PayNL Settings' ); ?>
 
 
@@ -67,14 +73,14 @@ print_heading( 'PayNL Settings' ); ?>
 			'description' => '... this amount',
 			'help'        => 'What value to restrict paynl payments to',
 		),
-		array(
+		'payment_method_paynl_charge_percent' => array(
 			'key'         => 'payment_method_paynl_charge_percent',
 			'default'     => 0,
 			'type'        => 'text',
 			'description' => 'Additional Charge (as %)',
 			'help'        => 'Example: 2.9 do not enter %% sign',
 		),
-		array(
+		'payment_method_paynl_charge_amount' => array(
 			'key'         => 'payment_method_paynl_charge_amount',
 			'default'     => 0,
 			'type'        => 'text',

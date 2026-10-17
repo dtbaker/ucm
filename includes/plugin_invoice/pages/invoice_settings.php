@@ -18,7 +18,8 @@ $invoice_templates['credit_note_pdf']         = 1;
 $invoice_templates['invoice_email_due']       = 1;
 $invoice_templates['invoice_email_overdue']   = 1;
 $invoice_templates['invoice_email_paid']      = 1;
-$invoice_templates['credit_note_email']       = 1;;
+$invoice_templates['credit_note_email']       = 1;
+;
 foreach ( $templates as $template ) {
 	if ( stripos( $template['template_key'], 'invoice' ) ) {
 		$invoice_templates[ $template['template_key'] ] = 1;
@@ -188,9 +189,17 @@ if ( count( $blank_invoices ) ) {
 		<?php } ?>
 	</ul>
 	You can remove all these invoices manually, or click the button below to remove them automatically.
-	<form action="" method="post">
+	<?php module_form::print_form_open_tag( array( 'action' => '' ) ); ?>
 		<input type="hidden" name="remove_duplicates" value="yes">
-		<input type="submit" value="Remove these <?php echo count( $blank_invoices ); ?> invoices">
-	</form>
+		<?php echo module_form::generate_form_actions( array(
+			'elements' => array(
+				array(
+					'type'  => 'save_button',
+					'name'  => 'remove_duplicates_go',
+					'value' => _l( 'Remove these %s invoices', count( $blank_invoices ) ),
+				),
+			),
+		) ); ?>
+	<?php module_form::print_form_close_tag(); ?>
 	<?php
 }

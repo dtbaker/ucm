@@ -2,12 +2,10 @@
 
 switch ( $display_mode ) {
 	case 'ajax':
-
 		break;
 	case 'iframe':
 	case 'normal':
 	default:
-
 		?>
 		<!DOCTYPE html>
 	<html dir="<?php echo module_config::c( 'text_direction', 'ltr' ); ?>"
@@ -17,17 +15,10 @@ switch ( $display_mode ) {
 			<meta content='width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no' name='viewport'>
 			<title><?php echo $page_title; ?></title>
 
-			<?php $header_favicon = module_theme::get_config( 'theme_favicon', '' );
+			<?php $header_favicon = module_theme::favicon_url();
 			if ( $header_favicon ) { ?>
 				<link rel="icon" href="<?php echo htmlspecialchars( $header_favicon ); ?>">
 			<?php } ?>
-
-			<!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
-			<!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
-			<!--[if lt IE 9]>
-			<script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
-			<script src="https://oss.maxcdn.com/libs/respond.js/1.3.0/respond.min.js"></script>
-			<![endif]-->
 
 			<?php module_config::print_css( _SCRIPT_VERSION ); ?>
 
@@ -69,7 +60,7 @@ switch ( $display_mode ) {
 			<header class="header">
 				<a href="<?php echo _BASE_HREF; ?>" class="logo">
 					<!-- Add the class icon to your logo image or logo icon to add the margining -->
-					<?php if ( $header_logo = module_theme::get_config( 'theme_logo', _BASE_HREF . 'images/logo.png' ) ) { ?>
+					<?php if ( $header_logo = module_theme::logo_url() ) { ?>
 						<img src="<?php echo htmlspecialchars( $header_logo ); ?>" border="0"
 						     title="<?php echo htmlspecialchars( module_config::s( 'header_title', 'UCM' ) ); ?>">
 					<?php } else { ?>
@@ -145,7 +136,8 @@ switch ( $display_mode ) {
 												<?php } ?>
 											</ul>
 										<?php } else { ?>
-											<a href="#" id="<?php echo $header_button['id']; ?>">
+											<a<?php echo header_button_link_attributes( $header_button ); ?>
+												id="<?php echo $header_button['id']; ?>">
 												<!-- <?php echo $header_button['title']; ?> -->
 												<i class="fa fa-<?php echo $header_button['fa-icon']; ?>"></i>
 											</a>
@@ -232,7 +224,10 @@ switch ( $display_mode ) {
 						}
 						?>
 						<!-- search form -->
-						<form action="<?php echo _BASE_HREF; ?>?p=search_results" method="post" class="sidebar-form">
+						<?php module_form::print_form_open_tag( array(
+							'action' => _BASE_HREF . '?p=search_results',
+							'class'  => 'sidebar-form',
+						) ); ?>
 							<div class="input-group">
 								<input type="text" name="quick_search" class="form-control"
 								       value="<?php echo isset( $_REQUEST['quick_search'] ) ? htmlspecialchars( $_REQUEST['quick_search'] ) : ''; ?>"
@@ -242,7 +237,7 @@ switch ( $display_mode ) {
 			                                    class="fa fa-search"></i></button>
 	                                </span>
 							</div>
-						</form>
+						<?php module_form::print_form_close_tag(); ?>
 						<!-- /.search form -->
 						<?php
 					} ?>
@@ -326,7 +321,7 @@ switch ( $display_mode ) {
 		<div id="content">
 
 		<?php
-	} else{
+	} else {
 		// not logged in
 	    ?>
         <body class="theme-adminlte bg-black" id="login-page">

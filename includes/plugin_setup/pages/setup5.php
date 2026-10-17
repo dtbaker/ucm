@@ -17,7 +17,7 @@ print_heading( 'Step #5: Complete' ); ?>
 		href="http://twitter.com/dtbaker" target="_blank">@dtbaker</a>) to hear about UCM updates. </p>
 
 <p>If you have any support requests or find a bug please send it to this website: <a
-		href="http://ultimateclientmanager.com/" target="_blank">ultimateclientmanager.com</a> - you can submit a support
+		href="https://ultimateclientmanager.com/" target="_blank">ultimateclientmanager.com</a> - you can submit a support
 	ticket or search the community forum. </p>
 
 <p>I've spent a long time building this system so I hope it will fit into your business needs nicely. If you like this

@@ -47,7 +47,7 @@ if ( $invoice_data['total_amount_due'] > 0 ) {
 		echo $template_print->content;
 		if ( ! isset( $mode ) || $mode == 'html' ) { ?>
 
-			<form action="<?php echo module_invoice::link_public_pay( $invoice_id ); ?>" method="post">
+			<?php module_form::print_form_open_tag( array( 'action' => module_invoice::link_public_pay( $invoice_id ) ) ); ?>
 				<input type="hidden" name="payment" value="go">
 				<input type="hidden" name="invoice_id" value="<?php echo $invoice_id; ?>">
 				<table class="" cellpadding="0" cellspacing="0">
@@ -71,7 +71,7 @@ if ( $invoice_data['total_amount_due'] > 0 ) {
 									for="paymethod<?php echo $x; ?>"><?php echo $payment_methods_on['name']; ?></label>
 								<br/>
 								<?php
-								$x ++;
+								$x++;
 							}
 							?>
 						</td>
@@ -100,7 +100,7 @@ if ( $invoice_data['total_amount_due'] > 0 ) {
 					</tr>
 					</tbody>
 				</table>
-			</form>
+			<?php module_form::print_form_close_tag(); ?>
 
 			<?php
 		} else {

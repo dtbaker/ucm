@@ -1,7 +1,9 @@
 <?php
 
-class iimysqli_result {
-	public $stmt, $nCols;
+class iimysqli_result
+{
+	public $stmt;
+	public $nCols;
 }
 
 if ( ! function_exists( 'mysqli_stmt_get_result' ) ) {
@@ -10,7 +12,7 @@ if ( ! function_exists( 'mysqli_stmt_get_result' ) ) {
 	function iimysqli_stmt_get_result( $stmt ) {
 
 		$metadata = mysqli_stmt_result_metadata( $stmt );
-		$ret      = new iimysqli_result;
+		$ret      = new iimysqli_result();
 		if ( ! $ret ) {
 			return null;
 		}
@@ -30,7 +32,7 @@ if ( ! function_exists( 'mysqli_stmt_get_result' ) ) {
 		$stmt->store_result();
 		$resultkeys = array();
 		$thisName   = "";
-		for ( $i = 0; $i < $stmt->num_rows; $i ++ ) {
+		for ( $i = 0; $i < $stmt->num_rows; $i++ ) {
 			$metadata = $stmt->result_metadata();
 			while ( $field = $metadata->fetch_field() ) {
 				$thisName     = $field->name;
@@ -40,7 +42,7 @@ if ( ! function_exists( 'mysqli_stmt_get_result' ) ) {
 
 		$ret  = array();
 		$code = "return mysqli_stmt_bind_result(\$result->stmt ";
-		for ( $i = 0; $i < $result->nCols; $i ++ ) {
+		for ( $i = 0; $i < $result->nCols; $i++ ) {
 			$ret[ $i ] = null;
 			if ( isset( $resultkeys[ $i ] ) ) {
 				$theValue = $resultkeys[ $i ];
@@ -68,8 +70,8 @@ if ( ! function_exists( 'mysqli_stmt_get_result' ) ) {
 }
 
 
-class UCMDatabase {
-
+class UCMDatabase
+{
 	private static $instance;
 
 	static function singleton() {
@@ -146,7 +148,7 @@ class UCMDatabase {
 
 			$$bind_name = $settings['value'];
 			$refarg[]   = &$$bind_name;
-			$i ++;
+			$i++;
 		}
 
 		foreach ( $this->params as $key => $settings ) {
@@ -235,6 +237,4 @@ class UCMDatabase {
 	public function insert_id() {
 		return mysqli_insert_id( $this->db_link );
 	}
-
-
 }

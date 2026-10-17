@@ -1,7 +1,7 @@
 <?php
 
-class UCMBaseMulti {
-
+class UCMBaseMulti
+{
 	public $db_id = 'table_id';
 	public $db_table = 'table';
 	public $db_fields = array();
@@ -55,30 +55,34 @@ class UCMBaseMulti {
 			}
 			$key_index = 1;
 			foreach ( $search as $key => $val ) {
-				if ( ! is_array( $val ) && strlen( $val ) && isset( $this->db_fields_all[ $key ] ) ) {
+				// Search values arrive as whatever the caller had - null, an int, a string.
+				// Only the leading "%" test needs it as text; the value itself is bound as
+				// it came in.
+				$val_text = is_scalar( $val ) ? (string) $val : '';
+				if ( ! is_array( $val ) && strlen( $val_text ) && isset( $this->db_fields_all[ $key ] ) ) {
 					// Handle like queries.
-					if ( strlen( trim( $val ) ) > 1 && $val[0] === '%' ) {
-						$val           = ltrim( $val, '%' );
+					if ( strlen( trim( $val_text ) ) > 1 && $val_text[0] === '%' ) {
 						$where .= " AND `$key` LIKE :$key ";
-						$this->db->bind_param( $key, '%' . $val .'%');
+						$this->db->bind_param( $key, '%' . ltrim( $val_text, '%' ) . '%' );
 					} else {
 						$where .= " AND `$key` = :$key ";
 						$this->db->bind_param( $key, $val );
 					}
 
-				} else if ( is_array( $val ) && ! empty( $val['condition'] ) && ! empty( $val['values'] ) && isset( $this->db_fields_all[ $key ] ) ) {
+				} elseif ( is_array( $val ) && ! empty( $val['condition'] ) && ! empty( $val['values'] ) && isset( $this->db_fields_all[ $key ] ) ) {
 					$where .= ' AND ( ';
 					switch ( strtolower( $val['condition'] ) ) {
 						case 'or':
 							$where_or = array();
 							foreach ( $val['values'] as $or_key => $or_value ) {
-								if ( strlen( $or_value ) ) {
+								$or_text = is_scalar( $or_value ) ? (string) $or_value : '';
+								if ( strlen( $or_text ) ) {
 									// Handle like queries.
-									if ( strlen( trim( $or_value ) ) > 1 && $or_value[0] === '%' ) {
-										$or_value      = ltrim( $or_value, '%' );
-										if( isset( $this->db_fields_all[ $or_key ] ) ) {
+									if ( strlen( trim( $or_text ) ) > 1 && $or_text[0] === '%' ) {
+										$or_value      = ltrim( $or_text, '%' );
+										if ( isset( $this->db_fields_all[ $or_key ] ) ) {
 											$where_or [] = " `$or_key` LIKE :" . $key . $key_index;
-										}else{
+										} else {
 											$where_or [] = " `$key` LIKE :" . $key . $key_index;
 										}
 										$this->db->bind_param( $key . $key_index, '%' . $or_value . '%' );
@@ -86,7 +90,7 @@ class UCMBaseMulti {
 										$where_or [] = " `$key` = :" . $key . $key_index;
 										$this->db->bind_param( $key . $key_index, $or_value );
 									}
-									$key_index ++;
+									$key_index++;
 								}
 							}
 							if ( count( $where_or ) ) {
@@ -165,6 +169,4 @@ class UCMBaseMulti {
 
 		return link_generate( $link_options );
 	}
-
-
 }

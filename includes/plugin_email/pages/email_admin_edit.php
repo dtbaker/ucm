@@ -77,18 +77,24 @@ $options = module_email::get_email_compose_options( $options );
 
 ?>
 
-<?php if ( $can_edit_emails ){ ?>
-	<form action="" method="post" id="template_change_form">
+<?php if ( $can_edit_emails ) { ?>
+	<?php module_form::print_form_open_tag( array(
+		'action' => '',
+		'id'     => 'template_change_form',
+	) ); ?>
 		<input type="hidden" name="template_name" value="" id="template_name_change">
-	</form>
+	<?php module_form::print_form_close_tag(); ?>
 
-<form action="" method="post" enctype="multipart/form-data" id="email_send_form">
+<?php module_form::print_form_open_tag( array(
+	'action'  => '',
+	'enctype' => 'multipart/form-data',
+	'id'      => 'email_send_form',
+) ); ?>
 	<input type="hidden" name="_process" id="process_tag" value="send_email">
 	<input type="hidden" name="email_id" id="email_id" value="<?php echo (int) $email_id; ?>">
 	<input type="hidden" name="options" value="<?php echo base64_encode( serialize( $options ) ); ?>">
 
 	<?php
-	module_form::print_form_auth();
 	}
 
 
@@ -228,7 +234,7 @@ $options = module_email::get_email_compose_options( $options );
 				$websites = module_website::get_websites( array( 'customer_id' => $customer_id ) );
 				if ( $can_edit_emails ) {
 					echo print_select_box( $websites, 'website_id', isset( $email['website_id'] ) ? $email['website_id'] : false, '', true, 'name' );
-				} else if ( isset( $email['website_id'] ) && $email['website_id'] ) {
+				} elseif ( isset( $email['website_id'] ) && $email['website_id'] ) {
 					echo isset( $websites[ $email['website_id'] ] ) ? htmlspecialchars( $websites[ $email['website_id'] ]['name'] ) : _l( 'Deleted' );
 				} else {
 					_e( 'N/A' );
@@ -243,7 +249,7 @@ $options = module_email::get_email_compose_options( $options );
 				$jobs = module_job::get_jobs( array( 'customer_id' => $customer_id ) );
 				if ( $can_edit_emails ) {
 					echo print_select_box( $jobs, 'job_id', isset( $email['job_id'] ) ? $email['job_id'] : false, '', true, 'name' );
-				} else if ( isset( $email['job_id'] ) && $email['job_id'] ) {
+				} elseif ( isset( $email['job_id'] ) && $email['job_id'] ) {
 					echo isset( $jobs[ $email['job_id'] ] ) ? htmlspecialchars( $jobs[ $email['job_id'] ]['name'] ) : _l( 'Deleted' );
 				} else {
 					_e( 'N/A' );
@@ -371,7 +377,7 @@ $options = module_email::get_email_compose_options( $options );
 	$fieldset_data['elements'][] = array(
 		'title' => _l( 'Attachment:' ),
 		'field' => function () use ( $can_edit_emails, $email ) {
-		foreach ( $email['attachments'] as $uri => $attachment ){
+		foreach ( $email['attachments'] as $uri => $attachment ) {
 			if ( is_array( $attachment ) ) {
 				if ( $attachment['preview'] ) {
 					echo '<a href="' . $attachment['preview'] . '">';
@@ -383,14 +389,14 @@ $options = module_email::get_email_compose_options( $options );
 			} else {
 				echo htmlspecialchars( $attachment );
 			}
-		if ( $can_edit_emails ){
+		if ( $can_edit_emails ) {
 			?>
 		<input type="hidden" name="existing_attachments[]" value="<?php echo htmlspecialchars( $uri ); ?>">
 		<?php
 		}
 		echo '<br/>';
 		}
-		if ( $can_edit_emails ){
+		if ( $can_edit_emails ) {
 		?>
 			<div id="email_attach_holder">
 				<div class="dynamic_block">
@@ -449,8 +455,8 @@ $options = module_email::get_email_compose_options( $options );
 	}
 
 
-	if ( $can_edit_emails ){ ?>
-</form>
+	if ( $can_edit_emails ) { ?>
+<?php module_form::print_form_close_tag(); ?>
 <?php } else { ?>
 
 	<input type="button" name="print" onclick="pop_and_print_email();" value="Print" class="submit_button">

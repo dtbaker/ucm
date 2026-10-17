@@ -3,14 +3,14 @@
 $newsletter_id        = ( isset( $_REQUEST['n'] ) ) ? (int) $_REQUEST['n'] : false;
 $newsletter_member_id = ( isset( $_REQUEST['nm'] ) ) ? (int) $_REQUEST['nm'] : 0;
 $send_id              = ( isset( $_REQUEST['s'] ) ) ? (int) $_REQUEST['s'] : 0;
-$hash                 = ( isset( $_REQUEST['hash'] ) ) ? trim( $_REQUEST['hash'] ) : false;
+$hash                 = ucm_request_string( 'hash' );
 if ( $newsletter_id && $newsletter_member_id && $hash ) {
 	if ( isset( $_REQUEST[ _MEMBER_HASH_URL_REDIRECT_BITS ] ) ) {
 		$correct_hash = module_newsletter::newsletter_redirect_hash( $newsletter_member_id, $send_id );
 	} else {
 		$correct_hash = module_newsletter::unsubscribe_url( $newsletter_id, $newsletter_member_id, $send_id, true );
 	}
-	if ( $correct_hash == $hash ) {
+	if ( hash_equals( $correct_hash, $hash ) ) {
 		$member = module_newsletter::get_newsletter_member( $newsletter_member_id );
 
 		if ( isset( $_REQUEST['email'] ) && $_REQUEST['email'] ) {

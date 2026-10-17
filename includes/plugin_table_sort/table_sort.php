@@ -14,8 +14,8 @@ function table_sort_desc( $a, $b ) {
 
 // look into http://au.php.net/manual/en/function.array-multisort.php
 
-class module_table_sort extends module_base {
-
+class module_table_sort extends module_base
+{
 	public static function can_i( $actions, $name = false, $category = false, $module = false ) {
 		if ( ! $module ) {
 			$module = __CLASS__;
@@ -28,10 +28,13 @@ class module_table_sort extends module_base {
 		return __CLASS__;
 	}
 
-	public function init() {
-		$this->module_name     = "table_sort";
-		$this->module_position = 0;
+	public function __construct() {
+		$this->module_name     = 'table_sort';
+		$this->module_position = 500;
 		$this->version         = 2.228;
+	}
+
+	public function init() {
 		// 2.228 - 2016-07-10 - big update to mysqli
 		// 2.227 - 2016-02-01 - css fix
 		// 2.226 - 2015-02-12 - extra field sorting on date fields (may be slow)
@@ -151,7 +154,7 @@ class module_table_sort extends module_base {
 			}
 			if ( $new_sort_per_page >= 1 ) {
 				$per_page = $new_sort_per_page;
-			} else if ( $new_sort_per_page == - 2 ) {
+			} elseif ( $new_sort_per_page == - 2 ) {
 				// special flag for "all"
 				$per_page = false;
 			}
@@ -203,12 +206,12 @@ class module_table_sort extends module_base {
 										// descenting
 										$g = array_reverse( $g );
 									}
-									$rows[ $row_id ][ 'group_sort_' . $options['owner_table'] ] = implode( $g, ', ' );
+									$rows[ $row_id ][ 'group_sort_' . $options['owner_table'] ] = implode( ', ', $g );
 
 								}
 								self::$sortables[ 'group_sort_' . $options['owner_table'] ] = $options['current'];
 							}
-						} else if ( isset( $options['extra_sort'] ) && $options['extra_sort'] && $options['owner_table'] && $options['owner_id'] ) {
+						} elseif ( isset( $options['extra_sort'] ) && $options['extra_sort'] && $options['owner_table'] && $options['owner_id'] ) {
 							// find the extra(s) for EVERY row in the result set.
 							// this is super slow, but only way to sort.
 							// we also sort multiple extras in the same order that is selected here.
@@ -310,7 +313,7 @@ class module_table_sort extends module_base {
 			<script type="text/javascript">
           $(function () {
 						<?php
-						foreach(self::$table_sort_options['sortable'] as $column_id => $options){
+						foreach (self::$table_sort_options['sortable'] as $column_id => $options) {
 						?>
               $('th#<?php echo $column_id;?>').append('<a href="#" class="table_sort_btn table_sort_desc <?php if ( isset( $options['current'] ) && $options['current'] == 2 ) {
 								echo 'current';
@@ -385,6 +388,4 @@ class module_table_sort extends module_base {
 			<?php
 		}
 	}
-
-
 }

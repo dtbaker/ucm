@@ -26,7 +26,7 @@ if ( ! $group ) {
 	module_security::sanatise_data( 'group', $group );
 }
 ?>
-<form action="" method="post">
+<?php module_form::print_form_open_tag( array( 'action' => '' ) ); ?>
 
 	<?php
 	module_form::prevent_exit( array(
@@ -98,4 +98,4 @@ if ( ! $group ) {
 	?>
 
 
-</form>
+<?php module_form::print_form_close_tag();

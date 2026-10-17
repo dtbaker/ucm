@@ -1,6 +1,7 @@
 <?php
 
-class module_base {
+class module_base
+{
 	public $module_name = '';
 	public $ajax_search_keys;
 	public $page_title;
@@ -16,22 +17,39 @@ class module_base {
 	public function pre_menu() {
 	}
 
-	public static function can_i( $actions, $name = false, $category = false, $module = false ) {
-		$class_name = $module;
-		if ( ! $module ) {
-			// php5.2 doesn't have get_called_class() :(
-			if ( function_exists( 'get_called_class' ) ) {
-				$class_name = get_called_class();
-			} else if ( is_callable( 'self::get_class()' ) ) {
-				eval( '$class_name = self::get_class();' );
-			} else {
-				// doesn't work in php5.2
-				eval( '$class_name = static::get_class();' );
-			}
-			if ( ! $class_name ) {
-				echo 'no class found - please upgrade to php5.3';
+	/**
+	 * Third party libraries this plugin needs at runtime.
+	 *
+	 * Return an array keyed by library id. Each entry is handed to ucm_libraries, which
+	 * handles loading, detection and the "not installed" message. A plugin that needs
+	 * nothing returns an empty array, which is the default.
+	 *
+	 * @return array
+	 */
+	public function third_party_libraries() {
+		return array();
+	}
+
+	/**
+	 * True when every library this plugin declares can be loaded.
+	 *
+	 * Use this in pre_menu() to hide a feature, or at the top of a page to show a message
+	 * instead of fataling.
+	 *
+	 * @return bool
+	 */
+	public function have_third_party_libraries() {
+		foreach ( array_keys( $this->third_party_libraries() ) as $library_id ) {
+			if ( ! ucm_libraries::have( $library_id ) ) {
+				return false;
 			}
 		}
+
+		return true;
+	}
+
+	public static function can_i( $actions, $name = false, $category = false, $module = false ) {
+		$class_name = $module ?: get_called_class();
 
 		if ( ! $name ) {
 			$name = ucwords( str_replace( '_', ' ', str_replace( 'module_', '', $class_name ) ) );
@@ -62,22 +80,9 @@ class module_base {
 		if ( ! _UCM_INSTALLED ) {
 			return false;
 		}
-		$class_name = false;
-		if ( function_exists( 'get_called_class' ) ) {
-			$class_name = get_called_class();
-		} else if ( is_callable( 'self::get_class()' ) ) {
-			eval( '$class_name = self::get_class();' );
-		} else if ( is_callable( 'static::get_class()' ) ) {
-			// doesn't work in php5.2
-			eval( '$class_name = static::get_class();' );
-		}
-		if ( $class_name ) {
-			$class_name = str_replace( 'module_', '', $class_name );
+		$class_name = str_replace( 'module_', '', get_called_class() );
 
-			return module_config::c( 'plugin_enabled_' . $class_name, 1 );
-		}
-
-		return true;
+		return module_config::c( 'plugin_enabled_' . $class_name, 1 );
 	}
 
 	public function autocomplete( $search_string = '', $search_options = array() ) {
@@ -145,7 +150,7 @@ class module_base {
 			if ( $type && ( ! isset( $link['type'] ) || $link['type'] != $type ) ) {
 				unset( $links[ $link_id ] );
 				continue; // wrong type of link, dont include here.
-			} else if ( $type === false && isset( $link['type'] ) ) {
+			} elseif ( $type === false && isset( $link['type'] ) ) {
 				unset( $links[ $link_id ] );
 				continue; // wrong type of link, dont include here.
 			}
@@ -265,14 +270,15 @@ class module_base {
 	private static $_dbt_exists = array();
 
 	public static function db_table_exists( $name, $force = false ) {
-		if ( defined( '_UCM_INSTALLED' ) && ! _UCM_INSTALLED ) {
-			return false;
-		}
+		// This caused an issue installing via docker for some reason. Commenting it out:
+		// if ( defined( '_UCM_INSTALLED' ) && ! _UCM_INSTALLED ) {
+		// 	return false;
+		// }
 		if ( $force ) {
 			if ( isset( self::$_dbt_exists[ $name ] ) && self::$_dbt_exists[ $name ] ) {
 				return true;
 			}
-			$sql = "SHOW TABLES LIKE '" . _DB_PREFIX . $name . "'";
+			$sql = "SHOW TABLES LIKE '" . _DB_PREFIX . db_escape( $name ) . "'";
 			$res = qa1( $sql );
 			if ( $res != false && count( $res ) ) {
 				self::$_dbt_exists[ $name ] = true;
@@ -333,7 +339,7 @@ class module_base {
 		return ( $this->page_title ) ? _l( $this->page_title ) : _l( ucwords( str_replace( "_", " ", $this->module_name ) ) );
 	}
 
-	function set_insatlled_plugin_version( $version ) {
+	function set_installed_plugin_version( $version ) {
 		module_config::save_config( '_plugin_version_' . $this->module_name, $version );
 	}
 
@@ -346,7 +352,8 @@ class module_base {
 		return $this->version;
 	}
 
-	function install_upgrade() { //$do_upgrade,$current_db_version
+	function install_upgrade() {
+ //$do_upgrade,$current_db_version
 		// get the SQL for this install, and run it!
 		$this->module_name = ( str_replace( 'module_', '', get_class( $this ) ) );
 		// return true on success, false (and set error) on failure.
@@ -354,7 +361,7 @@ class module_base {
 		if ( $this->get_install_sql() === false ) {
 			// nothing to install db wise.
 			return $current_plugin_version;
-		} else if ( $this->is_installed() ) {
+		} elseif ( $this->is_installed() ) {
 
 			$installed_plugin_version = $this->get_installed_plugin_version();
 			if ( ! $installed_plugin_version ) {
@@ -430,7 +437,7 @@ class module_base {
 					foreach ( $res as $r ) {
 						$match = $r[ current( $fields['search_fields'] ) ];
 						$match .= ' (';
-						for ( $x = 1; $x < count( $fields['search_fields'] ); $x ++ ) {
+						for ( $x = 1; $x < count( $fields['search_fields'] ); $x++ ) {
 							$field = $fields['search_fields'][ $x ];
 							// see if this one matches.
 							if ( preg_match( '/' . preg_quote( $key, '/' ) . '/i', $r[ $field ] ) ) {
@@ -477,7 +484,7 @@ class module_base {
 						reset( $fields );
 						$match = $r[ current( $fields ) ];
 						$match .= ' (';
-						for ( $x = 1; $x < count( $fields ); $x ++ ) {
+						for ( $x = 1; $x < count( $fields ); $x++ ) {
 							$field = $fields[ $x ];
 							// see if this one matches.
 							if ( preg_match( '/' . preg_quote( $key, '/' ) . '/i', $r[ $field ] ) ) {
@@ -534,4 +541,3 @@ class module_base {
 
 	}
 }
-

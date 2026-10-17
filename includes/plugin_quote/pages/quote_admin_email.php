@@ -1,5 +1,6 @@
 <?php
-if ( ! $quote_safe ) {
+
+if ( empty( $quote_safe ) ) {
 	die( 'failed' );
 }
 if ( ! module_quote::can_i( 'edit', 'Quotes' ) ) {
@@ -48,7 +49,7 @@ if ( $quote['customer_id'] ) {
 		if ( $primary ) {
 			$to_select = $primary['email'];
 		}
-	} else if ( $customer['primary_user_id'] ) {
+	} elseif ( $customer['primary_user_id'] ) {
 		$primary = module_user::get_user( $customer['primary_user_id'] );
 		if ( $primary ) {
 			$to_select = $primary['email'];
@@ -87,4 +88,3 @@ module_email::print_compose(
 		),
 	)
 );
-

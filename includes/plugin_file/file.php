@@ -16,9 +16,15 @@ define( '_FILE_ACCESS_ASSIGNED', 'Only files I have been assigned to' ); // do n
 define( '_FILE_UPLOAD_PATH', ( defined( '_UCM_FILE_STORAGE_DIR' ) ? _UCM_FILE_STORAGE_DIR : '' ) . 'includes/plugin_file/upload/' );
 
 
-class module_file extends module_base {
+class module_file extends module_base
+{
+	public $links;
 
-	var $links;
+	public function __construct() {
+		$this->module_name     = 'file';
+		$this->module_position = 200;
+		$this->version         = 2.574;
+	}
 
 	public static function can_i( $actions, $name = false, $category = false, $module = false ) {
 		if ( ! $module ) {
@@ -33,11 +39,7 @@ class module_file extends module_base {
 	}
 
 	function init() {
-		$this->links           = array();
-		$this->module_name     = "file";
-		$this->module_position = 21;
-
-		$this->version = 2.574;
+		$this->links = array();
 		// 2.574 - 2017-07-26 - fixes for php error messages
 		// 2.573 - 2017-05-02 - file path configuration
 		// 2.572 - 2017-01-03 - extra field searching
@@ -423,13 +425,12 @@ Comment: {COMMENT}
 						// instead of include file below.
 						$file_item['html'] = $this->print_file( $file_item['file_id'] );
 					}
-					include( "pages/file_list.php" );
+					include( dirname( __FILE__ ) . '/pages/file_list.php' );
 				} else {
 					echo 'Please save first before creating files.';
 				}
 				break;
 			case "file_delete":
-
 				if ( $owner_table && $owner_id ) {
 					$this->delete_files( $owner_table, $owner_id );
 				}
@@ -481,8 +482,10 @@ Comment: {COMMENT}
 				$editable = false;
 			}
 			$title = ( isset( $options['title'] ) && $options['title'] ) ? $options['title'] : false;
-			if ( ! is_file( 'pages/file_list_' . basename( $layout_type ) . '.php' ) || ! @include( 'pages/file_list_' . basename( $layout_type ) . '.php' ) ) {
-				include( "pages/file_list.php" );
+			$file_list_dir = dirname( __FILE__ ) . '/pages/';
+			$layout_file   = $file_list_dir . 'file_list_' . basename( $layout_type ) . '.php';
+			if ( ! is_file( $layout_file ) || ! @include( $layout_file ) ) {
+				include( $file_list_dir . 'file_list.php' );
 			}
 		}
 	}
@@ -532,7 +535,7 @@ Comment: {COMMENT}
 						?>
 					</div>
 					<?php if ( $editable ) { ?>
-						<a href="#" class="file_edit<?php echo $file_item['owner_table']; ?>_<?php echo $file_item['owner_id']; ?>"
+						<a href="#" class="file_edit<?php echo db_identifier( $file_item['owner_table'] ); ?>_<?php echo (int) $file_item['owner_id']; ?>"
 						   rel="<?php echo $file_item['file_id']; ?>"><?php echo nl2br( wordwrap( htmlspecialchars( $file_item['file_name'] ), 15, '<wbr>', true ) ); ?></a>
 					<?php } else { ?>
 						<a href="<?php echo $this->link( '', array(
@@ -547,7 +550,7 @@ Comment: {COMMENT}
 				?>
 				<span class="file_<?php echo $file_item['file_id']; ?>">
 				<?php if ( $editable ) { ?>
-					<a href="#" class="file_edit<?php echo $file_item['owner_table']; ?>_<?php echo $file_item['owner_id']; ?>"
+					<a href="#" class="file_edit<?php echo db_identifier( $file_item['owner_table'] ); ?>_<?php echo (int) $file_item['owner_id']; ?>"
 					   rel="<?php echo $file_item['file_id']; ?>"><?php echo nl2br( htmlspecialchars( $file_item['file_name'] ) ); ?></a>
 				<?php } else { ?>
 					<a href="<?php echo $this->link( '', array(
@@ -564,6 +567,12 @@ Comment: {COMMENT}
 	}
 
 	function process() {
+		// Everything below except a download is a form submit from a UCM page and must
+		// carry the form auth key. Downloads are plain links, scattered through the app
+		// and shared by hand, and are read-only, so they are left out on purpose.
+		if ( 'download' != $_REQUEST['_process'] && ! module_form::check_secure_key() ) {
+			module_form::reject_invalid_form_auth();
+		}
 		if ( 'plupload' == $_REQUEST['_process'] ) {
 
 
@@ -611,7 +620,7 @@ Comment: {COMMENT}
 
 				$count = 1;
 				while ( file_exists( $targetDir . DIRECTORY_SEPARATOR . $fileName_a . '_' . $count . $fileName_b ) ) {
-					$count ++;
+					$count++;
 				}
 
 				$fileName = $fileName_a . '_' . $count . $fileName_b;
@@ -665,23 +674,39 @@ Comment: {COMMENT}
 			}
 			@fclose( $out );
 			@fclose( $in );
-			// Check if file has been uploaded
+			// Check if file has been uploaded (last chunk or non-chunked)
 			if ( ! $chunks || $chunk == $chunks - 1 ) {
-				// Strip the temp .part suffix off
-				rename( "{$filePath}.part", $filePath );
+				$partPath = "{$filePath}.part";
+				if ( file_exists( $partPath ) ) {
+					if ( ! @rename( $partPath, $filePath ) ) {
+						// Fallback for cross-filesystem or permission issues
+						if ( @copy( $partPath, $filePath ) ) {
+							@unlink( $partPath );
+						} else {
+							die( '{"jsonrpc" : "2.0", "error" : {"code": 104, "message": "Failed to finalize upload."}, "id" : "id"}' );
+						}
+					}
+				}
 			}
-
 
 			die( '{"jsonrpc" : "2.0", "result" : null, "id" : "id"}' );
 
 
-		} else if ( 'download' == $_REQUEST['_process'] ) {
+		} elseif ( 'download' == $_REQUEST['_process'] ) {
 			@ob_end_clean();
-			$file_id   = (int) $_REQUEST['file_id'];
+			$file_id   = isset( $_REQUEST['file_id'] ) ? (int) $_REQUEST['file_id'] : 0;
 			$file_data = $this->get_file( $file_id );
+			// get_file() hands back a blank "new file" array both when the id does not
+			// exist and when this user is not allowed to see it, and that array has no
+			// file_path at all - so reaching for one warned twice under E_ALL and printed
+			// both warnings above the "Not found" the caller was meant to get.
+			if ( ! $file_id || empty( $file_data['file_id'] ) || $file_data['file_id'] != $file_id ) {
+				echo 'Not found';
+				exit;
+			}
 			if ( isset( $file_data['file_url'] ) && strlen( $file_data['file_url'] ) ) {
 				redirect_browser( $file_data['file_url'] );
-			} else if ( is_file( $file_data['file_path'] ) ) {
+			} elseif ( is_file( $file_data['file_path'] ) ) {
 				header( "Pragma: public" );
 				header( "Expires: 0" );
 				header( "Cache-Control: must-revalidate, post-check=0, pre-check=0" );
@@ -700,20 +725,48 @@ Comment: {COMMENT}
 				echo 'Not found';
 			}
 			exit;
-		} else if ( 'save_file_popup' == $_REQUEST['_process'] ) {
-			$file_id = $_REQUEST['file_id'];
+		} elseif ( 'save_file_popup' == $_REQUEST['_process'] ) {
+
+			// This branch had no permission check at all, so any logged in account -
+			// including a customer portal contact with no Files access - could rename or
+			// repoint another customer's file record. Matches the plupload branch above.
+			if ( ! self::can_i( 'edit', 'Files' ) && ! self::can_i( 'create', 'Files' ) ) {
+				echo 'Permission denied.';
+				exit;
+			}
+
+			// Cast: this reaches update_insert() as a row id.
+			$file_id = ( isset( $_REQUEST['file_id'] ) && $_REQUEST['file_id'] !== 'new' ) ? (int) $_REQUEST['file_id'] : 'new';
+
+			// Editing an existing record needs edit, not just create, and the record has to
+			// be one this user can actually reach.
+			if ( $file_id && $file_id !== 'new' ) {
+				$existing_file = new ucm_file( $file_id );
+				if ( ! self::can_i( 'edit', 'Files' ) || ! $existing_file->can_i_access() ) {
+					echo 'Permission denied.';
+					exit;
+				}
+			}
 
 			$file_path = false;
 			$file_name = false;
 
-			$options = unserialize( base64_decode( $_REQUEST['options'] ) );
+			// Checking the result is an array afterwards does not help: unserialize() has
+			// already built any objects in the payload by then, and their wakeup and
+			// destructor code has already run.
+			$options = ucm_unserialize_options( isset( $_REQUEST['options'] ) ? $_REQUEST['options'] : '' );
 
 			// have we uploaded anything
 			if ( isset( $_FILES['file_upload'] ) && is_uploaded_file( $_FILES['file_upload']['tmp_name'] ) ) {
 				// copy to file area.
-				$file_name = basename( $_FILES['file_upload']['name'] );
+				$file_name    = basename( $_FILES['file_upload']['name'] );
+				$upload_error = ucm_upload_error( $file_name, $_FILES['file_upload']['tmp_name'] );
+				if ( $upload_error ) {
+					set_error( $upload_error );
+					$file_name = false;
+				}
 				if ( $file_name ) {
-					$file_path = _FILE_UPLOAD_PATH . md5( time() . $file_name );
+					$file_path = _FILE_UPLOAD_PATH . ucm_upload_filename( $file_name );
 					if ( move_uploaded_file( $_FILES['file_upload']['tmp_name'], $file_path ) ) {
 						// it worked. umm.. do something.
 					} else {
@@ -742,7 +795,9 @@ Comment: {COMMENT}
 				$file_data = array(
 					'file_id'     => $file_id,
 					'owner_id'    => (int) $_REQUEST['owner_id'],
-					'owner_table' => $_REQUEST['owner_table'],
+					// A table name, and it is echoed back into class names and javascript
+					// function names all over the file UI, so it is normalised going in.
+					'owner_table' => db_identifier( $_REQUEST['owner_table'] ),
 					'file_time'   => time(), // allow UI to set a file time? nah.
 					'file_name'   => $file_name,
 					'file_path'   => $file_path,
@@ -767,11 +822,11 @@ Comment: {COMMENT}
 			<script type="text/javascript">
           // check if it exists in parent window
           var new_html = '<?php echo addcslashes( preg_replace( '/\s+/', ' ', $this->print_file( $file_id, $layout_type, true, $options ) ), "'" );?>';
-          parent.new_file_added<?php echo $file_data['owner_table'];?>_<?php echo $file_data['owner_id'];?>(<?php echo $file_id;?>, '<?php echo $file_data['owner_table'];?>',<?php echo $file_data['owner_id'];?>, new_html);
+          parent.new_file_added<?php echo db_identifier( $file_data['owner_table'] );?>_<?php echo (int) $file_data['owner_id'];?>(<?php echo (int) $file_id;?>, '<?php echo db_identifier( $file_data['owner_table'] );?>',<?php echo (int) $file_data['owner_id'];?>, new_html);
 			</script>
 			<?php
 			exit;
-		} else if ( 'save_file' == $_REQUEST['_process'] ) {
+		} elseif ( 'save_file' == $_REQUEST['_process'] ) {
 			$file_id = (int) $_REQUEST['file_id'];
 
 			$file_path = false;
@@ -801,10 +856,13 @@ Comment: {COMMENT}
 
 					if ( isset( $_REQUEST['plupload_key'] ) && isset( $_REQUEST['plupload_file_name'] ) && is_array( $_REQUEST['plupload_file_name'] ) && strlen( preg_replace( '/[^a-zA-Z0-9-_]+/', '', basename( $_REQUEST['plupload_key'] ) ) ) ) {
 						$plupload_key = preg_replace( '/[^a-zA-Z0-9-_]+/', '', basename( $_REQUEST['plupload_key'] ) );
+
 						foreach ( $_REQUEST['plupload_file_name'] as $plupload_file_name_key => $file_name ) {
 							$plupload_file_name_key = preg_replace( '/[^a-zA-Z0-9-_]+/', '', basename( $plupload_file_name_key ) );
 							if ( $plupload_key && $plupload_file_name_key && $file_name && is_file( _FILE_UPLOAD_PATH . 'plupload' . DIRECTORY_SEPARATOR . $plupload_key . '-' . $plupload_file_name_key ) ) {
-								$file_path = _FILE_UPLOAD_PATH . time() . '-' . md5( time() . $file_name );
+
+
+								$file_path = _FILE_UPLOAD_PATH . ucm_upload_filename( $file_name );
 								if ( rename( _FILE_UPLOAD_PATH . 'plupload' . DIRECTORY_SEPARATOR . $plupload_key . '-' . $plupload_file_name_key, $file_path ) ) {
 									// it worked. umm.. do something.
 									$file_changed    = true;
@@ -822,12 +880,13 @@ Comment: {COMMENT}
 						}
 
 					}
+
 					// the old file upload method, no plupload:
 					if ( ! $file_changed && isset( $_FILES['file_upload'] ) && is_uploaded_file( $_FILES['file_upload']['tmp_name'] ) ) {
 						// copy to file area.
 						$file_name = basename( $_FILES['file_upload']['name'] );
 						if ( $file_name ) {
-							$file_path = _FILE_UPLOAD_PATH . time() . '-' . md5( time() . $file_name );
+							$file_path = _FILE_UPLOAD_PATH . ucm_upload_filename( $file_name );
 							if ( move_uploaded_file( $_FILES['file_upload']['tmp_name'], $file_path ) ) {
 								// it worked. umm.. do something.
 								$file_changed    = true;
@@ -857,6 +916,7 @@ Comment: {COMMENT}
 						);
 					}
 
+					//print_r($files_to_save);exit;
 					// make sure we have a valid customer_id and job_id selected.
 					$possible_customers = $possible_jobs = array();
 					if ( class_exists( 'module_customer', false ) ) {
@@ -929,7 +989,7 @@ Comment: {COMMENT}
 						$parent_file      = new ucm_file( $file_data['bucket_parent_file_id'] );
 						$parent_file_data = $parent_file->get_data();
 						foreach ( $sub_bucket_fields as $sub_bucket_field ) {
-							$file_data[ $sub_bucket_field ] = $parent_file_data[ $sub_bucket_field ];
+							$file_data[ $sub_bucket_field ] = $parent_file_data[ $sub_bucket_field ] ?? 0;
 						}
 					}
 
@@ -1017,14 +1077,22 @@ Comment: {COMMENT}
 				}
 				redirect_browser( $this->link_open( $file_id ) );
 			}
-		} else if ( 'delete_file_popup' == $_REQUEST['_process'] ) {
+		} elseif ( 'delete_file_popup' == $_REQUEST['_process'] ) {
 			$file_id = (int) $_REQUEST['file_id'];
+
+			if ( ! self::can_i( 'delete', 'Files' ) ) {
+				echo 'Permission denied.';
+				exit;
+			}
 
 			if ( ! $file_id || $file_id == 'new' ) {
 				// cant delete a new file.. do nothing.
 			} else {
 				$file_data = $this->get_file( $file_id );
-				if ( true ) { //module_security::can_access_data('file',$file_data,$file_id)){
+				$ucm_file  = new ucm_file( $file_id );
+				// Was `if ( true )` with the real check commented out, so any logged in
+				// account could delete any file.
+				if ( $ucm_file->can_i_access() ) {
 					// delete the physical file.
 					if ( is_file( $file_data['file_path'] ) ) {
 						unlink( $file_data['file_path'] );
@@ -1035,7 +1103,7 @@ Comment: {COMMENT}
 					?>
 					<script type="text/javascript">
               var new_html = '';
-              parent.new_file_added<?php echo $file_data['owner_table'];?>_<?php echo $file_data['owner_id'];?>(<?php echo $file_id;?>, '<?php echo $file_data['owner_table'];?>',<?php echo $file_data['owner_id'];?>, new_html);
+              parent.new_file_added<?php echo db_identifier( $file_data['owner_table'] );?>_<?php echo (int) $file_data['owner_id'];?>(<?php echo (int) $file_id;?>, '<?php echo db_identifier( $file_data['owner_table'] );?>',<?php echo (int) $file_data['owner_id'];?>, new_html);
 					</script>
 					<?php
 				}
@@ -1411,9 +1479,9 @@ Comment: {COMMENT}
 		}
 		if ( isset( $search['job_id'] ) && (int) $search['job_id'] > 0 ) {
 			$where .= " AND f.job_id = " . (int) $search['job_id'];
-		} else if ( isset( $search['quote_id'] ) && (int) $search['quote_id'] > 0 ) {
+		} elseif ( isset( $search['quote_id'] ) && (int) $search['quote_id'] > 0 ) {
 			$where .= " AND f.quote_id = " . (int) $search['quote_id'];
-		} else if ( isset( $search['customer_id'] ) && (int) $search['customer_id'] ) {
+		} elseif ( isset( $search['customer_id'] ) && (int) $search['customer_id'] ) {
 			$where .= " AND f.customer_id = " . (int) $search['customer_id'];
 		}
 
@@ -1431,7 +1499,7 @@ Comment: {COMMENT}
 
 	public static function format_bytes( $size ) {
 		$units = array( ' B', ' KB', ' MB', ' GB', ' TB' );
-		for ( $i = 0; $size >= 1024 && $i < 4; $i ++ ) {
+		for ( $i = 0; $size >= 1024 && $i < 4; $i++ ) {
 			$size /= 1024;
 		}
 
@@ -1531,7 +1599,7 @@ Comment: {COMMENT}
 								$pointers = array();
 							}
 							$pointer_id = 0;
-							foreach($pointers as $pointer){
+							foreach ($pointers as $pointer) {
 							if ( ! trim( $pointer ) ) {
 								continue;
 							}
@@ -1593,7 +1661,7 @@ Comment: {COMMENT}
               }
 
               $(document).ready(function () {
-								<?php if(module_file::can_i( 'create', 'File Comments' )){ ?>
+								<?php if (module_file::can_i( 'create', 'File Comments' )) { ?>
                   $("#file_preview").click(function (e) {
                       if (!add_pointer) {
                           add_pointer = true;
@@ -1657,10 +1725,10 @@ Comment: {COMMENT}
 		switch ( $hook ) {
 			case 'view':
 				$file_id = ( isset( $_REQUEST['i'] ) ) ? (int) $_REQUEST['i'] : false;
-				$hash = ( isset( $_REQUEST['hash'] ) ) ? trim( $_REQUEST['hash'] ) : false;
+				$hash = ucm_request_string( 'hash' );
 				if ( $file_id && $hash ) {
 					$correct_hash = $this->link_public( $file_id, true );
-					if ( $correct_hash == $hash ) {
+					if ( hash_equals( $correct_hash, $hash ) ) {
 						// all good to print a receipt for this payment.
 						$file_data = $this->get_file( $file_id, false );
 
@@ -1788,7 +1856,21 @@ Comment: {COMMENT}
 								$template->assign_values( $quote_data );
 							}
 							$template->page_title = $file_data['file_name'];
-							$template->content    = '<form action="" method="post"><input type="hidden" name="save_file_comments" value="1">' . $template->content . '</form>';
+							// Built as a string rather than printed, so the helper's output is captured.
+							// Worth doing rather than hand-writing the tag: this form saves a comment, and
+							// going through the helper is what gives it the form token.
+							ob_start();
+							module_form::print_form_open_tag( array(
+								'action' => '',
+								'hidden' => array( 'save_file_comments' => '1' ),
+							) );
+							$comment_form_open = ob_get_clean();
+
+							ob_start();
+							module_form::print_form_close_tag();
+							$comment_form_close = ob_get_clean();
+
+							$template->content = $comment_form_open . $template->content . $comment_form_close;
 							echo $template->render( 'pretty_html' );
 						}
 
@@ -1798,10 +1880,10 @@ Comment: {COMMENT}
 			case 'download_bucket':
 				@ob_end_clean();
 				$file_id = ( isset( $_REQUEST['i'] ) ) ? (int) $_REQUEST['i'] : false;
-				$hash    = ( isset( $_REQUEST['hash'] ) ) ? trim( $_REQUEST['hash'] ) : false;
+				$hash    = ucm_request_string( 'hash' );
 				if ( $file_id && $hash ) {
 					$correct_hash = $this->link_public_download_bucket( $file_id, true );
-					if ( $correct_hash == $hash ) {
+					if ( hash_equals( $correct_hash, $hash ) ) {
 						// all good to print a receipt for this payment.
 						$file_data = $this->get_file( $file_id, false );
 
@@ -1852,15 +1934,23 @@ Comment: {COMMENT}
 			case 'download':
 				@ob_end_clean();
 				$file_id = ( isset( $_REQUEST['i'] ) ) ? (int) $_REQUEST['i'] : false;
-				$hash    = ( isset( $_REQUEST['hash'] ) ) ? trim( $_REQUEST['hash'] ) : false;
+				$hash    = ucm_request_string( 'hash' );
 				if ( $file_id && $hash ) {
 					$correct_hash = $this->link_public_view( $file_id, true );
-					if ( $correct_hash == $hash ) {
+					if ( hash_equals( $correct_hash, $hash ) ) {
 						// all good to print a receipt for this payment.
 						$file_data = $this->get_file( $file_id, false );
+						// A link outlives the file it points at. Without this the customer
+						// following an old link got two PHP warnings about the missing
+						// file_path instead of being told the file is gone - the same check
+						// the 'view' hook above already makes.
+						if ( empty( $file_data['file_id'] ) || $file_data['file_id'] != $file_id ) {
+							echo 'Not found';
+							exit;
+						}
 						if ( isset( $file_data['file_url'] ) && strlen( $file_data['file_url'] ) ) {
 							redirect_browser( $file_data['file_url'] );
-						} else if ( is_file( $file_data['file_path'] ) ) {
+						} elseif ( is_file( $file_data['file_path'] ) ) {
 							header( "Pragma: public" );
 							header( "Expires: 0" );
 							header( "Cache-Control: must-revalidate, post-check=0, pre-check=0" );
@@ -2067,14 +2157,13 @@ Comment: {COMMENT}
 		<?php
 		return ob_get_clean();
 	}
-
 }
 
 
 // moving to a better OOP layout for stuff.
 // this is a representation of a "file" in ucm. mapped to the ucm_file database table.
-class ucm_file {
-
+class ucm_file
+{
 	protected $file_id = 0;
 	protected $do_permissions = true;
 
@@ -2168,7 +2257,7 @@ class ucm_file {
 		if ( $this->file_id > 0 && ( ! $data || isset( $data['new'] ) || $data['file_id'] != $this->file_id ) ) {
 			$this->file_id = 0;
 			die( 'Failed to access file. No permissions to view this file, please check with the administrator.' );
-		} else if ( $this->file_id > 0 ) {
+		} elseif ( $this->file_id > 0 ) {
 			if ( class_exists( 'module_security', false ) ) {
 				if ( ! module_security::check_page( array(
 					'module'  => 'file',

@@ -24,5 +24,6 @@ function adminlte_dashboard_widgets() {
 	}
 
 	return $widgets;
-} // end hook function
+}
+// end hook function
 hook_add( 'dashboard_widgets', 'adminlte_dashboard_widgets' );

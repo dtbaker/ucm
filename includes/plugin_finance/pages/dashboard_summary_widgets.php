@@ -31,7 +31,7 @@
 			foreach ( $data as $key => $row ) {
 				?>
 				<tr class="<?php
-				echo $c ++ % 2 ? 'odd' : 'even';
+				echo $c++ % 2 ? 'odd' : 'even';
 				if ( isset( $row['highlight'] ) ) {
 					echo ' highlight';
 				}
@@ -59,7 +59,7 @@
 			//todo - this is only in whitelable, maybe we move icons to a central point so all themes can use them?
 			'content' => ob_get_clean(),
 		);
-		$week_count ++;
+		$week_count++;
 	}
 
 }

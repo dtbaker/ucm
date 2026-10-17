@@ -29,7 +29,7 @@ $search = array();
 foreach ( $module->get_data_link_keys() as $key ) {
 	if ( isset( $_REQUEST[ $key ] ) ) {
 		$search[ $key ] = $_REQUEST[ $key ];
-	} else if ( "{$owner_table}_id" == $key ) {
+	} elseif ( "{$owner_table}_id" == $key ) {
 		$search["{$owner_table}_id"] = $owner_id;
 	}
 }
@@ -117,7 +117,7 @@ foreach ( $module->get_data_link_keys() as $key ) {
 					?> Please feel free to change the <a
 						href="<?php echo $module->link_open_data_type( $data_type['data_type_id'] ); ?>">Settings</a> for this Custom Data Form. <?php
 				} ?>More details are <a
-					href="http://ultimateclientmanager.com/support/documentation-wiki/custom-data-forms/" target="_blank">located
+					href="https://ultimateclientmanager.com/support/documentation-wiki/custom-data-forms/" target="_blank">located
 					here in the Documentation</a>.
 			</div> <?php
 		}

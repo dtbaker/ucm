@@ -1,6 +1,5 @@
 <?php
 
-
 define( '_TICKET_ACCESS_ALL', 'All support tickets' );
 define( '_TICKET_ACCESS_ASSIGNED', 'Only assigned tickets' );
 define( '_TICKET_ACCESS_CREATED', 'Only tickets I created' );
@@ -18,12 +17,11 @@ define( '_TICKET_STATUS_NEW_ID', 2 );
 define( '_TICKET_STATUS_IN_PROGRESS_ID', 5 );
 define( '_TICKET_STATUS_RESOLVED_ID', 6 );
 
-class module_ticket extends module_base {
-
+class module_ticket extends module_base
+{
 	public $links;
 	public $ticket_types;
 
-	public $version = 2.504;
 	// 2.504 - 2017-05-02 - file path configuration
 	// 2.503 - 2017-04-22 - more debug messages on save test page
 	// 2.502 - 2017-02-20 - gmail email markup
@@ -185,11 +183,15 @@ class module_ticket extends module_base {
 		return __CLASS__;
 	}
 
+	public function __construct() {
+		$this->module_name     = 'ticket';
+		$this->module_position = 530;
+		$this->version         = 2.504;
+	}
+
 	public function init() {
-		$this->links           = array();
-		$this->ticket_types    = array();
-		$this->module_name     = "ticket";
-		$this->module_position = 25;
+		$this->links       = array();
+		$this->ticket_types = array();
 
 		self::$ticket_statuses = array(
 			1                             => _l( 'Unassigned' ),
@@ -430,8 +432,6 @@ Thanks,
 	public function handle_hook( $hook ) {
 		switch ( $hook ) {
 			case "invoice_paid":
-
-
 				$foo        = func_get_args();
 				$invoice_id = (int) $foo[1];
 				if ( $invoice_id > 0 ) {
@@ -514,7 +514,7 @@ Thanks,
 
 			// bubble back onto ourselves for the link.
 			return self::link_generate( $ticket_id, $options, $link_options );
-		} else if ( $options['page'] == 'ticket_settings_types' ) {
+		} elseif ( $options['page'] == 'ticket_settings_types' ) {
 			if ( isset( $options['data'] ) && $options['data'] ) {
 				//$options['data'] = $options['data'];
 			} else {
@@ -534,7 +534,7 @@ Thanks,
 				$data            = self::get_ticket_account( $ticket_id );
 				$options['data'] = $data;
 			}
-			$options['text'] = $options['data']['name'];
+			$options['text'] = isset( $options['data']['name'] ) ? $options['data']['name'] : '';
 			array_unshift( $link_options, $options );
 			$options['page'] = 'ticket_settings';
 
@@ -559,9 +559,9 @@ Thanks,
 			$bubble_to_module = array(
 				'module' => 'config',
 			);
-		} else if ( ( ! isset( $_GET['customer_id'] ) || ! $_GET['customer_id'] ) && class_exists( 'module_faq', false ) && ( module_config::c( 'ticket_separate_product_queue', 0 ) || module_config::c( 'ticket_separate_product_menu', 0 ) ) ) {
+		} elseif ( ( ! isset( $_GET['customer_id'] ) || ! $_GET['customer_id'] ) && class_exists( 'module_faq', false ) && ( module_config::c( 'ticket_separate_product_queue', 0 ) || module_config::c( 'ticket_separate_product_menu', 0 ) ) ) {
 
-		} else if ( $options['data']['customer_id'] > 0 ) {
+		} elseif ( $options['data']['customer_id'] > 0 ) {
 			if ( ! module_security::has_feature_access( array(
 				'name'        => 'Customers',
 				'module'      => 'customer',
@@ -830,13 +830,12 @@ Thanks,
 	public function external_hook( $hook ) {
 		switch ( $hook ) {
 			case 'attachment':
-
 				$ticket_id                    = ( isset( $_REQUEST['t'] ) ) ? (int) $_REQUEST['t'] : false;
 				$ticket_message_attachment_id = ( isset( $_REQUEST['tma'] ) ) ? (int) $_REQUEST['tma'] : false;
-				$hash                         = ( isset( $_REQUEST['hash'] ) ) ? trim( $_REQUEST['hash'] ) : false;
+				$hash                         = ucm_request_string( 'hash' );
 				if ( $ticket_id && $ticket_message_attachment_id && $hash ) {
 					$correct_hash = $this->link_open_attachment( $ticket_id, $ticket_message_attachment_id, true );
-					if ( $correct_hash == $hash ) {
+					if ( hash_equals( $correct_hash, $hash ) ) {
 						$attach = get_single( 'ticket_message_attachment', 'ticket_message_attachment_id', $ticket_message_attachment_id );
 						if ( file_exists( _UCM_FILE_STORAGE_DIR . 'includes/plugin_ticket/attachments/' . $attach['ticket_message_attachment_id'] ) ) {
 							header( "Content-type: application/octet-stream" );
@@ -909,7 +908,6 @@ Thanks,
 				exit;
 				break;
 			case 'public_new':
-
 				$ticket_id         = 'new';
 				$ticket_account_id = module_config::c( 'ticket_default_account_id', 0 ); //todo: set from a hashed variable in GET string.
 				if ( $ticket_account_id ) {
@@ -1012,8 +1010,10 @@ Thanks,
 						}
 
 						if ( ! $from_user_id ) {
+							// This is the public ticket form, so $email is whatever an anonymous
+							// visitor typed - it only has to contain an "@" to get this far.
 							echo 'Failed - cannot find the from user id';
-							echo $email . ' to support<hr>';
+							echo htmlspecialchars( (string) $email, ENT_QUOTES, 'UTF-8' ) . ' to support<hr>';
 
 							return;
 						}
@@ -1087,13 +1087,12 @@ Thanks,
 
 				break;
 			case 'public_status':
-
 				$ticket_id     = ( isset( $_REQUEST['i'] ) ) ? (int) $_REQUEST['i'] : false;
 				$new_status_id = ( isset( $_REQUEST['s'] ) ) ? (int) $_REQUEST['s'] : false;
-				$hash          = ( isset( $_REQUEST['hash'] ) ) ? trim( $_REQUEST['hash'] ) : false;
+				$hash          = ucm_request_string( 'hash' );
 				if ( $ticket_id && $new_status_id && $hash ) {
 					$correct_hash = $this->link_public_status( $ticket_id, $new_status_id, true );
-					if ( $correct_hash == $hash ) {
+					if ( hash_equals( $correct_hash, $hash ) ) {
 						// change the status.
 						update_insert( 'ticket_id', $ticket_id, 'ticket', array( 'status_id' => $new_status_id ) );
 						module_template::init_template( 'ticket_status_change', '<h2>Ticket</h2>
@@ -1116,12 +1115,11 @@ Thanks,
 				exit;
 				break;
 			case 'public':
-
 				$ticket_id = ( isset( $_REQUEST['i'] ) ) ? (int) $_REQUEST['i'] : false;
-				$hash      = ( isset( $_REQUEST['hash'] ) ) ? trim( $_REQUEST['hash'] ) : false;
+				$hash      = ucm_request_string( 'hash' );
 				if ( $ticket_id && $hash ) {
 					$correct_hash = $this->link_public( $ticket_id, true );
-					if ( $correct_hash == $hash ) {
+					if ( hash_equals( $correct_hash, $hash ) ) {
 						// all good to print a receipt for this payment.
 						$ticket = $this->get_ticket( $ticket_id );
 
@@ -1302,7 +1300,7 @@ Thanks,
 					'total'   => $total['c']
 				);
 			}
-		} else if ( $faq_product_id ) {
+		} elseif ( $faq_product_id ) {
 			// want a count of all tickets that have this faq_product_id
 			$sql = "SELECT COUNT(ticket_id) AS c FROM `" . _DB_PREFIX . "ticket` t WHERE (t.status_id < " . _TICKET_STATUS_RESOLVED_ID . "";
 			if ( $faq_product_id && module_config::c( 'ticket_separate_product_queue', 0 ) ) {
@@ -1387,6 +1385,11 @@ Thanks,
 
 
 	public function process() {
+		// Every form that reaches here is posted from a UCM page, so it carries the
+		// form auth key. Refuse anything that does not - see module_form::check_secure_key().
+		if ( ! module_form::check_secure_key() ) {
+			module_form::reject_invalid_form_auth();
+		}
 		$errors = array();
 		if ( 'save_saved_response' == $_REQUEST['_process'] ) {
 
@@ -1405,17 +1408,17 @@ Thanks,
 			// saved via ajax
 			exit;
 
-		} else if ( 'insert_saved_response' == $_REQUEST['_process'] ) {
+		} elseif ( 'insert_saved_response' == $_REQUEST['_process'] ) {
 
 			$x = 1;
-			while ( $x ++ < 10 && ob_get_level() ) {
+			while ( $x++ < 10 && ob_get_level() ) {
 				ob_end_clean();
 			}
 			$response = $this->get_saved_response( $_REQUEST['saved_response_id'] );
 			echo json_encode( $response );
 			exit;
 
-		} else if ( 'save_ticket_type' == $_REQUEST['_process'] ) {
+		} elseif ( 'save_ticket_type' == $_REQUEST['_process'] ) {
 
 			if ( ! module_config::can_i( 'edit', 'Settings' ) ) {
 				die( 'No perms to save ticket settings.' );
@@ -1432,7 +1435,7 @@ Thanks,
 			redirect_browser( $this->link_open_type( $ticket_type_id ) );
 
 
-		} else if ( 'save_ticket_data_key' == $_REQUEST['_process'] ) {
+		} elseif ( 'save_ticket_data_key' == $_REQUEST['_process'] ) {
 
 			if ( ! module_config::can_i( 'edit', 'Settings' ) ) {
 				die( 'No perms to save ticket settings.' );
@@ -1468,7 +1471,7 @@ Thanks,
 			redirect_browser( $this->link_open_field( $ticket_data_key_id ) );
 
 
-		} else if ( 'save_ticket_account' == $_REQUEST['_process'] ) {
+		} elseif ( 'save_ticket_account' == $_REQUEST['_process'] ) {
 
 			if ( ! module_config::can_i( 'edit', 'Settings' ) ) {
 				die( 'No perms to save ticket settings.' );
@@ -1479,7 +1482,7 @@ Thanks,
 				<br> <?php
 				self::import_email( $ticket_account_id, false, true );
 				exit;
-			} else if ( isset( $_REQUEST['butt_del'] ) ) {
+			} elseif ( isset( $_REQUEST['butt_del'] ) ) {
 				// deleting ticket account all together
 				delete_from_db( 'ticket_account', 'ticket_account_id', $_REQUEST['ticket_account_id'] );
 				set_message( 'Ticket account deleted successfully.' );
@@ -1488,7 +1491,7 @@ Thanks,
 			set_message( 'Ticket account saved successfully' );
 			redirect_browser( $this->link_open_account( $ticket_account_id ) );
 
-		} else if ( isset( $_REQUEST['butt_del'] ) && $_REQUEST['butt_del'] && $_REQUEST['ticket_id'] ) {
+		} elseif ( isset( $_REQUEST['butt_del'] ) && $_REQUEST['butt_del'] && $_REQUEST['ticket_id'] ) {
 			$data = self::get_ticket( $_REQUEST['ticket_id'] );
 			if ( module_form::confirm_delete( 'ticket_id', "Really delete ticket: " . $this->ticket_number( $data['ticket_id'] ), self::link_open( $_REQUEST['ticket_id'] ) ) ) {
 				$this->delete_ticket( $_REQUEST['ticket_id'] );
@@ -1497,7 +1500,7 @@ Thanks,
 				$url .= ( strpos( '?', $url ) !== false ? '?' : '&' ) . 'do_last_search';
 				redirect_browser( $url );
 			}
-		} else if ( "save_ticket" == $_REQUEST['_process'] ) {
+		} elseif ( "save_ticket" == $_REQUEST['_process'] ) {
 			$this->_handle_save_ticket();
 
 
@@ -1586,7 +1589,7 @@ Thanks,
 			$where = rtrim( $where, ' OR ' );
 			$where .= ' ) ';
 			unset( $search['status_id'] );
-		} else if ( isset( $search['status_id'] ) && strpos( $search['status_id'], '<' ) !== false ) {
+		} elseif ( isset( $search['status_id'] ) && strpos( $search['status_id'], '<' ) !== false ) {
 			$search['status_id'] = ltrim( $search['status_id'], '<' );
 			if ( (int) $search['status_id'] > 0 ) {
 				$where .= ' AND t.`status_id` < ' . (int) $search['status_id'] . ' ';
@@ -1616,7 +1619,7 @@ Thanks,
 				$envato_item_id = (int) $envato_item_id;
 				if ( $envato_item_id > 0 ) {
 					$envato_item_where .= " et.envato_item_id = " . (int) $envato_item_id . " OR ";
-				} else if ( $envato_item_id == - 1 ) {
+				} elseif ( $envato_item_id == - 1 ) {
 					$envato_item_where .= " et.envato_item_id IS NULL OR ";
 				}
 			}
@@ -1624,7 +1627,7 @@ Thanks,
 				$envato_item_where = rtrim( $envato_item_where, ' OR' );
 				$where             .= " AND (" . $envato_item_where . ")";
 			}
-		} else if ( isset( $search['envato_item_id'] ) && strlen( trim( $search['envato_item_id'] ) ) ) {
+		} elseif ( isset( $search['envato_item_id'] ) && strlen( trim( $search['envato_item_id'] ) ) ) {
 			$search['envato_item_id'] = (int) $search['envato_item_id'];
 			$from                     .= " LEFT JOIN `" . _DB_PREFIX . "envato_ticket` et ON t.ticket_id = et.ticket_id ";
 			$where                    .= " AND ( ";
@@ -1655,7 +1658,6 @@ Thanks,
 		}
 		switch ( $ticket_access ) {
 			case _TICKET_ACCESS_ALL:
-
 				break;
 			case _TICKET_ACCESS_ASSIGNED:
 				// we only want tickets assigned to me.
@@ -1810,7 +1812,6 @@ Thanks,
 			$where = " WHERE t.ticket_id = $ticket_id ";
 			switch ( $ticket_access ) {
 				case _TICKET_ACCESS_ALL:
-
 					break;
 				case _TICKET_ACCESS_ASSIGNED:
 					// we only want tickets assigned to me.
@@ -1922,8 +1923,8 @@ Thanks,
 			}
 			//$last_message = current($messages);
 			$last_message                       = mysqli_fetch_assoc( $messages );
-			$ticket['last_ticket_message_id']   = $last_message['ticket_message_id'];
-			$ticket['last_message_was_private'] = isset( $last_message['private_message'] ) && $last_message['private_message'];
+			$ticket['last_ticket_message_id']   = $last_message ? $last_message['ticket_message_id'] : null;
+			$ticket['last_message_was_private'] = $last_message && isset( $last_message['private_message'] ) && $last_message['private_message'];
 			// for passwords and website addresses..
 			$ticket['extra_data'] = self::get_ticket_extras( $ticket_id );
 
@@ -2080,7 +2081,7 @@ Thanks,
 
 				if ( isset( $data['change_status_id'] ) && $data['change_status_id'] ) {
 					update_insert( "ticket_id", $ticket_id, "ticket", array( 'status_id' => $data['change_status_id'] ) );
-				} else if ( $ticket_data['status_id'] == _TICKET_STATUS_RESOLVED_ID || $ticket_data['status_id'] == 7 ) {
+				} elseif ( $ticket_data['status_id'] == _TICKET_STATUS_RESOLVED_ID || $ticket_data['status_id'] == 7 ) {
 					$data['change_status_id'] = _TICKET_STATUS_IN_PROGRESS_ID; // change to in progress.
 				}
 
@@ -2455,6 +2456,11 @@ Thanks,
 			update_insert( 'ticket_id', $ticket_id, 'ticket', array(
 				'invoice_id' => $invoice_id,
 			) );
+			// The check above is the only thing stopping a second invoice for the same
+			// ticket, and it reads the ticket through the object cache. Without clearing
+			// it, a customer who asked for priority support twice inside the cache
+			// timeout was billed twice.
+			module_cache::clear( 'ticket' );
 			module_invoice::add_history( $invoice_id, 'Created invoice from support ticket #' . $this->ticket_number( $ticket_id ) );
 
 			return $invoice_id;
@@ -2767,7 +2773,7 @@ Thanks,
 		if ( ! $message && $last_ticket_message ) {
 			if ( $last_ticket_message['htmlcontent'] ) {
 				$message = trim( $last_ticket_message['htmlcontent'] );
-			} else if ( $last_ticket_message['content'] ) {
+			} elseif ( $last_ticket_message['content'] ) {
 				$message = nl2br( htmlspecialchars( $last_ticket_message['content'] ) );
 			}
 		}
@@ -3335,13 +3341,13 @@ Thanks,
 		}
 		if ( ! function_exists( 'dtbaker_ticket_import_sort' ) ) {
 			function dtbaker_ticket_import_sort( $a, $b ) {
-				return $a->time > $b->time;
+				return $a->time <=> $b->time;
 			}
 		}
 		uasort( $sorted_emails, 'dtbaker_ticket_import_sort' );
 		$message_number = 0;
 		foreach ( $sorted_emails as $overview ) {
-			$message_number ++;
+			$message_number++;
 
 			$message_id = (string) $overview->message_id;
 
@@ -3391,7 +3397,7 @@ Thanks,
 				send_error( "Failed to decode this email: " . $mail_content );
 				$parse_success = true; // so it delets the email below if that account setting is setfalse;
 			} else {
-				for ( $message = 0; $message < count( $decoded ); $message ++ ) {
+				for ( $message = 0; $message < count( $decoded ); $message++ ) {
 					if ( $mime->Analyze( $decoded[ $message ], $results ) ) {
 
 						if ( isset( $results['From'][0]['address'] ) ) {
@@ -3515,7 +3521,7 @@ Thanks,
 									//$account['default_customer_id'] = $from_user['customer_id'];
 								}
 
-							} else if ( module_config::c( 'ticket_allow_new_from_email', 1 ) ) {
+							} elseif ( module_config::c( 'ticket_allow_new_from_email', 1 ) ) {
 								// create a user under this account customer because we allow new emails to be created
 								if ( $account['default_customer_id'] ) {
 									// create a new support user! go go!
@@ -3571,9 +3577,9 @@ Thanks,
 							$message_type_id = _TICKET_MESSAGE_TYPE_CREATOR; // from an end user.
 							if ( strtolower( $from_address ) == strtolower( $email_account_address ) ) {
 								$message_type_id = _TICKET_MESSAGE_TYPE_ADMIN; // from an admin replying via email.
-							} else if ( strtolower( $from_address ) == strtolower( module_config::c( 'ticket_admin_email_alert' ) ) ) {
+							} elseif ( strtolower( $from_address ) == strtolower( module_config::c( 'ticket_admin_email_alert' ) ) ) {
 								$message_type_id = _TICKET_MESSAGE_TYPE_ADMIN; // from an admin replying via email.
-							} else if ( isset( $admins_rel[ $from_user_id ] ) ) {
+							} elseif ( isset( $admins_rel[ $from_user_id ] ) ) {
 								$message_type_id = _TICKET_MESSAGE_TYPE_ADMIN; // from an admin replying via email.
 							}
 
@@ -3946,7 +3952,7 @@ Thanks,
 		);
 		if ( isset( $data['name'] ) && $data['name'] ) {
 			$extra_db['extra_key'] = $data['name'];
-		} else if ( ! (int) $saved_response_id ) {
+		} elseif ( ! (int) $saved_response_id ) {
 			return; // not saving correctly.
 		}
 		$extra_id = update_insert( 'extra_id', $saved_response_id, 'extra', $extra_db );
@@ -4111,7 +4117,7 @@ Thanks,
 		set_message( "Ticket saved successfully" );
 		if ( isset( $_REQUEST['butt_notify_staff'] ) && $_REQUEST['butt_notify_staff'] ) {
 			redirect_browser( $this->link_open_notify( $ticket_id, false, $ticket_data ) );
-		} else if ( isset( $_REQUEST['mark_as_unread'] ) && $_REQUEST['mark_as_unread'] ) {
+		} elseif ( isset( $_REQUEST['mark_as_unread'] ) && $_REQUEST['mark_as_unread'] ) {
 			$url = $this->link_open( false );
 			$url .= ( strpos( '?', $url ) !== false ? '?' : '&' ) . 'do_last_search';
 			redirect_browser( $url );
@@ -4197,10 +4203,10 @@ Thanks,
 			$priority_count = 0;
 			while ( $ticket = mysqli_fetch_assoc( $res ) ) {
 				if ( $ticket['unread'] ) {
-					$unread ++;
+					$unread++;
 				}
 				if ( $ticket['priority'] == _TICKET_PRIORITY_STATUS_ID ) {
-					$priority_count ++;
+					$priority_count++;
 				}
 			}
 			$foo = array(
@@ -4271,40 +4277,34 @@ Thanks,
 		$tickets = get_multiple( 'ticket', array( 'invoice_id' => $invoice_id ) );
 		if ( $tickets ) {
 			foreach ( $tickets as $ticket ) {
-				?>
-				<h3><?php _e( 'Priority Support Ticket' ); ?></h3>
-				<table border="0" cellspacing="0" cellpadding="2" class="tableclass tableclass_form tableclass_full">
-					<tbody>
-					<tr>
-						<th class="width1">
-							<?php _e( 'Ticket' ); ?>
-						</th>
-						<td>
-							<?php echo module_ticket::link_open( $ticket['ticket_id'], true, $ticket ); ?>
-						</td>
-					</tr>
-					<tr>
-						<th>
-							<?php _e( 'Subject' ); ?>
-						</th>
-						<td>
-							<?php echo htmlspecialchars( $ticket['subject'] ); ?>
-						</td>
-					</tr>
-					<tr>
-						<th>
-							<?php _e( 'Status' ); ?>
-						</th>
-						<td>
-							<?php
-							$s = module_ticket::get_statuses();
-							echo $s[ $ticket['status_id'] ];
-							?>
-						</td>
-					</tr>
-					</tbody>
-				</table>
-				<?php
+				$statuses = module_ticket::get_statuses();
+				echo module_form::generate_fieldset( array(
+					// heading, not title, to match the subscription block that renders
+					// beside this one in the same sidebar - metis forces a heading to h5
+					// inside the box header either way, so a bare h3 here was the odd one out.
+					'heading'  => array(
+						'title' => _l( 'Priority Support Ticket' ),
+						'type'  => 'h3',
+					),
+					'class'    => 'tableclass tableclass_form tableclass_full',
+					'elements' => array(
+						array(
+							'title'  => 'Ticket',
+							'fields' => array( module_ticket::link_open( $ticket['ticket_id'], true, $ticket ) ),
+						),
+						array(
+							'title'  => 'Subject',
+							'fields' => array( htmlspecialchars( $ticket['subject'] ) ),
+						),
+						array(
+							'title'  => 'Status',
+							'fields' => array(
+								isset( $statuses[ $ticket['status_id'] ] )
+									? htmlspecialchars( $statuses[ $ticket['status_id'] ] ) : '',
+							),
+						),
+					),
+				) );
 			}
 		}
 	}
@@ -4762,6 +4762,4 @@ Thanks,
 
 		return ob_get_clean();
 	}
-
-
 }

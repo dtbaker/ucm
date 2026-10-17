@@ -1,11 +1,16 @@
 <?php
 
-
-class module_debug extends module_base {
-
+class module_debug extends module_base
+{
 	public static $debug = array();
 	public static $show_debug = false;
 	public static $start_time = 0;
+
+	public function __construct() {
+		$this->module_name     = 'debug';
+		$this->module_position = 30;
+		$this->version         = 2.121;
+	}
 
 	public static function can_i( $actions, $name = false, $category = false, $module = false ) {
 		if ( ! $module ) {
@@ -23,15 +28,25 @@ class module_debug extends module_base {
 		if ( self::$start_time == 0 ) {
 			self::$start_time = microtime( true );
 		}
-		$this->module_name     = "debug";
-		$this->module_position = 1;
-		$this->version         = 2.121;
 		// 2.1 - 2013-08-30 - debug mode enhancements
 		// 2.11 - 2013-09-15 - ID in debug column output
 		// 2.12 - 2014-07-28 - more info in debug output and ?debug_only_bad url
 		// 2.121 - 2014-10-07 - memory_get_usage fix
 	}
 
+	/**
+	 * Record one line for the debug table.
+	 *
+	 * `title`, `data` and `file` are escaped when the table is drawn. Most of what gets
+	 * logged is a var_export() of whatever was passed to a hook, which is full of markup
+	 * - unescaped it lands in the page as real elements, so a page in debug mode grows
+	 * duplicate forms, inputs and buttons that nothing on the page actually put there.
+	 *
+	 * A caller that means to write markup - the SQL logger highlights repeats, and folds
+	 * long queries behind a link - says so with 'html' => true.
+	 *
+	 * @param array $data
+	 */
 	public static function log( $data ) {
 		if ( $data && _DEBUG_MODE ) {
 			$data['time'] = substr( ( ( isset( $data['time'] ) ? $data['time'] : microtime( true ) ) - self::$start_time ), 0, 5 );
@@ -91,13 +106,13 @@ class module_debug extends module_base {
 			if ( isset( $_REQUEST['debug_only_bad'] ) ) {
 				if ( isset( $debug['important'] ) && $debug['important'] ) {
 					// keep this one.
-				} else if ( $this_memory > $memory_limit ) {
+				} elseif ( $this_memory > $memory_limit ) {
 					$show_next = true;
 
-				} else if ( $this_time > $time_limit ) {
+				} elseif ( $this_time > $time_limit ) {
 					$show_next = true;
 					// show this one!
-				} else if ( $show_next ) {
+				} elseif ( $show_next ) {
 					$show_next = false;
 				} else {
 					continue;
@@ -129,16 +144,16 @@ class module_debug extends module_base {
 					?>
 				</td>
 				<td>
-					<?php echo $id ++; ?>
+					<?php echo $id++; ?>
 				</td>
 				<td>
-					<?php echo isset( $debug['title'] ) ? $debug['title'] : 'NA'; ?>
+					<?php echo self::cell( $debug, 'title' ); ?>
 				</td>
 				<td>
-					<?php echo isset( $debug['data'] ) ? $debug['data'] : 'NA'; ?>
+					<?php echo self::cell( $debug, 'data' ); ?>
 				</td>
 				<td>
-					<?php echo isset( $debug['file'] ) ? $debug['file'] : 'NA'; ?>
+					<?php echo self::cell( $debug, 'file' ); ?>
 				</td>
 				<td>
 					<?php if ( module_config::c( 'debug_show_data', 0 ) ) { ?>
@@ -153,6 +168,23 @@ class module_debug extends module_base {
 			<?php
 		}
 		echo preg_replace( '#\s+#', ' ', ob_get_clean() );
+	}
+
+	/**
+	 * One cell of the debug table, escaped unless the logger asked for markup.
+	 *
+	 * @param array  $debug
+	 * @param string $key
+	 *
+	 * @return string
+	 */
+	private static function cell( $debug, $key ) {
+		if ( ! isset( $debug[ $key ] ) ) {
+			return 'NA';
+		}
+		$value = (string) $debug[ $key ];
+
+		return empty( $debug['html'] ) ? htmlspecialchars( $value ) : $value;
 	}
 
 	public static function print_heading() {
@@ -198,6 +230,5 @@ class module_debug extends module_base {
 		</div>
 		<?php
 	}
-
 }
 

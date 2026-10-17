@@ -158,7 +158,7 @@ if ( isset( $_REQUEST['print'] ) ) {
 						) ); ?>" class="ui-tabs-anchor"><?= _l( 'Revisions' ); ?></a>
 					</li>
 					<li class="ui-state-default ui-corner-top">
-						<a href="<?php echo $_SERVER['REQUEST_URI'] . '&print=true'; ?>"
+						<a href="<?php echo htmlspecialchars( $_SERVER['REQUEST_URI'] ) . '&amp;print=true'; ?>"
 						   onclick="window.open(this.href,'pop','width=900,height=700,scrollbars=1'); return false;"
 						   class="ui-tabs-anchor"><?= _l( 'Print' ); ?></a>
 					</li>
@@ -227,12 +227,12 @@ if ( isset( $_REQUEST['print'] ) ) {
 					}
 					$temp_revision_id = $data_record_revision['data_record_revision_id'];
 					?>
-					<tr class="<?php echo ( $c ++ % 2 ) ? "odd" : "even"; ?>">
+					<tr class="<?php echo ( $c++ % 2 ) ? "odd" : "even"; ?>">
 						<td class="row_action"><a href="<?php echo $module->link( '', array(
 								"data_type_id"   => $data_type_id,
 								"data_record_id" => $data_record_id,
 								"revision_id"    => $data_record_revision['data_record_revision_id']
-							) ); ?>">#<?php echo $x ++; ?></a></td>
+							) ); ?>">#<?php echo $x++; ?></a></td>
 						<td><?php echo print_date( $data_record_revision['date_created'], true ); ?></td>
 						<!-- <td><?php echo $data_record_revision['status']; ?></td> -->
 						<td><?php echo $user['name']; ?> (<?php echo $data_record_revision['create_ip_address']; ?>)</td>
@@ -241,7 +241,7 @@ if ( isset( $_REQUEST['print'] ) ) {
 								echo 'Initial Version';
 							} else {
 								// find out changed fields.
-								$sql = "SELECT * FROM `" . _DB_PREFIX . "data_store` WHERE data_record_revision_id = '" . $data_record_revision['data_record_revision_id'] . "' AND data_record_id = '" . $data_record_id . "'";
+								$sql = "SELECT * FROM `" . _DB_PREFIX . "data_store` WHERE data_record_revision_id = '" . (int) $data_record_revision['data_record_revision_id'] . "' AND data_record_id = '" . (int) $data_record_id . "'";
 								$res = qa( $sql );
 								if ( ! count( $res ) ) {
 									echo 'no changes';
@@ -339,13 +339,16 @@ if ( isset( $_REQUEST['print'] ) ) {
 						if ( strpos( $val, 'encrypt_popup' ) ) {
 							continue;
 						} ?>
-						<li><strong>{<?php echo strtoupper( htmlspecialchars( $key ) ); ?>}</strong> = <?= $val; ?></li>
+						<?php // get_replace_fields() escapes what it returns, but this list is the one place
+						// those values are printed as markup rather than substituted into a template, so
+						// it does not rely on that holding: a value that arrives unescaped is escaped
+						// here instead of running. ?>
+						<li><strong>{<?php echo strtoupper( htmlspecialchars( $key ) ); ?>}</strong> = <?php echo htmlspecialchars( html_entity_decode( (string) $val, ENT_QUOTES, 'UTF-8' ), ENT_QUOTES, 'UTF-8' ); ?></li>
 					<?php } ?>
 				</ul>
 				<?php
 				break;
 			case 'pdf':
-
 				if ( ! function_exists( 'convert_html2pdf' ) ) {
 					die( 'PDF generation not available' );
 				}
@@ -439,6 +442,7 @@ if ( isset( $_REQUEST['print'] ) ) {
 					$data_field_groups = unserialize( $current_revision['field_group_cache'] );
 					// we dont always read from cache, because then any ui changes wouldn't be reflected in older reports (if we want to change older reports)
 				}
+				// no break
 			case 'edit':
 				// edit the latest revision.
 
@@ -494,7 +498,7 @@ if ( isset( $_REQUEST['print'] ) ) {
 									echo 'Initial Version';
 								} else {
 									// find out changed fields.
-									$sql = "SELECT * FROM `" . _DB_PREFIX . "data_store` WHERE data_record_revision_id = '" . $current_revision['data_record_revision_id'] . "' AND data_record_id = '" . $data_record_id . "'";
+									$sql = "SELECT * FROM `" . _DB_PREFIX . "data_store` WHERE data_record_revision_id = '" . (int) $current_revision['data_record_revision_id'] . "' AND data_record_id = '" . (int) $data_record_id . "'";
 									$res = qa( $sql );
 									if ( ! count( $res ) ) {
 										echo 'no changes';
@@ -530,7 +534,11 @@ if ( isset( $_REQUEST['print'] ) ) {
 					}
 
 					?>
-					<form action="" method="post" class="validate" enctype="multipart/form-data">
+					<?php module_form::print_form_open_tag( array(
+						'action'  => '',
+						'class'   => 'validate',
+						'enctype' => 'multipart/form-data',
+					) ); ?>
 					<?php if ( ! $view_revision_id ) { ?>
 						<input type="hidden" name="form_id" value="<?php echo $GLOBALS['form_id']; ?>">
 						<input type="hidden" name="_process" value="save_data_record"/>
@@ -539,7 +547,7 @@ if ( isset( $_REQUEST['print'] ) ) {
 							"data_type_id"   => $data_type_id,
 							"data_record_id" => $data_record_id
 						) ); ?>"/>
-						<input type="hidden" name="data_record_id" value="<?php echo $data_record_id; ?>"/>
+						<input type="hidden" name="data_record_id" value="<?php echo htmlspecialchars( $data_record_id ); ?>"/>
 						<input type="hidden" name="parent_data_record_id"
 						       value="<?php echo (int) $data_record['parent_data_record_id']; ?>"/>
 						<input type="hidden" name="data_type_id" value="<?php echo $data_type_id; ?>"/>
@@ -597,7 +605,7 @@ if ( isset( $_REQUEST['print'] ) ) {
 				}
 				if ( ! isset( $embed_form ) ) {
 					?>
-					</form>
+					<?php module_form::print_form_close_tag(); ?>
 					<?php
 				}
 				?>

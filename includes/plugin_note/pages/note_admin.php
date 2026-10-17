@@ -5,7 +5,7 @@ if ( isset( $_REQUEST['note_id'] ) ) {
 
 	// re-check permissions sent in from ajax.
 	// there could be a way to trick this, if someone can find it my congratulations to them!
-	$options = unserialize( base64_decode( $_REQUEST['options'] ) );
+	$options = ucm_unserialize_options( $_REQUEST['options'] );
 	if ( ! $options ) {
 		return;
 	}
@@ -58,14 +58,7 @@ if ( isset( $_REQUEST['note_id'] ) ) {
 		$note['rel_data'] = $options['view_link'];
 	}
 	?>
-	<form action="<?php
-	echo $plugins['note']->link( 'note_edit', array(
-		'_process'    => 'save_note',
-		'owner_table' => $owner_table,
-		'owner_id'    => $owner_id,
-		'note_id'     => $note_id,
-	) );
-	?>" method="post">
+	<?php module_form::print_form_open_tag( array( 'action' => ( $plugins['note']->link( 'note_edit', array( '_process' => 'save_note', 'owner_table' => $owner_table, 'owner_id' => $owner_id, 'note_id' => $note_id, ) ) ) ) ); ?>
 		<input type="hidden" name="note_id" value="<?php echo (int) $note_id; ?>" id="note_id">
 		<input type="hidden" name="options" value="<?php echo base64_encode( serialize( $options ) ); ?>">
 		<input type="hidden" name="rel_data" id="form_rel_data" value="<?php echo $note['rel_data']; ?>">
@@ -84,6 +77,6 @@ if ( isset( $_REQUEST['note_id'] ) ) {
 			}
 		}
 		?>
-	</form>
+	<?php module_form::print_form_close_tag(); ?>
 	<?php
 }

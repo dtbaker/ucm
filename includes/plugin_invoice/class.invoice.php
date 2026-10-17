@@ -1,12 +1,13 @@
 <?php
+
 defined( '_UCM_VERSION' ) || die( '-5' );
 
 // (slowly) moving everything over to better OOP classes:
 
 if ( class_exists( 'UCMBaseDocument' ) ) {
 
-	class UCMInvoice extends UCMBaseDocument {
-
+	class UCMInvoice extends UCMBaseDocument
+    {
 		public $db_id = 'invoice_id';
 		public $db_table = 'invoice';
 		public $display_key = 'name';
@@ -56,17 +57,14 @@ if ( class_exists( 'UCMBaseDocument' ) ) {
 
 			return full_link( _EXTERNAL_TUNNEL_REWRITE . 'm.invoice/h.public/i.' . $this->id . '/hash.' . $this->link_public( true ) );
 		}
-
 	}
 
-	class UCMInvoices extends UCMBaseMulti {
-
+	class UCMInvoices extends UCMBaseMulti
+    {
 		public $db_id = 'invoice_id';
 		public $db_table = 'invoice';
 		public $display_name = 'Invoice';
 		public $display_name_plural = 'Invoices';
-
-
 	}
 
 

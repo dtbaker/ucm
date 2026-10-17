@@ -129,7 +129,11 @@ print_heading( array(
 ?>
 
 
-	<form action="" method="post" id="finance_form" class="search_form">
+	<?php module_form::print_form_open_tag( array(
+		'action' => '',
+		'id'     => 'finance_form',
+		'class'  => 'search_form',
+	) ); ?>
 
 		<?php
 		$categories_rel = array();
@@ -235,7 +239,7 @@ print_heading( array(
 		echo module_form::search_bar( $search_bar ); ?>
 
 
-	</form>
+	<?php module_form::print_form_close_tag(); ?>
 
 	<script type="text/javascript">
       function link_it(t) {
@@ -261,10 +265,16 @@ print_heading( array(
 	</script>
 
 
-	<form action="" method="post" id="quick_add_form">
-		<input type="hidden" name="_process" value="quick_save_finance">
-		<input type="hidden" name="finance_id" value="new">
-		<?php module_form::set_default_field( 'new_transaction_name' );
+<?php
+	module_form::print_form_open_tag( array(
+		'id'      => 'quick_add_form',
+		'process' => 'quick_save_finance',
+		'hidden'  => array(
+			'finance_id' => 'new',
+		),
+	) );
+
+		module_form::set_default_field( 'new_transaction_name' );
 
 
 		$table_manager                  = module_theme::new_table_manager();
@@ -396,7 +406,7 @@ print_heading( array(
 				if ( ! isset( $finance['transaction_date'] ) ) {
 					return false;
 				}
-				echo isset( $finance['categories'] ) ? $finance['categories'] : '';
+				echo isset( $finance['categories'] ) ? htmlspecialchars( $finance['categories'] ) : '';
 			},
 		);
 		$columns['finance_tick']        = array(
@@ -409,7 +419,7 @@ print_heading( array(
 					<input type="checkbox" name="link_invoice_payment_ids[<?php echo $finance['invoice_payment_id']; ?>]"
 					       value="<?php echo number_format( $finance['credit'], 2 ) . '_' . number_format( $finance['debit'], 2 ); ?>"
 					       class="link_box">
-				<?php } else if ( isset( $finance['finance_id'] ) ) { ?>
+				<?php } elseif ( isset( $finance['finance_id'] ) ) { ?>
 					<input type="checkbox" name="link_finance_ids[<?php echo $finance['finance_id']; ?>]"
 					       value="<?php echo number_format( $finance['credit'], 2 ) . '_' . number_format( $finance['debit'], 2 ); ?>"
 					       class="link_box">
@@ -536,9 +546,7 @@ print_heading( array(
 		$table_manager->pagination = true;
 		$table_manager->print_table();
 
-		?>
-	</form>
-<?php
+		module_form::print_form_close_tag();
 
 if ( $show_excluded_payment_info ) {
 	?>

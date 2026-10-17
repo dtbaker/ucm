@@ -1,9 +1,8 @@
 <?php
 
-
-class module_pdf extends module_base {
-
-	var $links;
+class module_pdf extends module_base
+{
+	public $links;
 	public $pdf_library;
 
 	public static function can_i( $actions, $name = false, $category = false, $module = false ) {
@@ -18,8 +17,29 @@ class module_pdf extends module_base {
 		return __CLASS__;
 	}
 
+	public function __construct() {
+		$this->module_name     = 'pdf';
+		$this->module_position = 410;
+		$this->version         = 2.135;
+	}
+
+	/**
+	 * @return array
+	 */
+	public function third_party_libraries() {
+		return array(
+			'dompdf' => array(
+				'name'       => 'dompdf',
+				'package'    => 'dompdf/dompdf',
+				'constraint' => '^3.1',
+				'class'      => 'Dompdf\\Dompdf',
+				'bundled'    => 'includes/plugin_pdf/dompdf/autoload.inc.php',
+				'feature'    => 'PDF generation for invoices, quotes and contracts',
+			),
+		);
+	}
+
 	function init() {
-		$this->version = 2.135;
 		// 2.1 - added arialuni ttf file
 		// 2.11 - more options for pdf generation
 		// 2.12 - better unicode configuration
@@ -38,9 +58,7 @@ class module_pdf extends module_base {
 		// 2.133 - 2016-07-10 - php7 support
 		// 2.134 - 2021-04-07 - php8 compatibility fix
 		// 2.135 - 2021-09-24 - change to dompdf generation
-		$this->links           = array();
-		$this->module_name     = "pdf";
-		$this->module_position = 8882;
+		$this->links = array();
 	}
 
 	public function pre_menu() {
@@ -55,7 +73,6 @@ class module_pdf extends module_base {
 			);
 		}
 	}
-
 }
 
 
@@ -110,14 +127,21 @@ function convert_html2pdf( $html, $pdf ) {
 		default:
 			ini_set( 'error_reporting', E_ERROR );
 			ini_set( "display_errors", true );
-			require_once( 'dompdf/autoload.inc.php' );
+			if ( ! ucm_libraries::load( 'dompdf' ) ) {
+				set_error( 'PDF generation is not available: the dompdf library is missing.' );
+
+				return false;
+			}
 			set_time_limit( 120 );
 
 			$dompdf = new \Dompdf\Dompdf();
 			$dompdf->loadHtml( file_get_contents( $html ) );
 			$dompdf->setPaper( module_config::c( 'pdf_media_size', 'A4' ) );
 			$dompdf->render();
-			$dompdf->stream($pdf);
+			// Dompdf::stream() sends the PDF straight to the browser and writes nothing to
+			// disk. Every caller of this function expects a file afterwards - to attach to
+			// an email, or to serve with its own headers - so write the file out instead.
+			file_put_contents( $pdf, $dompdf->output() );
 
 			break;
 	}

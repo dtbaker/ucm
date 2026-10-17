@@ -1,11 +1,16 @@
 <?php
 
-
-class module_hook extends module_base {
-
+class module_hook extends module_base
+{
 	public static $hook = array();
 	public static $show_hook = false;
 	public static $start_time = 0;
+
+	public function __construct() {
+		$this->module_name     = 'hook';
+		$this->module_position = 2;
+		$this->version         = 2.1;
+	}
 
 	public static function can_i( $actions, $name = false, $category = false, $module = false ) {
 		if ( ! $module ) {
@@ -20,9 +25,6 @@ class module_hook extends module_base {
 	}
 
 	public function init() {
-		$this->module_name     = "hook";
-		$this->module_position = 1;
-		$this->version         = 2.1;
 		// 2.1 - 2016-06-15 - initial release
 	}
 
@@ -42,6 +44,4 @@ class module_hook extends module_base {
 
 
 	}
-
 }
-

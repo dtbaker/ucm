@@ -77,19 +77,19 @@ if ( $data_type_id ) {
 									case 'data_record_id':
 										if ( $data_field_value != $data['data_record_id'] ) {
 											unset( $datas[ $data_id ] );
-											continue;
+											continue 2;
 										}
 										break;
 									case 'created_date_time':
 										if ( input_date( $data_field_value, true ) != input_date( $data['date_created'], true ) ) {
 											unset( $datas[ $data_id ] );
-											continue;
+											continue 2;
 										}
 										break;
 									case 'created_date':
 										if ( input_date( $data_field_value ) != input_date( $data['date_created'] ) ) {
 											unset( $datas[ $data_id ] );
-											continue;
+											continue 2;
 										}
 										break;
 									case 'created_time':
@@ -98,13 +98,13 @@ if ( $data_type_id ) {
 									case 'updated_date_time':
 										if ( input_date( $data_field_value, true ) != input_date( $data['date_updated'], true ) ) {
 											unset( $datas[ $data_id ] );
-											continue;
+											continue 2;
 										}
 										break;
 									case 'updated_date':
 										if ( input_date( $data_field_value ) != input_date( $data['date_updated'] ) ) {
 											unset( $datas[ $data_id ] );
-											continue;
+											continue 2;
 										}
 										break;
 									case 'updated_time':
@@ -113,13 +113,13 @@ if ( $data_type_id ) {
 									case 'created_by':
 										if ( $data_field_value != $data['create_user_id'] ) {
 											unset( $datas[ $data_id ] );
-											continue;
+											continue 2;
 										}
 										break;
 									case 'updated_by':
 										if ( $data_field_value != $data['update_user_id'] ) {
 											unset( $datas[ $data_id ] );
-											continue;
+											continue 2;
 										}
 										break;
 									default:
@@ -129,23 +129,23 @@ if ( $data_type_id ) {
 											if ( is_array( $foo ) ) {
 												if ( ! in_array( $data_field_value, $foo ) ) {
 													unset( $datas[ $data_id ] );
-													continue;
+													continue 2;
 												}
 											} else {
 
 												if ( $settings && $settings['field_type'] && $settings['field_type'] == 'text' ) {
 													if ( strpos( strtolower( trim( $data_items[ $data_field_id ]['data_text'] ) ), strtolower( $data_field_value ) ) === false ) {
 														unset( $datas[ $data_id ] );
-														continue;
+														continue 2;
 													}
-												} else if ( strtolower( trim( $data_items[ $data_field_id ]['data_text'] ) ) != strtolower( $data_field_value ) ) {
+												} elseif ( strtolower( trim( $data_items[ $data_field_id ]['data_text'] ) ) != strtolower( $data_field_value ) ) {
 													unset( $datas[ $data_id ] );
-													continue;
+													continue 2;
 												}
 											}
 										} else {
 											unset( $datas[ $data_id ] );
-											continue;
+											continue 2;
 										}
 								}
 							}
@@ -219,7 +219,7 @@ if ( $data_type_id ) {
 
 		?>
 
-		<form action="" method="POST">
+		<?php module_form::print_form_open_tag( array( 'action' => '' ) ); ?>
 			<input type="hidden" name="search_go" value="true">
 
 			<script type="text/javascript">
@@ -257,11 +257,8 @@ if ( $data_type_id ) {
 				}
 				if ( $data_fields ) {
 
-					ob_start();
-					?>
-					<table class="tableclass tableclass_form">
-						<?php
-						foreach ( $data_fields as $data_field_id => $data_field ) {
+					$search_elements = array();
+					foreach ( $data_fields as $data_field_id => $data_field ) {
 							$data_field['multiple'] = false;
 							switch ( $data_field['field_type'] ) {
 								case 'auto_id':
@@ -303,35 +300,28 @@ if ( $data_type_id ) {
 									$data_field['attributes']    = $update_user_ids;
 									break;
 							}
-							?>
+						$search_elements[ 'field_' . $data_field['data_field_id'] ] = array(
+							'title'  => $data_field['title'],
+							'fields' => array(
+								'<div style="float:left; padding:0 10px 0 0">'
+								. '<input type="checkbox" name="search_do[' . htmlspecialchars( $data_field['data_field_id'] ) . ']" value="1"'
+								. ' rel="' . htmlspecialchars( $data_field['data_field_id'] ) . '" class="search_do">'
+								. '</div>'
+								. '<div style="float:left">'
+								. '<div id="search_field_' . htmlspecialchars( $data_field['data_field_id'] ) . '" style="display:none;">'
+								. $module->get_form_element( $data_field )
+								. '</div></div>',
+							),
+						);
+					}
 
-							<tr>
-								<th class="width2"><?php echo $data_field['title']; ?></th>
-								<td>
-									<div style="float:left; padding:0 10px 0 0">
-										<input type="checkbox" name="search_do[<?php echo $data_field['data_field_id']; ?>]" value="1"
-										       rel="<?php echo $data_field['data_field_id']; ?>" class="search_do">
-									</div>
-									<div style="float:left">
-										<div id="search_field_<?php echo $data_field['data_field_id']; ?>" style="display:none;">
-											<?php
-											echo $module->get_form_element( $data_field ); ?>
-										</div>
-									</div>
-								</td>
-							</tr>
-
-							<?php
-						}
-						?>
-					</table>
-					<?php
 					$fieldset_data = array(
-						'heading'         => array(
+						'heading'  => array(
 							'title' => htmlspecialchars( $data_field_group['title'] ),
 							'type'  => 'h3',
 						),
-						'elements_before' => ob_get_clean(),
+						'class'    => 'tableclass tableclass_form',
+						'elements' => $search_elements,
 					);
 					echo module_form::generate_fieldset( $fieldset_data );
 					unset( $fieldset_data );
@@ -346,7 +336,7 @@ if ( $data_type_id ) {
 				       'data_type_id' => $data_type_id,
 				       'view_all'     => isset( $_REQUEST['view_all'] ) ? 1 : false,
 			       ) ); ?>';">
-		</form>
+		<?php module_form::print_form_close_tag(); ?>
 
 		<?php
 

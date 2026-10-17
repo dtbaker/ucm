@@ -1,8 +1,7 @@
 <?php
 
-
-class module_theme_adminlte extends module_base {
-
+class module_theme_adminlte extends module_base
+{
 	public static function can_i( $actions, $name = false, $category = false, $module = false ) {
 		if ( ! $module ) {
 			$module = __CLASS__;
@@ -15,11 +14,14 @@ class module_theme_adminlte extends module_base {
 		return __CLASS__;
 	}
 
-	public function init() {
-		$this->module_name     = "theme_adminlte";
+	public function __construct() {
+		$this->module_name     = 'theme_adminlte';
 		$this->module_position = 0;
+		$this->version         = 2.160;
+	}
 
-		$this->version = 2.159;
+	public function init() {
+		//2.160 - 2026-10-17 - new SVG logo and favicon, release version in the footer
 		//2.159 - 2022-12-27 - php8.1 fixes
 		//2.158 - 2017-01-12 - fieldset settings
 		//2.157 - 2017-01-05 - php warning fix
@@ -84,5 +86,3 @@ class module_theme_adminlte extends module_base {
 		return new ucm_adminlte_table_manager();
 	}
 }
-
-

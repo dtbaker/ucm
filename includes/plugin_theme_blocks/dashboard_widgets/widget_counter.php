@@ -18,7 +18,7 @@ if ( class_exists( 'module_invoice', false ) && module_invoice::can_i( 'view', '
 		if ( isset( $invoice['date_cancel'] ) && $invoice['date_cancel'] != '0000-00-00' ) {
 			continue;
 		}
-		$count ++;
+		$count++;
 	}
 
 	$count_widgets[] = array(
@@ -104,7 +104,7 @@ if ( $count_widgets ) {
 					}
 					?>
 					<div class="circle <?php echo $colors[ $color_count ];
-					$color_count ++;
+					$color_count++;
 					if ( $color_count >= count( $colors ) ) {
 						$color_count = 0;
 					} ?>">

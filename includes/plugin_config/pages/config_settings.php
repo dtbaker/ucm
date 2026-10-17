@@ -17,21 +17,18 @@ if ( class_exists( 'module_security', false ) ) {
 }
 $module->page_title = 'Settings';
 
-?>
+module_form::print_form_open_tag( array(
+	'process' => 'save_config',
+) );
 
-
-<form action="" method="post">
-
-	<?php
-	module_form::prevent_exit( array(
-			'valid_exits' => array(
-				// selectors for the valid ways to exit this form.
-				'.submit_button',
-			)
+module_form::prevent_exit( array(
+		'valid_exits' => array(
+			// selectors for the valid ways to exit this form.
+			'.submit_button',
 		)
-	);
-	?>
-	<input type="hidden" name="_process" value="save_config">
+	)
+);
+?>
 
 	<style type="text/css">
 		.config_variable {
@@ -84,7 +81,7 @@ $module->page_title = 'Settings';
 		</tr>
 		</tbody>
 	</table>
-</form>
+<?php module_form::print_form_close_tag(); ?>
 
 <script type="text/javascript">
     $(function () {

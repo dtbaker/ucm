@@ -2,8 +2,8 @@
 
 define( '_LABEL_USER_SPECIFIC', 'User Specific' );
 
-class module_security extends module_base {
-
+class module_security extends module_base
+{
 	//test
 	public $links;
 	public $security_types;
@@ -19,7 +19,7 @@ class module_security extends module_base {
 		'delete',
 	);
 
-	static $bypass_security = false;
+	public static $bypass_security = false;
 
 	public static function can_i( $actions, $name = false, $category = false, $module = false ) {
 		if ( ! $module ) {
@@ -33,13 +33,31 @@ class module_security extends module_base {
 		return __CLASS__;
 	}
 
-	public function init() {
-		$this->links           = array();
-		$this->security_types  = array();
-		$this->module_name     = "security";
-		$this->module_position = 999;
+	public function __construct() {
+		$this->module_name     = 'security';
+		$this->module_position = 50;
+		$this->version         = 2.527;
+	}
 
-		$this->version = 2.527;
+	/**
+	 * @return array
+	 */
+	public function third_party_libraries() {
+		return array(
+			'htmlpurifier' => array(
+				'name'       => 'HTML Purifier',
+				'package'    => 'ezyang/htmlpurifier',
+				'constraint' => '^4.19',
+				'class'      => 'HTMLPurifier',
+				'bundled'    => 'includes/plugin_security/htmlpurifier/HTMLPurifier.standalone.php',
+				'feature'    => 'Cleaning up HTML that people paste into the system',
+			),
+		);
+	}
+
+	public function init() {
+		$this->links          = array();
+		$this->security_types = array();
 		// 2.527 - 2021-04-07 - php8 compatibility fix
 		// 2.526 - 2017-05-02 - file path configuration
 		// 2.525 - 2017-02-16 - js error fix
@@ -211,7 +229,7 @@ class module_security extends module_base {
 	}
 
 	private static $user_perms = array();
-	static $perms_cache = array();
+	public static $perms_cache = array();
 
 	public static function get_user_permissions( $user_id ) {
 		$user_id = (int) $user_id;
@@ -264,13 +282,35 @@ class module_security extends module_base {
 				}
 			}
 			if ( ! $security_permission_id ) {
-				$security_permission_id = update_insert( 'security_permission_id', 'new', 'security_permission', array(
-					'name'        => $access_requirements['name'],
-					'category'    => $access_requirements['category'],
-					'module'      => $access_requirements['module'],
-					'description' => $access_requirements['description'],
+				// The cache is per request, so a permission first reached by two requests
+				// at once is missing from both and inserted twice. That is how this table
+				// came to hold four rows for some names: the browser suite runs four
+				// workers, and they all registered the same new data type in the same
+				// second. Look again in the database before adding one.
+				$existing = get_single( 'security_permission', array(
+					'name',
+					'category',
+					'module',
+				), array(
+					$access_requirements['name'],
+					$access_requirements['category'],
+					$access_requirements['module'],
 				) );
-				$available_perms        = array();
+				if ( $existing ) {
+					$security_permission_id = $existing['security_permission_id'];
+					$available_perms        = @unserialize( $existing['available_perms'] );
+					if ( ! is_array( $available_perms ) ) {
+						$available_perms = array();
+					}
+				} else {
+					$security_permission_id = update_insert( 'security_permission_id', 'new', 'security_permission', array(
+						'name'        => $access_requirements['name'],
+						'category'    => $access_requirements['category'],
+						'module'      => $access_requirements['module'],
+						'description' => $access_requirements['description'],
+					) );
+					$available_perms = array();
+				}
 				self::_build_perms_cache();
 			}/*
 			$permission = get_single('security_permission',array(
@@ -707,31 +747,44 @@ class module_security extends module_base {
 		//session_destroy();
 	}
 
+	/**
+	 * Sign in from an auto-login key.
+	 *
+	 * The key is derived from the stored password hash, so holding a valid one already
+	 * proves as much as a password does. It used to put the stored hash in
+	 * $_REQUEST['password'] and run the normal login, which only ever worked because
+	 * verification accepted a hash as its own password - the hole 31855c3 closed. Since
+	 * then the only accounts an auto-login link worked for were the ones still on the
+	 * shipped default password, which quietly broke password reset emails, customer
+	 * welcome emails and every public invoice, quote, job, ticket and contract link.
+	 */
 	public static function auto_login( $redirect = true ) {
-		if ( strlen( $_REQUEST['auto_login'] ) > 7 ) {
-			$foo     = explode( ":", $_REQUEST['auto_login'] );
-			$user_id = (int) $foo[0];
-			if ( $user_id > 0 ) {
-				// get the real key.
-				$real_key = self::get_auto_login_string( $user_id );
-				if ( $real_key == $_REQUEST['auto_login'] ) {
-					// log this security in !!
-					$sql = "SELECT * FROM " . _DB_PREFIX . "user WHERE user_id = '$user_id'";
-					$res = qa1( $sql );
-					if ( $res ) {
-						if ( getcred() ) {
-							set_message( _l( "You have been logged out." ) );
-						}
-						$_REQUEST['email']    = $res['email'];
-						$_REQUEST['password'] = $res['password'];
-
-						return self::process_login( $redirect, false );
-					}
-				}
-			}
+		if ( ! isset( $_REQUEST['auto_login'] ) || ! is_string( $_REQUEST['auto_login'] ) || strlen( $_REQUEST['auto_login'] ) <= 7 ) {
+			return false;
 		}
+		$foo     = explode( ":", $_REQUEST['auto_login'] );
+		$user_id = (int) $foo[0];
+		if ( $user_id <= 0 ) {
+			return false;
+		}
+		// get the real key.
+		$real_key = self::get_auto_login_string( $user_id );
+		if ( ! $real_key || ! hash_equals( (string) $real_key, $_REQUEST['auto_login'] ) ) {
+			return false;
+		}
+		// The same row shape process_login() works with, so the session is set up
+		// identically however somebody arrived.
+		$sql = "SELECT u.*, sr.security_role_id FROM `" . _DB_PREFIX . "user` u LEFT JOIN `" . _DB_PREFIX . "user_role` sr ON u.user_id = sr.user_id WHERE u.user_id = '" . (int) $user_id . "' LIMIT 1";
+		$res = qa1( $sql );
+		if ( ! $res ) {
+			return false;
+		}
+		if ( getcred() ) {
+			set_message( _l( "You have been logged out." ) );
+		}
+		hook_handle_callback( 'before_login' );
 
-		return false;
+		return self::establish_session( $res, $redirect );
 	}
 	/*public static function set_access_level($user_id,$access_level){
 			// move this back to the user module
@@ -847,88 +900,93 @@ class module_security extends module_base {
 			$password                   = trim( $_REQUEST['password'] );
 			$_SESSION['_AVA_logged_in'] = false;
 			if ( strlen( $email ) && strlen( $password ) ) {
-				// a user logs in, and they can access a certain areas of the website based on their permissions.
-				// each user is assigned a site.
-				// all data in the system is related to a particular site.
-				// we store the users current site id in the system.
-				// this way when the security 'sanatise' option runs we know which site_id to place into newly created date and
-				// which site_id's the user can access if they are not super admins
-				// update! we match hashed passwords, as well as unhashed passwords.
-				$sql = "SELECT u.*, sr.security_role_id FROM `" . _DB_PREFIX . "user` u LEFT JOIN `" . _DB_PREFIX . "user_role` sr ON u.user_id = sr.user_id WHERE `email` LIKE '" . db_escape( $email ) . "' AND ( `password` = '" . db_escape( $password ) . "' OR `password` = '" . db_escape( md5( $password ) ) . "' )";
+				// Fetch user by email only (password verified in PHP for security)
+				$sql = "SELECT u.*, sr.security_role_id FROM `" . _DB_PREFIX . "user` u LEFT JOIN `" . _DB_PREFIX . "user_role` sr ON u.user_id = sr.user_id WHERE `email` LIKE '" . db_escape( $email ) . "' LIMIT 1";
 				$res = qa1( $sql );
-				if ( strlen( trim( $res['email'] ) ) > 0 && strtolower( $res['email'] ) == strtolower( $email ) ) {
-					// check the status of the user.
-
-					// not sure what this will do.
-					if ( isset( $res['linked_parent_user_id'] ) && $res['linked_parent_user_id'] > 0 ) {
-						// swap to this user
-						$parent_user = module_user::get_user( $res['linked_parent_user_id'], false, false );
-						if ( $parent_user && $res['linked_parent_user_id'] == $parent_user['user_id'] ) {
-							// login as this user instead.
-							$res = $parent_user;
-						}
+				if ( $res && strlen( trim( $res['email'] ) ) > 0 && strtolower( $res['email'] ) == strtolower( $email ) && ucm_password_verify( $password, $res['password'], $res['user_id'] ) ) {
+					// Migrate legacy MD5 to bcrypt on successful login
+					if ( ucm_password_needs_rehash( $res['password'] ) ) {
+						$new_hash = ucm_password_hash( $password );
+						query( "UPDATE `" . _DB_PREFIX . "user` SET `password` = '" . db_escape( $new_hash ) . "' WHERE user_id = '" . (int) $res['user_id'] . "' LIMIT 1" );
 					}
 
-					//if(!$res['status_id'] && $res['user_id']!=1){ // 0 is inactive. 1 is active.
-					// check this user has permissions to login.
-					if ( $res['user_id'] != 1 && ! self::can_user_login( $res['user_id'] ) ) {
-						set_error( 'Account disabled' );
-						if ( $redirect ) {
-							$_SERVER['REQUEST_URI'] = preg_replace( '/auto_login=[^&]*&?/', '', $_SERVER['REQUEST_URI'] );
-							redirect_browser( $_SERVER['REQUEST_URI'] );
-						}
-
-						return false;
-					}
-					$_SESSION['_AVA_logged_in'] = true;
-					// todo - find out all their links.
-					/*if(isset($res['linked_parent_user_id']) && $res['linked_parent_user_id'] == $res['user_id']){
-						// this user is a primary user.
-						$_SESSION['_restrict_customer_id'] = array();
-						$_SESSION['_restrict_customer_id'][$res['customer_id']] = $res['customer_id'];
-						foreach(module_user::get_contact_customer_links($res['user_id']) as $linked){
-							$_SESSION['_restrict_customer_id'][$linked['customer_id']] = $linked['customer_id'];
-						}
-
-
-					}else{
-						// oldschool permissions.
-						$_SESSION['_restrict_customer_id'] = $res['customer_id'];
-					}*/
-					// find the access level from the security_access table.
-
-					/*$level = self::get_access_level($res['user_id']);
-					$_SESSION['_access_level'] = $level['access_level'];
-					$_SESSION['_data_access'] = $level['data_access'];*/
-
-					$sql = "INSERT INTO `" . _DB_PREFIX . "security_login` SET user_id = '" . $res['user_id'] . "', `time` = '" . time() . "', ip_address = '" . $_SERVER['REMOTE_ADDR'] . "'";
-					query( $sql );
-
-					$_SESSION['_user_name']    = $res['name'];
-					$_SESSION['_user_email']   = $res['email'];
-					$_SESSION['_user_id']      = $res['user_id'];
-					$_SESSION['_user_role_id'] = $res['security_role_id'];
-					/*if(!$res['user_type_id']){
-						$res['user_type_id'] = 2; // default to a 'contact' ..
-						module_user::set_user_type($res['user_id'],2);
-					}
-					$_SESSION['_user_type_id'] = $res['user_type_id'];*/
-					$_SESSION['_language'] = $res['language'];
-					hook_handle_callback( 'login_success' );
-					set_message( _l( "You have successfully logged in." ) );
-
-					if ( $redirect ) {
-						$_SERVER['REQUEST_URI'] = preg_replace( '/auto_login=[^&]*&?/', '', $_SERVER['REQUEST_URI'] );
-						redirect_browser( $_SERVER['REQUEST_URI'] );
-						exit;
-					}
-
-					return true;
+					return self::establish_session( $res, $redirect );
 				}
 			}
 		}
 		hook_handle_callback( 'login_failed' );
 		set_error( 'Invalid username or password, please try again.' );
+
+		return true;
+	}
+
+	/**
+	 * Put a verified user into the session.
+	 *
+	 * Everything after "this really is them", shared by the password login and the
+	 * auto-login link so the two cannot drift apart.
+	 *
+	 * @param array $res      the user row, already verified by the caller
+	 * @param bool  $redirect reload the current URL once the session is set up
+	 *
+	 * @return bool
+	 */
+	private static function establish_session( $res, $redirect = true ) {
+		$_SESSION['_AVA_logged_in'] = false;
+
+		// A contact can be linked to a parent login; sign that one in instead.
+		if ( isset( $res['linked_parent_user_id'] ) && $res['linked_parent_user_id'] > 0 ) {
+			$parent_user = module_user::get_user( $res['linked_parent_user_id'], false, false );
+			if ( $parent_user && $res['linked_parent_user_id'] == $parent_user['user_id'] ) {
+				$res = $parent_user;
+			}
+		}
+
+		// check this user has permissions to login.
+		if ( $res['user_id'] != 1 && ! self::can_user_login( $res['user_id'] ) ) {
+			set_error( 'Account disabled' );
+			if ( $redirect ) {
+				$_SERVER['REQUEST_URI'] = preg_replace( '/auto_login=[^&]*&?/', '', $_SERVER['REQUEST_URI'] );
+				redirect_browser( $_SERVER['REQUEST_URI'] );
+			}
+
+			return false;
+		}
+		$_SESSION['_AVA_logged_in'] = true;
+
+		$sql = "INSERT INTO `" . _DB_PREFIX . "security_login` SET user_id = '" . (int) $res['user_id'] . "', `time` = '" . (int) time() . "', ip_address = '" . db_escape( $_SERVER['REMOTE_ADDR'] ?? '' ) . "'";
+		query( $sql );
+
+		$_SESSION['_user_name']    = $res['name'];
+		$_SESSION['_user_email']   = $res['email'];
+		$_SESSION['_user_id']      = $res['user_id'];
+		$_SESSION['_user_role_id'] = isset( $res['security_role_id'] ) ? $res['security_role_id'] : false;
+		$_SESSION['_language']     = $res['language'];
+		hook_handle_callback( 'login_success' );
+		set_message( _l( "You have successfully logged in." ) );
+
+		// The install ships the literal string 'password' rather than a hash, so the
+		// stored value is itself the record of "nobody has ever set one". The code has
+		// always claimed it prompts for a change and never did. Land them on their own
+		// login settings, every time, until they do.
+		if ( $redirect && ucm_password_is_default( isset( $res['password'] ) ? $res['password'] : '' ) ) {
+			set_error( _l( 'Please set a password for this account. It is still the one the system was installed with.' ) );
+			// Built rather than taken from module_user::link_open(), which bubbles the
+			// user page under whichever module the link came from.
+			redirect_browser( link_generate( array(
+				array(
+					'module'    => 'user',
+					'page'      => 'user_admin',
+					'arguments' => array( 'user_id' => (int) $res['user_id'] ),
+				),
+			) ) );
+		}
+
+		if ( $redirect ) {
+			$_SERVER['REQUEST_URI'] = preg_replace( '/auto_login=[^&]*&?/', '', $_SERVER['REQUEST_URI'] );
+			redirect_browser( $_SERVER['REQUEST_URI'] );
+			exit;
+		}
 
 		return true;
 	}
@@ -940,6 +998,11 @@ class module_security extends module_base {
 	}
 
 	public function process() {
+		// Every form that reaches here is posted from a UCM page, so it carries the
+		// form auth key. Refuse anything that does not - see module_form::check_secure_key().
+		if ( ! module_form::check_secure_key() ) {
+			module_form::reject_invalid_form_auth();
+		}
 		/*if('save_data_access_popup' == $_REQUEST['_process']){
 			// saving data access for specieid user id.
 			// get user id from post.
@@ -989,6 +1052,11 @@ class module_security extends module_base {
 			}
 			$security_role_id = update_insert( 'security_role_id', $_REQUEST['security_role_id'], 'security_role', $_POST );
 			// todo - deleting.
+
+			// The role form posts its permission grid as one field rather than one per
+			// permission per action - see security_role_edit.php for why. Anything else
+			// posting to save_security_role still works the old way.
+			$posted = self::decode_permission_data( $_REQUEST );
 
 			if ( $security_role_id ) {
 				$sql = "DELETE FROM `" . _DB_PREFIX . "security_role_perm` WHERE security_role_id = '" . (int) $security_role_id . "'";
@@ -1055,7 +1123,7 @@ class module_security extends module_base {
 							if ( count( $actions ) ) {
 								$sql = "REPLACE INTO `" . _DB_PREFIX . "security_role_perm` SET security_role_id = '" . (int) $security_role_id . "', security_permission_id = '" . (int) $security_permission_id . "' ";
 								foreach ( $actions as $permission => $tf ) {
-									$sql .= ", `" . db_escape( $permission ) . "` = 1";
+									$sql .= ", `" . db_identifier( $permission ) . "` = 1";
 								}
 								query( $sql );
 							}
@@ -1065,9 +1133,9 @@ class module_security extends module_base {
 
 
 				} else {
-					if ( isset( $_REQUEST['permission'] ) && is_array( $_REQUEST['permission'] ) ) {
+					if ( isset( $posted['permission'] ) && is_array( $posted['permission'] ) ) {
 						// update permissions for this role.
-						foreach ( $_REQUEST['permission'] as $security_permission_id => $permissions ) {
+						foreach ( $posted['permission'] as $security_permission_id => $permissions ) {
 							$actions = array();
 							foreach ( self::$available_permissions as $permission ) {
 								if ( isset( $permissions[ $permission ] ) && $permissions[ $permission ] ) {
@@ -1076,15 +1144,15 @@ class module_security extends module_base {
 							}
 							$sql = "REPLACE INTO `" . _DB_PREFIX . "security_role_perm` SET security_role_id = '" . (int) $security_role_id . "', security_permission_id = '" . (int) $security_permission_id . "' ";
 							foreach ( $actions as $permission => $tf ) {
-								$sql .= ", `" . db_escape( $permission ) . "` = 1";
+								$sql .= ", `" . db_identifier( $permission ) . "` = 1";
 							}
 							query( $sql );
 						}
 					}
-					if ( isset( $_REQUEST['permission_drop_down'] ) && is_array( $_REQUEST['permission_drop_down'] ) ) {
+					if ( isset( $posted['permission_drop_down'] ) && is_array( $posted['permission_drop_down'] ) ) {
 						// update permissions for this role.
 						$permission = 'view';
-						foreach ( $_REQUEST['permission_drop_down'] as $security_permission_ids => $selected_security_permission_id ) {
+						foreach ( $posted['permission_drop_down'] as $security_permission_ids => $selected_security_permission_id ) {
 							$ids_to_clear = explode( '|', $security_permission_ids );
 							foreach ( $ids_to_clear as $id_to_clear ) {
 								$id_to_clear = (int) $id_to_clear;
@@ -1096,13 +1164,13 @@ class module_security extends module_base {
 							}
 							if ( (int) $selected_security_permission_id > 0 ) {
 								$sql = "REPLACE INTO `" . _DB_PREFIX . "security_role_perm` SET security_role_id = '" . (int) $security_role_id . "', security_permission_id = '" . (int) $selected_security_permission_id . "' ";
-								$sql .= ", `" . db_escape( $permission ) . "` = 1";
+								$sql .= ", `" . db_identifier( $permission ) . "` = 1";
 								query( $sql );
 							}
 						}
 					}
-					if ( isset( $_REQUEST['group_access'] ) && is_array( $_REQUEST['group_access'] ) ) {
-						foreach ( $_REQUEST['group_access'] as $group_id => $enabled ) {
+					if ( isset( $posted['group_access'] ) && is_array( $posted['group_access'] ) ) {
+						foreach ( $posted['group_access'] as $group_id => $enabled ) {
 							if ( $enabled ) {
 								$sql = "INSERT INTO `" . _DB_PREFIX . "security_group_role_rel` SET security_role_id = '" . (int) $security_role_id . "', group_id = '" . (int) $group_id . "' ";
 								query( $sql );
@@ -1117,8 +1185,8 @@ class module_security extends module_base {
 	}
 
 	public static function get_auto_login_string( $user_id ) {
-
-		$sql = "SELECT * FROM `" . _DB_PREFIX . "user` WHERE user_id = '$user_id'";
+		$user_id = (int) $user_id;
+		$sql     = "SELECT * FROM `" . _DB_PREFIX . "user` WHERE user_id = '$user_id'";
 		$res = qa( $sql );
 		if ( $res ) {
 			$user = array_shift( $res );
@@ -1164,6 +1232,86 @@ class module_security extends module_base {
 	}
 
 
+	/**
+	 * The permission state a save_security_role post is asking for.
+	 *
+	 * The role form posts `permission_data`, one JSON field holding the whole grid, the
+	 * data access drop downs and the group access boxes. It does that because a field per
+	 * permission per action stopped fitting in a post: PHP parses at most max_input_vars
+	 * of them (1000 by default) and silently drops the rest, and the grid has one control
+	 * per row in `security_permission`, a table that grows as the install is used.
+	 *
+	 * Anything that posts the older `permission[id][action]` fields - a saved integration,
+	 * a script - still works, so long as it stays under the limit. The JSON field wins
+	 * when both are present.
+	 *
+	 * @param array $request The request to read, normally $_REQUEST.
+	 *
+	 * @return array With `permission`, `permission_drop_down` and `group_access` keys,
+	 *               each present only if the request actually carried it.
+	 */
+	public static function decode_permission_data( $request ) {
+		$legacy = array();
+		foreach ( array( 'permission', 'permission_drop_down', 'group_access' ) as $key ) {
+			if ( isset( $request[ $key ] ) && is_array( $request[ $key ] ) ) {
+				$legacy[ $key ] = $request[ $key ];
+			}
+		}
+
+		if ( ! isset( $request['permission_data'] ) || ! is_string( $request['permission_data'] ) ) {
+			return $legacy;
+		}
+		$bundle = json_decode( $request['permission_data'], true );
+		if ( ! is_array( $bundle ) ) {
+			return $legacy;
+		}
+
+		$decoded = array();
+
+		if ( isset( $bundle['permission'] ) && is_array( $bundle['permission'] ) ) {
+			$decoded['permission'] = array();
+			foreach ( $bundle['permission'] as $security_permission_id => $actions ) {
+				if ( ! (int) $security_permission_id || ! is_array( $actions ) ) {
+					continue;
+				}
+				$allowed = array();
+				foreach ( self::$available_permissions as $action ) {
+					if ( ! empty( $actions[ $action ] ) ) {
+						$allowed[ $action ] = 1;
+					}
+				}
+				$decoded['permission'][ (int) $security_permission_id ] = $allowed;
+			}
+		}
+
+		if ( isset( $bundle['permission_drop_down'] ) && is_array( $bundle['permission_drop_down'] ) ) {
+			$decoded['permission_drop_down'] = array();
+			foreach ( $bundle['permission_drop_down'] as $security_permission_ids => $selected ) {
+				if ( is_array( $selected ) ) {
+					continue;
+				}
+				// The key is the pipe separated list of ids the drop down covers; the
+				// handler explodes it again to clear them. Keep it to digits and pipes.
+				$key = preg_replace( '/[^0-9|]/', '', (string) $security_permission_ids );
+				if ( '' === $key ) {
+					continue;
+				}
+				$decoded['permission_drop_down'][ $key ] = (string) (int) $selected;
+			}
+		}
+
+		if ( isset( $bundle['group_access'] ) && is_array( $bundle['group_access'] ) ) {
+			$decoded['group_access'] = array();
+			foreach ( $bundle['group_access'] as $group_id => $enabled ) {
+				if ( (int) $group_id && ! empty( $enabled ) && ! is_array( $enabled ) ) {
+					$decoded['group_access'][ (int) $group_id ] = 1;
+				}
+			}
+		}
+
+		return $decoded + $legacy;
+	}
+
 	public static function get_permissions( $search = array() ) {
 		return get_multiple( 'security_permission', $search, 'security_permission_id', 'exact', 'category' );
 	}
@@ -1173,7 +1321,12 @@ class module_security extends module_base {
 	}
 
 	public static function get_security_role( $security_role_id ) {
-		$role                = get_single( 'security_role', 'security_role_id', $security_role_id );
+		$role = get_single( 'security_role', 'security_role_id', $security_role_id );
+		if ( ! is_array( $role ) || ! $role ) {
+			// Adding permissions to a "not found" result would make it look like a real
+			// role to every caller that only checks the return value.
+			return array();
+		}
 		$role['permissions'] = get_multiple( 'security_role_perm', array( 'security_role_id' => $security_role_id ), 'security_permission_id' );
 
 		return $role;
@@ -1411,7 +1564,7 @@ PRIMARY KEY (`user_id`)
 			echo self::$page_denied_message;
 			self::$page_denied_message = '';
 
-		} else if ( self::$process_editable_page ) {
+		} elseif ( self::$process_editable_page ) {
 			module_debug::log( array(
 				'title' => 'Page Editable',
 				'file'  => 'includes/plugin_security/security.php',
@@ -1498,7 +1651,11 @@ PRIMARY KEY (`user_id`)
 	}
 
 	public static function purify_html( $dirty_html ) {
-		require_once dirname( __FILE__ ) . '/htmlpurifier/HTMLPurifier.standalone.php';
+		if ( ! ucm_libraries::load( 'htmlpurifier' ) ) {
+			// Without the library there is no safe way to keep any of this, so keep none
+			// of it. Better a plain-text version than markup nobody has checked.
+			return htmlspecialchars( (string) $dirty_html, ENT_QUOTES, 'UTF-8' );
+		}
 		$config = HTMLPurifier_Config::createDefault();
 		$config->set( 'HTML.SafeIframe', true );
 		$config->set( 'URI.SafeIframeRegexp', '%^http%' );
@@ -1507,6 +1664,4 @@ PRIMARY KEY (`user_id`)
 
 		return $purifier->purify( $dirty_html );
 	}
-
-
 }

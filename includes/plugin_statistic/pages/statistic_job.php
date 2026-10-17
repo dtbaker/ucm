@@ -26,7 +26,10 @@ print_heading( array(
 <p>This report will show an overview of all jobs that have been created (or are due to be renewed) within a specified
 	date range.</p>
 
-<form action="" method="post" id="statistic_form">
+<?php module_form::print_form_open_tag( array(
+	'action' => '',
+	'id'     => 'statistic_form',
+) ); ?>
 
 	<?php
 	$search_bar = array(
@@ -62,7 +65,7 @@ print_heading( array(
 	);
 	echo module_form::search_bar( $search_bar ); ?>
 
-</form>
+<?php module_form::print_form_close_tag(); ?>
 
 
 <p>&nbsp;</p>
@@ -98,7 +101,7 @@ print_heading( array(
 		}
 		$total['total_amount_invoicable'][ $job_data['currency_id'] ] += $job_data['total_amount'];
 		?>
-		<tr class="<?php echo ( $c ++ % 2 ) ? "odd" : "even"; ?>">
+		<tr class="<?php echo ( $c++ % 2 ) ? "odd" : "even"; ?>">
 			<td>
 				<?php echo module_job::link_open( $job_data['job_id'], true, $job_data ); ?>
 				<?php if ( isset( $original_job_data['renew_from_job_id'] ) ) {

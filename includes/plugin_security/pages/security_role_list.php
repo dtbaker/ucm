@@ -20,12 +20,11 @@ print_heading( $header );
 ?>
 
 
-<form action="" method="post">
+<?php module_form::print_form_open_tag( array( 'action' => '' ) ); ?>
 
 
 	<?php
-
-	/** START TABLE LAYOUT **/
+	/* START TABLE LAYOUT */
 	$table_manager   = module_theme::new_table_manager();
 	$columns         = array();
 	$columns['name'] = array(
@@ -41,4 +40,4 @@ print_heading( $header );
 	$table_manager->print_table();
 
 	?>
-</form>
+<?php module_form::print_form_close_tag();

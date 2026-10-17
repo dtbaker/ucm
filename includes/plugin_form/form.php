@@ -1,13 +1,18 @@
 <?php
 
-
 /**
  * FORM CLASS
  * Version: 2.21
  */
-class module_form extends module_base {
+class module_form extends module_base
+{
+	public static $form_options = array();
 
-	static $form_options = array();
+	public function __construct() {
+		$this->module_name     = 'form';
+		$this->module_position = 11;
+		$this->version         = 2.277;
+	}
 
 	public static function can_i( $actions, $name = false, $category = false, $module = false ) {
 		if ( ! $module ) {
@@ -17,7 +22,6 @@ class module_form extends module_base {
 		return parent::can_i( $actions, $name, $category, $module );
 	}
 
-	public $version = 2.277;
 	// 2.277 - 2021-04-07 - php8 compatibility fix
 	// 2.276 - 2017-06-27 - date format
 	// 2.275 - 2017-06-14 - decimal processing
@@ -85,9 +89,6 @@ class module_form extends module_base {
 	}
 
 	public function init() {
-		$this->module_name     = "form";
-		$this->module_position = 0;
-
 		//        module_config::register_css('form','jquery.timepicker.css');
 		module_config::register_css( 'form', 'jquery-ui-timepicker-addon.css' );
 		module_config::register_css( 'form', 'form.css' );
@@ -149,7 +150,7 @@ class module_form extends module_base {
 		foreach ( $post_data as $key => $val ) {
 			if ( preg_match( '/^form_saver_/', $key ) ) {
 				continue;
-			} else if ( is_array( $val ) ) {
+			} elseif ( is_array( $val ) ) {
 				self::_serialize_post( $data, $val, $key );
 			} else {
 				// normal string, just add it to the array.
@@ -159,10 +160,13 @@ class module_form extends module_base {
 	}
 
 	public function process() {
-		self::check_secure_key();
+		// Fail closed. check_secure_key() only returns a bool - it does not halt - so the
+		// result must be acted on here or the CSRF check does nothing at all.
+		if ( ! self::check_secure_key() ) {
+			self::reject_invalid_form_auth();
+		}
 		switch ( $_REQUEST['_process'] ) {
 			case 'save_fieldset_options':
-
 				if ( module_config::can_i( 'edit', 'Form Settings' ) ) {
 					$user_role_id     = ! empty( $_POST['fieldset_role_id'] ) ? (int) $_POST['fieldset_role_id'] : false;
 					$fieldset_id      = ! empty( $_POST['fieldset_id'] ) ? $_POST['fieldset_id'] : false;
@@ -238,7 +242,7 @@ class module_form extends module_base {
 		// now some javascript to apply 'required' fields to all specified
 		?>
 		<script type="text/javascript">
-			<?php if($data_to_load){ ?>
+			<?php if ($data_to_load) { ?>
       if (typeof Base64 == 'undefined') {
           var Base64 = {
               _keyStr: "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=",
@@ -346,9 +350,9 @@ class module_form extends module_base {
 						?>;
 				<?php
 				// code copied from my "save form for later" program
-				if($data_to_load){ ?>
+				if ($data_to_load) { ?>
           var form_saver_permitted_input_types = {};
-				<?php foreach(explode( ',', 'textarea,text,radio,hidden,checkbox,password,select,select-one' ) as $type){
+				<?php foreach (explode( ',', 'textarea,text,radio,hidden,checkbox,password,select,select-one' ) as $type) {
 				$type = trim( $type );
 				if ( ! $type ) {
 					continue;
@@ -358,7 +362,7 @@ class module_form extends module_base {
 				<?php } ?>
           // all saved data, base64encoded for basic js syntax error safety.
           var form_saver_data = {};
-				<?php foreach($data_to_load as $key=>$val){ ?>
+				<?php foreach ($data_to_load as $key => $val) { ?>
           form_saver_data['<?php echo base64_encode( $key );?>'] = '<?php echo base64_encode( $val );?>';
 				<?php } ?>
 				<?php } ?>
@@ -390,7 +394,7 @@ class module_form extends module_base {
               if (typeof plugin_error_fields[n] != 'undefined') {
                   $(this).addClass('ui-state-error');
               }
-						<?php if($data_to_load){ ?>
+						<?php if ($data_to_load) { ?>
               if (typeof form_saver_data[Base64.encode(jQuery(this).attr('name'))] != 'undefined') {
                   // see if this is in one of the permitted form types.
                   if (typeof form_saver_permitted_input_types[attr_type] == 'undefined' || form_saver_permitted_input_types[attr_type] != 'yes') {
@@ -577,7 +581,7 @@ class module_form extends module_base {
                 change_detected = true;
                 $(this).addClass('form-change');
             });
-					<?php foreach($valid_exits as $valid_exit){ ?>
+					<?php foreach ($valid_exits as $valid_exit) { ?>
             $('<?php echo $valid_exit;?>', plugin_form_prevent_exit).click(function () {
                 change_detected = false;
             });
@@ -677,12 +681,15 @@ class module_form extends module_base {
 			if ( ! isset( $setting['values'] ) ) {
 				$setting['values'] = array( $setting['value'] );
 			}
+			if ( ! is_array( $setting['values'] ) ) {
+				$setting['values'] = $setting['values'] !== '' ? array( $setting['values'] ) : array();
+			}
 			$loop_count = count( $setting['values'] );
 			if ( ! $loop_count ) {
 				$loop_count = 1;
 			}
 		}
-		for ( $x = 0; $x < $loop_count; $x ++ ) {
+		for ( $x = 0; $x < $loop_count; $x++ ) {
 
 			$after_element = '';
 
@@ -792,7 +799,7 @@ class module_form extends module_base {
               $(function () {
                   $('#<?php echo $setting['id'];?>').tinymce({
                       // Location of TinyMCE script
-										<?php if(! isset( $setting['options'] ) || ! isset( $setting['options']['inline'] ) || $setting['options']['inline']){ ?>
+										<?php if (! isset( $setting['options'] ) || ! isset( $setting['options']['inline'] ) || $setting['options']['inline']) { ?>
                       inline: true,
 										<?php } ?>
                       script_url: '<?php echo _BASE_HREF;?>includes/plugin_form/js/tinymce4.0.11/tinymce.min.js',
@@ -838,8 +845,8 @@ class module_form extends module_base {
                                   });
                               }
                           });
-												<?php if(! isset( $setting['options'] ) || ! isset( $setting['options']['inline'] ) || $setting['options']['inline']){
-												if($setting['name'] != $setting['id']){ ?>
+												<?php if (! isset( $setting['options'] ) || ! isset( $setting['options']['inline'] ) || $setting['options']['inline']) {
+												if ($setting['name'] != $setting['id']) { ?>
                           ed.on("change", function () {
                               $('#<?php echo $setting['id'];?>_postback').val(ed.getContent());
                           });
@@ -879,7 +886,9 @@ class module_form extends module_base {
 							} else {
 								$printval = $val;
 							}
-							if ( strlen( $printval ) == 0 ) {
+							// A null option label is an empty one. Reading its length
+							// without saying so deprecates under PHP 8.4.
+							if ( strlen( (string) $printval ) == 0 ) {
 								continue;
 							}
 							$sel .= '<option value="' . htmlspecialchars( $key ) . '"';
@@ -1045,7 +1054,7 @@ class module_form extends module_base {
         if (typeof ucm.form.settings.dynamic_select_edit_url != 'undefined') {
             ucm.form.settings.dynamic_select_edit_url = '<?php echo generate_link( 'dynamic_select_box', array( 'display_mode' => 'ajax' ), 'form' ); ?>';
         }
-				<?php if(module_config::can_i( 'edit', 'Form Settings' ) && module_config::c( 'show_form_edit_button', 1 )){ ?>
+				<?php if (module_config::can_i( 'edit', 'Form Settings' ) && module_config::c( 'show_form_edit_button', 1 )) { ?>
         if (typeof ucm.form.settings.fieldset_editing_url != 'undefined') {
             ucm.form.settings.fieldset_editing_url = '<?php echo generate_link( 'fieldset_edit', array( 'display_mode' => 'ajax' ), 'form' ); ?>';
         }
@@ -1123,25 +1132,149 @@ class module_form extends module_base {
 	}
 
 	public static function check_secure_key() {
-		if ( ! isset( $_REQUEST['form_auth_key'] ) || $_REQUEST['form_auth_key'] != self::get_secure_key() ) {
+		if ( ! isset( $_REQUEST['form_auth_key'] ) || ! is_string( $_REQUEST['form_auth_key'] ) ) {
 			return false;
 		}
 
-		return true;
+		// hash_equals() - constant time, and avoids PHP's loose-comparison pitfalls.
+		return hash_equals( self::get_secure_key(), $_REQUEST['form_auth_key'] );
+	}
+
+	/**
+	 * How many input variables this request sent, if that was more than PHP would parse.
+	 *
+	 * PHP stops parsing a request at `max_input_vars` - 1000 by default - and quietly
+	 * drops everything past it. There is no flag to read afterwards: the warning goes to
+	 * the error log at request startup, before any of this code runs, and $_POST simply
+	 * arrives short. A form that outgrows the limit therefore saves whatever fitted and
+	 * reports success, which is how a security role could be saved with half its
+	 * permissions missing.
+	 *
+	 * PHP counts the `&` separated pairs in the body as it parses, so counting them again
+	 * here gives the number it measured against the limit - duplicate names and array
+	 * keys included, which is why this counts the raw body rather than $_POST. A multipart
+	 * body cannot be read back, so those fall back to the parsed count, which cannot see
+	 * what was dropped: that only catches a form sitting right on the limit, and counts
+	 * no uploaded files, so it would rather miss a truncation than invent one.
+	 *
+	 * @return int The number of variables sent, or 0 if nothing was truncated.
+	 */
+	public static function request_input_overflow() {
+		$max = (int) ini_get( 'max_input_vars' );
+		if ( $max <= 0 ) {
+			return 0;
+		}
+
+		// A query string is parsed separately from the body, against the same limit.
+		if ( ! empty( $_SERVER['QUERY_STRING'] ) ) {
+			$sent = substr_count( $_SERVER['QUERY_STRING'], '&' ) + 1;
+			if ( $sent > $max ) {
+				return $sent;
+			}
+		}
+
+		if ( empty( $_SERVER['REQUEST_METHOD'] ) || 'POST' !== strtoupper( (string) $_SERVER['REQUEST_METHOD'] ) ) {
+			return 0;
+		}
+
+		$content_type = isset( $_SERVER['CONTENT_TYPE'] ) ? (string) $_SERVER['CONTENT_TYPE'] : '';
+		if ( false !== stripos( $content_type, 'multipart/form-data' ) ) {
+			$parsed = self::count_input_vars( $_POST );
+
+			return $parsed >= $max ? $parsed : 0;
+		}
+
+		$raw = file_get_contents( 'php://input' );
+		if ( ! is_string( $raw ) || ! strlen( $raw ) ) {
+			return 0;
+		}
+		$sent = substr_count( $raw, '&' ) + 1;
+
+		return $sent > $max ? $sent : 0;
+	}
+
+	/** Leaf values in a parsed input array - PHP counts those, not the top level keys. */
+	private static function count_input_vars( $input ) {
+		$count = 0;
+		foreach ( $input as $value ) {
+			$count += is_array( $value ) ? self::count_input_vars( $value ) : 1;
+		}
+
+		return $count;
+	}
+
+	/**
+	 * Halt the request after a post arrived truncated, rather than saving what fitted.
+	 */
+	public static function reject_truncated_request( $sent ) {
+		$max = (int) ini_get( 'max_input_vars' );
+		if ( ob_get_level() ) {
+			@ob_end_clean();
+		}
+		if ( ! headers_sent() ) {
+			header( 'HTTP/1.1 413 Payload Too Large' );
+			header( 'Content-Type: text/plain; charset=utf-8' );
+		}
+		echo "This form sent $sent values and PHP accepted only $max of them, so it was not saved.\n";
+		echo "Nothing has been changed. Please save fewer items at a time, or ask your host to raise max_input_vars.";
+		exit;
+	}
+
+	/**
+	 * Halt the request after a failed CSRF check. Callers that can recover should test
+	 * check_secure_key() themselves; this is for dispatchers that must not continue.
+	 */
+	public static function reject_invalid_form_auth() {
+		if ( ob_get_level() ) {
+			@ob_end_clean();
+		}
+		if ( ! headers_sent() ) {
+			header( 'HTTP/1.1 403 Forbidden' );
+			header( 'Content-Type: text/plain; charset=utf-8' );
+		}
+		echo 'Invalid or expired form submission. Please reload the page and try again.';
+		exit;
 	}
 
 	public static function print_form_close_tag() {
 		echo '</form>';
 	}
 
+	/**
+	 * Open a form.
+	 *
+	 * Anything that is not a key this function knows about is printed straight through as
+	 * an attribute, so `id`, `class`, `action`, `enctype`, `target` and friends all work
+	 * without being listed here.
+	 *
+	 * Recognised keys:
+	 *  - `method`  POST unless you say otherwise.
+	 *  - `process` the `_process` value the module dispatches on.
+	 *  - `hidden`  name => value pairs printed as hidden fields.
+	 *  - `ajax`    submits through the ajax form handler.
+	 *  - `auth`    whether to publish the form token. See below.
+	 */
 	public static function print_form_open_tag( $options ) {
 		$defaults = array(
 			'method' => 'post',
 		);
 		$options  = array_merge( $defaults, $options );
+
+		// The token belongs in a request body, never in a query string. A GET form would
+		// put it in the URL, and from there into browser history, the access log and the
+		// Referer header of every outbound link on the page - and the token is per session
+		// and does not expire. So POST forms get one by default, GET forms do not, and a
+		// caller that knows better says so out loud. Nobody gets a token into a GET by
+		// accident. A GET form that needs a guarded submit puts the token on the button
+		// instead, with print_form_auth_attributes().
+		if ( ! isset( $options['auth'] ) ) {
+			$options['auth'] = ( 'post' === strtolower( (string) $options['method'] ) );
+		}
+
 		echo '<form';
 		foreach ( $options as $key => $val ) {
 			switch ( $key ) {
+				case 'auth':
 				case 'hidden':
 				case 'process':
 				case '_process':
@@ -1153,6 +1286,7 @@ class module_form extends module_base {
 					if ( ! is_array( $val ) ) {
 						$val = array( 'return' => 'message' );
 					}
+					// no break
 				default:
 					if ( is_array( $val ) ) {
 						$val = htmlspecialchars( json_encode( $val ), ENT_QUOTES, 'UTF-8' );
@@ -1180,13 +1314,32 @@ class module_form extends module_base {
 			}
 		}
 
-		self::print_form_auth();
+		if ( $options['auth'] ) {
+			self::print_form_auth();
+		}
 	}
 
 	public static function print_form_auth() {
 		?>
 		<input type="hidden" name="form_auth_key" value="<?php echo htmlspecialchars( self::get_secure_key() ); ?>">
 		<?php
+	}
+
+	/**
+	 * Print the attributes a button needs to submit its form as a guarded POST.
+	 *
+	 * For forms that are GET. `_DEFAULT_FORM_METHOD` is GET whenever rewrite links are on
+	 * (`init.php:321`), and the list pages use it so a search stays bookmarkable. A hidden
+	 * form_auth_key inside a GET form travels in the query string, and from there into
+	 * browser history, the access log, and the Referer header of any outbound link on the
+	 * results page - and the token is per session and does not expire.
+	 *
+	 * So the token does not go in the markup as a field. It rides on the button, and
+	 * ucm.submit_guarded() (js/javascript.js) switches the form to POST and adds the field
+	 * at click time. A plain search submit stays a clean GET with no token in the URL.
+	 */
+	public static function print_form_auth_attributes() {
+		echo ' data-form-auth-key="' . htmlspecialchars( self::get_secure_key(), ENT_QUOTES, 'UTF-8' ) . '"';
 	}
 
 	public static function get_secure_key() {
@@ -1282,6 +1435,10 @@ class module_form extends module_base {
 
 
 	public static function save_fieldset_settings( $fieldset_id, $settings ) {
+		// Same as the read side: nothing to write to before the install has run.
+		if ( defined( '_UCM_INSTALLED' ) && ! _UCM_INSTALLED ) {
+			return;
+		}
 		if ( class_exists( 'UCMDatabase' ) ) {
 			$db = UCMDatabase::singleton();
 			$db->prepare( 'REPLACE INTO `' . _DB_PREFIX . 'form` SET `fieldset_id` = :id, `settings` = :settings' );
@@ -1293,6 +1450,14 @@ class module_form extends module_base {
 	}
 
 	public static function get_fieldset_settings( $fieldset_id ) {
+
+		// Before the install has run there is no `form` table to read, and no per-user
+		// display settings to read out of it either. Without this, any fieldset on the
+		// setup wizard replaces itself with "Table 'ucm_form' doesn't exist", which is what
+		// kept step 1 of the wizard on hand-written markup.
+		if ( defined( '_UCM_INSTALLED' ) && ! _UCM_INSTALLED ) {
+			return array();
+		}
 
 		if ( class_exists( 'UCMDatabase' ) ) {
 			$db = UCMDatabase::singleton();
@@ -1349,12 +1514,61 @@ class module_form extends module_base {
 		return array();
 	}
 
-	private static function _new_element_id( $element_id, $element_title ) {
+	/**
+	 * @param int|string           $element_id the key the caller used
+	 * @param string               $element_title
+	 * @param array<string,string> $generated  element key => id, from ucm_form_element_ids()
+	 *
+	 * @return string
+	 */
+	private static function _new_element_id( $element_id, $element_title, $generated = array() ) {
 		if ( is_numeric( $element_id ) && $element_title ) {
-			$element_id = preg_replace( '#[^a-zA-Z0-9]#', '', $element_title );
+			return isset( $generated[ $element_id ] ) ? $generated[ $element_id ] : preg_replace( '#[^a-zA-Z0-9]#', '', $element_title );
 		}
 
 		return $element_id;
+	}
+
+	/**
+	 * Renders one cell's worth of fields.
+	 *
+	 * Shared so the header cell and the data cell behave the same way, and so the metis
+	 * theme - which replaces generate_fieldset outright - renders them identically instead
+	 * of keeping a third copy of this loop.
+	 */
+	public static function render_fields( $fields ) {
+		if ( is_array( $fields ) ) {
+			foreach ( $fields as $dataid => $field ) {
+				if ( is_array( $field ) ) {
+					// treat this as a call to the form generate option
+					self::generate_form_element( $field );
+					echo ' ';
+				} elseif ( is_closure( $field ) ) {
+					$field();
+				} else {
+					echo $field . ' ';
+				}
+			}
+		} else {
+			echo $fields;
+		}
+	}
+
+	/**
+	 * Emits the attributes a caller asked to put on a cell.
+	 *
+	 * title_attributes exists because the group picker's header cell carries a
+	 * data-settings-url that includes/plugin_config/js/settings.js scans for, and a fieldset
+	 * had no way to say that - which is why that table stayed hand written.
+	 */
+	public static function render_cell_attributes( $attributes ) {
+		if ( empty( $attributes ) || ! is_array( $attributes ) ) {
+			return;
+		}
+		foreach ( $attributes as $attribute => $value ) {
+			echo ' ' . htmlspecialchars( (string) $attribute, ENT_QUOTES, 'UTF-8' )
+			     . '="' . htmlspecialchars( (string) $value, ENT_QUOTES, 'UTF-8' ) . '"';
+		}
 	}
 
 	public static function generate_fieldset( $options ) {
@@ -1370,12 +1584,23 @@ class module_form extends module_base {
 			}
 			$write_settings      = false;
 			$new_option_elements = array();
+			// Work the ids out across the whole set first. Two titles that differ only in
+			// punctuation slug to the same id, and the second element then replaced the
+			// first and never appeared.
+			$element_titles = array();
+			foreach ( $options['elements'] as $element_key => $element ) {
+				if ( is_numeric( $element_key ) && ! empty( $element['title'] ) ) {
+					$element_titles[ $element_key ] = $element['title'];
+				}
+			}
+			$generated_ids = ucm_form_element_ids( $element_titles );
 			foreach ( $options['elements'] as $element_id => $element ) {
 				// we convert numeric element id's into strings.
 				// this prevents duplicates if the page layout is rendered differently based on user permissions.
 				// ie job create / job edit has different fields
 				//
-				$new_element_id                         = self::_new_element_id( $element_id, ! empty( $element['title'] ) ? $element['title'] : '' );
+				$element_title                          = ! empty( $element['title'] ) ? $element['title'] : '';
+				$new_element_id                         = self::_new_element_id( $element_id, $element_title, $generated_ids );
 				$new_option_elements[ $new_element_id ] = $element;
 				unset( $options['elements'][ $element_id ] );
 
@@ -1430,6 +1655,7 @@ class module_form extends module_base {
 			'class'           => 'tableclass tableclass_form',
 			'extra_settings'  => array(),
 			'elements_before' => '',
+		'tbody_after'     => '',
 			'elements_after'  => '',
 		);
 		$options  = array_merge( $defaults, $options );
@@ -1443,19 +1669,30 @@ class module_form extends module_base {
 		}
 		$fieldset_settings['fields'] = count( $options['elements'] );
 
+		// 'rows' renders the <tr>s on their own - no heading, no table, none of the
+		// before/after markup - for a caller building a fragment to drop into a table that
+		// already exists. The faq hook answers a product change over ajax with exactly
+		// that, and hand-wrote its rows for years because the helper only made whole tables.
+		$rows_only = $options['type'] === 'rows';
+
 		//todo - hook in here for themes.
 		ob_start();
-		if ( $options['heading'] ) {
-			print_heading( $options['heading'] );
-		} else if ( $options['title'] ) { ?>
-			<<?php echo $options['title_type']; ?>><?php _e( $options['title'] ); ?></<?php echo $options['title_type']; ?>>
-		<?php } ?>
-		<?php echo $options['elements_before']; ?>
+		if ( ! $rows_only ) {
+			if ( $options['heading'] ) {
+				print_heading( $options['heading'] );
+			} elseif ( $options['title'] ) { ?>
+				<<?php echo $options['title_type']; ?>><?php _e( $options['title'] ); ?></<?php echo $options['title_type']; ?>>
+			<?php }
+			echo $options['elements_before'];
+		}
+		?>
 		<?php if ( $options['elements'] ) { ?>
+			<?php if ( ! $rows_only ) { ?>
 			<table class="<?php echo $options['class']; ?>"
 			       data-fieldset-settings="<?php echo htmlspecialchars( json_encode( $fieldset_settings ), ENT_QUOTES, 'UTF-8' ); ?>"
 			       data-fieldset-id="<?php echo $fieldset_id; ?>" id="<?php echo $fieldset_id; ?>">
 				<tbody>
+			<?php } ?>
 				<?php
 				foreach ( $options['elements'] as $element_id => $element ) {
 					if ( isset( $element['ignore'] ) && $element['ignore'] ) {
@@ -1466,7 +1703,9 @@ class module_form extends module_base {
 						unset( $element['field'] );
 					}
 					?>
-				<tr id="<?php echo $fieldset_id . '_' . $element_id; ?>" <?php
+				<tr id="<?php echo isset( $element['row_attributes']['id'] )
+					? htmlspecialchars( (string) $element['row_attributes']['id'], ENT_QUOTES, 'UTF-8' )
+					: $fieldset_id . '_' . $element_id; ?>" <?php
 				if ( ! empty( $element['dependency'] ) && is_array( $element['dependency'] ) ) {
 					if ( empty( $element['dependency']['fieldset_id'] ) ) {
 						$element['dependency']['fieldset_id'] = $fieldset_id;
@@ -1474,45 +1713,58 @@ class module_form extends module_base {
 					?> data-dependency="<?php echo htmlspecialchars( json_encode( $element['dependency'] ), ENT_QUOTES, 'UTF-8' ); ?>" <?php
 				}
 				echo ' data-element-id="' . $element_id . '"';
-				if ( ! empty( $user_display_settings['hidden'][ $element_id ] ) ) {
-					echo ' class="fieldset_element_hidden"';
+				// row_class lets a caller put a class on the row itself. Several pages kept
+				// hand-written tables purely because their progressive disclosure hides rows
+				// by class or by a <tbody> id, and a fieldset had no way to say that.
+				$row_classes = array();
+				if ( ! empty( $element['row_class'] ) ) {
+					$row_classes[] = $element['row_class'];
 				}
+				if ( ! empty( $user_display_settings['hidden'][ $element_id ] ) ) {
+					$row_classes[] = 'fieldset_element_hidden';
+				}
+				if ( $row_classes ) {
+					echo ' class="' . htmlspecialchars( implode( ' ', $row_classes ), ENT_QUOTES, 'UTF-8' ) . '"';
+				}
+				if ( ! empty( $element['row_style'] ) ) {
+					echo ' style="' . htmlspecialchars( $element['row_style'], ENT_QUOTES, 'UTF-8' ) . '"';
+				}
+				// row_attributes puts arbitrary attributes on the row. id, class and style are
+				// left out: the id is emitted above (a caller supplied one replaces the generated
+				// one), and class and style have their own options, so emitting them here too
+				// would put the attribute on the tag twice.
+				self::render_cell_attributes( array_diff_key(
+					$element['row_attributes'] ?? array(),
+					array( 'id' => 1, 'class' => 1, 'style' => 1 )
+				) );
 				?>>
 					<?php if ( ( isset( $element['message'] ) && $element['message'] ) || ( isset( $element['warning'] ) && isset( $element['warning'] ) ) ) { ?>
 						<td colspan="2" align="center">
 							<?php if ( isset( $element['message'] ) ) { ?>
 								<?php echo $element['message']; ?>
-							<?php } else if ( isset( $element['warning'] ) ) { ?>
+							<?php } elseif ( isset( $element['warning'] ) ) { ?>
 								<span class="error_text"><?php echo $element['warning']; ?></span>
 							<?php } ?>
 
 						</td>
 					<?php } else { ?>
-						<?php if ( isset( $element['title'] ) ) { ?>
+						<?php if ( isset( $element['title'] ) || isset( $element['title_fields'] ) ) { ?>
 							<th
-								class="<?php echo isset( $element['row_title_class'] ) ? $element['row_title_class'] : $options['row_title_class']; ?>">
-								<?php echo htmlspecialchars( _l( $element['title'] ) ); ?>
+								class="<?php echo isset( $element['row_title_class'] ) ? $element['row_title_class'] : $options['row_title_class']; ?>"<?php self::render_cell_attributes( $element['title_attributes'] ?? array() ); ?>>
+								<?php
+								if ( isset( $element['title'] ) ) {
+									echo htmlspecialchars( _l( $element['title'] ) );
+								}
+								if ( isset( $element['title_fields'] ) ) {
+									self::render_fields( $element['title_fields'] );
+								}
+								?>
 							</th>
 						<?php }
 						if ( isset( $element['fields'] ) ) { ?>
 							<td
-								class="<?php echo isset( $element['row_data_class'] ) ? $element['row_data_class'] : $options['row_data_class']; ?>">
-								<?php if ( is_array( $element['fields'] ) ) {
-									foreach ( $element['fields'] as $dataid => $field ) {
-										if ( is_array( $field ) ) {
-											// treat this as a call to the form generate option
-											self::generate_form_element( $field );
-											echo ' ';
-										} else if ( is_closure( $field ) ) {
-											$field();
-										} else {
-											echo $field . ' ';
-										}
-									}
-								} else {
-									echo $element['fields'];
-								}
-								?>
+								class="<?php echo isset( $element['row_data_class'] ) ? $element['row_data_class'] : $options['row_data_class']; ?>"<?php self::render_cell_attributes( $element['cell_attributes'] ?? array() ); ?>>
+								<?php self::render_fields( $element['fields'] ); ?>
 							</td>
 						<?php } ?>
 						</tr>
@@ -1523,10 +1775,21 @@ class module_form extends module_base {
 					module_extra::display_extras( $options['extra_settings'] );
 				}
 				?>
+				<?php if ( ! $rows_only ) { ?>
 				</tbody>
+				<?php
+				// tbody_after is raw markup placed inside the table, after the fieldset's own
+				// tbody. It exists for a caller whose script replaces a block of rows: a table
+				// may carry several tbodies, so a second one can be swapped out without
+				// disturbing the rows this fieldset rendered.
+				echo $options['tbody_after'] ?? '';
+				?>
 			</table>
+			<?php } ?>
 		<?php }
-		echo $options['elements_after']; ?>
+		if ( ! $rows_only ) {
+			echo $options['elements_after'];
+		} ?>
 		<?php
 
 		return ob_get_clean();
@@ -1612,6 +1875,4 @@ class module_form extends module_base {
 		<?php
 		return ob_get_clean();
 	}
-
-
 }

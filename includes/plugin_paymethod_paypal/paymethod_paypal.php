@@ -1,11 +1,13 @@
 <?php
 
+require_once( dirname( __FILE__ ) . '/orders.php' );
+require_once( dirname( __FILE__ ) . '/recurring.php' );
+
 //306412171 ucm_1306412206_per@gmail.com
 
 
-class module_paymethod_paypal extends module_base {
-
-
+class module_paymethod_paypal extends module_base
+{
 	public static function can_i( $actions, $name = false, $category = false, $module = false ) {
 		if ( ! $module ) {
 			$module = __CLASS__;
@@ -18,11 +20,13 @@ class module_paymethod_paypal extends module_base {
 		return __CLASS__;
 	}
 
-	function init() {
+	public function __construct() {
+		$this->module_name     = 'paymethod_paypal';
+		$this->module_position = 390;
 		$this->version         = 2.261;
-		$this->module_name     = "paymethod_paypal";
-		$this->module_position = 8882;
+	}
 
+	function init() {
 		// 2.261 - 2017-02-27 - config fix
 		// 2.260 - 2017-01-05 - php7 support
 		// 2.259 - 2015-03-14 - better default payment method options
@@ -56,6 +60,210 @@ class module_paymethod_paypal extends module_base {
 
 	public static function is_sandbox() {
 		return module_config::c( 'payment_method_paypal_sandbox', 0 );
+	}
+
+	/**
+	 * The REST credentials, if this install has them.
+	 *
+	 * Website Payments Standard needed only a PayPal email address. Orders v2 needs a
+	 * client ID and secret from a REST app, which no existing install has and which
+	 * cannot be derived from an email address. That is the whole migration problem for
+	 * this gateway: see use_orders_v2().
+	 *
+	 * @return array
+	 */
+	public static function rest_credentials() {
+		return array(
+			'client_id' => trim( (string) module_config::c( 'payment_method_paypal_client_id', '' ) ),
+			'secret'    => trim( (string) module_config::c( 'payment_method_paypal_secret', '' ) ),
+			'sandbox'   => (bool) self::is_sandbox(),
+		);
+	}
+
+	/**
+	 * Should this install take payments through Orders v2?
+	 *
+	 * Only once an admin has entered REST credentials. Every one of the 5,000 installs
+	 * upgrades without them, and switching on a flow they cannot use would break PayPal
+	 * for all of them at once - PayPal is the one payment method that is on by default.
+	 * So both paths ship, and this is the switch between them.
+	 *
+	 * @return bool
+	 */
+	public static function use_orders_v2() {
+		$credentials = self::rest_credentials();
+
+		return $credentials['client_id'] !== '' && $credentials['secret'] !== '';
+	}
+
+	/**
+	 * Where PayPal's webhook should be pointed. Shown on the settings page, because it
+	 * depends on how _EXTERNAL_TUNNEL is configured on this particular install.
+	 *
+	 * @return string
+	 */
+	public static function webhook_url() {
+		return full_link( _EXTERNAL_TUNNEL . '?m=paymethod_paypal&h=webhook' );
+	}
+
+	/**
+	 * The endpoint the payment page calls to capture an approved order.
+	 *
+	 * @param int  $invoice_payment_id
+	 * @param bool $h
+	 *
+	 * @return string
+	 */
+	public static function link_capture( $invoice_payment_id, $h = false ) {
+		if ( $h ) {
+			return md5( 'paypal order capture ' . _UCM_SECRET . ' ' . (int) $invoice_payment_id );
+		}
+
+		return full_link( _EXTERNAL_TUNNEL . '?m=paymethod_paypal&h=capture&i=' . (int) $invoice_payment_id . '&hash=' . self::link_capture( $invoice_payment_id, true ) );
+	}
+
+	/**
+	 * Create an order and show the payer the PayPal buttons.
+	 *
+	 * The buttons are the only part of this that happens in the browser. The order is
+	 * created server side, captured server side, and verified server side, so nothing
+	 * the page sends back is taken at face value.
+	 *
+	 * Never returns on the success path.
+	 *
+	 * @param int    $invoice_id
+	 * @param float  $payment_amount
+	 * @param int    $invoice_payment_id
+	 * @param int    $currency_id
+	 * @param string $description
+	 *
+	 * @return bool
+	 */
+	public static function start_orders_v2_payment( $invoice_id, $payment_amount, $invoice_payment_id, $currency_id, $description ) {
+		$currency      = module_config::get_currency( $currency_id );
+		$currency_code = isset( $currency['code'] ) ? strtoupper( $currency['code'] ) : 'USD';
+		$credentials   = self::rest_credentials();
+
+		$order = ucm_paypal_orders::create_order( $credentials, array(
+			'amount'             => $payment_amount,
+			'currency'           => $currency_code,
+			'description'        => $description,
+			'invoice_payment_id' => $invoice_payment_id,
+			'invoice_id'         => $invoice_id,
+		) );
+
+		if ( ! $order['ok'] ) {
+			module_invoice::add_payment_data( $invoice_payment_id, 'log', 'PayPal would not create an order: ' . $order['error'] );
+			send_error( 'PayPal order could not be created for invoice payment ' . (int) $invoice_payment_id . ': ' . $order['error'] );
+			echo htmlspecialchars( _l( 'Sorry, we could not start this payment. Please try again, or contact us.' ) );
+			exit;
+		}
+
+		module_invoice::add_payment_data( $invoice_payment_id, 'log', 'PayPal order ' . $order['id'] . ' created for ' . ucm_paypal_orders::format_amount( $payment_amount, $currency_code ) . ' ' . $currency_code . '.' );
+		// Recorded separately from the log so the capture endpoint can find it without
+		// having to believe the browser about which order it is capturing.
+		module_invoice::add_payment_data( $invoice_payment_id, 'paypal_order_id', $order['id'] );
+
+		$paypal_order_id   = $order['id'];
+		$paypal_client_id  = $credentials['client_id'];
+		$paypal_capture_url = self::link_capture( $invoice_payment_id );
+		$paypal_cancel_url = module_invoice::link_public( $invoice_id );
+
+		$template = new module_template();
+		ob_start();
+		include( module_theme::include_ucm( 'includes/plugin_paymethod_paypal/pages/paypal_buttons.php' ) );
+		$template->content = ob_get_clean();
+		echo $template->render( 'pretty_html' );
+		exit;
+	}
+
+	/**
+	 * The PayPal order id this payment was started with, as we recorded it at the time.
+	 *
+	 * @param int $invoice_payment_id
+	 *
+	 * @return string
+	 */
+	public static function stored_order_id( $invoice_payment_id ) {
+		$payment = get_single( 'invoice_payment', 'invoice_payment_id', (int) $invoice_payment_id );
+		if ( ! $payment ) {
+			return '';
+		}
+		$data = @unserialize( (string) $payment['data'], array( 'allowed_classes' => false ) );
+		if ( ! is_array( $data ) || empty( $data['paypal_order_id'] ) || ! is_array( $data['paypal_order_id'] ) ) {
+			return '';
+		}
+
+		return (string) end( $data['paypal_order_id'] );
+	}
+
+	/**
+	 * Capture an approved order and record the payment.
+	 *
+	 * Safe to call more than once: PayPal answers a second capture of the same order
+	 * with ORDER_ALREADY_CAPTURED, and the order is then read back and recorded through
+	 * the same path, which de-duplicates on the capture id.
+	 *
+	 * @param string $order_id
+	 * @param int    $expect_invoice_payment_id
+	 *
+	 * @return array the verification result
+	 */
+	public static function capture_and_record( $order_id, $expect_invoice_payment_id = 0 ) {
+		$order_id = trim( (string) $order_id );
+		if ( $order_id === '' || ! preg_match( '#^[A-Za-z0-9_-]{5,64}$#', $order_id ) ) {
+			return array( 'ok' => false, 'code' => 'bad_order_id', 'message' => 'Not a PayPal order id.', 'amount' => 0, 'flags' => array() );
+		}
+
+		$credentials = self::rest_credentials();
+		$capture     = ucm_paypal_orders::capture_order( $credentials, $order_id );
+		$body        = $capture['body'];
+
+		if ( ! $capture['ok'] ) {
+			// Already captured is not a failure - it is the second delivery of something
+			// that worked. Read the order back and carry on.
+			$order = ucm_paypal_orders::get_order( $credentials, $order_id );
+			if ( ! $order['ok'] ) {
+				return array( 'ok' => false, 'code' => 'capture_failed', 'message' => $capture['error'], 'amount' => 0, 'flags' => array() );
+			}
+			$body = $order['body'];
+		}
+
+		return self::record_captured_order( $body, $expect_invoice_payment_id );
+	}
+
+	/**
+	 * Turn a captured order into a payment record.
+	 *
+	 * @param array $order the decoded order, from PayPal and nowhere else
+	 * @param int   $expect_invoice_payment_id
+	 *
+	 * @return array
+	 */
+	public static function record_captured_order( $order, $expect_invoice_payment_id = 0 ) {
+		$capture = ucm_paypal_orders::completed_capture( $order );
+		if ( ! $capture ) {
+			return array( 'ok' => false, 'code' => 'not_captured', 'message' => 'PayPal has no completed capture on this order.', 'amount' => 0, 'flags' => array() );
+		}
+
+		$invoice_payment_id = (int) ( $capture['_custom_id'] !== '' ? $capture['_custom_id'] : $capture['_reference_id'] );
+		if ( $expect_invoice_payment_id && $invoice_payment_id !== (int) $expect_invoice_payment_id ) {
+			return array( 'ok' => false, 'code' => 'wrong_payment', 'message' => 'This PayPal order belongs to a different payment.', 'amount' => 0, 'flags' => array() );
+		}
+
+		$currency = isset( $capture['amount']['currency_code'] ) ? (string) $capture['amount']['currency_code'] : '';
+		$value    = isset( $capture['amount']['value'] ) ? (float) $capture['amount']['value'] : 0;
+
+		return module_invoice::verify_and_record( $invoice_payment_id, array(
+			'amount'         => $value,
+			'currency'       => $currency,
+			'transaction_id' => isset( $capture['id'] ) ? (string) $capture['id'] : '',
+			'paid'           => true,
+			'test'           => (bool) self::is_sandbox(),
+		), array(
+			'method_key' => self::get_payment_method_key(),
+			'sandbox'    => (bool) self::is_sandbox(),
+		) );
 	}
 
 	public function handle_hook( $hook ) {
@@ -100,7 +308,7 @@ class module_paymethod_paypal extends module_base {
 
 		if ( $dollar_limit == 'above' && $invoice_data['total_amount_due'] < $dollar_value ) {
 			return false;
-		} else if ( $dollar_limit == 'below' && $invoice_data['total_amount_due'] > $dollar_value ) {
+		} elseif ( $dollar_limit == 'below' && $invoice_data['total_amount_due'] > $dollar_value ) {
 			return false;
 		}
 		if ( strlen( $cur ) > 1 ) {
@@ -121,6 +329,22 @@ class module_paymethod_paypal extends module_base {
 		query( $sql );
 	}
 
+	/**
+	 * The stable identifier for this payment method, never the admin-editable label.
+	 *
+	 * @return string
+	 */
+	public static function get_payment_method_key() {
+		return 'paypal';
+	}
+
+	/**
+	 * @return bool
+	 */
+	public function is_deprecated() {
+		return false;
+	}
+
 	public static function get_payment_method_name() {
 		return module_config::s( 'payment_method_paypal_label', 'PayPal' );
 	}
@@ -128,6 +352,78 @@ class module_paymethod_paypal extends module_base {
 
 	public function get_invoice_payment_description( $invoice_id, $method = '' ) {
 
+	}
+
+	/**
+	 * Can this install offer a PayPal subscription?
+	 *
+	 * Only the admin setting gates it, because recurring payments do not go through the
+	 * Orders v2 rewrite - they use PayPal's subscription buttons and come back by IPN, so
+	 * they work with nothing but the PayPal email address, exactly as they always have.
+	 * That inconsistency is deliberate and the settings page says so.
+	 *
+	 * @return bool
+	 */
+	public static function subscriptions_available() {
+		return (bool) module_config::c( 'payment_method_paypal_subscriptions', 0 );
+	}
+
+	/**
+	 * The UCM subscription an invoice was generated from, if any.
+	 *
+	 * @param int $invoice_id
+	 *
+	 * @return array|false id, name, days, months, years and the PayPal period mapping
+	 */
+	public static function invoice_subscription( $invoice_id ) {
+		if ( ! class_exists( 'module_subscription', false ) ) {
+			return false;
+		}
+		$subscription_history = get_single( 'subscription_history', 'invoice_id', $invoice_id );
+		if ( ! $subscription_history || empty( $subscription_history['subscription_id'] ) ) {
+			return false;
+		}
+		$subscription       = module_subscription::get_subscription( $subscription_history['subscription_id'] );
+		$subscription_owner = module_subscription::get_subscription_owner( $subscription_history['subscription_owner_id'] );
+		if ( ! $subscription || ! $subscription_owner || empty( $subscription_owner['owner_table'] ) || empty( $subscription_owner['owner_id'] ) ) {
+			return false;
+		}
+		// The owner still has to hold this subscription - an invoice can outlive the
+		// attachment it was generated from.
+		$members_subscriptions = module_subscription::get_subscriptions_by( $subscription_owner['owner_table'], $subscription_owner['owner_id'] );
+		if ( ! isset( $members_subscriptions[ $subscription_history['subscription_id'] ] ) ) {
+			return false;
+		}
+
+		return array(
+			'id'       => (int) $subscription_history['subscription_id'],
+			'name'     => isset( $subscription['name'] ) ? $subscription['name'] : '',
+			'days'     => (int) $subscription['days'],
+			'months'   => (int) $subscription['months'],
+			'years'    => (int) $subscription['years'],
+			'settings' => isset( $subscription['settings'] ) ? $subscription['settings'] : array(),
+			'period'   => ucm_paypal_recurring::period( $subscription['days'], $subscription['months'], $subscription['years'] ),
+		);
+	}
+
+	/**
+	 * @param array $subscription as returned by invoice_subscription()
+	 *
+	 * @return array
+	 */
+	private static function period_in_words( $subscription ) {
+		$bits = array();
+		if ( $subscription['days'] > 0 ) {
+			$bits[] = _l( '%s days', $subscription['days'] );
+		}
+		if ( $subscription['months'] > 0 ) {
+			$bits[] = _l( '%s months', $subscription['months'] );
+		}
+		if ( $subscription['years'] > 0 ) {
+			$bits[] = _l( '%s years', $subscription['years'] );
+		}
+
+		return $bits;
 	}
 
 	public static function start_payment( $invoice_id, $payment_amount, $invoice_payment_id, $user_id = false ) {
@@ -169,71 +465,19 @@ class module_paymethod_paypal extends module_base {
 			}
 
 			// we check if this payment is a recurring payment or a standard one off payment.
-			if ( module_config::c( 'payment_method_paypal_subscriptions', 0 ) ) {
-				// we support subscriptions!
-				// first check if the subscription module is active, and if this invoice is part of an active subscription.
-				$is_subscription = false;
-				if ( class_exists( 'module_subscription', false ) ) {
-					$subscription_history = get_single( 'subscription_history', 'invoice_id', $invoice_id );
-					if ( $subscription_history && $subscription_history['subscription_id'] ) {
-						// this invoice is for a subscription! woo!
-						// work out when we should bill for this subscription.
-						$subscription       = module_subscription::get_subscription( $subscription_history['subscription_id'] );
-						$subscription_owner = module_subscription::get_subscription_owner( $subscription_history['subscription_owner_id'] );
-						if ( $subscription_owner['owner_table'] && $subscription_owner['owner_id'] ) {
-							// work out when the next invoice will be generated for this subscription.
-							$members_subscriptions = module_subscription::get_subscriptions_by( $subscription_owner['owner_table'], $subscription_owner['owner_id'] );
-							if ( isset( $members_subscriptions[ $subscription_history['subscription_id'] ] ) ) {
-								$member_subscription = $members_subscriptions[ $subscription_history['subscription_id'] ];
-								// everything checks out! good to go....
+			if ( self::subscriptions_available() ) {
+				$subscription = self::invoice_subscription( $invoice_id );
 
-								// for now we just do a basic "EVERY X TIME" subscription
-								// todo: work out how long until next generate date, and set that (possibly smaller) time period as the first portion of the subscription
-								/*echo '<pre>';
-								print_r($subscription_history);
-								print_r($subscription);
-								print_r($subscription_owner);
-								print_r($member_subscription);
-								exit;*/
+				if ( $subscription && $subscription['period']['ok'] ) {
 
-								$is_subscription = array();
-								if ( $subscription['days'] > 0 ) {
-									$is_subscription['days'] = $subscription['days'];
-								}
-								if ( $subscription['months'] > 0 ) {
-									$is_subscription['months'] = $subscription['months'];
-								}
-								if ( $subscription['years'] > 0 ) {
-									$is_subscription['years'] = $subscription['years'];
-								}
-								if ( count( $is_subscription ) ) {
-									$is_subscription['name'] = $subscription['name'];
-								}
-
-							}
-						}
-					}
-				}
-				// todo: check if this invoice has a manual renewal date, perform subscription feature as above.
-
-				if ( $is_subscription ) {
-
-					$bits = array();
-					if ( isset( $is_subscription['days'] ) && $is_subscription['days'] > 0 ) {
-						$bits[] = _l( '%s days', $is_subscription['days'] );
-					}
-					if ( isset( $is_subscription['months'] ) && $is_subscription['months'] > 0 ) {
-						$bits[] = _l( '%s months', $is_subscription['months'] );
-					}
-					if ( isset( $is_subscription['years'] ) && $is_subscription['years'] > 0 ) {
-						$bits[] = _l( '%s years', $is_subscription['years'] );
-					}
+					$bits = self::period_in_words( $subscription );
 
 					$invoice_payment_data = module_invoice::get_invoice_payment( $invoice_payment_id );
 					if ( isset( $invoice_payment_data['invoice_payment_subscription_id'] ) && (int) $invoice_payment_data['invoice_payment_subscription_id'] > 0 ) {
-						// existing subscription already!
-						// not really sure what to do here, just redirect to paypal as if the user is doing it for the first time.
-						$_REQUEST['payment_subscription'] = true; // hacks!
+						// This payment already has a subscription row against it, so the
+						// payer has been here before and is coming back to finish. Send
+						// them to PayPal rather than asking the question again.
+						$_REQUEST['payment_subscription'] = true;
 					}
 
 					if ( isset( $_REQUEST['payment_subscription'] ) || module_config::c( 'payment_method_paypal_force_subscription', 0 ) ) {
@@ -241,16 +485,14 @@ class module_paymethod_paypal extends module_base {
 
 						// we create an entry in our database for this particular subscription
 						// or if one exists for this payment already then we just continue with that (ie: the user is going in again to redo it)
-
-						// setup a new subscription in the database for us.
 						if ( isset( $invoice_payment_data['invoice_payment_subscription_id'] ) && (int) $invoice_payment_data['invoice_payment_subscription_id'] > 0 ) {
-							$invoice_payment_subscription_id = $invoice_payment_data['invoice_payment_subscription_id'];
+							$invoice_payment_subscription_id = (int) $invoice_payment_data['invoice_payment_subscription_id'];
 						} else {
 							$invoice_payment_subscription_id = update_insert( 'invoice_payment_subscription_id', false, 'invoice_payment_subscription', array(
 								'status'        => _INVOICE_SUBSCRIPTION_PENDING,
-								'days'          => isset( $is_subscription['days'] ) ? $is_subscription['days'] : 0,
-								'months'        => isset( $is_subscription['months'] ) ? $is_subscription['months'] : 0,
-								'years'         => isset( $is_subscription['years'] ) ? $is_subscription['years'] : 0,
+								'days'          => $subscription['days'],
+								'months'        => $subscription['months'],
+								'years'         => $subscription['years'],
 								'date_start'    => '0000-00-00',
 								'date_last_pay' => '0000-00-00',
 								'date_next'     => '0000-00-00',
@@ -260,35 +502,11 @@ class module_paymethod_paypal extends module_base {
 							) );
 						}
 
-						$description = _l( 'Recurring payment for %s every %s', $is_subscription['name'], implode( ', ', $bits ) );
-						unset( $is_subscription['name'] ); // so reset/key cals below rosk.
+						$description = _l( 'Recurring payment for %s every %s', $subscription['name'], implode( ', ', $bits ) );
 
 						$currency = module_config::get_currency( $invoice_payment_data['currency_id'] );
 
 						$url = 'https://www.' . ( self::is_sandbox() ? 'sandbox.' : '' ) . 'paypal.com/cgi-bin/webscr?';
-
-						// if there are more than 1 recurring amounts then we convert it to days, as paypal only supports one time period.
-						if ( count( $is_subscription ) > 1 ) {
-							$days = isset( $is_subscription['days'] ) ? $is_subscription['days'] : 0;
-							if ( isset( $is_subscription['months'] ) ) {
-								$days += ( $is_subscription['months'] * 30 );
-								unset( $is_subscription['months'] );
-							}
-							if ( isset( $is_subscription['years'] ) ) {
-								$days += ( $is_subscription['years'] * 365 );
-								unset( $is_subscription['years'] );
-							}
-							$is_subscription['days'] = $days;
-						}
-						reset( $is_subscription );
-						$time = key( $is_subscription );
-						if ( $time == 'days' ) {
-							$time = 'D';
-						} else if ( $time == 'months' ) {
-							$time = 'M';
-						} else if ( $time == 'years' ) {
-							$time = 'Y';
-						}
 
 						$fields = array(
 							'cmd'           => '_xclick-subscriptions',
@@ -304,8 +522,8 @@ class module_paymethod_paypal extends module_base {
 							'notify_url'    => full_link( _EXTERNAL_TUNNEL . '?m=paymethod_paypal&h=ipn&method=paypal' ),
 							'custom'        => self::paypal_custom( $user_id, $invoice_payment_id, $invoice_id, $invoice_payment_subscription_id ),
 							'a3'            => $payment_amount,
-							'p3'            => current( $is_subscription ),
-							't3'            => $time,
+							'p3'            => $subscription['period']['count'],
+							't3'            => $subscription['period']['unit'],
 							'src'           => 1,
 							'sra'           => 1,
 							'no_note'       => 1,
@@ -324,21 +542,19 @@ class module_paymethod_paypal extends module_base {
 							$real_amount    += $real_fee_total;
 							$fields['a3']   = $real_amount;
 							$fields['a1']   = $payment_amount; // $real_amount + (isset($subscription['settings']['trial_price_adjust']) ? $subscription['settings']['trial_price_adjust'] : 0);
-							$fields['p1']   = current( $is_subscription ); // * $subscription['settings']['trial_period'];
-							$fields['t1']   = $time;
+							$fields['p1']   = $subscription['period']['count'];
+							$fields['t1']   = $subscription['period']['unit'];
 						}
-						//echo '<pre>'; print_r($fields);exit;
-
 
 						foreach ( $fields as $key => $val ) {
 							$url .= $key . '=' . urlencode( $val ) . '&';
 						}
 
-						//echo '<a href="'.$url.'">'.$url.'</a>';exit;
+						module_invoice::add_payment_data( $invoice_payment_id, 'log', 'PayPal subscription button opened for ' . number_format( (float) $payment_amount, 2 ) . ' ' . $currency['code'] . ' every ' . $subscription['period']['count'] . $subscription['period']['unit'] . '.' );
 
 						redirect_browser( $url );
 
-					} else if ( isset( $_REQUEST['payment_single'] ) ) {
+					} elseif ( isset( $_REQUEST['payment_single'] ) ) {
 						// use is choosing to continue payment as a once off amount
 
 					} else {
@@ -376,11 +592,28 @@ class module_paymethod_paypal extends module_base {
 						exit;
 					}
 
-
+				} elseif ( $subscription ) {
+					// The subscription has a period PayPal cannot repeat exactly. Rather
+					// than approximate it - a month counted as thirty days, a year as
+					// three hundred and sixty five, which drifts away from UCM's own
+					// schedule a little more every cycle - automatic payments are simply
+					// not offered. The payer pays this invoice once and the scheduled job
+					// generates the next one.
+					module_invoice::add_payment_data( $invoice_payment_id, 'log', 'Automatic payments not offered: ' . $subscription['period']['message'] );
 				}
 			}
 
+
 			$description = _l( 'Payment for Invoice %s', $invoice_data['name'] );
+
+			if ( self::use_orders_v2() ) {
+				return self::start_orders_v2_payment( $invoice_id, $payment_amount, $invoice_payment_id, $invoice_payment_data['currency_id'], $description );
+			}
+
+			// Website Payments Standard. PayPal's own docs now say this "is deprecated and
+			// should not be used for new integrations", and its archive page is where they
+			// moved the documentation. It still works, and it is all an install has until
+			// an admin creates a REST app, so it stays until they do.
 			self::paypal_redirect( $description, $payment_amount, $user_id, $invoice_payment_id, $invoice_id, $invoice_payment_data['currency_id'] );
 
 			return true;
@@ -392,10 +625,126 @@ class module_paymethod_paypal extends module_base {
 	public function external_hook( $hook ) {
 		switch ( $hook ) {
 			case 'ipn':
-				// handle IPN response from paypal.
+				// Website Payments Standard notifications. Kept indefinitely, not for one
+				// release: it is forty lines of working code, and an install that never
+				// creates a REST app has nothing else.
 				$this->handle_paypal_ipn();
 				break;
+			case 'capture':
+				$this->handle_order_capture();
+				break;
+			case 'webhook':
+				$this->handle_order_webhook();
+				break;
 		}
+	}
+
+	/**
+	 * Called by the payment page once the payer approves the order.
+	 *
+	 * Answers JSON. The order id is not taken from the request - it is read from the
+	 * payment's own log, written when the order was created - so there is nothing here
+	 * for a payer to substitute.
+	 *
+	 * @return void
+	 */
+	private function handle_order_capture() {
+		header( 'Content-Type: application/json' );
+
+		$invoice_payment_id = isset( $_REQUEST['i'] ) ? (int) $_REQUEST['i'] : 0;
+		$hash               = isset( $_REQUEST['hash'] ) ? (string) $_REQUEST['hash'] : '';
+
+		if ( ! $invoice_payment_id || ! hash_equals( self::link_capture( $invoice_payment_id, true ), $hash ) ) {
+			echo json_encode( array( 'ok' => false, 'message' => _l( 'Sorry, this payment link is not valid.' ) ) );
+			exit;
+		}
+
+		$payment = get_single( 'invoice_payment', 'invoice_payment_id', $invoice_payment_id );
+		if ( ! $payment ) {
+			echo json_encode( array( 'ok' => false, 'message' => _l( 'Sorry, this payment link is not valid.' ) ) );
+			exit;
+		}
+
+		$result = self::capture_and_record( self::stored_order_id( $invoice_payment_id ), $invoice_payment_id );
+
+		echo json_encode( array(
+			'ok'       => (bool) $result['ok'] || $result['code'] === 'duplicate',
+			'redirect' => module_invoice::link_public_payment_complete( $payment['invoice_id'] ),
+			'message'  => $result['ok'] ? '' : _l( 'We could not confirm this payment. Please contact us before trying again.' ),
+		) );
+		exit;
+	}
+
+	/**
+	 * PAYMENT.CAPTURE.COMPLETED, verified by PayPal itself.
+	 *
+	 * Not CHECKOUT.ORDER.APPROVED - that fires before the money moves.
+	 *
+	 * @return void
+	 */
+	private function handle_order_webhook() {
+		$raw_body   = (string) @file_get_contents( 'php://input' );
+		$webhook_id = trim( (string) module_config::c( 'payment_method_paypal_webhook_id', '' ) );
+
+		$headers = array();
+		foreach ( $_SERVER as $key => $value ) {
+			if ( strpos( $key, 'HTTP_' ) === 0 ) {
+				$headers[ str_replace( '_', '-', strtolower( substr( $key, 5 ) ) ) ] = $value;
+			}
+		}
+
+		if ( ! self::use_orders_v2() || ! ucm_paypal_orders::verify_webhook( self::rest_credentials(), $webhook_id, $headers, $raw_body ) ) {
+			// PayPal retries a non-2xx, which is what should happen if this was genuine
+			// and something here is misconfigured.
+			header( 'HTTP/1.1 400 Bad Request' );
+			echo 'Could not verify this notification.';
+			exit;
+		}
+
+		$event = json_decode( $raw_body, true );
+		$type  = is_array( $event ) && isset( $event['event_type'] ) ? (string) $event['event_type'] : '';
+
+		if ( $type !== 'PAYMENT.CAPTURE.COMPLETED' ) {
+			echo 'OK';
+			exit;
+		}
+
+		// The event body is verified, but it is still only a notification. Read the order
+		// back from PayPal and record from that, the same way the capture path does.
+		$capture_id = isset( $event['resource']['id'] ) ? (string) $event['resource']['id'] : '';
+		$order_id   = '';
+		if ( isset( $event['resource']['supplementary_data']['related_ids']['order_id'] ) ) {
+			$order_id = (string) $event['resource']['supplementary_data']['related_ids']['order_id'];
+		}
+
+		if ( $order_id !== '' ) {
+			$order = ucm_paypal_orders::get_order( self::rest_credentials(), $order_id );
+			if ( $order['ok'] ) {
+				$result = self::record_captured_order( $order['body'] );
+				echo $result['ok'] ? 'Payment recorded.' : 'Nothing to do.';
+				exit;
+			}
+		}
+
+		// No order id in the event - record straight from the verified resource.
+		$invoice_payment_id = isset( $event['resource']['custom_id'] ) ? (int) $event['resource']['custom_id'] : 0;
+		if ( $invoice_payment_id && $capture_id !== '' ) {
+			$result = module_invoice::verify_and_record( $invoice_payment_id, array(
+				'amount'         => isset( $event['resource']['amount']['value'] ) ? (float) $event['resource']['amount']['value'] : 0,
+				'currency'       => isset( $event['resource']['amount']['currency_code'] ) ? (string) $event['resource']['amount']['currency_code'] : '',
+				'transaction_id' => $capture_id,
+				'paid'           => true,
+				'test'           => (bool) self::is_sandbox(),
+			), array(
+				'method_key' => self::get_payment_method_key(),
+				'sandbox'    => (bool) self::is_sandbox(),
+			) );
+			echo $result['ok'] ? 'Payment recorded.' : 'Nothing to do.';
+			exit;
+		}
+
+		echo 'OK';
+		exit;
 	}
 
 	public static function paypal_redirect( $description, $amount, $user_id, $payment_id, $invoice_id, $currency_id ) {
@@ -456,6 +805,9 @@ class module_paymethod_paypal extends module_base {
 		} else {
 			fputs( $fp, "POST $web[path] HTTP/1.1\r\n" );
 			fputs( $fp, "Host: $web[host]\r\n" );
+			// PayPal requires a User-Agent on the IPN postback and rejects requests
+			// without one.
+			fputs( $fp, "User-Agent: UCM/" . _UCM_VERSION . "\r\n" );
 			fputs( $fp, "Content-type: application/x-www-form-urlencoded\r\n" );
 			fputs( $fp, "Content-length: " . strlen( $postdata ) . "\r\n" );
 			fputs( $fp, "Connection: close\r\n\r\n" );
@@ -497,7 +849,7 @@ class module_paymethod_paypal extends module_base {
 		$invoice_payment_subscription_id = false;
 		if ( count( $paypal_bits ) == 4 ) {
 			// normal IPN, single payment.
-		} else if ( count( $paypal_bits ) == 5 ) {
+		} elseif ( count( $paypal_bits ) == 5 ) {
 			// subscription IPN, with subscription id.
 			$invoice_payment_subscription_id = (int) $paypal_bits[3];
 			$invoice_payment_subscription    = get_single( 'invoice_payment_subscription', 'invoice_payment_subscription_id', $invoice_payment_subscription_id );
@@ -617,21 +969,27 @@ class module_paymethod_paypal extends module_base {
 						break;
 					case "subscr_payment":
 					case "web_accept":
-
 						if ( $_REQUEST['payment_status'] == "Canceled_Reversal" || $_REQUEST['payment_status'] == "Refunded" ) {
 							// funky refund!! oh noes!!
 							// TODO: store this in the database as a negative payment... should be easy.
 							// populate $_REQUEST vars then do something like $payment_history_id = update_insert("payment_history_id","new","payment_history");
 							send_error( "PayPal Error! The payment $payment_id has been refunded or reversed! BAD BAD! You have to follup up customer for money manually now." );
 
-						} else if ( $_REQUEST['payment_status'] == "Completed" ) {
+						} elseif ( $_REQUEST['payment_status'] == "Completed" ) {
 
 							// payment is completed! yeye getting closer...
 
 							// running in paypal sandbox or not?
 							//$sandbox = (self::is_sandbox())?"sandbox.":'';
 							// quick check we're not getting a fake payment request.
-							$url    = 'https://www.' . ( self::is_sandbox() ? 'sandbox.' : '' ) . 'paypal.com/cgi-bin/webscr';
+							// ipnpb.paypal.com, not www. www is the consumer web front end:
+							// rate limited and bot filtered, and PayPal has been telling
+							// integrators to move off it for years. When the postback does
+							// not come back VERIFIED this handler emails the admin and
+							// records nothing - the customer has paid and UCM never finds
+							// out - so a postback host that fails intermittently is the
+							// worst kind of wrong here.
+							$url    = 'https://ipnpb.' . ( self::is_sandbox() ? 'sandbox.' : '' ) . 'paypal.com/cgi-bin/webscr';
 							$result = self::fsockPost( $url, $_POST );
 							//send_error('paypal sock post: '.$url."\n\n".var_export($result,true));
 							if ( stripos( $result, "VERIFIED" ) !== false ) {

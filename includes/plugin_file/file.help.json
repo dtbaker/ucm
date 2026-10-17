@@ -1,0 +1,15 @@
+{
+	"_generated": "Written by docs-site/scripts/build-app-artifacts.mjs. Edit the article frontmatter, not this file.",
+	"article": "using/files",
+	"pages": {
+		"file-file_admin": "using/files",
+		"file-file_admin_bucket": "using/files",
+		"file-file_admin_edit": "using/files",
+		"file-file_admin_email": "using/files",
+		"file-file_admin_list": "using/files",
+		"file-file_customer_edit": "using/files",
+		"file-file_edit": "using/files",
+		"file-file_list": "using/files",
+		"file-file_list_preview": "using/files"
+	}
+}

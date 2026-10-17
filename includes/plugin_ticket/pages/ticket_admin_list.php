@@ -184,14 +184,21 @@ print_heading( $header );
 ?>
 
 
-<form action="" method="<?php echo _DEFAULT_FORM_METHOD; ?>">
+<?php module_form::print_form_open_tag( array(
+	'action' => '',
+	'method' => _DEFAULT_FORM_METHOD,
+) ); ?>
 
 	<input type="hidden" name="customer_id"
 	       value="<?php echo isset( $_REQUEST['customer_id'] ) ? (int) $_REQUEST['customer_id'] : ''; ?>">
 
 	<?php
 
-	module_form::print_form_auth();
+	// No form_auth_key field here. This form is _DEFAULT_FORM_METHOD, which is GET when
+	// rewrite links are on, so a token in the markup would go into the query string on
+	// every search - and from there into history, logs and Referer headers. The controls
+	// that need a token (bulk actions, CSV export) carry it on their own button and
+	// switch the form to POST when clicked.
 
 	$search_bar = array(
 		'elements' => array(
@@ -328,7 +335,7 @@ print_heading( $header );
 							'cost'      => $item['cost'],
 						);
 					}
-					$item_ticket_count[ $item_id ]['count'] ++;
+					$item_ticket_count[ $item_id ]['count']++;
 					$envato_count += $item['cost'];
 				}
 			} else {
@@ -341,7 +348,7 @@ print_heading( $header );
 						'cost'      => 0,
 					);
 				}
-				$item_ticket_count[ $item_id ]['count'] ++;
+				$item_ticket_count[ $item_id ]['count']++;
 			}
 		}
 		if ( mysqli_num_rows( $tickets ) > 0 ) {
@@ -351,7 +358,8 @@ print_heading( $header );
 		//}
 		function sort_envato_ticket_count( $a, $b ) {
 			//return ($a['count']*$a['cost'])<=($b['count']*$b['cost']);
-			return $a['count'] <= $b['count'];
+			// busiest item first.
+			return $b['count'] <=> $a['count'];
 		}
 
 		uasort( $item_ticket_count, 'sort_envato_ticket_count' );
@@ -430,7 +438,7 @@ print_heading( $header );
 	$columns['ticket_type']   = array(
 		'title'    => 'Type',
 		'callback' => function ( $ticket ) {
-			echo htmlspecialchars( $ticket['ticket_type'] );
+			echo htmlspecialchars( $ticket['ticket_type'] ?? '' );
 		},
 	);
 	$columns['ticket_status'] = array(
@@ -549,4 +557,4 @@ print_heading( $header );
 
 
 	?>
-</form>
+<?php module_form::print_form_close_tag();

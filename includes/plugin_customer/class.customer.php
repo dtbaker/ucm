@@ -1,11 +1,12 @@
 <?php
+
 defined( '_UCM_VERSION' ) || die( '-5' );
 
 // (slowly) moving everything over to better OOP classes:
 
 
-class UCMCustomer extends UCMBaseSingle {
-
+class UCMCustomer extends UCMBaseSingle
+{
 	public $db_id = 'customer_id';
 	public $db_table = 'customer';
 	public $display_key = 'name';
@@ -63,13 +64,10 @@ class UCMCustomer extends UCMBaseSingle {
 	}
 }
 
-class UCMCustomers extends UCMBaseMulti {
-
+class UCMCustomers extends UCMBaseMulti
+{
 	public $db_id = 'customer_id';
 	public $db_table = 'customer';
 	public $display_name = 'Customer';
 	public $display_name_plural = 'Customers';
-
-
 }
-

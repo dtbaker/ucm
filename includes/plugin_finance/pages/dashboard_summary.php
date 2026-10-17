@@ -32,7 +32,7 @@
 				foreach ( $data as $key => $row ) {
 					?>
 					<tr class="<?php
-					echo $c ++ % 2 ? 'odd' : 'even';
+					echo $c++ % 2 ? 'odd' : 'even';
 					if ( isset( $row['highlight'] ) ) {
 						echo ' highlight';
 					}

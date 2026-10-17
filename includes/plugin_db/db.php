@@ -1,7 +1,12 @@
 <?php
 
-
-class module_db extends module_base {
+class module_db extends module_base
+{
+	public function __construct() {
+		$this->module_name     = 'db';
+		$this->module_position = 20;
+		$this->version         = 2.140;
+	}
 
 	public static function can_i( $actions, $name = false, $category = false, $module = false ) {
 		if ( ! $module ) {
@@ -16,10 +21,6 @@ class module_db extends module_base {
 	}
 
 	public function init() {
-		$this->module_name     = "db";
-		$this->module_position = 0;
-
-		$this->version = 2.140;
 		//2.140 - 2017-05-30 - upgrade fix
 		//2.139 - 2017-05-02 - speed fixes
 		//2.138 - 2017-05-02 - big changes
@@ -42,6 +43,7 @@ class module_db extends module_base {
 		if ( is_array( $table ) || ! trim( $table ) ) {
 			return array();
 		}
+		$table = db_identifier( $table );
 		if ( isset( self::$fieldscache[ $table ] ) ) {
 			return self::$fieldscache[ $table ];
 		}
@@ -74,26 +76,26 @@ class module_db extends module_base {
 			if ( count( $hidden ) && in_array( $r['Field'], $hidden ) ) {
 				$type = "hidden";
 				// new field for file.
-			} else if ( preg_match( "/^file_/", $r['Field'] ) && preg_match( "/varchar\((\d+)\)/", $r['Type'], $matches ) ) {
+			} elseif ( preg_match( "/^file_/", $r['Field'] ) && preg_match( "/varchar\((\d+)\)/", $r['Type'], $matches ) ) {
 				$type      = "file";
 				$size      = 50;
 				$maxlength = 255;
-			} else if ( preg_match( "/varchar\((\d+)\)/", $r['Type'], $matches ) ) {
+			} elseif ( preg_match( "/varchar\((\d+)\)/", $r['Type'], $matches ) ) {
 				$type      = "text";
 				$size      = max( "10", min( "30", $matches[1] ) );
 				$maxlength = $matches[1];
-			} else if ( preg_match( "/int/i", $r['Type'] ) || preg_match( "/float/i", $r['Type'] ) ) {
+			} elseif ( preg_match( "/int/i", $r['Type'] ) || preg_match( "/float/i", $r['Type'] ) ) {
 				$format    = array( "/^\d+$/", "Integer" );
 				$type      = "number";
 				$maxlength = $size = 20;
-			} else if ( $r['Type'] == "text" ) {
+			} elseif ( $r['Type'] == "text" ) {
 				$type = "textarea";
 				$size = 0;
-			} else if ( $r['Type'] == "date" || $r['Type'] == "datetime" ) {
+			} elseif ( $r['Type'] == "date" || $r['Type'] == "datetime" ) {
 				$format    = array( "/^\d\d\d\d-\d\d-\d\d$/", "YYYY-MM-DD" );
 				$type      = "date";
 				$maxlength = $size = 20;
-			} else if ( preg_match( "/decimal/", $r['Type'] ) || preg_match( "/double/", $r['Type'] ) ) {
+			} elseif ( preg_match( "/decimal/", $r['Type'] ) || preg_match( "/double/", $r['Type'] ) ) {
 				$format    = array( "/^\d+\.?[\d+]?$/", "Decimal" );
 				$type      = "decimal";
 				$maxlength = $size = 20;
@@ -121,6 +123,9 @@ class module_db extends module_base {
 		if ( $data === false ) {
 			$data = $_REQUEST;
 		}
+		// Both of these end up inside backticks in the statements below.
+		$table  = db_identifier( $table );
+		$pkey   = db_identifier( $pkey );
 		$fields = self::get_fields( $table, array( "date_created", "date_updated" ) ); //
 		if ( isset( $fields['system_id'] ) && defined( '_SYSTEM_ID' ) ) {
 			$data['system_id'] = _SYSTEM_ID;
@@ -219,7 +224,7 @@ class module_db extends module_base {
 			} else {
 				$val = $data[ $field['name'] ];
 			}
-			$sql .= " `" . $field['name'] . "` = '" . db_escape( $val ) . "', ";
+			$sql .= " `" . db_identifier( $field['name'] ) . "` = '" . db_escape( $val ) . "', ";
 		}
 		$sql = rtrim( $sql, ', ' );
 		$sql .= $where;
@@ -234,14 +239,57 @@ class module_db extends module_base {
 
 	public static $dbcnx = false;
 
+	/**
+	 * Set once a connection attempt has failed on a copy that is not set up yet, so the
+	 * rest of the request does not try again. module_config::c() connects on every read
+	 * until the system is installed, and an unreachable host can take seconds each time.
+	 *
+	 * @var bool
+	 */
+	private static $connect_failed = false;
+
+	/**
+	 * What to do when the database will not connect.
+	 *
+	 * A copy with no config.local.php has never been set up: its settings are the
+	 * placeholders in includes/config.php, so this returns and the caller treats the
+	 * system as not installed, which is what sends the request to the setup wizard.
+	 *
+	 * A copy that has been set up stops here with a page saying so. Its database is down
+	 * or its settings are wrong, and carrying on as "not installed" would offer the setup
+	 * wizard to anyone who visits. The database's own message names the user and host, so
+	 * it goes to the error log, and on screen only in debug mode.
+	 */
+	private static function connect_failed( $error ) {
+		if ( defined( '_UCM_CONFIGURED' ) && ! _UCM_CONFIGURED ) {
+			self::$connect_failed = true;
+
+			return;
+		}
+		// No _UCM_CONFIGURED at all means a config.php from before it existed, which held
+		// the real credentials itself - so that counts as set up as well.
+		error_log( 'UCM could not connect to its database: ' . $error );
+		if ( ! headers_sent() ) {
+			http_response_code( 503 );
+			header( 'Content-Type: text/html; charset=utf-8' );
+		}
+		echo '<!doctype html><html><head><meta charset="utf-8"><title>Database connection failed</title></head><body>';
+		echo '<h1>Database connection failed</h1>';
+		echo '<p>UCM could not connect to its database. Check that the database server is running, and that the server, database name, username and password in includes/config.local.php are correct.</p>';
+		if ( defined( '_DEBUG_MODE' ) && _DEBUG_MODE ) {
+			echo '<p>The error was: <strong>' . htmlspecialchars( $error ) . '</strong></p>';
+		} else {
+			echo '<p>The exact error has been written to the PHP error log.</p>';
+		}
+		echo '</body></html>';
+		exit();
+	}
+
 	public static function db_connect() {
+		if ( self::$connect_failed ) {
+			return false;
+		}
 		if ( ! self::$dbcnx ) {
-			if ( function_exists( 'mysql_connect' ) ) {
-				if ( isset( $_POST['install_upgrade'] ) ) {
-					// we still use oldschool connect during the upgrade process so things don't break .
-					@mysql_connect( _DB_SERVER, _DB_USER, _DB_PASS ) or die( mysql_error() );
-				}
-			}
 			if ( function_exists( 'mysqli_connect' ) ) {
 				// todo; parse out port number or :/tmp/socket listing from _DB_SERVER and add to correct params
 				$server      = _DB_SERVER;
@@ -255,10 +303,21 @@ class module_db extends module_base {
 					$server = str_replace( ':' . $matches[1], '', $server );
 					$socket = $matches[1];
 				}
-				self::$dbcnx = mysqli_connect( $server, _DB_USER, _DB_PASS, _DB_NAME, $port_number, $socket );
-				if ( mysqli_connect_errno() ) {
-					printf( "Connect failed: %s\n", mysqli_connect_error() );
-					exit();
+				// PHP 8.1 made mysqli throw on a failed connection instead of returning
+				// false, so without the catch a wrong password is an uncaught exception
+				// and a blank 500 - including on a fresh unzip, before the setup wizard
+				// has had a chance to ask for the real details.
+				try {
+					self::$dbcnx = mysqli_connect( $server, _DB_USER, _DB_PASS, _DB_NAME, $port_number, $socket );
+					$connect_error = self::$dbcnx ? '' : mysqli_connect_error();
+				} catch ( mysqli_sql_exception $e ) {
+					self::$dbcnx   = false;
+					$connect_error = $e->getMessage();
+				}
+				if ( ! self::$dbcnx ) {
+					self::connect_failed( (string) $connect_error );
+
+					return false;
 				}
 				if ( module_config::c( 'database_utf8', 1 ) ) {
 					self::set_charset();
@@ -280,7 +339,7 @@ class module_db extends module_base {
 			if ( ! isset( $past_queries[ $sql ] ) ) {
 				$past_queries[ $sql ] = 0;
 			} else {
-				$past_queries[ $sql ] ++;
+				$past_queries[ $sql ]++;
 			}
 			$sql_debug = $sql;
 			if ( strlen( $sql_debug ) > 60 ) {
@@ -295,12 +354,22 @@ class module_db extends module_base {
 					'file'      => 'includes/database.php',
 					'data'      => '(' . ( $past_queries[ $sql ] > 0 ? '<span style="color:#FF0000; font-weight:bold;">' . $past_queries[ $sql ] . '</span>' : $past_queries[ $sql ] ) . ') ' . $debug_message . $sql_debug,
 					'important' => $past_queries[ $sql ] > 0,
+					// the cell above is markup on purpose: a red repeat count, and long
+					// queries folded behind a link. The SQL itself is escaped already.
+					'html'      => true,
 				) );
 			}
 		}
 		$res = false;
 		if ( self::$dbcnx && ! $res = mysqli_query( self::$dbcnx, $sql ) ) {
-			set_error( _l( 'SQL Error: %s', self::last_error() . ' ' . $sql ) );
+			// The query and the database's own message go on screen only in debug mode.
+			// Outside it they told whoever hit the error the table and column names, which
+			// is a free map of the database for anyone who can make a query fail.
+			if ( defined( '_DEBUG_MODE' ) && _DEBUG_MODE ) {
+				set_error( _l( 'SQL Error: %s', self::last_error() . ' ' . $sql ) );
+			} else {
+				set_error( _l( 'Sorry, there was a database error. Please try again.' ) );
+			}
 			set_error( _l( 'Try clicking the "Run Manual Upgrades" button to resolve SQL Errors.' ) );
 
 			return false;
@@ -336,7 +405,15 @@ class module_db extends module_base {
 	}
 
 	public static function escape( $string ) {
-		return function_exists( 'mysqli_real_escape_string' ) ? mysqli_real_escape_string( self::$dbcnx, $string ) : mysql_real_escape_string( $string );
+		// No connection only happens before setup, when db_connect() has given up on the
+		// placeholder settings. query() refuses to run without a connection, so whatever
+		// is built from this never reaches a database - it only has to be a string,
+		// rather than the TypeError mysqli raises when given false.
+		if ( ! self::$dbcnx ) {
+			return addslashes( (string) $string );
+		}
+
+		return mysqli_real_escape_string( self::$dbcnx, (string) $string );
 	}
 
 	public static function db_insert_id() {
@@ -346,7 +423,6 @@ class module_db extends module_base {
 	public static function last_error() {
 		return mysqli_error( self::$dbcnx );
 	}
-
 }
 
 /* placeholder module to contain various functions used through out the system */

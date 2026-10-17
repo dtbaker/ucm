@@ -9,10 +9,13 @@ define( '_TIMER_ACCESS_ALL', 'All timers in system' ); // do not change string
 define( '_TIMER_ACCESS_CUSTOMER', 'All timers from customers you have access to' ); // do not change string
 define( '_TIMER_ACCESS_MINE', 'Only my timers' ); // do not change string
 
-class module_timer extends module_base {
-
-
-	public $version = 2.141;
+class module_timer extends module_base
+{
+	public function __construct() {
+		$this->module_name     = 'timer';
+		$this->module_position = 540;
+		$this->version         = 2.141;
+	}
 	//2.141 - 2018-03-31 - timer + invoice link
 	//2.140 - 2017-07-26 - bug fixes
 	//2.139 - 2017-07-23 - timers linked to customers/websites
@@ -41,9 +44,6 @@ class module_timer extends module_base {
 	}
 
 	public function init() {
-		$this->module_name     = "timer";
-		$this->module_position = 26;
-
 		if ( module_security::is_logged_in() && self::is_plugin_enabled() && self::can_i( 'view', 'Timers' ) && get_display_mode() != 'mobile' ) {
 			module_config::register_css( 'timer', 'timer.css' );
 			module_config::register_js( 'timer', 'timer.js' );
@@ -230,15 +230,26 @@ class module_timer extends module_base {
 	public static function invoice_link( $billable_timers = array() ) {
 		$url = module_invoice::link_open( 'new', false ) . '&timer_ids=' . implode( ',', $billable_timers );
 		// we also have to pass any ticket_ids through
-		$ticket_ids = array();
+		$ticket_ids   = array();
+		$customer_ids = array();
 		foreach ( $billable_timers as $timer_id ) {
 			$timer = new UCMTimer( $timer_id );
 			if ( $timer->owner_table && $timer->owner_id && $timer->owner_table == 'ticket' ) {
 				$ticket_ids[] = (int) $timer->owner_id;
 			}
+			$timer_customer_id = (int) $timer->get( 'customer_id' );
+			if ( $timer_customer_id > 0 ) {
+				$customer_ids[ $timer_customer_id ] = true;
+			}
 		}
 		$other_ids = array( 'ticket_ids' => $ticket_ids );
 		$url       .= '&' . http_build_query( $other_ids );
+		// The timers know whose work this was. Without passing it on, the invoice opened
+		// with no customer at all and the customer's own tax and rate defaults were
+		// never applied. Only when every timer agrees, otherwise we would be guessing.
+		if ( count( $customer_ids ) === 1 ) {
+			$url .= '&customer_id=' . key( $customer_ids );
+		}
 
 		return $url;
 	}
@@ -280,7 +291,7 @@ class module_timer extends module_base {
 				exit;
 
 
-			} else if ( "automatic_page_timer" == $_REQUEST['_process'] ) {
+			} elseif ( "automatic_page_timer" == $_REQUEST['_process'] ) {
 
 				// javascript will poll this endpoint every 5 seconds
 				// we look for any non-closed timers that match this owner_table / owner_id
@@ -309,7 +320,7 @@ class module_timer extends module_base {
 
 				exit;
 
-			} else if ( "task_timer_clicked" == $_REQUEST['_process'] ) {
+			} elseif ( "task_timer_clicked" == $_REQUEST['_process'] ) {
 
 				header( "Content-type: text/json" );
 
@@ -327,9 +338,9 @@ class module_timer extends module_base {
 							$timer->delete();
 							echo json_encode( array( 'deleted' => 1 ) );
 							exit;
-						} else if ( ! empty( $_POST['finished'] ) ) {
+						} elseif ( ! empty( $_POST['finished'] ) ) {
 							$timer->closed();
-						} else if ( $timer->timer_status != _TIMER_STATUS_CLOSED ) {
+						} elseif ( $timer->timer_status != _TIMER_STATUS_CLOSED ) {
 							$latest = $timer->get_latest();
 							if ( $latest ) {
 								switch ( $latest['timer_status'] ) {
@@ -374,7 +385,7 @@ class module_timer extends module_base {
 				}
 
 				exit;
-			} else if ( "complete_timer" == $_REQUEST['_process'] ) {
+			} elseif ( "complete_timer" == $_REQUEST['_process'] ) {
 
 				if ( self::can_i( 'edit', 'Timers' ) ) {
 					$timer         = new UCMTimer( $_REQUEST['timer_id'] );
@@ -388,12 +399,12 @@ class module_timer extends module_base {
 					exit;
 				}
 
-			} else if ( "save_timer_segment" == $_REQUEST['_process'] ) {
+			} elseif ( "save_timer_segment" == $_REQUEST['_process'] ) {
 
 				$timer_segment = new UCMTimerSegment( $_REQUEST['timer_segment_id'] );
 				$timer_segment->handle_submit();
 
-			} else if ( "save_timer" == $_REQUEST['_process'] ) {
+			} elseif ( "save_timer" == $_REQUEST['_process'] ) {
 
 				if ( isset( $_REQUEST['butt_del'] ) && $_REQUEST['butt_del'] && self::can_i( 'delete', 'Timers' ) && module_form::check_secure_key() ) {
 
@@ -416,7 +427,7 @@ class module_timer extends module_base {
 					}
 					$timer->delete_with_confirm( false, $return );
 
-				} else if ( self::can_i( 'edit', 'Timers' ) ) {
+				} elseif ( self::can_i( 'edit', 'Timers' ) ) {
 					$timer     = new UCMTimer( $_REQUEST['timer_id'] );
 					$save_data = $_POST;
 					$timer->save_data( $save_data );
@@ -426,7 +437,7 @@ class module_timer extends module_base {
 
 						$timer->closed();
 
-					} else if ( isset( $_POST['start_pause'] ) ) {
+					} elseif ( isset( $_POST['start_pause'] ) ) {
 						// we're starting or pausing the timer.
 						$latest = $timer->get_latest();
 						switch ( $latest['timer_status'] ) {
@@ -665,7 +676,7 @@ class module_timer extends module_base {
 					}
 					break;
 			}
-		}else if ( module_timer::can_i( 'view', 'Timers' ) ) {
+		} elseif ( module_timer::can_i( 'view', 'Timers' ) ) {
 
 			$ucmtimers = new UCMTimers();
 
@@ -749,9 +760,10 @@ class module_timer extends module_base {
 	}
 
 	public static function format_seconds( $total_time ) {
-		$hours   = floor( $total_time / 3600 );
-		$minutes = floor( ( $total_time / 60 ) % 60 );
-		$seconds = floor( $total_time % 60 );
+		$total_int = (int) floor( $total_time );
+		$hours     = (int) ( $total_int / 3600 );
+		$minutes   = ( (int) floor( $total_time / 60 ) ) % 60;
+		$seconds   = $total_int % 60;
 
 		return sprintf( "%02d:%02d:%02d", $hours, $minutes, $seconds );
 	}
@@ -812,8 +824,6 @@ class module_timer extends module_base {
 		<?php
 		return ob_get_clean();
 	}
-
-
 }
 
 include_once 'class.timer.php';

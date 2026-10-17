@@ -191,3 +191,103 @@ function open_shut(id){
 	}
 	return false;
 }
+
+/**
+ * Submit the form a button lives in as a POST that carries the form auth token.
+ *
+ * The list pages are GET forms so a search stays bookmarkable, and a hidden token field
+ * in a GET form ends up in the query string, the browser history, the server access log
+ * and the Referer header of any link on the results page. So the token rides on the
+ * button instead (module_form::print_form_auth_attributes) and is added here, at click
+ * time, on the one submit that actually needs it.
+ */
+ucm.submit_guarded = function (el) {
+	var $el = jQuery(el);
+	var $form = $el.closest('form');
+	if (!$form.length) {
+		return false;
+	}
+	return ucm.submit_guarded_form($form, $el.data('form-auth-key'));
+};
+
+/**
+ * As above, for the cases where the button is not inside the form it submits - the CSV
+ * export popdown hands its fields to whichever list form is on the page.
+ */
+ucm.submit_guarded_form = function ($form, key) {
+	$form = jQuery($form);
+	if (!$form.length || !$form[0]) {
+		return false;
+	}
+	if (key) {
+		$form.attr('method', 'post');
+		var $field = $form.find('input[name="form_auth_key"]');
+		if (!$field.length) {
+			$field = jQuery('<input>').attr({type: 'hidden', name: 'form_auth_key'});
+			$form.append($field);
+		}
+		$field.val(key);
+	}
+	$form[0].submit();
+	return true;
+};
+
+/**
+ * Collect the security role form's permission controls into a single posted field.
+ *
+ * The permission grid has one control per permission per action, and
+ * module_security::has_feature_access() adds a permission row the first time any screen
+ * asks for one, so the grid grows as the install is used. On a database with 1300
+ * permissions it is already 2345 controls. PHP's max_input_vars defaults to 1000, and a
+ * post that exceeds it is truncated during request startup with no flag the application
+ * can read - so the far side of the grid was being dropped and the role saved with
+ * whatever happened to fit.
+ *
+ * So the controls carry no name of their own. This reads them into one JSON field, which
+ * keeps the post at a fixed size no matter how large the table grows.
+ * module_security::process() decodes it.
+ */
+ucm.permission_bundle = function (form) {
+	var $form = jQuery(form);
+	var $field = $form.find('input[name="permission_data"]');
+	if (!$form.length || !$field.length) {
+		return;
+	}
+
+	var collect = function () {
+		var bundle = {permission: {}, permission_drop_down: {}, group_access: {}};
+
+		$form.find('input[data-permission]').each(function () {
+			if (!this.checked) {
+				return;
+			}
+			var id = jQuery(this).data('permission');
+			var action = jQuery(this).data('permission-action');
+			if (!bundle.permission[id]) {
+				bundle.permission[id] = {};
+			}
+			bundle.permission[id][action] = 1;
+		});
+
+		// The drop downs name every permission id they cover, so the handler knows which
+		// rows to clear before writing the one that was chosen.
+		$form.find('select[data-permission-drop-down]').each(function () {
+			bundle.permission_drop_down[jQuery(this).data('permission-drop-down')] = jQuery(this).val();
+		});
+
+		$form.find('input[data-group-access]').each(function () {
+			if (this.checked) {
+				bundle.group_access[jQuery(this).data('group-access')] = 1;
+			}
+		});
+
+		$field.val(JSON.stringify(bundle));
+	};
+
+	// On change as well as on submit: the save button posts through
+	// ucm.submit_guarded_form() in places, which calls form.submit() directly and so
+	// never fires the submit handler.
+	$form.on('change', 'input[data-permission], select[data-permission-drop-down], input[data-group-access]', collect);
+	$form.on('submit', collect);
+	collect();
+};

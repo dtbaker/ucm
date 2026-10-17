@@ -1,6 +1,5 @@
 <?php
 
-
 if ( module_user::can_i( 'edit', 'Staff Settings', 'Config' ) ) {
 
 
@@ -53,4 +52,3 @@ if ( module_user::can_i( 'edit', 'Staff Settings', 'Config' ) ) {
 	);
 	echo module_form::generate_fieldset( $fieldset_data );
 }
-

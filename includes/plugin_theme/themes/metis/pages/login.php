@@ -13,11 +13,14 @@
 		</div>
 
 
-	<?php }else if ( isset( $_GET['forgot'] ) ){ ?>
+	<?php } elseif ( isset( $_GET['forgot'] ) ) { ?>
 
 		<div class="tab-content">
 			<div id="forgot" class="tab-pane active">
-				<form action="" method="post" class="form-signin">
+				<?php module_form::print_form_open_tag( array(
+					'action' => '',
+					'class'  => 'form-signin',
+				) ); ?>
 					<input type="hidden" name="_process_reset" value="true">
 					<p
 						class="text-muted text-center"><?php echo _l( 'Please enter your email address below to reset your password.' ); ?></p>
@@ -31,7 +34,7 @@
 					<button class="btn btn-lg btn-danger btn-block" name="reset"
 					        type="submit"><?php echo _l( 'Reset Password' ); ?></button>
 					<?php hook_handle_callback( 'forgot_password_screen' ); ?>
-				</form>
+				<?php module_form::print_form_close_tag(); ?>
 			</div>
 		</div>
 		<div class="text-center">
@@ -50,11 +53,14 @@
 			</ul>
 		</div>
 
-	<?php }else{ ?>
+	<?php } else { ?>
 
 		<div class="tab-content">
 			<div id="login" class="tab-pane active">
-				<form action="" class="form-signin" method="post">
+				<?php module_form::print_form_open_tag( array(
+					'action' => '',
+					'class'  => 'form-signin',
+				) ); ?>
 					<input type="hidden" name="_process_login" value="true">
 					<?php if ( _DEMO_MODE ) { ?>
 						<p class="text-muted text-center"
@@ -62,7 +68,7 @@
 							<strong>Login details for the UCM demo are:</strong><br/>
 							Administrator: admin@example.com / password <br/>
 							Customer: user@example.com / password <br/>
-							<a href="http://ultimateclientmanager.com/support/faq-knowledge-base/faq-item/?ucm_faq_id=20"
+							<a href="https://ultimateclientmanager.com/support/faq-knowledge-base/faq-item/?ucm_faq_id=20"
 							   target="_blank">FAQ: create your own Customer login</a>
 						</p>
 					<?php } ?>
@@ -80,7 +86,7 @@
 					<button class="btn btn-lg btn-primary btn-block"
 					        type="submit"><?php echo _l( 'Login' ); ?><?php echo ( defined( '_DEMO_MODE' ) && _DEMO_MODE ) ? ' to demo' : ''; ?></button>
 					<?php hook_handle_callback( 'login_screen' ); ?>
-				</form>
+				<?php module_form::print_form_close_tag(); ?>
 			</div>
 		</div>
 		<div class="text-center">

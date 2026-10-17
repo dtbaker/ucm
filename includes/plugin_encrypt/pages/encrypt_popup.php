@@ -89,7 +89,7 @@ if ( $encrypt_id ) {
 	        src="<?php echo full_link( 'includes/plugin_encrypt/js/rsa2.js' ); ?>?ver=<?php echo _SCRIPT_VERSION; ?>"></script>
 	<script type="text/javascript">
       var existing_encrypt_keys = {};
-			<?php foreach($encryption_keys as $existing_encryption_key){ ?>
+			<?php foreach ($encryption_keys as $existing_encryption_key) { ?>
       existing_encrypt_keys[<?php echo $existing_encryption_key['encrypt_key_id'];?>] = {
           'public_key': '<?php echo $existing_encryption_key['public_key'];?>',
           'secured_private_key': '<?php echo $existing_encryption_key['secured_private_key'];?>',
@@ -165,8 +165,8 @@ if ( $encrypt_id ) {
               var raw = '<?php echo $encrypt['data'];?>';
               var decrypt = rsa2.decrypt(raw);
               //alert($('#decrypted_value').val().length);
-              $('#password_box').hide();
-              $('#unlocking_box').show();
+              $('.password_box').hide();
+              $('.unlocking_box').show();
               // do an ajax post to tell our logging that we successfully unlocked this entry.
               // this is not fool proof. turn off your internet after unlocked the password will get around this.
               // but it's a start.
@@ -174,15 +174,16 @@ if ( $encrypt_id ) {
                   type: 'GET',
                   url: '<?php echo $plugins['encrypt']->link( 'note_admin', array(
 										'_process'         => 'encrypt_successful',
+										'form_auth_key'    => module_form::get_secure_key(),
 										'encrypt_field_id' => $encrypt_field_id,
 										'encrypt_id'       => $encrypt_id,
 									) );?>',
                   success: function () {
-                      $('#unlocking_box').hide();
+                      $('.unlocking_box').hide();
                       if (decrypt && decrypt.length > 0) {
                           $('#decrypted_value').val(decrypt);
                       }
-                      $('#decrypt_box').show();
+                      $('.decrypt_box').show();
                       $('#decrypted_value')[0].focus();
                   },
                   fail: function () {
@@ -204,6 +205,7 @@ if ( $encrypt_id ) {
                   type: 'POST',
                   url: '<?php echo $plugins['encrypt']->link( 'note_admin', array(
 										'_process'         => 'save_encrypt',
+										'form_auth_key'    => module_form::get_secure_key(),
 										'encrypt_field_id' => $encrypt_field_id,
 										'encrypt_id'       => $encrypt_id,
 									) );?>',
@@ -237,6 +239,7 @@ if ( $encrypt_id ) {
                       type: 'POST',
                       url: '<?php echo $plugins['encrypt']->link( 'note_admin', array(
 												'_process'         => 'save_encrypt_key',
+												'form_auth_key'    => module_form::get_secure_key(),
 												'encrypt_field_id' => $encrypt_field_id,
 											) );?>',
                       data: {
@@ -270,157 +273,171 @@ if ( $encrypt_id ) {
 	</script>
 
 <?php //print_heading(array('title'=>'Encryption','type'=>'h3')); ?>
-	<table class="tableclass tableclass_form tableclass_full" id="enc_existing">
-		<tbody>
-		<tr>
-			<th class="width2">
-				<?php _e( 'Encryption Vault:' ); ?>
-			</th>
-			<td id="env_vault_name">
-				<?php
-				// drop down list of available encryption methods.
-				if ( $encryption_key && $encrypt && $encrypt['encrypt_key_id'] ) {
-					// we actually have an encrypted value here. don't let them change the key.
-					echo htmlspecialchars( $encryption_key['encrypt_key_name'] );
-				} else {
-					// no encryption saved yet for this field.
-					// let them pick
-					echo print_select_box( $encryption_keys, 'encrypt_key_id', isset( $encrypt_field['encrypt_key_id'] ) ? $encrypt_field['encrypt_key_id'] : false, '', true, 'encrypt_key_name', false );
-					?>
-					<a href="#"
-					   onclick="$('#enc_existing').hide(); $('#enc_create_new').show();$('#encrypt_key_name')[0].focus(); return false;"><?php _e( 'Create New Vault' ); ?></a>
-					<?php
-				}
-				?>
-			</td>
-		</tr>
-		</tbody>
-		<tbody id="password_box" style="<?php echo $adding_new_blank_field ? 'display:none;' : ''; ?>">
-		<tr>
-			<th>
-				<?php _e( 'Enter Passphrase:' ); ?>
-			</th>
-			<td>
-				<input type="password" name="encryptpass" id="encryptpass" value="" onchange="do_crypt(this.value);"
-				       onkeyup="do_crypt(this.value);">
-				<script type="text/javascript">
-            $(function () {
-                $('#encryptpass')[0].focus();
-                $('#encrypt_key_id').change(function () {
-                    var new_id = $(this).val();
-                    if (typeof existing_encrypt_keys[new_id] != 'undefined') {
-                        rsa2.public_key = existing_encrypt_keys[new_id].public_key;
-                        rsa2.private_encrypted = existing_encrypt_keys[new_id].secured_private_key;
-                        rsa2.e = existing_encrypt_keys[new_id].e;
-                    }
-                });
-            })
-				</script>
-			</td>
-		</tr>
-		<tr>
-			<th>
-				<?php _e( 'Last Decryption:' ); ?>
-			</th>
-			<td>
-				<?php
-				$last = get_multiple( 'encrypt_access', array(
-					'encrypt_id' => $encrypt_id,
-					'status'     => 2
-				), 'encrypt_access_id', 'exact', 'encrypt_access_id DESC' );
-				if ( ! $last ) {
-					_e( 'N/A' );
-				} else {
-					$last = array_shift( $last );
-					_e( 'By %s at %s from %s', module_user::link_open( $last['create_user_id'], true ), print_date( $last['date_created'], true ), preg_replace( '#^(\d*\.\d*).*$#', '$1.**.**', $last['create_ip_address'] ) );
-				}
-				?>
-			</td>
-		</tr>
-		<!-- <tr>
-        <th>
-            <?php _e( 'Raw Value:' ); ?>
-        </th>
-        <td>
-            <textarea name="data" rows="7" cols="60" id="raw_value"><?php echo $encrypt['data']; ?></textarea>
-        </td>
-    </tr> -->
-		</tbody>
-		<tbody id="unlocking_box" style="display:none;">
-		<tr>
-			<th>
-				<?php _e( 'Enter Passphrase:' ); ?>
-			</th>
-			<td>
-				<?php _e( 'Success! Decrypting... please wait...' ); ?>
-			</td>
-		</tr>
-		</tbody>
-		<tbody id="decrypt_box" style="<?php echo $adding_new_blank_field ? '' : 'display:none;'; ?>">
-		<tr>
-			<th>
-				<?php _e( 'Decrypted Value:' ); ?>
-			</th>
-			<td>
-				<textarea name="decrypted_value" <?php if ( ! module_encrypt::can_i( 'edit', 'Encrypts' ) ) {
-					echo 'disabled="disabled" ';
-				} ?> rows="7" cols="60" id="decrypted_value"><?php echo htmlspecialchars( $existing_value ); ?></textarea>
-			</td>
-		</tr>
-		<!-- <tr>
-        <th >
-            <?php _e( 'Encrypted Value:' ); ?>
-        </th>
-        <td>
-            <textarea name="encrypted_value" rows="7" cols="60" id="encrypted_value"></textarea>
-        </td>
-    </tr> -->
-		<?php if ( module_encrypt::can_i( 'edit', 'Encrypts' ) && isset( $_REQUEST['editable'] ) ) { // not really safe - used in custom data feature in view only mode ?>
-			<tr>
-				<th>
-				</th>
-				<td>
-					<input type="submit" name="save" value="<?php _e( 'Encrypt and Save' ); ?>" onclick="do_save();"
-					       class="submit_button save_button">
-					<?php if ( $encrypt_id > 0 ) { ?>
-						<input type="submit" name="decrypt" value="<?php _e( 'Save Decrypted' ); ?>" onclick="do_save_decrypted();"
-						       class="submit_button delete_button">
-					<?php } ?>
-				</td>
-			</tr>
+	<?php
+	// Three <tbody> groups used to be shown and hidden by id as the passphrase is entered
+	// and the value decrypts. A fieldset has no row groups, so each row carries the group
+	// as a class and the script above switches on the class instead.
+	$cell = array();
+
+	ob_start();
+	// drop down list of available encryption methods.
+	if ( $encryption_key && $encrypt && $encrypt['encrypt_key_id'] ) {
+		// we actually have an encrypted value here. don't let them change the key.
+		echo htmlspecialchars( $encryption_key['encrypt_key_name'] );
+	} else {
+		// no encryption saved yet for this field.
+		// let them pick
+		echo print_select_box( $encryption_keys, 'encrypt_key_id', isset( $encrypt_field['encrypt_key_id'] ) ? $encrypt_field['encrypt_key_id'] : false, '', true, 'encrypt_key_name', false );
+		?>
+		<a href="#"
+		   onclick="$('#enc_existing').hide(); $('#enc_create_new').show();$('#encrypt_key_name')[0].focus(); return false;"><?php _e( 'Create New Vault' ); ?></a>
+		<?php
+	}
+	$cell['vault'] = '<div id="env_vault_name">' . ob_get_clean() . '</div>';
+
+	ob_start();
+	?>
+	<input type="password" name="encryptpass" id="encryptpass" value="" onchange="do_crypt(this.value);"
+	       onkeyup="do_crypt(this.value);">
+	<script type="text/javascript">
+      $(function () {
+          $('#encryptpass')[0].focus();
+          $('#encrypt_key_id').change(function () {
+              var new_id = $(this).val();
+              if (typeof existing_encrypt_keys[new_id] != 'undefined') {
+                  rsa2.public_key = existing_encrypt_keys[new_id].public_key;
+                  rsa2.private_encrypted = existing_encrypt_keys[new_id].secured_private_key;
+                  rsa2.e = existing_encrypt_keys[new_id].e;
+              }
+          });
+      })
+	</script>
+	<?php
+	$cell['passphrase'] = ob_get_clean();
+
+	ob_start();
+	$last = get_multiple( 'encrypt_access', array(
+		'encrypt_id' => $encrypt_id,
+		'status'     => 2
+	), 'encrypt_access_id', 'exact', 'encrypt_access_id DESC' );
+	if ( ! $last ) {
+		_e( 'N/A' );
+	} else {
+		$last = array_shift( $last );
+		_e( 'By %s at %s from %s', module_user::link_open( $last['create_user_id'], true ), print_date( $last['date_created'], true ), preg_replace( '#^(\d*\.\d*).*$#', '$1.**.**', $last['create_ip_address'] ) );
+	}
+	$cell['last_decryption'] = ob_get_clean();
+
+	ob_start();
+	?>
+	<textarea name="decrypted_value" <?php if ( ! module_encrypt::can_i( 'edit', 'Encrypts' ) ) {
+		echo 'disabled="disabled" ';
+	} ?> rows="7" cols="60" id="decrypted_value"><?php echo htmlspecialchars( $existing_value ); ?></textarea>
+	<?php
+	$cell['decrypted_value'] = ob_get_clean();
+
+	$password_style = $adding_new_blank_field ? 'display:none;' : '';
+	$decrypt_style  = $adding_new_blank_field ? '' : 'display:none;';
+
+	$vault_elements = array(
+		'vault_name'      => array(
+			'title'  => _l( 'Encryption Vault:' ),
+			'fields' => array( $cell['vault'] ),
+		),
+		'passphrase'      => array(
+			'title'     => _l( 'Enter Passphrase:' ),
+			'row_class' => 'password_box',
+			'row_style' => $password_style,
+			'fields'    => array( $cell['passphrase'] ),
+		),
+		'last_decryption' => array(
+			'title'     => _l( 'Last Decryption:' ),
+			'row_class' => 'password_box',
+			'row_style' => $password_style,
+			'fields'    => array( $cell['last_decryption'] ),
+		),
+		'unlocking'       => array(
+			'title'     => _l( 'Enter Passphrase:' ),
+			'row_class' => 'unlocking_box',
+			'row_style' => 'display:none;',
+			'fields'    => array( _l( 'Success! Decrypting... please wait...' ) ),
+		),
+		'decrypted_value' => array(
+			'title'     => _l( 'Decrypted Value:' ),
+			'row_class' => 'decrypt_box',
+			'row_style' => $decrypt_style,
+			'fields'    => array( $cell['decrypted_value'] ),
+		),
+	);
+
+	if ( module_encrypt::can_i( 'edit', 'Encrypts' ) && isset( $_REQUEST['editable'] ) ) { // not really safe - used in custom data feature in view only mode
+		ob_start();
+		?>
+		<input type="submit" name="save" value="<?php _e( 'Encrypt and Save' ); ?>" onclick="do_save();"
+		       class="submit_button save_button">
+		<?php if ( $encrypt_id > 0 ) { ?>
+			<input type="submit" name="decrypt" value="<?php _e( 'Save Decrypted' ); ?>" onclick="do_save_decrypted();"
+			       class="submit_button delete_button">
 		<?php } ?>
-		</tbody>
-	</table>
+		<?php
+		$vault_elements['decrypt_actions'] = array(
+			'title'     => '',
+			'row_class' => 'decrypt_box',
+			'row_style' => $decrypt_style,
+			'fields'    => array( ob_get_clean() ),
+		);
+	}
+
+	echo '<div id="enc_existing">';
+	echo module_form::generate_fieldset( array(
+		'class'    => 'tableclass tableclass_form tableclass_full',
+		'elements' => $vault_elements,
+	) );
+	echo '</div>';
+	?>
 <?php if ( module_encrypt::can_i( 'create', 'Encrypts' ) ) { ?>
-	<form action="" method="post">
-		<table class="tableclass tableclass_form tableclass_full" id="enc_create_new" style="display:none;">
-			<tbody>
-			<tr>
-				<th class="width2">
-					<?php _e( 'Encryption Vault:' ); ?>
-				</th>
-				<td>
-					<input type="text" name="encrypt_key_name" id="encrypt_key_name">
-				</td>
-			</tr>
-			<tr>
-				<th>
-					<?php _e( 'Choose Passphrase:' ); ?>
-				</th>
-				<td>
-					<input type="password" name="new_passphrase" id="new_passphrase" value="">
-				</td>
-			</tr>
-			<tr>
-				<th>
-				</th>
-				<td>
-					<?php _e( '(this may take a few moments)' ); ?> <br/>
-					<input type="button" name="save" value="<?php _e( 'Create New' ); ?>" onclick="create_new();"
-					       class="submit_button save_button">
-				</td>
-			</tr>
-			</tbody>
-		</table>
-	</form>
+	<?php module_form::print_form_open_tag( array( 'action' => '' ) ); ?>
+		<?php
+		ob_start();
+		?>
+		<?php _e( '(this may take a few moments)' ); ?> <br/>
+		<input type="button" name="save" value="<?php _e( 'Create New' ); ?>" onclick="create_new();"
+		       class="submit_button save_button">
+		<?php
+		$create_actions = ob_get_clean();
+
+		// The id and the hidden state go on a wrapper rather than on the fieldset. A theme
+		// may render fieldsets itself - metis does, through the generate_fieldset hook -
+		// and its version does not carry an id or a style, so anything the script on this
+		// page needs to find has to sit outside the helper's output.
+		echo '<div id="enc_create_new" style="display:none;">';
+		echo module_form::generate_fieldset( array(
+			'class'    => 'tableclass tableclass_form tableclass_full',
+			'elements' => array(
+				'encrypt_key_name' => array(
+					'title' => _l( 'Encryption Vault:' ),
+					'field' => array(
+						'type' => 'text',
+						'name' => 'encrypt_key_name',
+						'id'   => 'encrypt_key_name',
+					),
+				),
+				'new_passphrase'   => array(
+					'title' => _l( 'Choose Passphrase:' ),
+					'field' => array(
+						'type'  => 'password',
+						'name'  => 'new_passphrase',
+						'id'    => 'new_passphrase',
+						'value' => '',
+					),
+				),
+				'actions'          => array(
+					'title'  => '',
+					'fields' => array( $create_actions ),
+				),
+			),
+		) );
+		echo '</div>';
+		?>
+	<?php module_form::print_form_close_tag(); ?>
 <?php } ?>

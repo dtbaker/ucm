@@ -1,8 +1,7 @@
 <?php
 
-
-class module_subscription extends module_base {
-
+class module_subscription extends module_base
+{
 	public $links;
 	public $subscription_types;
 	public $subscription_id;
@@ -20,12 +19,15 @@ class module_subscription extends module_base {
 		return __CLASS__;
 	}
 
+	public function __construct() {
+		$this->module_name     = 'subscription';
+		$this->module_position = 30;
+		$this->version         = 2.204;
+	}
+
 	public function init() {
 		$this->links              = array();
 		$this->subscription_types = array();
-		$this->module_name        = "subscription";
-		$this->module_position    = 30;
-		$this->version            = 2.204;
 		// 2.204 - 2017-02-26 - add website details to subscription
 		// 2.203 - 2017-01-04 - subscription pdf template customer option
 		// 2.202 - 2016-12-01 - ajax lookup for subscribers
@@ -102,7 +104,8 @@ class module_subscription extends module_base {
 
 
 		module_config::register_css( 'subscription', 'subscription.css' );
-		module_config::register_js( 'subscription', 'subscription.js' );;
+		module_config::register_js( 'subscription', 'subscription.js' );
+;
 		hook_add( 'invoice_sidebar', 'module_subscription::hook_invoice_sidebar' );
 		hook_add( 'invoice_deleted', 'module_subscription::hook_invoice_deleted' );
 		hook_add( 'invoice_replace_fields', 'module_subscription::hook_invoice_replace_fields' );
@@ -219,44 +222,13 @@ class module_subscription extends module_base {
 				'menu_include_parent' => 0,
 			);
 
-			if ( isset( $_GET['subscription_bug_close'] ) ) {
-				module_config::save_config( 'subscription_check_unsent', 0 );
-			}
-			if ( module_config::c( 'subscription_check_unsent', 1 ) ) {
-				hook_add( 'inner_content_start', 'module_subscription::inner_content_start' );
-			}
+			// A notice about subscription invoices that went unsent in a six week window
+			// in 2016 used to be hooked on here. It is gone: the dates it looked for are
+			// a decade old, the query ran on every page that reached this far, and
+			// hooking it from pre_menu() meant it only ever appeared on screens built
+			// from more than one module. See the note on inner_content_start in index.php.
 		}
 
-	}
-
-	public static function inner_content_start() {
-		$sql             = "SELECT * FROM `" . _DB_PREFIX . "subscription_history` p ";
-		$sql             .= " LEFT JOIN `" . _DB_PREFIX . "invoice` i ";
-		$sql             .= " ON p.invoice_id = i.invoice_id";
-		$sql             .= " WHERE p.paid_date = '0000-00-00'";
-		$sql             .= " AND p.date_created >= '2016-09-10'";
-		$sql             .= " AND p.date_created <= '2016-10-21'";
-		$sql             .= " AND i.date_sent = '0000-00-00'";
-		$invoice_items   = qa( $sql );
-		$unsent_invoices = array();
-		foreach ( $invoice_items as $invoice_item ) {
-			// check if these invoices are unsent.
-			$unsent_invoices[ $invoice_item['invoice_id'] ] = module_invoice::link_open( $invoice_item['invoice_id'], true );
-		}
-		if ( count( $unsent_invoices ) ) {
-			?>
-			<div style="padding:10px;margin: 10px; border:1px solid #FF0000;">
-				Notice: there are <?php echo count( $unsent_invoices ); ?> unsent subscription invoices due to a recent bug.
-				Please check all your recent invoices and manually send them to the customer if
-				required: <?php echo implode( ', ', $unsent_invoices ); ?>.
-				&nbsp;
-				&nbsp;
-				&nbsp;
-				&nbsp;
-				<a href="<?php echo _BASE_HREF; ?>?subscription_bug_close">Hide This Notice</a>
-			</div>
-			<?php
-		}
 	}
 
 	/** static stuff */
@@ -578,10 +550,15 @@ class module_subscription extends module_base {
 			//            $sql .=  " AND (sm.`deleted` = 0 OR sm.`deleted` IS NULL)";
 			//            $sql .=  " AND (sc.`deleted` = 0 OR sc.`deleted` IS NULL)";
 			$sql                      .= " GROUP BY s.subscription_id";
-			$subscription             = qa1( $sql );
-			$subscription['settings'] = isset( $subscription['settings'] ) ? @json_decode( $subscription['settings'], true ) : array();
-			if ( ! is_array( $subscription['settings'] ) ) {
-				$subscription['settings'] = array();
+			$subscription = qa1( $sql );
+			// Only unpack settings when a row came back. Writing to $subscription when it
+			// is false turned it into a one-key array, so the "not found" defaults below
+			// were skipped and the edit page was missing every other field.
+			if ( $subscription ) {
+				$subscription['settings'] = isset( $subscription['settings'] ) ? @json_decode( $subscription['settings'], true ) : array();
+				if ( ! is_array( $subscription['settings'] ) ) {
+					$subscription['settings'] = array();
+				}
 			}
 		}
 		if ( ! $subscription ) {
@@ -605,6 +582,11 @@ class module_subscription extends module_base {
 
 
 	public function process() {
+		// Every form that reaches here is posted from a UCM page, so it carries the
+		// form auth key. Refuse anything that does not - see module_form::check_secure_key().
+		if ( ! module_form::check_secure_key() ) {
+			module_form::reject_invalid_form_auth();
+		}
 		if ( isset( $_REQUEST['butt_del'] ) && $_REQUEST['butt_del'] && $_REQUEST['subscription_id'] ) {
 			$data = self::get_subscription( $_REQUEST['subscription_id'] );
 			if ( module_form::confirm_delete( 'subscription_id', "Really delete subscription: " . $data['name'], self::link_open( $_REQUEST['subscription_id'] ) ) ) {
@@ -612,7 +594,7 @@ class module_subscription extends module_base {
 				set_message( "Subscription deleted successfully" );
 				redirect_browser( self::link_open( false ) );
 			}
-		} else if ( "save_subscription" == $_REQUEST['_process'] ) {
+		} elseif ( "save_subscription" == $_REQUEST['_process'] ) {
 			$subscription_id = $this->save_subscription( $_REQUEST['subscription_id'], $_POST );
 			set_message( "Subscription saved successfully" );
 			redirect_browser( self::link_open( $subscription_id ) );
@@ -854,7 +836,7 @@ class module_subscription extends module_base {
 				if ( $invoice_data['date_cancel'] != '0000-00-00' ) {
 					continue;
 				}
-				$number_of_past_invoices ++;
+				$number_of_past_invoices++;
 			}
 		}
 		//if(isset($subscription['settings']) && isset($subscription['settings']['trial_period']) && $subscription['settings']['trial_period'] > 0 && $number_of_past_invoices < $subscription['settings']['trial_period']){
@@ -1004,7 +986,7 @@ class module_subscription extends module_base {
 							if ( $invoice_data['date_cancel'] != '0000-00-00' ) {
 								continue;
 							}
-							$number_of_past_invoices ++;
+							$number_of_past_invoices++;
 						}
 					}
 				}
@@ -1027,16 +1009,31 @@ class module_subscription extends module_base {
 				$invoice_id = (int) $foo[1];
 				if ( $invoice_id > 0 ) {
 					// see if any subscriptions match this invoice.
-					//module_cache::clear_cache();
-					$invoice      = module_invoice::get_invoice( $invoice_id );
+					// The one field we want is date_paid, which save_invoice() wrote a
+					// few lines before raising this hook. Read the row directly rather
+					// than through module_invoice::get_invoice(), which is cached: a
+					// cached copy here is the copy from before the payment, and its
+					// empty date_paid would be written to subscription_history as
+					// 0000-00-00 - the invoice paid, and the subscription's own record
+					// of it saying otherwise.
+					//
+					// save_invoice() does clear the invoice cache immediately before
+					// raising this hook (invoice.php, just above the handle_hook call),
+					// so today that cannot happen. Demonstrated by removing that clear:
+					// a renewal paid in full recorded paid_date 0000-00-00. This read
+					// does not depend on a caller three hundred lines away keeping that
+					// discipline, and it is one row instead of a six-table join.
+					$invoice      = get_single( 'invoice', 'invoice_id', $invoice_id );
 					$subscription = get_single( 'subscription_history', 'invoice_id', $invoice_id );
-					if ( $subscription ) {
+					if ( $invoice && $subscription ) {
 						// mark subscription as paid and move onto the next date.
 						update_insert( 'subscription_history_id', $subscription['subscription_history_id'], 'subscription_history', array(
 							'paid_date' => $invoice['date_paid'],
 						) );
 						$subscription_owner = get_single( 'subscription_owner', 'subscription_owner_id', $subscription['subscription_owner_id'] );
-						$this->update_next_due_date( $subscription['subscription_id'], $subscription_owner['owner_table'], $subscription_owner['owner_id'] );
+						if ( $subscription_owner ) {
+							$this->update_next_due_date( $subscription['subscription_id'], $subscription_owner['owner_table'], $subscription_owner['owner_id'] );
+						}
 						/*if($subscription['customer_id']){
                             $this->update_next_due_date($subscription['subscription_id'],$subscription['customer_id'],true);
                         }else{
@@ -1169,7 +1166,7 @@ class module_subscription extends module_base {
 							$next_time   = $t;
 							$has_history = true;
 						}
-					} else if ( $invoice['date_create'] && $invoice['date_create'] != '0000-00-00' ) {
+					} elseif ( $invoice['date_create'] && $invoice['date_create'] != '0000-00-00' ) {
 						$t = strtotime( $invoice['date_create'] );
 						if ( $t >= $next_time ) {
 							$next_time   = $t;
@@ -1373,7 +1370,7 @@ class module_subscription extends module_base {
 		// check if this invoice id is a subscription payment
 		if ( $full_finance_item && isset( $full_finance_item['finance_id'] ) && (int) $full_finance_item['finance_id'] > 0 ) {
 			// already have saved a finance item against this invoice id, so we don't try to assume this is a subscription payment
-		} else if ( $full_finance_item && isset( $full_finance_item['invoice_payment_id'] ) && (int) $full_finance_item['invoice_payment_id'] > 0 ) {
+		} elseif ( $full_finance_item && isset( $full_finance_item['invoice_payment_id'] ) && (int) $full_finance_item['invoice_payment_id'] > 0 ) {
 			$subscription = get_single( 'subscription_history', 'invoice_id', $invoice_id );
 			if ( $subscription ) {
 				$subscription_owner = get_single( 'subscription_owner', 'subscription_owner_id', $subscription['subscription_owner_id'] );
@@ -1508,7 +1505,7 @@ class module_subscription extends module_base {
 				$original = true;
 				$c        = 0;
 				while ( $time < $end_date ) {
-					if ( $c ++ > 200 ) {
+					if ( $c++ > 200 ) {
 						break;
 					}
 					$next_time = 0;
@@ -1516,7 +1513,7 @@ class module_subscription extends module_base {
 						// it's a once off..
 						// add it to the list but dont calculate the next one.
 
-					} else if ( ! $original ) {
+					} elseif ( ! $original ) {
 						// work out when the next one will be.
 						$next_time = self::_calculate_next_time( $time, $subscription );
 						$time      = $next_time;
@@ -1566,7 +1563,66 @@ class module_subscription extends module_base {
 		return $return;
 	}
 
+	/**
+	 * Generate the renewals that are due, at most one run at a time.
+	 *
+	 * Two of these running at once bills the customer twice. Nothing in the renewal
+	 * path is atomic: the loop reads `next_due_date`, decides a renewal is due, and only
+	 * writes the date forward at the very end of generate_subscription_invoice() - after
+	 * the invoice, its payment methods and its history row. The whole of that work is the
+	 * window, and two runs inside it both generate.
+	 *
+	 * Reproduced by firing two cron.php requests at the same instant against one
+	 * subscription due today: two invoices, the same invoice number, the same period, the
+	 * same customer, and two subscription_history rows. The merge pass at the end does not
+	 * combine them because each run only knows about the one it made.
+	 *
+	 * That is not an exotic thing to arrange. cron.php's own guard only keeps runs three
+	 * minutes apart, it records the time at the end of the run rather than the start, so a
+	 * run longer than the cron interval is overlapped by the next tick - and this function
+	 * is also called straight out of a customer save when
+	 * subscription_send_invoice_straight_away is on, which never passes through cron.php
+	 * at all.
+	 *
+	 * So the lock lives here rather than in cron.php: this is the one place every caller
+	 * goes through. It is a MySQL named lock, held by the connection, so it is released
+	 * when the request ends however it ends - there is no flag left set by a run that
+	 * died. GET_LOCK answers 1 for acquired, 0 for already held and NULL on error; only a
+	 * definite 0 skips the run, so a database that cannot do named locks goes back to the
+	 * old behaviour instead of quietly stopping every renewal in the system.
+	 */
 	public static function run_cron( $debug = false ) {
+		// 22 characters plus a 32 character hash. Comfortably inside MySQL's 64 character
+		// limit on a lock name, which it refuses with an exception rather than a warning.
+		// The hash keeps two installations sharing one database server out of each
+		// other's way: named locks are server wide, not per database.
+		$lock_name = 'ucm_subscription_cron_' . md5( _DB_NAME . '|' . _DB_PREFIX );
+		$have_lock = false;
+		try {
+			$lock = qa1( "SELECT GET_LOCK('" . db_escape( $lock_name ) . "', 0) AS got_lock" );
+			if ( is_array( $lock ) && isset( $lock['got_lock'] ) && (string) $lock['got_lock'] === '0' ) {
+				if ( $debug ) {
+					echo "Another subscription cron run is already in progress - skipping this one.<br>\n";
+				}
+
+				return;
+			}
+			$have_lock = is_array( $lock ) && isset( $lock['got_lock'] ) && (string) $lock['got_lock'] === '1';
+		} catch ( Exception $e ) {
+			// Whatever went wrong, it is not worth stopping every renewal in the system
+			// over. Carry on unlocked, which is where this code was before.
+			$have_lock = false;
+		}
+		try {
+			self::run_cron_renewals( $debug );
+		} finally {
+			if ( $have_lock ) {
+				query( "SELECT RELEASE_LOCK('" . db_escape( $lock_name ) . "')" );
+			}
+		}
+	}
+
+	private static function run_cron_renewals( $debug = false ) {
 
 		// we only want to perform these cron actions if we're after a certain time of day
 		// because we dont want to be generating these renewals and sending them at midnight, can get confusing
@@ -1915,7 +1971,6 @@ class module_subscription extends module_base {
 			switch ( $search_options['lookup'] ) {
 				case 'active_subscriptions':
 				default:
-
 					break;
 			}
 		}
@@ -2109,6 +2164,4 @@ class module_subscription extends module_base {
 		<?php
 		return ob_get_clean();
 	}
-
-
 }

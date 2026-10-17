@@ -1,7 +1,9 @@
-<form action="" method="post" id="shop-order-form">
+<?php module_form::print_form_open_tag( array(
+	'action' => '',
+	'id'     => 'shop-order-form',
+) ); ?>
 
 	<input type="hidden" name="portal_action" value="generate_invoice">
-	<?php module_form::print_form_auth(); ?>
 
 	<?php
 
@@ -76,5 +78,4 @@
 	?>
 
 
-</form>
-
+<?php module_form::print_form_close_tag();

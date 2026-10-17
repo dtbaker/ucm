@@ -7,246 +7,225 @@ $newsletter_template    = module_newsletter::get_newsletter_template( $newslette
 
 ?>
 
-<form action="" method="post">
+<?php module_form::print_form_open_tag( array( 'action' => '' ) ); ?>
 	<input type="hidden" name="_process" value="save_newsletter_template">
 	<?php
 	module_form::set_required( array(
-			'fields' => array(
-				'newsletter_template_name' => 'Name',
-			)
-		)
-	);
+		'fields' => array(
+			'newsletter_template_name' => 'Name',
+		),
+	) );
 	module_form::prevent_exit( array(
-			'valid_exits' => array(
-				// selectors for the valid ways to exit this form.
-				'.submit_button',
-				'.valid_exit',
-			)
-		)
+		'valid_exits' => array(
+			'.submit_button',
+			'.valid_exit',
+		),
+	) );
+
+	$name_element = array(
+		'title'           => _l( 'Name' ),
+		'row_title_class' => 'width1',
+	);
+
+	if ( (int) $newsletter_template_id > 0 && $newsletter_template['directory'] && is_dir( $newsletter_template['directory'] ) ) {
+		$name_element['fields'] = array(
+			'<input type="hidden" name="newsletter_template_name" value="' . htmlspecialchars( $newsletter_template['newsletter_template_name'] ) . '">',
+			htmlspecialchars( $newsletter_template['newsletter_template_name'] ),
+		);
+	} else {
+		$name_element['field'] = array(
+			'type'  => 'text',
+			'name'  => 'newsletter_template_name',
+			'value' => $newsletter_template['newsletter_template_name'],
+		);
+	}
+
+	$details_elements = array( 'name' => $name_element );
+
+	if ( (int) $newsletter_template_id > 0 ) {
+		if ( $newsletter_template['directory'] && is_dir( $newsletter_template['directory'] ) ) {
+			$details_elements['template_folder'] = array(
+				'title'  => _l( 'Template Folder' ),
+				'fields' => array( htmlspecialchars( $newsletter_template['directory'] ) . ' ' . _l( '(you can create advanced template features from this folder)' ) ),
+			);
+		}
+
+		ob_start();
+		if ( $newsletter_template['directory'] && is_dir( $newsletter_template['directory'] ) && is_file( $newsletter_template['directory'] . 'preview.jpg' ) ) {
+			echo '<img src="' . full_link( $newsletter_template['directory'] . 'preview.jpg' ) . '">';
+		} else {
+			module_file::display_files( array(
+				'owner_table' => 'newsletter_template',
+				'owner_id'    => $newsletter_template_id,
+				'layout'      => 'gallery',
+			) );
+		}
+		$preview_html = ob_get_clean();
+
+		$details_elements['preview_image'] = array(
+			'title'  => _l( 'Preview Image' ),
+			'fields' => array( $preview_html ),
+		);
+
+		if ( $newsletter_template['directory'] && is_dir( $newsletter_template['directory'] ) && is_file( $newsletter_template['directory'] . 'render.php' ) ) {
+			$description = 'N/A';
+			$contents    = file_get_contents( $newsletter_template['directory'] . 'render.php' );
+			if ( preg_match( '#Description:(.*)#i', $contents, $matches ) ) {
+				$description = htmlspecialchars( trim( $matches[1] ) );
+			}
+			$details_elements['custom_rendering'] = array(
+				'title'  => _l( 'Custom Rendering' ),
+				'fields' => array(
+					_l( 'Controlled by file: <em>%s</em> %s<br/>Description: <em>%s</em> ', $newsletter_template['directory'] . 'render.php', _hr( 'You can expand on the default functionality of the newsletter rendering system by editing this custom PHP file. You can include custom PHP calls to databases to output your own HTML for sending. Pretty nifty!' ), $description ),
+				),
+			);
+		}
+	}
+
+	$details_fieldset = array(
+		'heading'  => array( 'type' => 'h3', 'title' => _l( 'Newsletter Template Details' ) ),
+		'class'    => 'tableclass tableclass_form',
+		'elements' => $details_elements,
+	);
+	echo module_form::generate_fieldset( $details_fieldset );
+	?>
+	<?php
+	$body_warnings = '';
+	if ( strpos( $newsletter_template['body'], '{BODY}' ) === false ) {
+		$body_warnings .= _l( 'Please make sure you include a single {BODY} tag in the template.' ) . ' ';
+	}
+	if ( strpos( $newsletter_template['body'], '{UNSUBSCRIBE}' ) === false ) {
+		$body_warnings .= _l( 'It is probably best to include the {UNSUBSCRIBE} link in the template. Please add it so users can unsubscribe easily.' );
+	}
+
+	$body_fieldset = array(
+		'heading'  => array(
+			'type'  => 'h3',
+			'title' => _l( 'Template HTML Code:' ),
+			'help'  => 'The outer HTML code for this template. That is, all the parts of the template that will not change each time you send a newsletter (header, menu, footer). You can include the dynamic fields which will be replaced each time the newsletter is sent.<br>When you insert images or links please use full addresses (including http:// at the start).',
+		),
+		'class'    => 'tableclass tableclass_form',
+		'elements' => array(
+			'body' => array(
+				'title'  => '',
+				'fields' => array(
+					$body_warnings,
+					array(
+						'type'  => 'textarea',
+						'name'  => 'body',
+						'id'    => 'template_body',
+						'value' => $newsletter_template['body'],
+						'style' => 'width:96%; height:500px; margin:5px;',
+					),
+				),
+				'row_title_class' => '',
+			),
+		),
+	);
+
+	$default_inner_fieldset = array(
+		'heading'  => array(
+			'type'  => 'h3',
+			'title' => _l( 'Template Default Content:' ),
+			'help'  => 'When this template is selected, the below default content will appear in the newsletter for editing.',
+		),
+		'class'    => 'tableclass tableclass_form',
+		'elements' => array(
+			'default_inner' => array(
+				'title'  => '',
+				'fields' => array(
+					array(
+						'type'  => 'textarea',
+						'name'  => 'default_inner',
+						'id'    => 'default_inner',
+						'value' => isset( $newsletter_template['default_inner'] ) ? $newsletter_template['default_inner'] : '',
+						'style' => 'width:96%; height:300px; margin:5px;',
+					),
+				),
+				'row_title_class' => '',
+			),
+		),
+	);
+
+	// Each placeholder appends itself to the template body when clicked. These were rows in
+	// a hand-written table handed to the fieldset as elements_before; they are elements now.
+	$append_to_body = static function ( $insert, $label ) {
+		return '<a href="#" onmousedown="$(\'#template_body\').val($(\'#template_body\').val() + '
+		       . $insert . '); return false;" onclick="return false;">' . $label . '</a>';
+	};
+
+	$template_elements = array(
+		'body' => array(
+			'title'  => '',
+			'fields' => array(
+				$append_to_body( "'{BODY}'", '{BODY}' ),
+				_l( 'content from "create newsletter"' ),
+			),
+		),
+		'php'  => array(
+			'title'  => '',
+			'fields' => array(
+				$append_to_body( "'&lt;?php ?&gt;'", '&lt;?php ?&gt;' ),
+				_l( 'code evaluated at send time' ),
+			),
+		),
+	);
+
+	foreach ( module_newsletter::get_replace_fields() as $key => $val ) {
+		$template_elements[ 'field_' . $key ] = array(
+			'title'  => '',
+			'fields' => array(
+				$append_to_body( json_encode( '{' . $key . '}' ), '{' . htmlspecialchars( $key ) . '}' ),
+				htmlspecialchars( (string) $val ),
+			),
+		);
+	}
+
+	$template_elements['more_once_chosen'] = array(
+		'message' => _l( 'You will have more custom fields here<br/> once you pick your recipients.' ),
+	);
+
+	$dynamic_fieldset = array(
+		'heading'  => array( 'type' => 'h3', 'title' => _l( 'Dynamic Fields:' ) ),
+		'class'    => 'tableclass tableclass_form tbl_fixed',
+		'elements' => $template_elements,
 	);
 	?>
-
-	<table width="100%" cellpadding="5">
-		<tbody>
-		<tr>
-			<td valign="top">
-				<h3><?php echo _l( 'Newsletter Template Details' ); ?></h3>
-
-				<table width="100%" border="0" cellspacing="0" cellpadding="2" class="tableclass tableclass_form">
-					<tbody>
-					<tr>
-						<th class="width1">
-							<?php echo _l( 'Name' ); ?>
-						</th>
-						<td>
-							<?php if ( (int) $newsletter_template_id > 0 && $newsletter_template['directory'] && is_dir( $newsletter_template['directory'] ) ) { ?>
-								<input type="hidden" name="newsletter_template_name"
-								       value="<?php echo htmlspecialchars( $newsletter_template['newsletter_template_name'] ); ?>"/>
-								<?php echo htmlspecialchars( $newsletter_template['newsletter_template_name'] ); ?>
-							<?php } else { ?>
-								<input type="text" name="newsletter_template_name"
-								       value="<?php echo htmlspecialchars( $newsletter_template['newsletter_template_name'] ); ?>"/>
-							<?php } ?>
-						</td>
-					</tr>
-					<?php if ( false ) { ?>
-						<tr>
-							<th>
-								<?php echo _l( 'Input Type' ); ?>
-							</th>
-							<td>
-								<input type="radio" name="wizard"
-								       value="0"<?php echo ! $newsletter_template['wizard'] ? ' checked' : ''; ?>> <?php _e( 'Single Body Area' ); ?>
-								<input type="radio" name="wizard"
-								       value="1"<?php echo $newsletter_template['wizard'] ? ' checked' : ''; ?>> <?php _e( 'Multiple Body Areas' ); ?>
-							</td>
-						</tr>
-					<?php } ?>
-					<?php if ( (int) $newsletter_template_id > 0 ) { ?>
-						<?php if ( $newsletter_template['directory'] && is_dir( $newsletter_template['directory'] ) ) { ?>
-							<tr>
-								<th>
-									<?php echo _l( 'Template Folder' ); ?>
-								</th>
-								<td>
-									<?php
-									echo $newsletter_template['directory'];
-									echo ' ';
-									_e( '(you can create advanced template features from this folder)' );
-									?>
-								</td>
-							</tr>
-						<?php } ?>
-						<tr>
-							<th>
-								<?php echo _l( 'Preview Image' ); ?>
-							</th>
-							<td>
-								<?php
-								if ( $newsletter_template['directory'] && is_dir( $newsletter_template['directory'] ) && is_file( $newsletter_template['directory'] . 'preview.jpg' ) ) {
-									?>
-									<img src="<?php echo full_link( $newsletter_template['directory'] . 'preview.jpg' ); ?>">
-									<?php
-								} else {
-									module_file::display_files( array(
-											//'title' => 'Certificate Files',
-											'owner_table' => 'newsletter_template',
-											'owner_id'    => $newsletter_template_id,
-											'layout'      => 'gallery',
-										)
-									);
-								}
-								?>
-							</td>
-						</tr>
-						<?php
-						if ( $newsletter_template['directory'] && is_dir( $newsletter_template['directory'] ) ) {
-							if ( is_file( $newsletter_template['directory'] . 'render.php' ) ) {
-								$description = 'N/A';
-								$contents    = file_get_contents( $newsletter_template['directory'] . 'render.php' );
-								if ( preg_match( '#Description:(.*)#i', $contents, $matches ) ) {
-									$description = htmlspecialchars( $matches[1] );
-								}
-								?>
-								<tr>
-									<th>
-										<?php _e( 'Custom Rendering' ); ?>
-									</th>
-									<td>
-										<?php _e( 'Controlled by file: <em>%s</em> %s<br/>Description: <em>%s</em> ', $newsletter_template['directory'] . 'render.php', _hr( 'You can expand on the default functionality of the newsletter rendering system by editing this custom PHP file. You can include custom PHP calls to databases to output your own HTML for sending. Pretty nifty!' ), $description ); ?>
-									</td>
-								</tr>
-								<?php
-							}
-						} ?>
-					<?php } ?>
-					</tbody>
-				</table>
-			</td>
-		</tr>
-		</tbody>
-	</table>
 	<table width="100%" cellpadding="5">
 		<tbody>
 		<tr>
 			<td valign="top" width="70%">
-				<?php
-				print_heading( array(
-					'type'  => 'h3',
-					'title' => 'Template HTML Code:',
-					'help'  => 'The outer HTML code for this template. That is, all the parts of the template that will not change each time you send a newsletter (header, menu, footer). You can include the dynamic fields which will be replaced each time the newsletter is sent.<br>When you insert images or links please use full addresses (including http:// at the start).',
-				) );
-				?>
-				<table width="100%" border="0" cellspacing="0" cellpadding="2" class="tableclass tableclass_form">
-					<tbody>
-					<tr>
-						<td>
-							<?php
-							if ( strpos( $newsletter_template['body'], '{BODY}' ) === false ) {
-								_e( 'Please make sure you include a single {BODY} tag in the template.' );
-							}
-							if ( strpos( $newsletter_template['body'], '{UNSUBSCRIBE}' ) === false ) {
-								_e( 'It is probably best to include the {UNSUBSCRIBE} link in the template. Please add it so users can unsubscribe easily.' );
-							} ?>
-							<textarea rows="20" cols="20" name="body" id="template_body"
-							          style="width:96%; height:500px; margin:5px;"><?php echo htmlspecialchars( $newsletter_template['body'] ); ?></textarea>
-						</td>
-					</tr>
-					</tbody>
-				</table>
-				<?php
-				print_heading( array(
-					'type'  => 'h3',
-					'title' => 'Template Default Content:',
-					'help'  => 'When this template is selected, the below default content will appear in the newsletter for editing.',
-				) );
-				?>
-				<table width="100%" border="0" cellspacing="0" cellpadding="2" class="tableclass tableclass_form">
-					<tbody>
-					<tr>
-						<td>
-							<textarea rows="20" cols="20" name="default_inner" id="default_inner"
-							          style="width:96%; height:300px; margin:5px;"><?php echo htmlspecialchars( isset( $newsletter_template['default_inner'] ) ? $newsletter_template['default_inner'] : '' ); ?></textarea>
-						</td>
-					</tr>
-					</tbody>
-				</table>
+				<?php echo module_form::generate_fieldset( $body_fieldset ); ?>
+				<?php echo module_form::generate_fieldset( $default_inner_fieldset ); ?>
 			</td>
 			<td valign="top">
-				<?php
-				print_heading( array(
-					'type'  => 'h3',
-					'title' => 'Dynamic Fields:',
-				) );
-				?>
-
-				<table width="100%" border="0" cellspacing="0" cellpadding="2" class="tableclass tableclass_form tbl_fixed">
-					<tbody>
-					<tr>
-						<td class="width1">
-							<a href="#" onmousedown="$('#template_body').val($('#template_body').val() + '{BODY}'); return false;"
-							   onclick="return false;">{BODY}</a>
-						</td>
-						<td>
-							content from "create newsletter"
-						</td>
-					</tr>
-					<tr>
-						<td>
-							<a href="#"
-							   onmousedown="$('#template_body').val($('#template_body').val() + '<?php echo '<?php ?>'; ?>'); return false;"
-							   onclick="return false;">&lt;?php ?&gt;</a>
-						</td>
-						<td>
-							code evaluated at send time
-						</td>
-					</tr>
-					<?php
-					$x      = 0;
-					$fields = module_newsletter::get_replace_fields();
-					foreach ( $fields as $key => $val ) {
-						?>
-						<tr>
-							<td>
-								<a href="#"
-								   onmousedown="$('#template_body').val($('#template_body').val() + '{<?php echo $key; ?>}'); return false;"
-								   onclick="return false;"><?php echo '{' . htmlspecialchars( $key ) . '}'; ?></a>
-							</td>
-							<td>
-								<?php echo htmlspecialchars( $val ); ?>
-							</td>
-						</tr>
-						<?php
-						$x ++;
-					} ?>
-					<tr>
-						<td colspan="2" align="center">
-							<?php _e( 'You will have more custom fields here<br/> once you pick your recipients.' ); ?>
-						</td>
-					</tr>
-					</tbody>
-				</table>
-
-
+				<?php echo module_form::generate_fieldset( $dynamic_fieldset ); ?>
 			</td>
 		</tr>
 		<tr>
 			<td colspan="2" align="center">
-				<input type="submit" name="butt_save" id="butt_save" value="<?php echo _l( 'Save' ); ?>"
-				       class="submit_button save_button"/>
-				<input type="button" name="cancel" value="<?php echo _l( 'Cancel' ); ?>"
-				       onclick="window.location.href='<?php echo module_newsletter::link_list( false ); ?>';"
-				       class="submit_button"/>
-				<?php if ( (int) $newsletter_template_id > 0 ) { ?>
-					<input type="submit" name="butt_del" id="butt_del" value="<?php echo _l( 'Delete' ); ?>"
-					       class="submit_button delete_button"/>
-				<?php } ?>
-
+				<?php
+				$form_actions_elements = array(
+					array( 'type' => 'save_button', 'name' => 'butt_save', 'id' => 'butt_save', 'value' => _l( 'Save' ) ),
+					array(
+						'type'    => 'button',
+						'name'    => 'cancel',
+						'value'   => _l( 'Cancel' ),
+						'class'   => 'submit_button',
+						'onclick' => "window.location.href='" . module_newsletter::link_list( false ) . "';",
+					),
+				);
+				if ( (int) $newsletter_template_id > 0 ) {
+					$form_actions_elements[] = array( 'type' => 'delete_button', 'name' => 'butt_del', 'id' => 'butt_del', 'value' => _l( 'Delete' ) );
+				}
+				$form_actions = array(
+					'class'    => 'action_bar action_bar_center',
+					'elements' => $form_actions_elements,
+				);
+				echo module_form::generate_form_actions( $form_actions );
+				?>
 			</td>
 		</tr>
 		</tbody>
 	</table>
-
-
-</form>
-
+<?php module_form::print_form_close_tag();

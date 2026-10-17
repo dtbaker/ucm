@@ -5,7 +5,7 @@ if ( ! defined( '_UCM_VERSION' ) ) {
 	die( 'Nothing to see here' );
 }
 
-if ( ! $invoice_safe ) {
+if ( empty( $invoice_safe ) ) {
 	die( 'failed' );
 }
 
@@ -70,7 +70,7 @@ if ( $invoice['customer_id'] ) {
 $show_task_dates = module_config::c( 'invoice_task_list_show_date', 1 );
 $colspan         = 2;
 if ( $show_task_dates ) {
-	$colspan ++;
+	$colspan++;
 }
 
 
@@ -98,7 +98,14 @@ $default_payment_method = module_config::c( 'invoice_default_payment_method', 'p
 </script>
 
 
-<form action="" method="post" id="invoice_form">
+<?php
+module_form::print_form_open_tag( array(
+	'id' => 'invoice_form',
+) );
+?>
+	<!-- _process stays as markup: the no_permissions class keeps check_page() from
+	     stripping it on a view-only user's page, and the helper's hidden fields
+	     cannot carry a class. -->
 	<input type="hidden" name="_process" value="save_invoice" class="no_permissions"/>
 	<input type="hidden" name="invoice_id" value="<?php echo $invoice_id; ?>"/>
 	<?php if ( $invoice['customer_id'] && ! isset( $_REQUEST['change_customer'] ) ) { ?>
@@ -110,7 +117,7 @@ $default_payment_method = module_config::c( 'invoice_default_payment_method', 'p
 		<input type="hidden" name="deposit_job_id"
 		       value="<?php echo isset( $invoice['job_id'] ) ? (int) $invoice['job_id'] : 0; ?>"/>
 	<?php } ?>
-	<input type="hidden" name="hourly_rate" value="<?php echo htmlspecialchars( $invoice['hourly_rate'] ); ?>"/>
+	<input type="hidden" name="hourly_rate" value="<?php echo htmlspecialchars( $invoice['hourly_rate'] ?? '' ); ?>"/>
 
 	<input type="hidden" name="_redirect" value="" id="form_redirect"/>
 
@@ -397,13 +404,7 @@ $default_payment_method = module_config::c( 'invoice_default_payment_method', 'p
 		/* MAKE PAYMENT */
 		ob_start();
 		?>
-		<table class="tableclass tableclass_form tableclass_full" cellpadding="0" cellspacing="0">
-			<tbody>
-			<tr>
-				<th class="width1">
-					<?php _e( 'Payment Method' ); ?>
-				</th>
-				<td>
+		<?php ob_start(); ?>
 					<?php
 
 					$default_payment_method_text = '';
@@ -420,7 +421,7 @@ $default_payment_method = module_config::c( 'invoice_default_payment_method', 'p
 							<label for="paymethod<?php echo $x; ?>"><?php echo $payment_method->get_payment_method_name(); ?></label>
 							<br/>
 							<?php
-							$x ++;
+							$x++;
 						}
 					}
 					foreach ( $payment_methods as $payment_method ) {
@@ -438,17 +439,14 @@ $default_payment_method = module_config::c( 'invoice_default_payment_method', 'p
 							<input type="hidden" id="text_paymethod<?php echo $x; ?>"
 							       value="<?php echo htmlspecialchars( $payment_method->get_invoice_payment_description( $invoice_id ) ); ?>">
 							<?php
-							$x ++;
+							$x++;
 						}
 					}
 					?>
-				</td>
-			</tr>
-			<tr class="payment_type_online">
-				<th>
-					<?php _e( 'Payment Amount' ); ?>
-				</th>
-				<td>
+		<?php
+		$payment_method_cell = ob_get_clean();
+		ob_start();
+		?>
 					<?php
 					if ( module_config::c( 'invoice_allow_payment_amount_adjustment', 1 ) ) {
 						echo currency( '<input type="text" name="payment_amount" value="' . number_out( $invoice['total_amount_due'] ) . '" class="currency no_permissions">', true, $invoice['currency_id'] );
@@ -457,22 +455,40 @@ $default_payment_method = module_config::c( 'invoice_default_payment_method', 'p
 						echo '<input type="hidden" name="payment_amount" value="' . number_out( $invoice['total_amount_due'] ) . '" class="no_permissions">';
 					}
 					?>
-				</td>
-			</tr>
-			<tr class="payment_type_online">
-				<td align="center" colspan="2">
-					<input type="hidden" name="butt_makepayment" id="butt_makepayment" value="" class="no_permissions">
-					<button type="button" name="buttpay" class="submit_button no_permissions btn btn-primary"
-					        onclick="$('#butt_makepayment').val('yes'); this.form.submit();"><?php _e( 'Make Payment' ); ?></button>
-				</td>
-			</tr>
-			<tr class="payment_type_offline">
-				<td align="left" colspan="2" id="payment_type_offline_info">
+		<?php
+		$payment_amount_cell = ob_get_clean();
 
-				</td>
-			</tr>
-			</tbody>
-		</table>
+		// invoice.js hides and shows these rows by class - $('.payment_type_offline').hide()
+		// and so on - and writes the offline instructions into #payment_type_offline_info
+		// with .html(). row_class puts the class on the row under both the default renderer
+		// and the one metis substitutes for it; the id moves to a div inside the cell, which
+		// .html() takes exactly as it took the cell.
+		echo module_form::generate_fieldset( array(
+			'class'    => 'tableclass tableclass_form tableclass_full',
+			'elements' => array(
+				'payment_method' => array(
+					'title'  => _l( 'Payment Method' ),
+					'fields' => array( $payment_method_cell ),
+				),
+				'payment_amount' => array(
+					'title'     => _l( 'Payment Amount' ),
+					'row_class' => 'payment_type_online',
+					'fields'    => array( $payment_amount_cell ),
+				),
+				'make_payment'   => array(
+					'row_class' => 'payment_type_online',
+					'message'   => '<input type="hidden" name="butt_makepayment" id="butt_makepayment" value="" class="no_permissions">'
+					               . '<button type="button" name="buttpay" class="submit_button no_permissions btn btn-primary"'
+					               . ' onclick="$(\'#butt_makepayment\').val(\'yes\'); this.form.submit();">'
+					               . _l( 'Make Payment' ) . '</button>',
+				),
+				'offline_info'   => array(
+					'row_class' => 'payment_type_offline',
+					'message'   => '<div id="payment_type_offline_info"></div>',
+				),
+			),
+		) );
+		?>
 		<?php
 
 
@@ -516,7 +532,7 @@ $default_payment_method = module_config::c( 'invoice_default_payment_method', 'p
 									for="paymethodallowed<?php echo $x; ?>"><?php echo $payment_method->get_payment_method_name(); ?></label>
 								<br/>
 								<?php
-								$x ++;
+								$x++;
 							}
 						}
 					}
@@ -578,7 +594,7 @@ $default_payment_method = module_config::c( 'invoice_default_payment_method', 'p
 
 									<?php
 									_h( 'A renewal is available for this invoice. Clicking this button will create a new invoice based on this invoice, and set the renewal reminder up again for the next date.' );
-								} else if ( isset( $invoice['renew_auto'] ) && $invoice['renew_auto'] ) {
+								} elseif ( isset( $invoice['renew_auto'] ) && $invoice['renew_auto'] ) {
 									_h( 'This invoice will be automatically renewed on this date.' );
 
 								} else {
@@ -689,7 +705,7 @@ $default_payment_method = module_config::c( 'invoice_default_payment_method', 'p
 			$timers    = $ucmtimers->get( array(
 				'invoice_id' => $invoice['invoice_id']
 			), array( 'timer_id' => 'DESC' ) );
-			foreach($timers as $timer){
+			foreach ($timers as $timer) {
 				$UCMTimer = new UCMTimer($timer['timer_id']);
 				$linked_timers[] = array(
 					'description' => $UCMTimer->get('description'),
@@ -703,14 +719,14 @@ $default_payment_method = module_config::c( 'invoice_default_payment_method', 'p
 					'title'  => 'Linked Timers',
 					'fields' => array(
 						'<div id="timer_rel_ids_holder">',
-						function() use ($linked_timers){
+						function () use ($linked_timers) {
 							$total_time = 0;
-							foreach($linked_timers as $linked_timer){
-								echo '<a href="' . $linked_timer['link'] . '">' . htmlspecialchars($linked_timer['description']).'</a> (' . $linked_timer['time'] .' ) <br>';
+							foreach ($linked_timers as $linked_timer) {
+								echo '<a href="' . $linked_timer['link'] . '">' . htmlspecialchars($linked_timer['description']) . '</a> (' . $linked_timer['time'] . ' ) <br>';
 								$total_time += $linked_timer['seconds'];
 							}
-							if(count($linked_timers)>1){
-								echo 'Total Time: '.module_timer::format_seconds($total_time);
+							if (count($linked_timers) > 1) {
+								echo 'Total Time: ' . module_timer::format_seconds($total_time);
 							}
 						},
 						'</div>'
@@ -745,7 +761,7 @@ $default_payment_method = module_config::c( 'invoice_default_payment_method', 'p
 						align="center"><?php _e( 'A Credit Note has been generated against this cancelled invoice: %s', module_invoice::link_open( $other_i['invoice_id'], true, $other_i ) ); ?></p>
 					<?php
 				}
-			} else if ( module_invoice::can_i( 'create', 'Invoices' ) ) {
+			} elseif ( module_invoice::can_i( 'create', 'Invoices' ) ) {
 				?>
 				<p style="text-align: center">
 					<input type="submit" name="butt_generate_credit" value="<?php _e( 'Generate Credit Note' ); ?>"
@@ -768,7 +784,7 @@ $default_payment_method = module_config::c( 'invoice_default_payment_method', 'p
 		echo module_form::generate_fieldset( $fieldset_data );
 		unset( $fieldset_data );
 
-	} else if ( $invoice['overdue'] ) {
+	} elseif ( $invoice['overdue'] ) {
 
 		/***** INVOICE OVERDUE ****/
 		ob_start();
@@ -832,7 +848,7 @@ $default_payment_method = module_config::c( 'invoice_default_payment_method', 'p
 		echo module_form::generate_fieldset( $fieldset_data );
 		unset( $fieldset_data );
 
-	} else if ( $invoice_id > 0 && $invoice['total_amount_due'] > 0 && module_security::is_page_editable() && module_invoice::can_i( 'create', 'Invoice Payments' ) ) {
+	} elseif ( $invoice_id > 0 && $invoice['total_amount_due'] > 0 && module_security::is_page_editable() && module_invoice::can_i( 'create', 'Invoice Payments' ) ) {
 		foreach ( $invoice['job_ids'] as $possible_job_id ) {
 			// find any deposit invoices matching this job.
 			$possible_invoices = module_invoice::get_invoices( array( 'deposit_job_id' => $possible_job_id ) );
@@ -1205,7 +1221,7 @@ $default_payment_method = module_config::c( 'invoice_default_payment_method', 'p
 							?>
 							-
 							<?php
-						} else if ( $invoice['default_task_type'] == _TASK_TYPE_QTY_AMOUNT || $invoice['default_task_type'] == _TASK_TYPE_HOURS_AMOUNT ) {
+						} elseif ( $invoice['default_task_type'] == _TASK_TYPE_QTY_AMOUNT || $invoice['default_task_type'] == _TASK_TYPE_HOURS_AMOUNT ) {
 							?>
 							<input type="text" name="invoice_invoice_item[new][hours]" value="" id="newinvoice_itemqty" size="3"
 							       style="width:30px;" onchange="setamount(this.value,'new');" onkeyup="setamount(this.value,'new');">
@@ -1295,7 +1311,7 @@ $default_payment_method = module_config::c( 'invoice_default_payment_method', 'p
 								<input type="text" name="invoice_invoice_item[<?php echo $invoice_item_id; ?>][task_order]" value="<?php
 								if ( isset( $invoice_item_data['custom_task_order'] ) && (int) $invoice_item_data['custom_task_order'] > 0 ) {
 									echo $invoice_item_data['custom_task_order'];
-								} else if ( isset( $invoice_item_data['task_order'] ) && $invoice_item_data['task_order'] > 0 ) {
+								} elseif ( isset( $invoice_item_data['task_order'] ) && $invoice_item_data['task_order'] > 0 ) {
 									echo $invoice_item_data['task_order'];
 								}
 								?>" size="3" class="edit_task_order">
@@ -1303,9 +1319,9 @@ $default_payment_method = module_config::c( 'invoice_default_payment_method', 'p
 						<?php } ?>
 						<td>
 							<input type="hidden" name="invoice_invoice_item[<?php echo $invoice_item_id; ?>][task_id]"
-							       value="<?php echo htmlspecialchars( $invoice_item_data['task_id'] ); ?>">
+							       value="<?php echo htmlspecialchars( $invoice_item_data['task_id'] ?? '' ); ?>">
 							<input type="hidden" name="invoice_invoice_item[<?php echo $invoice_item_id; ?>][timer_id]"
-							       value="<?php echo htmlspecialchars( $invoice_item_data['timer_id'] ); ?>">
+							       value="<?php echo htmlspecialchars( $invoice_item_data['timer_id'] ?? '' ); ?>">
 
 							<input type="text" name="invoice_invoice_item[<?php echo $invoice_item_id; ?>][description]"
 							       value="<?php echo htmlspecialchars( $invoice_item_data['custom_description'] ? $invoice_item_data['custom_description'] : $invoice_item_data['description'] ); ?>"
@@ -1424,13 +1440,13 @@ $default_payment_method = module_config::c( 'invoice_default_payment_method', 'p
 					</tbody>
 				<?php } ?>
 				<tbody id="invoice_item_preview_<?php echo $invoice_item_id; ?>">
-				<tr class="<?php echo $c ++ % 2 ? 'odd' : 'even'; ?>">
+				<tr class="<?php echo $c++ % 2 ? 'odd' : 'even'; ?>">
 					<?php if ( module_config::c( 'invoice_task_numbers', 1 ) ) { ?>
 						<td>
 							<?php
 							if ( isset( $invoice_item_data['custom_task_order'] ) && (int) $invoice_item_data['custom_task_order'] > 0 ) {
 								echo $invoice_item_data['custom_task_order'];
-							} else if ( isset( $invoice_item_data['task_order'] ) && $invoice_item_data['task_order'] > 0 ) {
+							} elseif ( isset( $invoice_item_data['task_order'] ) && $invoice_item_data['task_order'] > 0 ) {
 								echo $invoice_item_data['task_order'];
 							}
 							?>
@@ -1451,7 +1467,9 @@ $default_payment_method = module_config::c( 'invoice_default_payment_method', 'p
 							<a href="#"
 							   onclick="editinvoice_item('<?php echo $invoice_item_id; ?>',0); return false;"><?php echo ( ! trim( $desc ) ) ? 'N/A' : $desc; ?></a>
 						<?php }
-						$long_description = trim( $invoice_item_data['custom_long_description'] ? $invoice_item_data['custom_long_description'] : $invoice_item_data['long_description'] );
+						// Both are null on a line that has never had a long description -
+						// a line billed straight off a job task, for one.
+						$long_description = trim( (string) ( $invoice_item_data['custom_long_description'] ? $invoice_item_data['custom_long_description'] : $invoice_item_data['long_description'] ) );
 						if ( $long_description != '' ) { ?>
 							<a href="#" class="task_toggle_long_description">&raquo;</a>
 							<div
@@ -1547,7 +1565,7 @@ $default_payment_method = module_config::c( 'invoice_default_payment_method', 'p
 					}
 				}
 
-			} else if ( $invoice['discount_type'] == _DISCOUNT_TYPE_AFTER_TAX ) {
+			} elseif ( $invoice['discount_type'] == _DISCOUNT_TYPE_AFTER_TAX ) {
 				$rows[] = array(
 					'label' => _l( 'Sub:' ),
 					'value' => '<span class="currency">' . dollar( $invoice['total_sub_amount'], true, $invoice['currency_id'] ) . '</span>'
@@ -1656,7 +1674,7 @@ $default_payment_method = module_config::c( 'invoice_default_payment_method', 'p
 				<tr>
 					<td colspan="<?php echo $colspan; ?>" align="center">
 						<a
-							href="<?php echo module_invoice::link_open( $invoice_id ); ?>&_process=assign_credit_to_customer"><?php _e( 'This customer has overpaid this invoice. Click here to assign this as credit to their account for a future invoice.' ); ?></a>
+							href="<?php echo module_invoice::link_open( $invoice_id ); ?>&_process=assign_credit_to_customer&form_auth_key=<?php echo module_form::get_secure_key(); ?>"><?php _e( 'This customer has overpaid this invoice. Click here to assign this as credit to their account for a future invoice.' ); ?></a>
 					</td>
 					<td>
 						<?php _e( 'Credit:' ); ?>
@@ -1698,8 +1716,7 @@ $default_payment_method = module_config::c( 'invoice_default_payment_method', 'p
 		</script>
 
 	<?php
-
-	/*** PAYMENT HISTORY ****/
+	/* PAYMENT HISTORY */
 	ob_start();
 	?>
 
@@ -1833,7 +1850,7 @@ $default_payment_method = module_config::c( 'invoice_default_payment_method', 'p
 							<?php }
 							if ( $invoice_payment_data['date_paid'] == '0000-00-00' ) {
 								?> (<a
-									href="<?php echo htmlspecialchars( $_SERVER['REQUEST_URI'] ) . '&_process=make_payment&invoice_payment_id=' . $invoice_payment_id; ?>"><?php _e( 'complete' ); ?></a>) <?php
+									href="<?php echo htmlspecialchars( $_SERVER['REQUEST_URI'] ) . '&_process=make_payment&invoice_payment_id=' . $invoice_payment_id . '&form_auth_key=' . urlencode( module_form::get_secure_key() ); ?>"><?php _e( 'complete' ); ?></a>) <?php
 							}
 							?>
 						</td>
@@ -2021,8 +2038,4 @@ $default_payment_method = module_config::c( 'invoice_default_payment_method', 'p
 	);
 	echo module_form::generate_form_actions( $form_actions );
 
-
-	?>
-
-
-</form>
+	module_form::print_form_close_tag();

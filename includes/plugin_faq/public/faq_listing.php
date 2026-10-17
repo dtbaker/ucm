@@ -14,7 +14,10 @@ $show_product = isset( $_REQUEST['show_product'] ) ? $_REQUEST['show_product'] :
 
 
 <?php if ( $show_search ) { ?>
-	<form action="" method="<?php echo _DEFAULT_FORM_METHOD; ?>">
+	<?php module_form::print_form_open_tag( array(
+		'action' => '',
+		'method' => _DEFAULT_FORM_METHOD,
+	) ); ?>
 
 	<input type="hidden" name="customer_id"
 	       value="<?php echo isset( $_REQUEST['customer_id'] ) ? (int) $_REQUEST['customer_id'] : ''; ?>">
@@ -62,7 +65,7 @@ $show_product = isset( $_REQUEST['show_product'] ) ? $_REQUEST['show_product'] :
 		foreach ( $faqs as $data ) {
 			$faq = module_faq::get_faq( $data['faq_id'] );
 			?>
-			<tr class="<?php echo ( $c ++ % 2 ) ? "odd" : "even"; ?>">
+			<tr class="<?php echo ( $c++ % 2 ) ? "odd" : "even"; ?>">
 				<td nowrap="">
 					<a
 						href="<?php echo module_faq::link_open_public( $data['faq_id'], false ); ?>&faq_product_id=<?php echo isset( $search['faq_product_id'] ) ? (int) $search['faq_product_id'] : ''; ?>"><?php echo htmlspecialchars( $faq['question'] ); ?></a>
@@ -89,5 +92,5 @@ $show_product = isset( $_REQUEST['show_product'] ) ? $_REQUEST['show_product'] :
 
 
 <?php if ( $show_search ) { ?>
-	</form>
+	<?php module_form::print_form_close_tag(); ?>
 <?php } ?>

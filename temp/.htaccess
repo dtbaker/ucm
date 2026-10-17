@@ -1,0 +1,23 @@
+# This folder is working storage. It holds PHP session files, generated invoice, quote
+# and contract documents, and the combined stylesheet and script cache.
+#
+# Only the stylesheet and script cache is meant to be fetched over the web. Everything
+# else in here is private, and the file names are easy to guess, so block it.
+
+<IfModule mod_authz_core.c>
+	Require all denied
+</IfModule>
+<IfModule !mod_authz_core.c>
+	Order allow,deny
+	Deny from all
+</IfModule>
+
+<FilesMatch "\.(css|js)$">
+	<IfModule mod_authz_core.c>
+		Require all granted
+	</IfModule>
+	<IfModule !mod_authz_core.c>
+		Order allow,deny
+		Allow from all
+	</IfModule>
+</FilesMatch>

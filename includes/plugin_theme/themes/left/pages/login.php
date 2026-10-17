@@ -28,7 +28,7 @@
 	<div class="final_content_wrap">
 
 
-		<?php if ( isset( $_REQUEST['signup'] ) && module_config::c( 'customer_signup_on_login', 0 ) ){ ?>
+		<?php if ( isset( $_REQUEST['signup'] ) && module_config::c( 'customer_signup_on_login', 0 ) ) { ?>
 
 			<h2><?php echo _l( 'Sign Up' ); ?> </h2>
 			<table width="100%" class="tableclass">
@@ -46,12 +46,12 @@
 			</table>
 
 
-		<?php }else if ( isset( $_REQUEST['reset'] ) ){ ?>
+		<?php } elseif ( isset( $_REQUEST['reset'] ) ) { ?>
 			<h2><?php echo _l( 'Forgot password' ); ?> </h2>
 			<p><?php echo _l( 'Please enter your email address below to reset your password.' ); ?></p>
 
 
-			<form action="" method="post">
+			<?php module_form::print_form_open_tag( array( 'action' => '' ) ); ?>
 				<input type="hidden" name="_process_reset" value="true">
 				<table width="100%" class="tableclass">
 					<tr>
@@ -83,8 +83,8 @@
 					</tr>
 				</table>
 				<?php hook_handle_callback( 'forgot_password_screen' ); ?>
-			</form>
-		<?php }else{ ?>
+			<?php module_form::print_form_close_tag(); ?>
+		<?php } else { ?>
 
 		<h2><?php echo _l( 'Please Login' ); ?> </h2>
 		<p
@@ -97,7 +97,7 @@
 					<img src="<?php echo _BASE_HREF; ?>images/lock.png" alt="lock"/>
 				</td>
 				<td>
-					<form action="" method="post">
+					<?php module_form::print_form_open_tag( array( 'action' => '' ) ); ?>
 						<input type="hidden" name="_process_login" value="true">
 						<table width="100%" class="tableclass">
 							<tr>
@@ -147,7 +147,7 @@
 							</tr>
 						</table>
 						<?php hook_handle_callback( 'login_screen' ); ?>
-					</form>
+					<?php module_form::print_form_close_tag(); ?>
 				</td>
 			</tr>
 		</table>

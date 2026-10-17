@@ -1,6 +1,5 @@
 <?php
 
-
 // for the email table.
 define( '_MAIL_STATUS_PENDING', 1 );
 define( '_MAIL_STATUS_OVER_QUOTA', 5 );
@@ -9,8 +8,13 @@ define( '_MAIL_STATUS_FAILED', 4 );
 define( '_MAIL_STATUS_SCHEDULED', 5 );
 
 
-class module_email extends module_base {
-
+class module_email extends module_base
+{
+	public function __construct() {
+		$this->module_name     = 'email';
+		$this->module_position = 160;
+		$this->version         = 2.365;
+	}
 
 	public static function can_i( $actions, $name = false, $category = false, $module = false ) {
 		if ( ! $module ) {
@@ -25,10 +29,6 @@ class module_email extends module_base {
 	}
 
 	function init() {
-		$this->module_name     = "email";
-		$this->module_position = 1666;
-
-		$this->version = 2.365;
 		// 2.365 - 2021-04-07 - php8 compatibility fix
 		// 2.364 - 2017-07-24 - auto bcc option
 		// 2.363 - 2017-05-18 - quote email fix
@@ -222,6 +222,11 @@ class module_email extends module_base {
 
 
 	public function process() {
+		// Every form that reaches here is posted from a UCM page, so it carries the
+		// form auth key. Refuse anything that does not - see module_form::check_secure_key().
+		if ( ! module_form::check_secure_key() ) {
+			module_form::reject_invalid_form_auth();
+		}
 		if ( 'send_email' == $_REQUEST['_process'] ) {
 			$this->_handle_send_email();
 		}
@@ -337,7 +342,7 @@ class module_email extends module_base {
 	}
 
 	private function _handle_send_email() {
-		$options = @unserialize( base64_decode( $_REQUEST['options'] ) );
+		$options = ucm_unserialize_options( $_REQUEST['options'] );
 		if ( ! $options ) {
 			$options = array();
 		}
@@ -353,7 +358,8 @@ class module_email extends module_base {
 				$to[]          = $ct;
 			}
 		} else {
-			$to = isset( $options['to'] ) && is_array( $options['to'] ) ? $options['to'] : array();;
+			$to = isset( $options['to'] ) && is_array( $options['to'] ) ? $options['to'] : array();
+;
 		}
 
 		$email = $this->new_email();
@@ -560,6 +566,9 @@ class module_email extends module_base {
 				$args             = $options['success_callback_args'];
 				$args['email_id'] = $email->id;
 				if ( preg_match( '#module_\w#', $options['success_callback'] ) ) {
+					// The callback comes from the caller's options, and the guard above is what
+					// keeps it to a module method.
+					// nosemgrep: php.lang.security.injection.tainted-callable.tainted-callable
 					call_user_func( $options['success_callback'], $args );
 				}
 			}/*else if($options['success_callback']){
@@ -567,7 +576,7 @@ class module_email extends module_base {
             }*/
 			set_message( 'Email sent successfully' );
 			redirect_browser( $options['complete_url'] );
-		} else if ( $email->status == _MAIL_STATUS_SCHEDULED ) {
+		} elseif ( $email->status == _MAIL_STATUS_SCHEDULED ) {
 			set_message( 'Email scheduled successfully' );
 			redirect_browser( $options['complete_url'] );
 		} else {
@@ -631,7 +640,10 @@ class module_email extends module_base {
 		}
 	}
 
-	public static function hook_website_deleted( $callback_name, $website_id, $remove_linked_data ) {
+	// website.php dispatches this one with the website id alone, so a third parameter
+	// here - copied from hook_customer_deleted() above, which does get one - made every
+	// website delete a fatal under PHP 8.
+	public static function hook_website_deleted( $callback_name, $website_id ) {
 		if ( (int) $website_id > 0 ) {
 			delete_from_db( 'email', 'website_id', $website_id );
 		}
@@ -731,15 +743,13 @@ class module_email extends module_base {
 
 		return $sql;
 	}
-
-
 }
 
 
 if ( class_exists( 'UCMBaseSingle' ) ) {
 
-	class UCMEmail extends UCMBaseSingle {
-
+	class UCMEmail extends UCMBaseSingle
+    {
 		public $db_id = 'email_id';
 		public $db_table = 'email';
 		public $display_key = 'description';
@@ -1036,11 +1046,18 @@ if ( class_exists( 'UCMBaseSingle' ) ) {
 			$this->replace( 'FROM_NAME', $this->from['name'] );
 			$this->replace( 'FROM_EMAIL', $this->from['email'] );
 			// hack - we do this loop twice because some replace keys may have replace keys in them.
-			for ( $x = 0; $x < 2; $x ++ ) {
+			for ( $x = 0; $x < 2; $x++ ) {
 				foreach ( $this->replace_values as $key => $val ) {
-					if ( is_array( $val ) ) {
+					if ( is_array( $val ) || is_object( $val ) ) {
 						continue;
 					}
+					// A replace field for a column that is not set arrives as null, and PHP 8
+					// deprecates passing that to str_replace(). The cast is what str_replace
+					// was already doing, so nothing about the output changes - but on an
+					// install with display_errors on, four deprecations per replace value get
+					// printed, and anything printed before redirect_browser() stops the
+					// redirect happening at all. That is what broke accepting a contract.
+					$val = (string) $val;
 					//$val = str_replace(array('\\', '$'), array('\\\\', '\$'), $val);
 					$key = '{' . strtoupper( $key ) . '}';
 					// reply to name
@@ -1343,7 +1360,7 @@ if ( class_exists( 'UCMBaseSingle' ) ) {
 					foreach ( $attachments as $file_path => $file_name ) {
 						if ( strpos( $file_path, 'temp_' ) === 0 && is_file( $temp_folder . basename( $file_path ) ) ) {
 							$mail->AddAttachment( $temp_folder . basename( $file_path ), $file_name );
-						} else if ( is_file( $file_path ) ) {
+						} elseif ( is_file( $file_path ) ) {
 							$mail->AddAttachment( $file_path, $file_name );
 						}
 					}
@@ -1423,17 +1440,14 @@ if ( class_exists( 'UCMBaseSingle' ) ) {
 
 			return _l( 'N/A' );
 		}
-
-
 	}
 
-	class UCMEmails extends UCMBaseMulti {
-
+	class UCMEmails extends UCMBaseMulti
+    {
 		public $db_id = 'email_id';
 		public $db_table = 'email';
 		public $display_name = 'Email';
 		public $display_name_plural = 'Emails';
-
 	}
 
 }

@@ -1,13 +1,26 @@
 <?php
 
+/**
+ * Newest note first.
+ *
+ * This used to return a boolean, which PHP 8.4 deprecates and PHP 9 refuses - and which
+ * was never right anyway: false came back both for "equal" and for "a is later", so two
+ * notes with the same timestamp sorted arbitrarily.
+ */
 function sort_notes( $a, $b ) {
-	return $a['note_time'] < $b['note_time'];
+	return $b['note_time'] <=> $a['note_time'];
 }
 
-class module_note extends module_base {
+class module_note extends module_base
+{
+	public $links;
+	public $user_types;
 
-	var $links;
-	public $version = 2.278;
+	public function __construct() {
+		$this->module_name     = 'note';
+		$this->module_position = 310;
+		$this->version         = 2.278;
+	}
 	// 2.278 - 2016-11-16 - fontawesome icon fixes
 	// 2.277 - 2016-11-06 - timepicker improvement
 	// 2.276 - 2016-10-22 - modal popup improvements
@@ -63,10 +76,8 @@ class module_note extends module_base {
 	}
 
 	function init() {
-		$this->links           = array();
-		$this->user_types      = array();
-		$this->module_name     = "note";
-		$this->module_position = 8882;
+		$this->links     = array();
+		$this->user_types = array();
 		module_config::register_css( 'note', 'notes.css' );
 
 		hook_add( 'calendar_events', 'module_note::hook_calendar_events' );
@@ -232,7 +243,7 @@ class module_note extends module_base {
 				$alert_res['link']      = module_vendor::link_open( $task['owner_id'], false, $vendor_data );
 				$alert_res['full_link'] = module_vendor::link_open( $task['owner_id'], true, $vendor_data );
 				break;
-			case 'job';
+			case 'job':
 				$job_data = module_job::get_job( $task['owner_id'] );
 				if ( ! $job_data || ! isset( $job_data['job_id'] ) || $job_data['job_id'] != $task['owner_id'] ) {
 					return false;
@@ -263,7 +274,7 @@ class module_note extends module_base {
 		$can_create = $can_edit = $can_view = $can_delete = true;
 		if ( $options && isset( $options['bypass_security'] ) ) {
 			// do nothing?
-		} else if ( isset( $options ) && isset( $options['owner_table'] ) && $options['owner_table'] && isset( $options['title'] ) && $options['title'] ) {
+		} elseif ( isset( $options ) && isset( $options['owner_table'] ) && $options['owner_table'] && isset( $options['title'] ) && $options['title'] ) {
 			$can_view   = $plugins[ $options['owner_table'] ]->can_i( 'view', $options['title'] );
 			$can_edit   = $plugins[ $options['owner_table'] ]->can_i( 'edit', $options['title'] );
 			$can_create = $plugins[ $options['owner_table'] ]->can_i( 'create', $options['title'] );
@@ -554,9 +565,14 @@ class module_note extends module_base {
 	}
 
 	function process() {
+		// Every form that reaches here is posted from a UCM page, so it carries the
+		// form auth key. Refuse anything that does not - see module_form::check_secure_key().
+		if ( ! module_form::check_secure_key() ) {
+			module_form::reject_invalid_form_auth();
+		}
 		if ( 'save_note' == $_REQUEST['_process'] ) {
 			$note_id = $_REQUEST['note_id'];
-			$options = unserialize( base64_decode( $_REQUEST['options'] ) );
+			$options = ucm_unserialize_options( $_REQUEST['options'] );
 
 			if ( ! $options ) {
 				return;

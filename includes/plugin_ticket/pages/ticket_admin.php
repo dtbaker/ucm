@@ -100,7 +100,7 @@ if ( ( ! isset( $_GET['customer_id'] ) || ! $_GET['customer_id'] ) && class_exis
 			'm'                   => 'ticket',
 			'p'                   => 'ticket_admin',
 			'default_page'        => 'ticket_admin_open',
-			'order'               => ++ $order,
+			'order'               => ++$order,
 			'menu_include_parent' => 0,
 			'allow_nesting'       => 0,
 			'current'             => ( isset( $_REQUEST['faq_product_id'] ) && $_REQUEST['faq_product_id'] == $product_id ),
@@ -113,5 +113,3 @@ if ( ( ! isset( $_GET['customer_id'] ) || ! $_GET['customer_id'] ) && class_exis
 } else {
 	include( 'ticket_admin_open.php' );
 }
-
-

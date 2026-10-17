@@ -16,7 +16,7 @@ if ( isset( $options['staff_id'] ) && (int) $options['staff_id'] > 0 && isset( $
 }
 
 // get 4 months either side of todays date.
-for ( $x = - 4; $x <= 4; $x ++ ) {
+for ( $x = - 4; $x <= 4; $x++ ) {
 	$ret = listCalendar( date( 'm/d/Y', strtotime( '+' . $x . ' months' ) ), 'month' );
 	if ( is_array( $ret ) && isset( $ret['events'] ) && count( $ret['events'] ) ) {
 		$calendar_entries = array_merge( $calendar_entries, $ret['events'] );
@@ -108,9 +108,9 @@ UID:' . md5( $alert['subject'] . $alert['link'] . $alert['other_details'] ) . '@
 DTSTAMP:' . date( 'Ymd\THis', time() ) . '
 DTSTART;VALUE=DATE:' . date( 'Ymd', $alert['start_time'] ) . '
 DTEND;VALUE=DATE:' . $end . '
-SUMMARY:' . $alert['subject'] . '
-LOCATION:' . ( isset( $alert['location'] ) ? $alert['location'] : '' ) . '
-DESCRIPTION: Customer:' . $alert['link'] . "<br />" . $alert['other_details'] . '
+SUMMARY:' . module_calendar::ical_text( $alert['subject'] ) . '
+LOCATION:' . module_calendar::ical_text( isset( $alert['location'] ) ? $alert['location'] : '' ) . '
+DESCRIPTION: Customer:' . module_calendar::ical_text( $alert['link'] ) . '\\n' . module_calendar::ical_text( $alert['other_details'] ) . '
 END:VEVENT
 ';
 			} else {
@@ -121,9 +121,9 @@ UID:' . md5( $alert['subject'] . $alert['link'] . $alert['other_details'] ) . '@
 DTSTAMP:' . date( 'Ymd\THis', time() ) . '
 DTSTART:' . date( 'Ymd\THis', $alert['start_time'] ) . '
 DTEND:' . $end . '
-SUMMARY:' . $alert['subject'] . '
-LOCATION:' . ( isset( $alert['location'] ) ? $alert['location'] : '' ) . '
-DESCRIPTION: Customer:' . $alert['link'] . "<br />" . $alert['other_details'] . '
+SUMMARY:' . module_calendar::ical_text( $alert['subject'] ) . '
+LOCATION:' . module_calendar::ical_text( isset( $alert['location'] ) ? $alert['location'] : '' ) . '
+DESCRIPTION: Customer:' . module_calendar::ical_text( $alert['link'] ) . '\\n' . module_calendar::ical_text( $alert['other_details'] ) . '
 END:VEVENT
 ';
 			}
@@ -135,4 +135,3 @@ END:VEVENT
 
 
 echo 'END:VCALENDAR';
-

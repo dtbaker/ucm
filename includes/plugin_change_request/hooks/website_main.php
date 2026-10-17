@@ -21,7 +21,7 @@ $show_completed = isset( $_REQUEST['show_completed_change_requests'] ) ? $_REQUE
 $num_completed  = 0;
 foreach ( $change_requests as $change_request ) {
 	if ( $change_request['status'] == _CHANGE_REQUEST_STATUS_COMPLETE ) {
-		$num_completed ++;
+		$num_completed++;
 	}
 }
 if ( $num_completed ) {
@@ -87,7 +87,7 @@ ob_start();
 				continue;
 			}
 			?>
-			<tr class="<?php echo $c ++ % 2 ? 'odd' : 'even'; ?>">
+			<tr class="<?php echo $c++ % 2 ? 'odd' : 'even'; ?>">
 				<td>
 					<?php echo htmlspecialchars( $change_request['url'] ); ?>
 				</td>
@@ -131,7 +131,7 @@ ob_start();
 						echo ' ';
 						$task = $tasks[ $change_request['task_id'] ];
 						_e( '%s hrs = %s', $task['hours'], currency( $task['amount'] > 0 ? $task['amount'] : ( $task['hours'] * $job_data['hourly_rate'] ) ), true, $job_data['currency_id'] );
-					} else if ( module_job::can_i( 'edit', 'Job Tasks' ) ) {
+					} elseif ( module_job::can_i( 'edit', 'Job Tasks' ) ) {
 						if ( count( $jobs ) ) {
 							echo print_select_box( $jobs, 'change_request_job_id', '', '', _l( 'select a job' ), 'name' );
 							?>
@@ -164,7 +164,7 @@ ob_start();
 					<?php } ?>
 
 					<?php if ( $change_request['status'] == 1 ) { ?>
-					<?php } else if ( $change_request['status'] == 2 ) {
+					<?php } elseif ( $change_request['status'] == 2 ) {
 						// popup asking them what job to add this change request to.
 						?>
 					<?php } ?>

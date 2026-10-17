@@ -1,7 +1,7 @@
 <?php
 
-class module_signature extends module_base {
-
+class module_signature extends module_base
+{
 	public static function can_i( $actions, $name = false, $category = false, $module = false ) {
 		if ( ! $module ) {
 			$module = __CLASS__;
@@ -14,12 +14,14 @@ class module_signature extends module_base {
 		return __CLASS__;
 	}
 
-	function init() {
-		$this->links           = array();
-		$this->module_name     = "signature";
-		$this->module_position = 17.1; //17 is job
+	public function __construct() {
+		$this->module_name     = 'signature';
+		$this->module_position = 450;
+		$this->version         = 2.21;
+	}
 
-		$this->version = 2.21;
+	function init() {
+		$this->links = array();
 		// 2.1 - 2014-07-09 - initial release
 		// 2.2 - 2014-07-12 - staff and customer signature from same login account support
 		// 2.21 - 2014-07-12 - staff and customer signature from same login account support
@@ -54,7 +56,11 @@ class module_signature extends module_base {
 	public static function signature_job_task_link( $job_id, $task_id ) {
 		// check if staff or customer signature is required.
 		$job_task = module_job::get_task( $job_id, $task_id );
-		if ( $job_task && ! $job_task['fully_completed'] ) {
+		if ( ! $job_task || ! $job_task['fully_completed'] ) {
+			// No task row at all is the case a job being built from a quote hits: the
+			// tasks are previewed with task_id 0, so there is nothing to look up and
+			// nothing to sign yet. Reading $job_task['user_id'] on that printed a
+			// warning into the task list.
 			echo _l( 'Pending Completion' );
 
 			return;
@@ -77,7 +83,7 @@ class module_signature extends module_base {
 		if ( ! $existing_job_task_signature || ! $existing_job_task_signature['staff_signature_id'] ) {
 			$class = 'signature_staff';
 			$text  = _l( 'Staff Required' );
-		} else if ( $existing_job_task_signature && ! $existing_job_task_signature['customer_signature_id'] ) {
+		} elseif ( $existing_job_task_signature && ! $existing_job_task_signature['customer_signature_id'] ) {
 			$class = 'signature_customer';
 			$text  = _l( 'Customer Required' );
 		} else {
@@ -100,7 +106,7 @@ class module_signature extends module_base {
 
 		switch ( $hook ) {
 			case 'signature_job_task':
-				$args = json_decode( base64_decode( $_REQUEST['i'] ), true );
+				$args = json_decode( (string) base64_decode( ucm_request_string( 'i' ) ), true );
 				include( 'pages/signature_job_task.php' );
 				break;
 		}

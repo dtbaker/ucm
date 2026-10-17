@@ -1,8 +1,7 @@
 <?php
 
-
-class module_paymethod_banktransfer extends module_base {
-
+class module_paymethod_banktransfer extends module_base
+{
 	public static function can_i( $actions, $name = false, $category = false, $module = false ) {
 		if ( ! $module ) {
 			$module = __CLASS__;
@@ -15,16 +14,18 @@ class module_paymethod_banktransfer extends module_base {
 		return __CLASS__;
 	}
 
+	public function __construct() {
+		$this->module_name     = 'paymethod_banktransfer';
+		$this->module_position = 330;
+		$this->version         = 2.241;
+	}
+
 	function init() {
-		$this->version = 2.241;
 		//2.21 - currency fix.
 		//2.22 - edit template
 		//2.23 - improved settings page
 		//2.24 - 2014-03-16 - added more tags to bank transfer templates
 		//2.241 - 2015-03-14 - better default payment method options
-
-		$this->module_name     = "paymethod_banktransfer";
-		$this->module_position = 8882;
 
 		if ( class_exists( 'module_template', false ) ) {
 			module_template::init_template( 'paymethod_banktransfer', 'Hello,
@@ -104,6 +105,22 @@ Amount: <strong>{AMOUNT}</strong>', 'Bank transfer details for invoice payments.
 		query( $sql );
 	}
 
+	/**
+	 * The stable identifier for this payment method, never the admin-editable label.
+	 *
+	 * @return string
+	 */
+	public static function get_payment_method_key() {
+		return 'banktransfer';
+	}
+
+	/**
+	 * @return bool
+	 */
+	public function is_deprecated() {
+		return false;
+	}
+
 	public static function get_payment_method_name() {
 		return module_config::s( 'payment_method_banktransfer_label', 'Bank Transfer' );
 	}
@@ -156,5 +173,4 @@ Amount: <strong>{AMOUNT}</strong>', 'Bank transfer details for invoice payments.
 		echo $template->render( 'pretty_html' );
 		exit;
 	}
-
 }

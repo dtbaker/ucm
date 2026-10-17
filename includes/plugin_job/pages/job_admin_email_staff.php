@@ -1,5 +1,6 @@
 <?php
-if ( ! $job_safe ) {
+
+if ( empty( $job_safe ) ) {
 	die( 'failed' );
 }
 if ( ! module_job::can_i( 'edit', 'Jobs' ) ) {
@@ -47,7 +48,7 @@ foreach ( $job_tasks as $job_task ) {
 		$job['job_tasks'] .= _l( 'Completed Hours:' ) . ' ' . $job_task['completed'] . '<br/>';
 	}
 	$job['job_tasks'] .= '</li>';
-	$job['task_count'] ++;
+	$job['task_count']++;
 }
 $job['job_tasks'] .= '</ul>';
 

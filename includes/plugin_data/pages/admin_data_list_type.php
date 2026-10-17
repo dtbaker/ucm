@@ -78,7 +78,7 @@ if ( isset( $data_type['max_entries'] ) && $data_type['max_entries'] == 1 && cou
 				?> Please feel free to change the <a
 					href="<?php echo $module->link_open_data_type( $data_type['data_type_id'] ); ?>">Settings</a> for this Custom Data Form. <?php
 			} ?>More details are <a
-				href="http://ultimateclientmanager.com/support/documentation-wiki/custom-data-forms/" target="_blank">located
+				href="https://ultimateclientmanager.com/support/documentation-wiki/custom-data-forms/" target="_blank">located
 				here in the Documentation</a>.
 		</div> <?php
 	}

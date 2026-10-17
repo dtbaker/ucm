@@ -1,6 +1,6 @@
 <?php
 $hash      = $_REQUEST['hash'];
-$form_data = unserialize( base64_decode( $_SESSION['_delete_data'][ $hash ] ) );
+$form_data = ucm_unserialize_options( $_SESSION['_delete_data'][ $hash ] );
 if ( ! $form_data ) {
 	echo 'Error, please go back and try again';
 	exit;
@@ -13,7 +13,7 @@ $module->page_title = _l( 'Delete Confirmation' );
 ob_start();
 ?>
 
-	<form action="<?php echo $form_data[2]; ?>" method="post">
+	<?php module_form::print_form_open_tag( array( 'action' => htmlspecialchars( $form_data[2] ) ) ); ?>
 		<input type="hidden" name="_confirm_delete" value="<?php echo htmlspecialchars( $hash ); ?>">
 		<?php foreach ( $form_data[1] as $key => $val ) {
 			if ( is_array( $val ) ) {
@@ -56,12 +56,15 @@ ob_start();
 					'name'    => 'cancel',
 					'value'   => _l( 'Cancel' ),
 					'class'   => 'submit_button',
-					'onclick' => "window.location.href='" . $form_data[3] . "'; return false;",
+					// generate_form_element() prints onclick straight into the attribute, so
+					// this has to come out safe for both the javascript string and the
+					// attribute around it.
+					'onclick' => "window.location.href='" . htmlspecialchars( addcslashes( $form_data[3], "'\\" ), ENT_QUOTES ) . "'; return false;",
 				),
 			),
 		);
 		echo module_form::generate_form_actions( $form_actions ); ?>
-	</form>
+	<?php module_form::print_form_close_tag(); ?>
 
 <?php
 $fieldset_data = array(

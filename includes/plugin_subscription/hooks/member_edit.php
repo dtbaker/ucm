@@ -8,13 +8,6 @@ $responsive_summary = array();
 ob_start();
 ?>
 
-	<table width="100%" border="0" cellspacing="0" cellpadding="2" class="tableclass tableclass_form">
-		<tbody>
-		<tr>
-			<th class="width1">
-				<?php echo _l( 'Subscriptions' ); ?>
-			</th>
-			<td>
 				<?php if ( module_subscription::can_i( 'edit', 'Subscriptions' ) ) { ?>
 					<input type="hidden" name="member_subscriptions_save" value="1">
 					<input type="hidden" name="subscription_add_payment" value="" id="subscription_add_payment">
@@ -37,7 +30,7 @@ ob_start();
 							global $members_subscriptions;
 							if ( isset( $members_subscriptions[ $a['subscription_id'] ] ) && isset( $members_subscriptions[ $b['subscription_id'] ] ) ) {
 								return 0;
-							} else if ( isset( $members_subscriptions[ $a['subscription_id'] ] ) && ! isset( $members_subscriptions[ $b['subscription_id'] ] ) ) {
+							} elseif ( isset( $members_subscriptions[ $a['subscription_id'] ] ) && ! isset( $members_subscriptions[ $b['subscription_id'] ] ) ) {
 								return - 1;
 							} else {
 								return 1;
@@ -215,7 +208,7 @@ ob_start();
 										// this invoice is for the next due date (calculated using the new method of storing date in db)
 										$next_due_time_invoice_created = $invoice_data;
 
-									} else if ( print_date( $next_due_time ) == print_date( $invoice_data['date_create'] ) || ( $next_due_time_pre && print_date( $next_due_time_pre ) == print_date( $invoice_data['date_create'] ) ) ) {
+									} elseif ( print_date( $next_due_time ) == print_date( $invoice_data['date_create'] ) || ( $next_due_time_pre && print_date( $next_due_time_pre ) == print_date( $invoice_data['date_create'] ) ) ) {
 										// this invoice is for the next due date.
 										$next_due_time_invoice_created = $invoice_data;
 									}
@@ -236,7 +229,8 @@ ob_start();
 							//echo '<li>';
 							if ( $next_due_time_invoice_created ) {
 								_e( 'The next invoice has been created for %s. Please mark it as paid.', '<a href="' . module_invoice::link_open( $next_due_time_invoice_created['invoice_id'], false, $next_due_time_invoice_created ) . '">' . print_date( $next_due_time ) . '</a>' );
-								echo ' <a href="#" onclick="$(\'#next_invoice_' . $subscription['subscription_id'] . '\').show(); $(this).hide();">New</a>';;
+								echo ' <a href="#" onclick="$(\'#next_invoice_' . $subscription['subscription_id'] . '\').show(); $(this).hide();">New</a>';
+;
 								echo '<span id="next_invoice_' . $subscription['subscription_id'] . '" style="display:none;"><br/>';
 							}
 							if ( isset( $subscription['automatic_renew'] ) && $subscription['automatic_renew'] ) {
@@ -274,15 +268,11 @@ ob_start();
 					</div>
 
 				<?php } ?>
-			</td>
-		</tr>
-		</tbody>
-	</table>
 
 <?php
 
 $fieldset_data = array(
-	'heading'         => array(
+	'heading'  => array(
 		'title'      => _l( 'Subscriptions &amp; Payments' ),
 		'type'       => 'h3',
 		'responsive' => array(
@@ -290,6 +280,11 @@ $fieldset_data = array(
 			'summary' => htmlspecialchars( implode( ', ', $responsive_summary ) ),
 		)
 	),
-	'elements_before' => ob_get_clean(),
+	'elements' => array(
+		'subscriptions' => array(
+			'title'  => 'Subscriptions',
+			'fields' => array( ob_get_clean() ),
+		),
+	),
 );
 echo module_form::generate_fieldset( $fieldset_data );

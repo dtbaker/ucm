@@ -7,8 +7,8 @@
  * If you want to change this file please copy it to a new folder: custom/includes/plugin_theme_blocks/class.table_manager.php
  * this way it wont get overwritten during system updates.
  */
-class ucm_blocks_table_manager extends ucm_table_manager {
-
+class ucm_blocks_table_manager extends ucm_table_manager
+{
 	public $table_class = 'table tableclass_rows table-hover table-condensed datatable adm-table dataTable no-footer';
 
 	public function print_table() {
@@ -40,7 +40,7 @@ class ucm_blocks_table_manager extends ucm_table_manager {
 			<tr class="title">
 				<?php foreach ( $this->columns as $column_id => $column_data ) {
 					$title = is_array( $column_data ) ? $column_data['title'] : $column_data;
-					$colspan ++;
+					$colspan++;
 					?>
 					<th id="<?php echo $column_id; ?>"><?php echo _l( $title ); ?></th>
 				<?php }
@@ -52,7 +52,7 @@ class ucm_blocks_table_manager extends ucm_table_manager {
 				if ( class_exists( 'module_subscription', false ) && count( $this->subscription_fields ) ) {
 					foreach ( $this->subscription_fields as $extra_field ) {
 						module_subscription::print_table_header( $extra_field['type'] );
-						$colspan ++;
+						$colspan++;
 					}
 				}
 				?>
@@ -95,7 +95,7 @@ class ucm_blocks_table_manager extends ucm_table_manager {
 				</tfoot>
 			<?php } ?>
 		</table>
-		<?php if ( ! $this->inline_table ){ ?>
+		<?php if ( ! $this->inline_table ) { ?>
 		</div>
 		<?php
 	}
@@ -144,6 +144,4 @@ class ucm_blocks_table_manager extends ucm_table_manager {
 			<?php
 		}
 	}
-
-
 }

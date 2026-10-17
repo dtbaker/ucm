@@ -1,0 +1,15 @@
+{
+	"_generated": "Written by docs-site/scripts/build-app-artifacts.mjs. Edit the article frontmatter, not this file.",
+	"article": "using/calendar",
+	"pages": {
+		"calendar-calendar_admin": "using/calendar",
+		"calendar-calendar_admin_edit": "using/calendar",
+		"calendar-calendar_admin_edit2": "using/calendar",
+		"calendar-calendar_settings": "using/calendar",
+		"calendar-ical_alerts": "using/calendar",
+		"calendar-ical_finance_recurring": "using/calendar",
+		"calendar-ical_finance_summary": "using/calendar",
+		"calendar-ical_finance_transactions": "using/calendar",
+		"calendar-ical_full": "using/calendar"
+	}
+}

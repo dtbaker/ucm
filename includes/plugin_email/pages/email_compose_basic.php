@@ -1,6 +1,6 @@
 <?php
 if ( ! isset( $options ) && isset( $_REQUEST['options'] ) ) {
-	$options = unserialize( base64_decode( $_REQUEST['options'] ) );
+	$options = ucm_unserialize_options( $_REQUEST['options'] );
 }
 if ( ! isset( $options ) ) {
 	$options = array();
@@ -9,14 +9,20 @@ $options = module_email::get_email_compose_options( $options );
 extract( $options );
 ?>
 
-<form action="" method="post" id="template_change_form">
+<?php module_form::print_form_open_tag( array(
+	'action' => '',
+	'id'     => 'template_change_form',
+) ); ?>
 	<input type="hidden" name="template_name" value="" id="template_name_change">
-</form>
+<?php module_form::print_form_close_tag(); ?>
 
-<form action="<?php echo full_link( 'email.email_compose_basic' ); ?>" method="post" enctype="multipart/form-data">
+<?php module_form::print_form_open_tag( array(
+	'action'  => full_link( 'email.email_compose_basic' ),
+	'enctype' => 'multipart/form-data',
+) ); ?>
 	<input type="hidden" name="_process" value="send_email">
 	<input type="hidden" name="options" value="<?php echo base64_encode( serialize( $options ) ); ?>">
-	<?php module_form::print_form_auth();
+	<?php
 
 	$fieldset_data = array(
 		'title'    => isset( $title ) ? $title : false,
@@ -60,7 +66,7 @@ extract( $options );
 
 	$fieldset_data['elements'][] = array(
 		'title' => _l( 'From:' ),
-		'field' => function () use ( $options, $headers, $from_name, $from_email ) {
+		'field' => function () use ( $options, $from_name, $from_email ) {
 
 			//		    $from_name = !empty($headers['FromName']) ? $headers['FromName'] : $options['from_name'];
 			//		    $from_email = !empty($headers['FromEmail']) ? $headers['FromEmail'] : $options['from_email'];
@@ -79,7 +85,7 @@ extract( $options );
 
 	$fieldset_data['elements'][] = array(
 		'title' => _l( 'To:' ),
-		'field' => function () use ( $to, $options, $headers, $to_select ) {
+		'field' => function () use ( $to, $options, $to_select ) {
 			// drop down with various options, or a blank inbox box with an email address.
 			if ( count( $to ) > 1 ) {
 				?>
@@ -92,13 +98,13 @@ extract( $options );
 						} ?>><?php echo htmlspecialchars( $t['email'] ) . ' - ' . htmlspecialchars( $t['name'] ); ?></option>
 					<?php } ?>
 				</select>
-			<?php }else if ( count( $to ) ){
+			<?php } elseif ( count( $to ) ) {
 				$t = array_shift( $to );
 				?>
 
 				<?php echo htmlspecialchars( $t['email'] ) . ' - ' . htmlspecialchars( $t['name'] ) . ( isset( $t['last_name'] ) && module_config::c( 'email_to_full_name', 1 ) ? ' ' . htmlspecialchars( $t['last_name'] ) : '' ); ?>
 
-			<?php }else{ ?>
+			<?php } else { ?>
 				<div id="email_to_holder">
 					<div class="dynamic_block">
 						<input type="email" name="custom_to[]"
@@ -115,7 +121,7 @@ extract( $options );
 	if ( count( $to ) > 1 ) {
 		$fieldset_data['elements'][] = array(
 			'title' => _l( 'CC:' ),
-			'field' => function () use ( $to, $options, $headers ) {
+			'field' => function () use ( $to, $options ) {
 				// drop down with various options, or a blank inbox box with an email address.
 				?>
 				<div id="email_cc_holder">
@@ -156,7 +162,7 @@ extract( $options );
 
 	$fieldset_data['elements'][] = array(
 		'title' => _l( 'Attachment:' ),
-		'field' => function () use ( $attachments, $options, $headers ) {
+		'field' => function () use ( $attachments, $options ) {
 			// drop down with various options, or a blank inbox box with an email address.
 			// uploado an attachment here, or generate one from a pdf on send.
 			// (eg: sending an invoice pdf)
@@ -224,5 +230,4 @@ extract( $options );
 	?>
 
 
-</form>
-
+<?php module_form::print_form_close_tag();

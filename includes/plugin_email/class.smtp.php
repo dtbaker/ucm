@@ -1,4 +1,5 @@
 <?php
+
 /**
  * PHPMailer RFC821 SMTP email transport class.
  * PHP Version 5
@@ -24,7 +25,8 @@
  * @author Chris Ryan
  * @author Marcus Bointon <phpmailer@synchromedia.co.uk>
  */
-class SMTP {
+class SMTP
+{
 	/**
 	 * The PHPMailer SMTP version number.
 	 * @var string
@@ -499,8 +501,8 @@ class SMTP {
 				 * PROTOCOL Docs http://curl.haxx.se/rfc/ntlm.html#ntlmSmtpAuthentication
 				 */
 				require_once 'extras/ntlm_sasl_client.php';
-				$temp        = new stdClass;
-				$ntlm_client = new ntlm_sasl_client_class;
+				$temp        = new stdClass();
+				$ntlm_client = new ntlm_sasl_client_class();
 				//Check that functions are available
 				if ( ! $ntlm_client->initialize( $temp ) ) {
 					$this->setError( $temp->error );
@@ -751,7 +753,7 @@ class SMTP {
 	 */
 	public function hello( $host = '' ) {
 		//Try extended hello first (RFC 2821)
-		return (boolean) ( $this->sendHello( 'EHLO', $host ) or $this->sendHello( 'HELO', $host ) );
+		return (bool) ( $this->sendHello( 'EHLO', $host ) or $this->sendHello( 'HELO', $host ) );
 	}
 
 	/**

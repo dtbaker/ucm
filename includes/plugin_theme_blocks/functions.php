@@ -220,7 +220,7 @@ function blocks_search_bar( $callback, $options ) {
 									$field['class'] .= ' form-control input-sm';
 									module_form::generate_form_element( $field );
 									echo ' ';
-								} else if ( is_closure( $field ) ) {
+								} elseif ( is_closure( $field ) ) {
 									$field();
 								} else {
 									echo $field . ' ';
@@ -324,13 +324,13 @@ function blocks_generate_fieldset( $callback, $options ) {
 	     data-fieldset-settings="<?php echo htmlspecialchars( json_encode( $fieldset_settings ), ENT_QUOTES, 'UTF-8' ); ?>"
 	     data-fieldset-id="<?php echo $fieldset_id; ?>" id="<?php echo $fieldset_id; ?>">
 		<div class="box-header">
-			<?php if ( $options['heading'] ){
+			<?php if ( $options['heading'] ) {
 				if ( ! isset( $options['heading']['type'] ) || $options['heading']['type'] != 'h3' ) {
 					$options['heading']['type'] = 'h3';
 				}
 				$options['heading']['class'] = 'box-title';
 				print_heading( $options['heading'] );
-			}else if ( $options['title'] ){ ?>
+			} elseif ( $options['title'] ) { ?>
 			<<?php echo $options['title_type']; ?>
 			class="box-title"><?php _e( $options['title'] ); ?></<?php echo $options['title_type']; ?>>
 		<?php } ?>
@@ -365,7 +365,7 @@ function blocks_generate_fieldset( $callback, $options ) {
 							<div class="text-center">
 								<?php if ( isset( $element['message'] ) ) { ?>
 									<?php echo $element['message']; ?>
-								<?php } else if ( isset( $element['warning'] ) ) { ?>
+								<?php } elseif ( isset( $element['warning'] ) ) { ?>
 									<span class="error_text"><?php echo $element['warning']; ?></span>
 								<?php } ?>
 							</div>
@@ -438,7 +438,7 @@ function blocks_generate_fieldset( $callback, $options ) {
 														// treat this as a call to the form generate option
 														module_form::generate_form_element( $field );
 														echo ' ';
-													} else if ( is_closure( $field ) ) {
+													} elseif ( is_closure( $field ) ) {
 														$field();
 													} else {
 														echo $field . ' ';

@@ -4,10 +4,15 @@ function sort_groups( $a, $b ) {
 	return $a['group_time'] < $b['group_time'];
 }
 
-class module_group extends module_base {
+class module_group extends module_base
+{
+	public $links;
 
-	var $links;
-	public $version = 2.198;
+	public function __construct() {
+		$this->module_name     = 'group';
+		$this->module_position = 220;
+		$this->version         = 2.198;
+	}
 	// 2.198 - 2016-11-01 - layout improvement
 	// 2.197 - 2016-07-10 - big update to mysqli
 	// 2.196 - 2016-03-29 - autocomplete fix
@@ -45,10 +50,7 @@ class module_group extends module_base {
 	}
 
 	function init() {
-		$this->links           = array();
-		$this->module_name     = "group";
-		$this->module_position = 8882;
-
+		$this->links = array();
 
 		if ( self::can_i( 'edit', 'Groups' ) ) {
 			$this->links[] = array(
@@ -158,6 +160,11 @@ class module_group extends module_base {
 
 
 	public function process() {
+		// Every form that reaches here is posted from a UCM page, so it carries the
+		// form auth key. Refuse anything that does not - see module_form::check_secure_key().
+		if ( ! module_form::check_secure_key() ) {
+			module_form::reject_invalid_form_auth();
+		}
 		if ( isset( $_REQUEST['butt_del'] ) && $_REQUEST['butt_del'] && $_REQUEST['group_id'] ) {
 			$data = self::get_group( $_REQUEST['group_id'] );
 			if ( module_form::confirm_delete( 'group_id', "Really delete group: " . $data['name'], self::link_open( $_REQUEST['group_id'] ) ) ) {
@@ -165,7 +172,7 @@ class module_group extends module_base {
 				set_message( "group deleted successfully" );
 				redirect_browser( $this->link_open( false ) );
 			}
-		} else if ( 'save_group' == $_REQUEST['_process'] ) {
+		} elseif ( 'save_group' == $_REQUEST['_process'] ) {
 			$group_id = update_insert( 'group_id', $_REQUEST['group_id'], 'group', $_POST );
 			set_message( 'Group saved successfully' );
 			redirect_browser( $this->link_open( $group_id ) );
@@ -185,7 +192,7 @@ class module_group extends module_base {
 
 		if ( $options && isset( $options['bypass_security'] ) ) {
 			// do nothing?
-		} else if ( isset( $options ) && isset( $options['owner_table'] ) && $options['owner_table'] && isset( $options['title'] ) && $options['title'] ) {
+		} elseif ( isset( $options ) && isset( $options['owner_table'] ) && $options['owner_table'] && isset( $options['title'] ) && $options['title'] ) {
 			global $plugins;
 			if ( isset( $plugins[ $options['owner_table'] ] ) ) {
 				$can_create = $can_edit = $can_view = $can_delete = false; // default to false if permissions exist.
@@ -228,68 +235,67 @@ class module_group extends module_base {
 					),
 				);
 			}
-			ob_start();
-			//<div class="content_box_wheader">
-			?>
-			<table class="tableclass tableclass_full tableclass_form group_selection">
-				<tbody>
-				<?php
-				if ( isset( $options['description'] ) && $options['description'] ) { ?>
-					<tr>
-						<td colspan="2">
-							<?php echo $options['description']; ?>
-						</td>
-					</tr>
-				<?php }
-				foreach ( $group_items as $group_item ) {
-					$group_id = $group_item['group_id'];
-					?>
-					<tr id="group_<?php echo $group_id; ?>">
-						<th
-							class="width1"<?php if ( self::can_i( 'edit', 'Groups' ) ) { ?> data-settings-url="<?php echo module_group::link_open( $group_id, false ); ?>" <?php } ?>>
-							<?php if ( $can_edit ) { ?>
-								<input type="hidden" name="group_module[<?php echo $owner_table; ?>][<?php echo $group_id; ?>]"
-								       value="<?php echo htmlspecialchars( $owner_id ); ?>">
-								<input type="checkbox" name="used_group_module[<?php echo $owner_table; ?>][<?php echo $group_id; ?>]"
-								       id="groupchk<?php echo $owner_table . $group_id; ?>"
-								       value="<?php echo htmlspecialchars( $owner_id ); ?>" <?php echo isset( $group_item['checked'] ) && $group_item['checked'] ? ' checked' : ''; ?>>
-							<?php } else { ?>
-								<input type="checkbox" name="group"
-								       value="<?php echo htmlspecialchars( $owner_id ); ?>" <?php echo isset( $group_item['checked'] ) && $group_item['checked'] ? ' checked' : ''; ?>
-								       disabled="">
-							<?php } ?>
-						</th>
-						<td>
-							<label
-								for="groupchk<?php echo $owner_table . $group_id; ?>"><?php echo htmlspecialchars( $group_item['name'] ); ?></label>
-						</td>
-					</tr>
-					<?php
+			// The checkbox belongs in the header cell and the label in the data cell, which is
+			// why this table stayed hand written: 'title' is escaped plain text, so it cannot
+			// hold a control, and the header cell also carries the data-settings-url that
+			// includes/plugin_config/js/settings.js prepends its settings icon into.
+			// title_fields and title_attributes cover both.
+			$fieldset_data['class']    = 'tableclass tableclass_full tableclass_form group_selection';
+			$fieldset_data['elements'] = array();
+
+			if ( isset( $options['description'] ) && $options['description'] ) {
+				// Above the rows rather than as a centred row inside them. A fieldset's only
+				// full-width row is 'message', which module_form centres in a <td> and metis
+				// renders as a <th> - neither is right for a paragraph of explanation.
+				$fieldset_data['elements_before'] = $options['description'];
+			}
+
+			foreach ( $group_items as $group_item ) {
+				$group_id = $group_item['group_id'];
+				$checked  = isset( $group_item['checked'] ) && $group_item['checked'] ? ' checked' : '';
+
+				if ( $can_edit ) {
+					$control = '<input type="hidden" name="group_module[' . $owner_table . '][' . $group_id . ']"'
+					           . ' value="' . htmlspecialchars( $owner_id ) . '">'
+					           . '<input type="checkbox" name="used_group_module[' . $owner_table . '][' . $group_id . ']"'
+					           . ' id="groupchk' . $owner_table . $group_id . '"'
+					           . ' value="' . htmlspecialchars( $owner_id ) . '"' . $checked . '>';
+				} else {
+					$control = '<input type="checkbox" name="group"'
+					           . ' value="' . htmlspecialchars( $owner_id ) . '"' . $checked . ' disabled="">';
 				}
-				if ( $can_create && module_security::is_page_editable() && get_display_mode() != 'mobile' ) {
-					$group_id = 'new';
-					?>
-					<tr id="group_<?php echo $group_id; ?>">
-						<th class="width1">
-							<input type="hidden" name="group_module[<?php echo $owner_table; ?>][<?php echo $group_id; ?>]"
-							       value="<?php echo htmlspecialchars( $owner_id ); ?>">
-							<input type="checkbox" name="used_group_module[<?php echo $owner_table; ?>][<?php echo $group_id; ?>]"
-							       id="groupchk<?php echo $owner_table . $group_id; ?>"
-							       value="<?php echo htmlspecialchars( $owner_id ); ?>">
-						</th>
-						<td>
-							<label for="groupchk<?php echo $owner_table . $group_id; ?>"></label>
-							<input type="text" name="group_module_name[<?php echo $owner_table; ?>][<?php echo $group_id; ?>]"
-							       autocomplete="off" placeholder="<?php _e( 'New Group' ); ?>"
-							       onkeyup="$('#groupchk<?php echo $owner_table . $group_id; ?>').prop('checked',true);">
-						</td>
-					</tr>
-				<?php } ?>
-				</tbody>
-			</table>
-			<?php
-			//</div>
-			$fieldset_data['elements_before'] = ob_get_clean();
+
+				$fieldset_data['elements'][ 'group_' . $group_id ] = array(
+					'title_fields'     => array( $control ),
+					'title_attributes' => self::can_i( 'edit', 'Groups' )
+						? array( 'data-settings-url' => module_group::link_open( $group_id, false ) )
+						: array(),
+					'fields'           => array(
+						'<label for="groupchk' . $owner_table . $group_id . '">'
+						. htmlspecialchars( $group_item['name'] ) . '</label>',
+					),
+				);
+			}
+
+			if ( $can_create && module_security::is_page_editable() && get_display_mode() != 'mobile' ) {
+				$group_id = 'new';
+				$fieldset_data['elements'][ 'group_' . $group_id ] = array(
+					'title_fields' => array(
+						'<input type="hidden" name="group_module[' . $owner_table . '][' . $group_id . ']"'
+						. ' value="' . htmlspecialchars( $owner_id ) . '">'
+						. '<input type="checkbox" name="used_group_module[' . $owner_table . '][' . $group_id . ']"'
+						. ' id="groupchk' . $owner_table . $group_id . '"'
+						. ' value="' . htmlspecialchars( $owner_id ) . '">',
+					),
+					'fields'       => array(
+						'<label for="groupchk' . $owner_table . $group_id . '"></label>'
+						. '<input type="text" name="group_module_name[' . $owner_table . '][' . $group_id . ']"'
+						. ' autocomplete="off" placeholder="' . htmlspecialchars( _l( 'New Group' ) ) . '"'
+						. ' onkeyup="$(\'#groupchk' . $owner_table . $group_id . '\').prop(\'checked\',true);">',
+					),
+				);
+			}
+
 			echo module_form::generate_fieldset( $fieldset_data );
 		}
 		//print $html;
@@ -432,7 +438,7 @@ class module_group extends module_base {
 						$x   = 1;
 						while ( isset( $user[ $key ] ) ) {
 							$key = $extra['extra_key'] . $x;
-							$x ++;
+							$x++;
 						}
 						$user[ $key ] = trim( $extra['extra'] );
 					}
@@ -451,7 +457,7 @@ class module_group extends module_base {
 							$x   = 1;
 							while ( isset( $user[ $key ] ) ) {
 								$key = $extra['extra_key'] . $x;
-								$x ++;
+								$x++;
 							}
 							$user[ $key ] = trim( $extra['extra'] );
 						}
@@ -522,7 +528,7 @@ class module_group extends module_base {
 						$x   = 1;
 						while ( isset( $user[ $key ] ) ) {
 							$key = $extra['extra_key'] . $x;
-							$x ++;
+							$x++;
 						}
 						$user[ $key ] = trim( $extra['extra'] );
 					}
@@ -537,7 +543,7 @@ class module_group extends module_base {
 							$x   = 1;
 							while ( isset( $user[ $key ] ) ) {
 								$key = $extra['extra_key'] . $x;
-								$x ++;
+								$x++;
 							}
 							$user[ $key ] = trim( $extra['extra'] );
 						}
@@ -578,7 +584,7 @@ class module_group extends module_base {
 					$x   = 1;
 					while ( isset( $user[ $key ] ) ) {
 						$key = $extra['extra_key'] . $x;
-						$x ++;
+						$x++;
 					}
 					$user[ $key ] = trim( $extra['extra'] );
 				}
@@ -592,7 +598,7 @@ class module_group extends module_base {
 					$x   = 1;
 					while ( isset( $user[ $key ] ) ) {
 						$key = $extra['extra_key'] . $x;
-						$x ++;
+						$x++;
 					}
 					$user[ $key ] = trim( $extra['extra'] );
 				}
@@ -607,7 +613,7 @@ class module_group extends module_base {
 						$x   = 1;
 						while ( isset( $user[ $key ] ) ) {
 							$key = $extra['extra_key'] . $x;
-							$x ++;
+							$x++;
 						}
 						$user[ $key ] = trim( $extra['extra'] );
 					}
@@ -666,9 +672,18 @@ class module_group extends module_base {
 	}
 
 
-	static $pagination_options = array();
+	public static $pagination_options = array();
 
 	public static function run_pagination_hook( &$rows ) {
+
+		// Bulk actions delete whole sets of records and "add to group" writes to every
+		// row on screen. Both are submitted from the list page, which publishes the
+		// form auth key next to the hidden go fields below.
+		$bulk_requested = ( isset( $_REQUEST['bulk_action_go'] ) && 'yes' == $_REQUEST['bulk_action_go'] )
+			|| ( isset( $_REQUEST['add_group_go'] ) && 'yes' == $_REQUEST['add_group_go'] );
+		if ( $bulk_requested && ! module_form::check_secure_key() ) {
+			module_form::reject_invalid_form_auth();
+		}
 
 		if ( isset( $_REQUEST['bulk_action_go'] ) && $_REQUEST['bulk_action_go'] == 'yes' ) {
 			// we are posting back tot his script with a go!
@@ -688,6 +703,10 @@ class module_group extends module_base {
 						if ( $bulk_action_id && $flag == 'yes' ) {
 							// do this action! run the callback with $rows array
 							if ( isset( self::$pagination_options['bulk_actions'][ $bulk_action_id ] ) && self::$pagination_options['bulk_actions'][ $bulk_action_id ]['callback'] ) {
+								// The request only picks which bulk action to run. The callback itself
+								// comes out of $pagination_options, which the list page sets in PHP and
+								// nothing from the request can reach.
+								// nosemgrep: php.lang.security.injection.tainted-callable.tainted-callable
 								call_user_func( self::$pagination_options['bulk_actions'][ $bulk_action_id ]['callback'], $rows );
 							}
 						}
@@ -761,7 +780,7 @@ class module_group extends module_base {
 	            } else {
 	            foreach ( $groups
 
-		            as $group ){
+ as $group ) {
 		            $group_id = $group['group_id'];
 		            ?>
 	            <input type="checkbox" class="add_to_group" name="add_to_group[<?php echo $group['group_id']; ?>]"
@@ -773,13 +792,12 @@ class module_group extends module_base {
 	            ?>
                     <input type="hidden" name="add_group_go" id="add_group_go" value="">
 		            <input type="button" name="add_group_button" id="add_group_button"
-		                   value="<?php _e( 'Add to group' ); ?>">
+		                   value="<?php _e( 'Add to group' ); ?>"<?php module_form::print_form_auth_attributes(); ?>>
 		            <script type="text/javascript">
                         $(function () {
                             $('#add_group_button').click(function () {
                                 $('#add_group_go').val('yes');
-                                // todo: if no form, create one them submit.
-                                $('#add_group_go').parents('form')[0].submit();
+                                ucm.submit_guarded(this);
                             });
                         });
                     </script>
@@ -839,13 +857,12 @@ class module_group extends module_base {
 	            ?>
 	            <input type="hidden" name="bulk_action_go" id="bulk_action_go" value="">
                     <input type="button" name="bulk_action_button" id="bulk_action_button"
-                           value="<?php _e( 'Perform Bulk Actions' ); ?>">
+                           value="<?php _e( 'Perform Bulk Actions' ); ?>"<?php module_form::print_form_auth_attributes(); ?>>
                     <script type="text/javascript">
                         $(function () {
                             $('#bulk_action_button').click(function () {
                                 $('#bulk_action_go').val('yes');
-                                // todo: if no form, create one them submit.
-                                $('#bulk_action_go').parents('form')[0].submit();
+                                ucm.submit_guarded(this);
                             });
                         });
                     </script>

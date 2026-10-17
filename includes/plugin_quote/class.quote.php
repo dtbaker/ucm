@@ -7,8 +7,8 @@ defined( '_UCM_VERSION' ) || die( '-5' );
 
 if ( class_exists( 'UCMBaseDocument' ) ) {
 
-	class UCMQuote extends UCMBaseDocument {
-
+	class UCMQuote extends UCMBaseDocument
+    {
 		public $db_id = 'quote_id';
 		public $db_table = 'quote';
 		public $display_key = 'name';
@@ -51,17 +51,14 @@ if ( class_exists( 'UCMBaseDocument' ) ) {
 
 			return full_link( _EXTERNAL_TUNNEL_REWRITE . 'm.quote/h.public/i.' . $this->id . '/hash.' . $this->link_public( true ) );
 		}
-
 	}
 
-	class UCMQuotes extends UCMBaseMulti {
-
+	class UCMQuotes extends UCMBaseMulti
+    {
 		public $db_id = 'quote_id';
 		public $db_table = 'quote';
 		public $display_name = 'Quote';
 		public $display_name_plural = 'Quotes';
-
-
 	}
 
 

@@ -12,4 +12,3 @@ if ( isset( $_REQUEST['security_role_id'] ) ) {
 	include( "security_role_list.php" );
 
 }
-

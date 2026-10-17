@@ -1,0 +1,90 @@
+services:
+  app:
+    build: .
+    container_name: ucm-app
+    ports:
+      - "8090:80"
+    volumes:
+      - .:/var/www/html
+      - ./temp:/var/www/html/temp
+    environment:
+      - APACHE_DOCUMENT_ROOT=/var/www/html
+      - UCM_DEBUG=1
+      # Demo chrome off unless asked for. ./scripts/demo-mode.sh on flips it.
+      - UCM_DEMO_MODE=${UCM_DEMO_MODE:-0}
+      # Follows demo mode unless set. Listed so the override actually reaches PHP - a
+      # variable not named here is not passed into the container, however it is exported.
+      - UCM_BLOCK_EMAILS=${UCM_BLOCK_EMAILS:-}
+      # Local dev only. A real install gets a random secret written to
+      # config.local.php by the installer.
+      - UCM_SECRET=local-dev-not-a-real-secret
+    depends_on:
+      - db
+    restart: unless-stopped
+
+  # A second copy of the app used only to test the installer against an empty database.
+  # Started by scripts/install-test.sh, not by `docker compose up`.
+  # It keeps its own config.local.php inside the container so installing here does not
+  # touch the one the normal dev app uses.
+  app-install-test:
+    build: .
+    container_name: ucm-app-install-test
+    profiles:
+      - install-test
+    ports:
+      - "8092:80"
+    volumes:
+      - .:/var/www/html
+    environment:
+      - APACHE_DOCUMENT_ROOT=/var/www/html
+      - UCM_DEBUG=1
+      - UCM_CONFIG_LOCAL=/tmp/ucm-install-test.config.local.php
+      - UCM_DB_NAME=ucm_install_test
+      - UCM_SECRET=install-test-not-a-real-secret
+    depends_on:
+      - db
+
+  db:
+    image: mysql:8.0
+    container_name: ucm-db
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: ucm
+      MYSQL_USER: ucm
+      MYSQL_PASSWORD: ucm
+    ports:
+      - "8096:3306"
+    volumes:
+      - ucm_mysql_data:/var/lib/mysql
+    command: --default-authentication-plugin=mysql_native_password --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    restart: unless-stopped
+    healthcheck:
+      test:
+        ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-proot"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  mailhog:
+    image: mailhog/mailhog:latest
+    container_name: ucm-mailhog
+    ports:
+      - "1025:1025"
+      - "8025:8025"
+    restart: unless-stopped
+
+  phpmyadmin:
+    image: phpmyadmin:latest
+    container_name: ucm-phpmyadmin
+    ports:
+      - "8091:80"
+    environment:
+      PMA_HOST: db
+      PMA_USER: ucm
+      PMA_PASSWORD: ucm
+    depends_on:
+      - db
+    restart: unless-stopped
+
+volumes:
+  ucm_mysql_data:

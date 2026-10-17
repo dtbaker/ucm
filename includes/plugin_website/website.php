@@ -1,8 +1,7 @@
 <?php
 
-
-class module_website extends module_base {
-
+class module_website extends module_base
+{
 	public $links;
 	public $website_types;
 
@@ -18,12 +17,15 @@ class module_website extends module_base {
 		return __CLASS__;
 	}
 
-	public function init() {
-		$this->links           = array();
-		$this->website_types   = array();
-		$this->module_name     = "website";
-		$this->module_position = 16;
+	public function __construct() {
+		$this->module_name     = 'website';
+		$this->module_position = 570;
 		$this->version         = 2.271;
+	}
+
+	public function init() {
+		$this->links         = array();
+		$this->website_types = array();
 		//2.271 - 2017-07-23 - adding website invoices and timers to edit page
 		//2.270 - 2016-11-02 - website timer feature
 		//2.269 - 2016-07-10 - big update to mysqli
@@ -250,15 +252,20 @@ class module_website extends module_base {
 
 
 	public function process() {
+		// Every form that reaches here is posted from a UCM page, so it carries the
+		// form auth key. Refuse anything that does not - see module_form::check_secure_key().
+		if ( ! module_form::check_secure_key() ) {
+			module_form::reject_invalid_form_auth();
+		}
 		$errors = array();
-		if ( isset( $_REQUEST['butt_del'] ) && $_REQUEST['butt_del'] && $_REQUEST['website_id'] ) {
+		if ( isset( $_REQUEST['butt_del'] ) && $_REQUEST['butt_del'] && $_REQUEST['website_id'] && self::can_i( 'delete', 'Websites' ) ) {
 			$data = self::get_website( $_REQUEST['website_id'] );
 			if ( module_form::confirm_delete( 'website_id', "Really delete " . module_config::c( 'project_name_single', 'Website' ) . ": " . $data['name'], self::link_open( $_REQUEST['website_id'] ) ) ) {
 				$this->delete_website( $_REQUEST['website_id'] );
 				set_message( module_config::c( 'project_name_single', 'Website' ) . " deleted successfully" );
 				redirect_browser( self::link_open( false ) );
 			}
-		} else if ( "save_website" == $_REQUEST['_process'] ) {
+		} elseif ( "save_website" == $_REQUEST['_process'] ) {
 			$website_id = $this->save_website( $_REQUEST['website_id'], $_POST );
 			hook_handle_callback( 'website_save', $website_id );
 			$_REQUEST['_redirect'] = $this->link_open( $website_id );
@@ -556,7 +563,7 @@ class module_website extends module_base {
 			if ( $website && $website['website_id'] > 0 ) {
 				$row['website_id'] = $website['website_id'];
 			}
-		} else if ( isset( $row['url'] ) ) {
+		} elseif ( isset( $row['url'] ) ) {
 			$row['name'] = $row['url'];
 		}
 		if ( ! $row['website_id'] && isset( $row['url'] ) && strlen( trim( $row['url'] ) ) ) {
@@ -624,7 +631,7 @@ class module_website extends module_base {
 		if ( isset( $extra_options['duplicates'] ) && $extra_options['duplicates'] == 'ignore' && $row['customer_id'] > 0 ) {
 			// don't update customer record with new one.
 
-		} else if ( ( isset( $row['customer_name'] ) && strlen( trim( $row['customer_name'] ) ) > 0 ) || $row['customer_id'] > 0 ) {
+		} elseif ( ( isset( $row['customer_name'] ) && strlen( trim( $row['customer_name'] ) ) > 0 ) || $row['customer_id'] > 0 ) {
 			// update customer record with new one.
 			$row['customer_id'] = update_insert( 'customer_id', $row['customer_id'], 'customer', $row );
 			if ( isset( $row['customer_contact_fname'] ) || isset( $row['customer_contact_email'] ) ) {
@@ -720,7 +727,7 @@ class module_website extends module_base {
 		// first we find any matching existing websites. skipping duplicates if option is set.
 		foreach ( $data as $rowid => $row ) {
 			if ( self::handle_import_row( $row, false, $add_to_group, $extra_options ) ) {
-				$count ++;
+				$count++;
 			}
 		}
 
@@ -798,5 +805,4 @@ class module_website extends module_base {
 
 		return $attributes;
 	}
-
 }

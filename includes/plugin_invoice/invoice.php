@@ -1,5 +1,7 @@
 <?php
 
+require_once( dirname( __FILE__ ) . '/payment_verification.php' );
+
 define( '_INVOICE_ACCESS_ALL', 'All invoices in system' );
 define( '_INVOICE_ACCESS_JOB', 'Invoices from Jobs I have access to' );
 define( '_INVOICE_ACCESS_STAFF', 'Only my Staff Invoices' );
@@ -22,8 +24,8 @@ define( '_INVOICE_SUBSCRIPTION_PENDING', 1 );
 define( '_INVOICE_SUBSCRIPTION_ACTIVE', 2 );
 define( '_INVOICE_SUBSCRIPTION_FAILED', 3 );
 
-class module_invoice extends module_base {
-
+class module_invoice extends module_base
+{
 	public $links;
 	public $invoice_types;
 
@@ -39,13 +41,15 @@ class module_invoice extends module_base {
 		return __CLASS__;
 	}
 
-	public function init() {
-		$this->links           = array();
-		$this->invoice_types   = array();
-		$this->module_name     = "invoice";
-		$this->module_position = 18;
+	public function __construct() {
+		$this->module_name     = 'invoice';
+		$this->module_position = 250;
+		$this->version         = 2.809;
+	}
 
-		$this->version = 2.809;
+	public function init() {
+		$this->links         = array();
+		$this->invoice_types = array();
 		//2.809 - 2018-03-31 - timer + invoice link
 		//2.808 - 2017-07-23 - adding website invoies to website page.
 		//2.807 - 2017-05-30 - invoice api
@@ -675,7 +679,7 @@ Thank you,<br><br>
 											}
 											$send_email_on                = strtotime( '+' . module_config::c( 'overdue_email_auto_days_repeat', 7 ) . ' days', $last_invoice_sent );
 											$alert_res['auto_email_date'] = print_date( $send_email_on );
-										} else if ( $invoice['date_sent'] && $invoice['date_sent'] != '0000-00-00' ) {
+										} elseif ( $invoice['date_sent'] && $invoice['date_sent'] != '0000-00-00' ) {
 											$invoice_is_due               = strtotime( $invoice['date_due'] );
 											$send_email_on                = strtotime( '+' . module_config::c( 'overdue_email_auto_days', 3 ) . ' days', $invoice_is_due );
 											$alert_res['auto_email_date'] = print_date( $send_email_on );
@@ -942,9 +946,9 @@ Thank you,<br><br>
 		// todo - read total_amoutn_due from new c_ cached field
 		if ( ! isset( $data['total_amount_due'] ) ) {
 
-		} else if ( isset( $data['date_cancel'] ) && $data['date_cancel'] != '0000-00-00' ) {
+		} elseif ( isset( $data['date_cancel'] ) && $data['date_cancel'] != '0000-00-00' ) {
 			$link_options['class'] = 'invoice_cancel';
-		} else if ( $data['total_amount_due'] <= 0 ) {
+		} elseif ( $data['total_amount_due'] <= 0 ) {
 			$link_options['class'] = 'success_text';
 		} else {
 			$link_options['class'] = 'error_text';
@@ -1056,10 +1060,10 @@ Thank you,<br><br>
 				ob_start();
 
 				$invoice_id = ( isset( $_REQUEST['i'] ) ) ? (int) $_REQUEST['i'] : false;
-				$hash       = ( isset( $_REQUEST['hash'] ) ) ? trim( $_REQUEST['hash'] ) : false;
+				$hash       = ucm_request_string( 'hash' );
 				if ( $invoice_id && $hash ) {
 					$correct_hash = $this->link_public_print( $invoice_id, true );
-					if ( $correct_hash == $hash ) {
+					if ( hash_equals( $correct_hash, $hash ) ) {
 						// check invoice still exists.
 						$invoice_data = $this->get_invoice( $invoice_id );
 						if ( ! $invoice_data || $invoice_data['invoice_id'] != $invoice_id ) {
@@ -1102,10 +1106,10 @@ Thank you,<br><br>
 				break;
 			case 'public_pay':
 				$invoice_id = ( isset( $_REQUEST['i'] ) ) ? (int) $_REQUEST['i'] : false;
-				$hash       = ( isset( $_REQUEST['hash'] ) ) ? trim( $_REQUEST['hash'] ) : false;
+				$hash       = ucm_request_string( 'hash' );
 				if ( $invoice_id && $hash ) {
 					$correct_hash = $this->link_public_pay( $invoice_id, true );
-					if ( $correct_hash == $hash ) {
+					if ( hash_equals( $correct_hash, $hash ) ) {
 						// check invoice still exists.
 						$invoice_data = $this->get_invoice( $invoice_id );
 						if ( ! $invoice_data || $invoice_data['invoice_id'] != $invoice_id ) {
@@ -1120,10 +1124,10 @@ Thank you,<br><br>
 				break;
 			case 'payment_complete':
 				$invoice_id = ( isset( $_REQUEST['i'] ) ) ? (int) $_REQUEST['i'] : false;
-				$hash       = ( isset( $_REQUEST['hash'] ) ) ? trim( $_REQUEST['hash'] ) : false;
+				$hash       = ucm_request_string( 'hash' );
 				if ( $invoice_id && $hash ) {
 					$correct_hash = $this->link_public_payment_complete( $invoice_id, true );
-					if ( $correct_hash == $hash ) {
+					if ( hash_equals( $correct_hash, $hash ) ) {
 						// check invoice still exists.
 						$invoice_data = $this->get_invoice( $invoice_id );
 						if ( ! $invoice_data || $invoice_data['invoice_id'] != $invoice_id ) {
@@ -1154,10 +1158,10 @@ Thank you,<br><br>
 				break;
 			case 'public':
 				$invoice_id = ( isset( $_REQUEST['i'] ) ) ? (int) $_REQUEST['i'] : false;
-				$hash       = ( isset( $_REQUEST['hash'] ) ) ? trim( $_REQUEST['hash'] ) : false;
+				$hash       = ucm_request_string( 'hash' );
 				if ( $invoice_id && $hash ) {
 					$correct_hash = $this->link_public( $invoice_id, true );
-					if ( $correct_hash == $hash ) {
+					if ( hash_equals( $correct_hash, $hash ) ) {
 
 
 						// check invoice still exists.
@@ -1281,10 +1285,10 @@ Job: <strong>{JOB_NAME}</strong> <br/>
 				break;
 			case 'receipt':
 				$invoice_payment_id = ( isset( $_REQUEST['i'] ) ) ? (int) $_REQUEST['i'] : false;
-				$hash               = ( isset( $_REQUEST['hash'] ) ) ? trim( $_REQUEST['hash'] ) : false;
+				$hash               = ucm_request_string( 'hash' );
 				if ( $invoice_payment_id && $hash ) {
 					$correct_hash = $this->link_receipt( $invoice_payment_id, true );
-					if ( $correct_hash == $hash ) {
+					if ( hash_equals( $correct_hash, $hash ) ) {
 						// all good to print a receipt for this payment.
 						$invoice_payment_data = $this->get_invoice_payment( $invoice_payment_id );
 						if ( $invoice_payment_data ) {
@@ -1447,7 +1451,7 @@ Job: <strong>{JOB_NAME}</strong> <br/>
 				$data['invoice_notes'] .= '</ul>';
 			} else {
 				$note                  = array_shift( $notes );
-				if(!empty($note['note'])) {
+				if (!empty($note['note'])) {
 					$data['invoice_notes'] .= htmlspecialchars( $note['note'] );
 				}
 			}
@@ -1594,9 +1598,21 @@ Job: <strong>{JOB_NAME}</strong> <br/>
 
 	public function process() {
 		$errors = array();
+		// Every branch below is a form submit or an admin link from a UCM page, so all of
+		// them must carry the form auth key - make_payment included.
+		//
+		// Customers paying an invoice do not come through here. That path is
+		// external_hook( 'public_pay' ), which checks its own signed link hash and then
+		// calls handle_payment() directly, so guarding this does not touch it. Gateways
+		// return through external_hook too ( 'ipn' / 'event_ipn' ), never through here.
+		// The only callers of _process=make_payment are the two "complete" links on the
+		// admin invoice and credit pages, and both now send the token.
+		if ( ! module_form::check_secure_key() ) {
+			module_form::reject_invalid_form_auth();
+		}
 		if ( $_REQUEST['_process'] == 'make_payment' ) {
 			$this->handle_payment();
-		} else if ( isset( $_REQUEST['butt_del'] ) && $_REQUEST['butt_del'] && $_REQUEST['invoice_id'] && module_invoice::can_i( 'delete', 'Invoices' ) ) {
+		} elseif ( isset( $_REQUEST['butt_del'] ) && $_REQUEST['butt_del'] && $_REQUEST['invoice_id'] && module_invoice::can_i( 'delete', 'Invoices' ) ) {
 			$data = self::get_invoice( $_REQUEST['invoice_id'] );
 			if ( module_form::confirm_delete( 'invoice_id', _l( "Really delete invoice: %s", htmlspecialchars( $data['name'] ) ), self::link_open( $_REQUEST['invoice_id'] ) ) ) {
 				$invoice_data = self::get_invoice( $_REQUEST['invoice_id'], true );
@@ -1608,7 +1624,7 @@ Job: <strong>{JOB_NAME}</strong> <br/>
 					redirect_browser( self::link_open( false ) );
 				}
 			}
-		} else if ( "assign_credit_to_customer" == $_REQUEST['_process'] ) {
+		} elseif ( "assign_credit_to_customer" == $_REQUEST['_process'] ) {
 			$invoice_id = (int) $_REQUEST['invoice_id'];
 			if ( $invoice_id > 0 ) {
 				$invoice_data = $this->get_invoice( $invoice_id );
@@ -1633,7 +1649,7 @@ Job: <strong>{JOB_NAME}</strong> <br/>
 				}
 				redirect_browser( $this->link_open( $invoice_id ) );
 			}
-		} else if ( "save_invoice" == $_REQUEST['_process'] ) {
+		} elseif ( "save_invoice" == $_REQUEST['_process'] ) {
 
 			$invoice_id = isset( $_REQUEST['invoice_id'] ) ? (int) $_REQUEST['invoice_id'] : false;
 			// check the user has permissions to edit this page.
@@ -1772,9 +1788,10 @@ Job: <strong>{JOB_NAME}</strong> <br/>
 			if ( isset( $_REQUEST['butt_makepayment'] ) && $_REQUEST['butt_makepayment'] == 'yes' ) {
 				//redirect_browser(self::link_public_pay($invoice_id));
 				self::handle_payment();
-			} else if ( isset( $_REQUEST['butt_print'] ) && $_REQUEST['butt_print'] ) {
-				$_REQUEST['_redirect'] = self::link_generate( $invoice_id, array( 'arguments' => array( 'print' => 1 ) ) );;
-			} else if ( isset( $_REQUEST['butt_merge'] ) && $_REQUEST['butt_merge'] && isset( $_REQUEST['merge_invoice'] ) && is_array( $_REQUEST['merge_invoice'] ) ) {
+			} elseif ( isset( $_REQUEST['butt_print'] ) && $_REQUEST['butt_print'] ) {
+				$_REQUEST['_redirect'] = self::link_generate( $invoice_id, array( 'arguments' => array( 'print' => 1 ) ) );
+;
+			} elseif ( isset( $_REQUEST['butt_merge'] ) && $_REQUEST['butt_merge'] && isset( $_REQUEST['merge_invoice'] ) && is_array( $_REQUEST['merge_invoice'] ) ) {
 				$merge_invoice_ids = self::check_invoice_merge( $invoice_id );
 				foreach ( $merge_invoice_ids as $merge_invoice ) {
 					if ( isset( $_REQUEST['merge_invoice'][ $merge_invoice['invoice_id'] ] ) ) {
@@ -1786,9 +1803,10 @@ Job: <strong>{JOB_NAME}</strong> <br/>
 				}
 				$_REQUEST['_redirect'] = $this->link_open( $invoice_id );
 				set_message( 'Invoices merged successfully' );
-			} else if ( isset( $_REQUEST['butt_email'] ) && $_REQUEST['butt_email'] ) {
-				$_REQUEST['_redirect'] = self::link_generate( $invoice_id, array( 'arguments' => array( 'email' => 1 ) ) );;
-			} else if ( ! empty( $_REQUEST['butt_archive'] ) ) {
+			} elseif ( isset( $_REQUEST['butt_email'] ) && $_REQUEST['butt_email'] ) {
+				$_REQUEST['_redirect'] = self::link_generate( $invoice_id, array( 'arguments' => array( 'email' => 1 ) ) );
+;
+			} elseif ( ! empty( $_REQUEST['butt_archive'] ) ) {
 				$UCMInvoice = new UCMInvoice( $invoice_id );
 				if ( $UCMInvoice->is_archived() ) {
 					$UCMInvoice->unarchive();
@@ -1798,7 +1816,7 @@ Job: <strong>{JOB_NAME}</strong> <br/>
 					set_message( "Invoice archived successfully" );
 				}
 				$_REQUEST['_redirect'] = self::link_generate( $invoice_id );
-			} else if ( isset( $_REQUEST['butt_generate_credit'] ) && $_REQUEST['butt_generate_credit'] ) {
+			} elseif ( isset( $_REQUEST['butt_generate_credit'] ) && $_REQUEST['butt_generate_credit'] ) {
 				// generate a credit note against this invioce.
 				// to do this we duplicate the invoice, remove the cancel date, remove the sent date,
 				// set a new create date, set the credit_note_id variable, remove the paid date,
@@ -1853,7 +1871,12 @@ Job: <strong>{JOB_NAME}</strong> <br/>
 			}
 		}
 		if ( ! count( $errors ) ) {
-			redirect_browser( $_REQUEST['_redirect'] );
+			// Only the save branches set _redirect. Completing a payment from the admin
+			// link does not, and redirecting to an empty URL sent the browser nowhere.
+			$redirect = isset( $_REQUEST['_redirect'] ) && $_REQUEST['_redirect'] && is_string( $_REQUEST['_redirect'] )
+				? $_REQUEST['_redirect']
+				: self::link_open( (int) $_REQUEST['invoice_id'] );
+			redirect_browser( $redirect );
 			exit;
 		}
 		print_error( $errors, true );
@@ -2082,7 +2105,7 @@ Job: <strong>{JOB_NAME}</strong> <br/>
 					$time_in_seconds = $ucmtimer->get_total_time( true, true );
 					$hours           = round( $time_in_seconds / 3600, 2 );
 
-					$invoice_items[ 'new' . $new_id ++ ] = array(
+					$invoice_items[ 'new' . $new_id++ ] = array(
 						'description'             => $ucmtimer->description,
 						'custom_description'      => '',
 						'long_description'        => '',
@@ -2097,7 +2120,7 @@ Job: <strong>{JOB_NAME}</strong> <br/>
 				}
 			}
 
-		} else if ( ! $invoice_id && isset( $_REQUEST['job_id'] ) && (int) $_REQUEST['job_id'] > 0 ) {
+		} elseif ( ! $invoice_id && isset( $_REQUEST['job_id'] ) && (int) $_REQUEST['job_id'] > 0 ) {
 
 			// hack for half completed invoices
 			if ( isset( $_REQUEST['amount_due'] ) && $_REQUEST['amount_due'] > 0 ) {
@@ -2150,12 +2173,12 @@ Job: <strong>{JOB_NAME}</strong> <br/>
 							$task['hourly_rate'] = $job['hourly_rate'];
 						}
 						$invoice_items[ 'new' . $x ] = $task;
-						$x ++;
+						$x++;
 					}
 					//print_r($tasks);exit;
 				}
 			}
-		} else if ( $invoice_id ) {
+		} elseif ( $invoice_id ) {
 
 			if ( ! $invoice ) {
 				$invoice = self::get_invoice( $invoice_id, true );
@@ -2244,7 +2267,7 @@ Job: <strong>{JOB_NAME}</strong> <br/>
 				} else {
 					$invoice_item_data['invoice_item_amount'] = $invoice_item_data['task_hourly_rate'] * $invoice_item_data['hours'];
 				}
-			} else if ( $invoice_item_data['manual_task_type'] == _TASK_TYPE_QTY_AMOUNT ) {
+			} elseif ( $invoice_item_data['manual_task_type'] == _TASK_TYPE_QTY_AMOUNT ) {
 				if ( $invoice_item_data['amount'] != 0 ) {
 					$invoice_item_data['invoice_item_amount'] = $invoice_item_data['amount'];
 				} else {
@@ -2307,7 +2330,7 @@ Job: <strong>{JOB_NAME}</strong> <br/>
 						// moved it into SQL above, instead of doing a get_single() call below for each invoice line item
 						if ( $invoice_item_data['task_date_done'] && $invoice_item_data['task_date_done'] != '0000-00-00' ) {
 							$invoice_item_data['date_done'] = $invoice_item_data['task_date_done'];
-						} else if ( isset( $invoice['date_create'] ) && $invoice['date_create'] != '0000-00-00' ) {
+						} elseif ( isset( $invoice['date_create'] ) && $invoice['date_create'] != '0000-00-00' ) {
 							$invoice_item_data['date_done'] = $invoice['date_create'];
 						}
 					} else {
@@ -2366,7 +2389,7 @@ Job: <strong>{JOB_NAME}</strong> <br/>
 						$payment['refund_invoice_payments'][] = $other_payment;
 					}
 				}
-			} else if ( $payment['amount'] < 0 && count( $other_payments ) > 0 ) {
+			} elseif ( $payment['amount'] < 0 && count( $other_payments ) > 0 ) {
 				// this is a refund of another payment.
 				$amount_left_to_refund = $payment['amount'];
 				foreach ( $other_payments as $other_payment ) {
@@ -2413,7 +2436,7 @@ Job: <strong>{JOB_NAME}</strong> <br/>
 				$job = module_job::get_job( $_REQUEST['job_id'] );
 				// todo: confirm tis isn't a data leak risk oh well.
 				$invoice_number = $invoice_prefix . $job['name'];
-			} else if ( module_config::c( 'invoice_incrementing', 0 ) ) {
+			} elseif ( module_config::c( 'invoice_incrementing', 0 ) ) {
 				$invoice_number = module_config::c( 'invoice_incrementing_next', 1 );
 				// see if there is an invoice number matching this one.
 				$this_invoice_number = $invoice_number;
@@ -2439,7 +2462,7 @@ Job: <strong>{JOB_NAME}</strong> <br/>
 								break;
 							}
 						}
-						$this_invoice_number ++;
+						$this_invoice_number++;
 					}
 				} while ( count( $invoices ) );
 				module_config::save_config( 'invoice_incrementing_next', $invoice_number );
@@ -2463,7 +2486,7 @@ Job: <strong>{JOB_NAME}</strong> <br/>
 							// first loop, start with A
 							$suffix_ascii2 = 65; // set 2nd suffix to A, work with this.
 						} else {
-							$suffix_ascii2 ++; // move from A to B
+							$suffix_ascii2++; // move from A to B
 						}
 
 					}
@@ -2473,7 +2496,7 @@ Job: <strong>{JOB_NAME}</strong> <br/>
 					} else {
 						$this_invoice_number = $invoice_number . ( $suffix_ascii2 ? chr( $suffix_ascii2 ) : '' ) . chr( $suffix_ascii );
 					}
-					$suffix_ascii ++;
+					$suffix_ascii++;
 				} while ( count( $invoices ) && $suffix_ascii <= 91 && $suffix_ascii2 <= 90 ); //90 is Z
 			}
 		}
@@ -2557,7 +2580,11 @@ Job: <strong>{JOB_NAME}</strong> <br/>
 				}
 			}
 
-			if ( isset( $invoice['job_ids'] ) && strlen( trim( $invoice['job_ids'] ) ) > 0 ) {
+			if ( ! is_array( $invoice ) ) {
+				// No such invoice. Assigning into $invoice from here would turn the "not
+				// found" result into an array and make callers think they found one.
+				$invoice = array();
+			} elseif ( isset( $invoice['job_ids'] ) && strlen( trim( $invoice['job_ids'] ) ) > 0 ) {
 				$invoice['job_ids'] = explode( ',', $invoice['job_ids'] );
 			} else {
 				$invoice['job_ids'] = array();
@@ -2567,7 +2594,6 @@ Job: <strong>{JOB_NAME}</strong> <br/>
 			if ( $invoice && isset( $invoice['invoice_id'] ) && $invoice['invoice_id'] == $invoice_id ) {
 				switch ( self::get_invoice_access_permissions() ) {
 					case _INVOICE_ACCESS_ALL:
-
 						break;
 					case _INVOICE_ACCESS_STAFF:
 						if ( $invoice['vendor_user_id'] != module_security::get_loggedin_id() ) {
@@ -2671,7 +2697,7 @@ Job: <strong>{JOB_NAME}</strong> <br/>
 			$currency_id = module_config::c( 'default_currency_id', 1 );
 			if ( $customer_id > 0 ) {
 				// find a default website to use ?
-			} else if ( $job_id > 0 ) {
+			} elseif ( $job_id > 0 ) {
 				// only a job, no customer. set the customer id.
 				$job_data    = module_job::get_job( $job_id, false );
 				$customer_id = $job_data['customer_id'];
@@ -2755,7 +2781,7 @@ Job: <strong>{JOB_NAME}</strong> <br/>
 		if ( ! (int) $invoice_id ) {
 			if ( isset( $invoice['job_ids'] ) && $invoice['job_ids'] ) {
 				$first_job_id = current( $invoice['job_ids'] );
-			} else if ( isset( $invoice['job_id'] ) && $invoice['job_id'] ) {
+			} elseif ( isset( $invoice['job_id'] ) && $invoice['job_id'] ) {
 				$first_job_id = $invoice['job_id']; // abckwards compatibility
 			} else {
 				$first_job_id = 0;
@@ -2835,7 +2861,7 @@ Job: <strong>{JOB_NAME}</strong> <br/>
 				// after tax discount ::::::::::
 				// handled below.
 				//$invoice['final_modification'] = -$invoice['discount_amount'];
-			} else if ( $invoice['discount_type'] == _DISCOUNT_TYPE_BEFORE_TAX ) {
+			} elseif ( $invoice['discount_type'] == _DISCOUNT_TYPE_BEFORE_TAX ) {
 				// before tax discount:::::
 				//$invoice['final_modification'] = -$invoice['discount_amount'];
 				// problem : this 'discount_amount_on_tax' calculation may not match the correct final discount calculation as per below
@@ -2893,7 +2919,7 @@ Job: <strong>{JOB_NAME}</strong> <br/>
 		if ( module_config::c( 'tax_calculate_mode', _TAX_CALCULATE_AT_END ) == _TAX_CALCULATE_INCREMENTAL && isset( $invoice['total_tax'] ) && $invoice['total_tax'] > 0 ) {
 			// tax already calculated above.
 
-		} else if ( module_config::c( 'tax_calculate_mode', _TAX_CALCULATE_AT_END ) == _TAX_CALCULATE_AT_END ) {
+		} elseif ( module_config::c( 'tax_calculate_mode', _TAX_CALCULATE_AT_END ) == _TAX_CALCULATE_AT_END ) {
 			// tax needs to be calculated based on the total_sub_amount_taxable
 			$previous_invoice_tax_id = false;
 			foreach ( $invoice['taxes'] as $invoice_tax_id => $invoice_tax ) {
@@ -2917,7 +2943,7 @@ Job: <strong>{JOB_NAME}</strong> <br/>
 			// this will only work if a single tax has been included.
 			if ( is_array( $invoice['taxes'] ) && count( $invoice['taxes'] ) > 1 ) {
 				set_error( 'Included tax calculation only works with 1 tax rate' );
-			} else if ( is_array( $invoice['taxes'] ) && count( $invoice['taxes'] ) ) {
+			} elseif ( is_array( $invoice['taxes'] ) && count( $invoice['taxes'] ) ) {
 				reset( $invoice['taxes'] );
 				$invoice_tax_id = key( $invoice['taxes'] );
 				if ( isset( $invoice['taxes'][ $invoice_tax_id ] ) ) {
@@ -3099,7 +3125,7 @@ Job: <strong>{JOB_NAME}</strong> <br/>
 						'percent'    => isset( $data['tax_percents'][ $key ] ) ? $data['tax_percents'][ $key ] : 0,
 						'amount'     => 0, // calculate this where? nfi? maybe on final invoice get or something.
 						'name'       => isset( $data['tax_names'][ $key ] ) ? $data['tax_names'][ $key ] : 'TAX',
-						'order'      => $order ++,
+						'order'      => $order++,
 						'increment'  => isset( $data['tax_increment_checkbox'] ) && $data['tax_increment_checkbox'] ? 1 : 0,
 					);
 					$invoice_tax_id   = update_insert( 'invoice_tax_id', $invoice_tax_id, 'invoice_tax', $invoice_tax_data );
@@ -3151,7 +3177,7 @@ Job: <strong>{JOB_NAME}</strong> <br/>
 						if ( strpos( $invoice_item_data['hours'], ':' ) !== false ) {
 							$invoice_item_data['hours_mins'] = str_replace( ":", ".", $invoice_item_data['hours'] );
 						}
-					} else if ( isset( $invoice_item_data['hours'] ) && strlen( $invoice_item_data['hours'] ) ) {
+					} elseif ( isset( $invoice_item_data['hours'] ) && strlen( $invoice_item_data['hours'] ) ) {
 						$invoice_item_data['hours'] = number_in( $invoice_item_data['hours'] );
 					} else {
 						$invoice_item_data['hours'] = 0;
@@ -3184,7 +3210,7 @@ Job: <strong>{JOB_NAME}</strong> <br/>
 								if ( isset( $invoice_item_data['hours'] ) && strlen( $invoice_item_data['hours'] ) == 0 ) {
 									// no hours entered (eg: empty) so we treat whatever was in 'hourly_rate' as the amount
 									$invoice_item_data['amount'] = $invoice_item_data['hourly_rate'];
-								} else if ( isset( $invoice_item_data['hours'] ) && strlen( $invoice_item_data['hours'] ) > 0 ) {
+								} elseif ( isset( $invoice_item_data['hours'] ) && strlen( $invoice_item_data['hours'] ) > 0 ) {
 									// hours inputted, along with hourly rate. work out the new amount.
 
 									$invoice_item_data['amount'] = round( $invoice_item_data['hours'] * $invoice_item_data['hourly_rate'], module_config::c( 'currency_decimal_places', 2 ) );
@@ -3210,7 +3236,7 @@ Job: <strong>{JOB_NAME}</strong> <br/>
                     }*/
 					if ( ! isset( $invoice_item_data['taxable_t'] ) ) {
 						$invoice_item_data['taxable'] = module_config::c( 'task_taxable_default', 1 );
-					} else if ( isset( $invoice_item_data['taxable_t'] ) && $invoice_item_data['taxable_t'] && ! isset( $invoice_item_data['taxable'] ) ) {
+					} elseif ( isset( $invoice_item_data['taxable_t'] ) && $invoice_item_data['taxable_t'] && ! isset( $invoice_item_data['taxable'] ) ) {
 						$invoice_item_data['taxable'] = 0;
 					}
 					if ( ! strlen( $invoice_item_data['hours'] ) ) {
@@ -3238,7 +3264,7 @@ Job: <strong>{JOB_NAME}</strong> <br/>
 							if ( $invoice_payment_data['amount'] < 0 && $invoice_payment_data['payment_type'] == _INVOICE_PAYMENT_TYPE_NORMAL ) {
 								// this is a refund.
 								$invoice_payment_data['payment_type'] = _INVOICE_PAYMENT_TYPE_REFUND;
-							} else if ( $invoice_payment_data['payment_type'] == _INVOICE_PAYMENT_TYPE_REFUND ) {
+							} elseif ( $invoice_payment_data['payment_type'] == _INVOICE_PAYMENT_TYPE_REFUND ) {
 								$invoice_payment_data['payment_type'] = _INVOICE_PAYMENT_TYPE_NORMAL;
 							}
 						}
@@ -3439,6 +3465,302 @@ Job: <strong>{JOB_NAME}</strong> <br/>
 		return $statuses;
 	}
 
+	/**
+	 * The stable key for a payment method plugin, e.g. 'stripe'.
+	 *
+	 * invoice_payment.method holds the admin-editable *label*, so it changes whenever
+	 * somebody renames a payment method in settings. Anything that needs to know which
+	 * gateway a payment belongs to asks for the key instead.
+	 *
+	 * A payment plugin from outside this release will not declare one. Its directory name
+	 * is the next best thing, and it matches every key shipped here, so third party
+	 * payment plugins keep working without being touched.
+	 *
+	 * @param object $payment_method a plugin object from handle_hook( 'get_payment_methods' )
+	 *
+	 * @return string
+	 */
+	public static function payment_method_key( $payment_method ) {
+		if ( ! is_object( $payment_method ) ) {
+			return '';
+		}
+		if ( method_exists( $payment_method, 'get_payment_method_key' ) ) {
+			$key = $payment_method->get_payment_method_key();
+			if ( is_string( $key ) && $key !== '' ) {
+				return $key;
+			}
+		}
+		if ( ! empty( $payment_method->module_name ) ) {
+			return preg_replace( '#^paymethod_#', '', $payment_method->module_name );
+		}
+
+		return '';
+	}
+
+	/**
+	 * Is this payment method retired?
+	 *
+	 * A deprecated method keeps working everywhere it is already in use - it starts
+	 * payments, it answers its notification endpoint, and its history renders. What it
+	 * loses is visibility: a fresh install never sees it.
+	 *
+	 * A payment plugin from outside this release has not declared anything, so it is not
+	 * deprecated.
+	 *
+	 * @param object $payment_method
+	 *
+	 * @return bool
+	 */
+	public static function payment_method_is_deprecated( $payment_method ) {
+		if ( is_object( $payment_method ) && method_exists( $payment_method, 'is_deprecated' ) ) {
+			return (bool) $payment_method->is_deprecated();
+		}
+
+		return false;
+	}
+
+	/**
+	 * Does this install have payments recorded against a payment method?
+	 *
+	 * This is what stops a deprecation hiding somebody's financial history behind a menu
+	 * item that no longer exists. An install that has been taking Pay.nl payments for
+	 * eight years keeps its Pay.nl settings page; a fresh install never sees one.
+	 *
+	 * One query per request, and only for an admin - the callers are all behind a
+	 * Settings permission check.
+	 *
+	 * @param string $key    the method's stable key
+	 * @param array  $labels labels this method may have been stored under, for rows
+	 *                       written before method_key existed
+	 *
+	 * @return bool
+	 */
+	public static function payment_method_has_history( $key, $labels = array() ) {
+		static $seen = null;
+		if ( $seen === null ) {
+			$seen   = array( 'keys' => array(), 'labels' => array() );
+			$fields = get_fields( 'invoice_payment' );
+			$sql    = isset( $fields['method_key'] )
+				? "SELECT `method_key`, `method` FROM `" . _DB_PREFIX . "invoice_payment` GROUP BY `method_key`, `method`"
+				: "SELECT `method` FROM `" . _DB_PREFIX . "invoice_payment` GROUP BY `method`";
+			foreach ( qa( $sql ) as $row ) {
+				if ( ! empty( $row['method_key'] ) ) {
+					$seen['keys'][ $row['method_key'] ] = true;
+				}
+				if ( isset( $row['method'] ) && $row['method'] !== '' ) {
+					$seen['labels'][ $row['method'] ] = true;
+				}
+			}
+		}
+
+		if ( $key !== '' && isset( $seen['keys'][ $key ] ) ) {
+			return true;
+		}
+		foreach ( (array) $labels as $label ) {
+			if ( isset( $seen['labels'][ $label ] ) ) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	/**
+	 * The warning shown on a retired payment method's settings page.
+	 *
+	 * Three things it deliberately says: history is safe, which is the admin's first
+	 * fear; what to use instead; and that nothing will remove this method behind their
+	 * back.
+	 *
+	 * @param string $name   the method's display label
+	 * @param string $reason one sentence on why it is retired
+	 * @param string $extra  optional additional paragraph, already escaped
+	 *
+	 * @return void
+	 */
+	public static function print_deprecated_payment_method_notice( $name, $reason, $extra = '' ) {
+		?>
+		<div class="alert alert-warning" role="alert">
+			<p>
+				<strong><?php echo htmlspecialchars( $name ); ?> <?php _e( 'is no longer supported.' ); ?></strong>
+				<?php echo htmlspecialchars( $reason ); ?>
+			</p>
+			<?php if ( $extra ) { ?>
+				<p><?php echo $extra; ?></p>
+			<?php } ?>
+			<p><?php _e( 'Your existing payments and payment history are not affected and will keep working. To keep taking online payments, enable Stripe, PayPal or Square under Settings, Payment Methods.' ); ?></p>
+			<p><?php _e( 'This payment method will be removed in a future version. It will not be removed by an automatic update.' ); ?></p>
+		</div>
+		<?php
+	}
+
+	/**
+	 * Append a line to a payment's own log, stored in invoice_payment.data.
+	 *
+	 * Four payment plugins carried an identical private copy of this, and one of them
+	 * called another plugin's copy. One implementation, on the module that owns the
+	 * table.
+	 *
+	 * @param int    $invoice_payment_id
+	 * @param string $key
+	 * @param string $val
+	 *
+	 * @return void
+	 */
+	public static function add_payment_data( $invoice_payment_id, $key, $val ) {
+		$payment = get_single( 'invoice_payment', 'invoice_payment_id', (int) $invoice_payment_id );
+		if ( ! $payment ) {
+			return;
+		}
+		// allowed_classes=false: this blob is written by gateway code and read back here,
+		// and nothing in it should ever decode to an object.
+		$payment_data = @unserialize( (string) $payment['data'], array( 'allowed_classes' => false ) );
+		if ( ! is_array( $payment_data ) ) {
+			$payment_data = array();
+		}
+		if ( ! isset( $payment_data[ $key ] ) || ! is_array( $payment_data[ $key ] ) ) {
+			$payment_data[ $key ] = array();
+		}
+		$payment_data[ $key ][] = $val;
+		update_insert( 'invoice_payment_id', (int) $invoice_payment_id, 'invoice_payment', array( 'data' => serialize( $payment_data ) ) );
+	}
+
+	/**
+	 * Check a gateway notification and, if it holds up, record the payment.
+	 *
+	 * The gateway has one job before calling this: establish that the notification
+	 * really came from its provider, by signature or by an authenticated re-fetch. Only
+	 * the gateway can do that. Everything after - is it for this payment, has it already
+	 * been processed, is the amount and currency right, what gets written - is the same
+	 * job for every gateway and happens here.
+	 *
+	 * $payload is the provider's answer, normalised by the gateway. See
+	 * ucm_payment_verification::check() for its shape.
+	 *
+	 * $options:
+	 *   method_key  string  the calling gateway's key, so one gateway cannot record
+	 *                       against another's payment
+	 *   invoice_id  int     the invoice the notification claims this is for
+	 *   sandbox     bool    true when the gateway is configured for test mode
+	 *
+	 * Every outcome is appended to the payment's log, including the refusals, because
+	 * "the customer says they paid and UCM disagrees" is unanswerable without one.
+	 *
+	 * @param int   $invoice_payment_id
+	 * @param array $payload
+	 * @param array $options
+	 *
+	 * @return array the ucm_payment_verification result; 'ok' says whether it was recorded
+	 */
+	public static function verify_and_record( $invoice_payment_id, $payload, $options = array() ) {
+		$invoice_payment_id = (int) $invoice_payment_id;
+		$options            = is_array( $options ) ? $options : array();
+		$payload            = is_array( $payload ) ? $payload : array();
+		$transaction_id     = isset( $payload['transaction_id'] ) ? trim( (string) $payload['transaction_id'] ) : '';
+
+		$payment = $invoice_payment_id ? get_single( 'invoice_payment', 'invoice_payment_id', $invoice_payment_id ) : false;
+		if ( ! is_array( $payment ) ) {
+			$payment = array();
+		}
+
+		$result = ucm_payment_verification::check_belongs_to( $payment, $options );
+		if ( $result['ok'] ) {
+			$result = ucm_payment_verification::check_not_replayed( $payment, $transaction_id );
+		}
+		if ( $result['ok'] ) {
+			$currency = module_config::get_currency( $payment['currency_id'] );
+			$result   = ucm_payment_verification::check( array(
+				'amount'   => $payment['amount'],
+				'currency' => isset( $currency['code'] ) ? $currency['code'] : '',
+				'sandbox'  => ! empty( $options['sandbox'] ),
+			), $payload );
+		}
+
+		if ( ! $invoice_payment_id || ! $payment ) {
+			return $result;
+		}
+
+		if ( ! $result['ok'] ) {
+			// 'duplicate' is the provider doing what it documents - PayPal retries an IPN
+			// up to 25 times - so it is noted once and not treated as a problem.
+			self::add_payment_data( $invoice_payment_id, 'log', 'Payment notification not recorded (' . $result['code'] . '): ' . $result['message'] );
+
+			return $result;
+		}
+
+		update_insert( 'invoice_payment_id', $invoice_payment_id, 'invoice_payment', array(
+			'date_paid' => date( 'Y-m-d' ),
+			'amount'    => $result['amount'],
+			'other_id'  => $transaction_id,
+		) );
+		self::add_payment_data( $invoice_payment_id, 'log', 'Payment recorded from ' . ( isset( $options['method_key'] ) ? $options['method_key'] : 'gateway' ) . ' transaction ' . $transaction_id . '. ' . $result['message'] );
+		if ( $result['flags'] ) {
+			self::add_payment_data( $invoice_payment_id, 'log', 'Worth a look: ' . implode( ', ', $result['flags'] ) . '.' );
+		}
+
+		module_cache::clear( 'invoice' );
+		self::save_invoice( $payment['invoice_id'], array() );
+
+		return $result;
+	}
+
+	/**
+	 * Fill in method_key for payments recorded before the column existed.
+	 *
+	 * There is nothing to match on but the label, which is exactly the weakness the key
+	 * exists to fix - so this maps every label a shipped plugin could have written: the
+	 * one configured right now, the factory default, and the "(IPN)" and "(Subscription)"
+	 * variants the gateways wrote directly.
+	 *
+	 * Anything it cannot place keeps an empty key and carries on rendering from `method`
+	 * exactly as before. Manually entered payments, credits and offline methods are
+	 * supposed to land there. Nothing is ever overwritten and `method` is never touched.
+	 *
+	 * @return string SQL, statement-per-semicolon, to run straight after the ALTER
+	 */
+	private static function payment_method_key_backfill_sql() {
+		// key => every label that key has ever been stored as
+		$defaults = array(
+			'authorize'    => 'Authorize',
+			'banktransfer' => 'Bank Transfer',
+			'check'        => 'Check',
+			'coinbase'     => 'Bitcoin',
+			'multisafepay' => 'MultiSafepay',
+			'other'        => 'Other',
+			'paynl'        => 'paynl',
+			'paypal'       => 'PayPal',
+			'stripe'       => 'Stripe',
+		);
+
+		$labels = array();
+		foreach ( $defaults as $key => $default_label ) {
+			$configured = module_config::s( 'payment_method_' . $key . '_label', $default_label );
+			foreach ( array( $default_label, $configured ) as $label ) {
+				$label = trim( (string) $label );
+				if ( $label === '' ) {
+					continue;
+				}
+				foreach ( array( $label, $label . ' (IPN)', $label . ' (Subscription)' ) as $variant ) {
+					$labels[ $variant ] = $key;
+				}
+			}
+		}
+		// MultiSafepay wrote this one with different capitalisation to its own label.
+		$labels['Multisafepay (IPN)'] = 'multisafepay';
+
+		$sql = '';
+		foreach ( $labels as $label => $key ) {
+			// install_upgrade() splits this on semicolons, so a label containing one
+			// cannot be expressed here. Leaving it unmatched is the safe outcome.
+			if ( strpos( $label, ';' ) !== false ) {
+				continue;
+			}
+			$sql .= 'UPDATE `' . _DB_PREFIX . 'invoice_payment` SET `method_key` = \'' . db_escape( $key ) . '\' WHERE `method_key` = \'\' AND `method` = \'' . db_escape( $label ) . '\';';
+		}
+
+		return $sql;
+	}
+
 	public function handle_payment() {
 		// handle a payment request via post data from
 		$invoice_id = (int) $_REQUEST['invoice_id'];
@@ -3451,10 +3773,17 @@ Job: <strong>{JOB_NAME}</strong> <br/>
 			$invoice_payment_data = module_invoice::get_invoice_payment( $_REQUEST['invoice_payment_id'] );
 			if ( $invoice_payment_data['invoice_id'] == $invoice_id && $invoice_payment_data['date_paid'] == '0000-00-00' && $invoice_payment_data['invoice_payment_id'] == $_REQUEST['invoice_payment_id'] ) {
 				// we can resume this incomplete payment.
-				// hack to find out which payment method plugin we are using, this is bad!
+				// Match on the stable key. This used to compare the stored label against
+				// each plugin's current label, so renaming a payment method in settings
+				// silently killed every in-flight payment. Rows written before method_key
+				// existed still only have the label, so fall back to it for those.
+				$stored_key = isset( $invoice_payment_data['method_key'] ) ? trim( (string) $invoice_payment_data['method_key'] ) : '';
 				$payment_methods = handle_hook( 'get_payment_methods', $this );
 				foreach ( $payment_methods as &$payment_method ) {
-					if ( $payment_method->is_enabled() && $payment_method->is_method( 'online' ) && $payment_method->get_payment_method_name() == $invoice_payment_data['method'] ) {
+					$matches = $stored_key !== ''
+						? self::payment_method_key( $payment_method ) === $stored_key
+						: $payment_method->get_payment_method_name() == $invoice_payment_data['method'];
+					if ( $payment_method->is_enabled() && $payment_method->is_method( 'online' ) && $matches ) {
 						$payment_method_name = $payment_method->module_name;
 						global $plugins;
 						if ( isset( $plugins[ $payment_method_name ] ) ) {
@@ -3463,7 +3792,7 @@ Job: <strong>{JOB_NAME}</strong> <br/>
 					}
 				}
 			}
-		} else if ( isset( $_REQUEST['payment_method'] ) && $invoice_id && isset( $_REQUEST['payment_amount'] ) ) {
+		} elseif ( isset( $_REQUEST['payment_method'] ) && $invoice_id && isset( $_REQUEST['payment_amount'] ) ) {
 			$payment_method = $_REQUEST['payment_method'];
 			$payment_amount = number_in( $_REQUEST['payment_amount'] );
 			$invoice_data   = $this->get_invoice( $invoice_id );
@@ -3486,7 +3815,10 @@ Job: <strong>{JOB_NAME}</strong> <br/>
 						'invoice_id'  => $invoice_id,
 						'amount'      => $payment_amount,
 						'currency_id' => $invoice_data['currency_id'],
+						// the label, for display and for every report that already reads it
 						'method'      => $plugins[ '' . $payment_method ]->get_payment_method_name(),
+						// and the key, for anything that needs to know which gateway this is
+						'method_key'  => self::payment_method_key( $plugins[ '' . $payment_method ] ),
 					) );
 					module_cache::clear( 'invoice' );
 
@@ -3662,7 +3994,8 @@ Job: <strong>{JOB_NAME}</strong> <br/>
 		return qa( $sql );
 	}
 
-	public static function email_sent( $args ) { //$invoice_id,$template_name=''){
+	public static function email_sent( $args ) {
+ //$invoice_id,$template_name=''){
 		$invoice_id    = $args['invoice_id'];
 		$template_name = $args['template_name'];
 		$template_type = ! empty( $args['template_type'] ) ? $args['template_type'] : 'due';
@@ -3720,7 +4053,7 @@ Job: <strong>{JOB_NAME}</strong> <br/>
 			// 'recurring_text'
 			if ( $invoice['member_id'] ) {
 				$member_name = module_member::link_open( $invoice['member_id'], true );
-			} else if ( $invoice['customer_id'] ) {
+			} elseif ( $invoice['customer_id'] ) {
 				$member_name = module_customer::link_open( $invoice['customer_id'], true );
 			} else {
 				$member_name = _l( 'N/A' );
@@ -3767,7 +4100,7 @@ Job: <strong>{JOB_NAME}</strong> <br/>
 			// 'recurring_text'
 			if ( $invoice['member_id'] ) {
 				$member_name = module_member::link_open( $invoice['member_id'], true );
-			} else if ( $invoice['customer_id'] ) {
+			} elseif ( $invoice['customer_id'] ) {
 				$member_name = module_customer::link_open( $invoice['customer_id'], true );
 			} else {
 				$member_name = _l( 'N/A' );
@@ -3817,10 +4150,10 @@ Job: <strong>{JOB_NAME}</strong> <br/>
 		if ( isset( $invoice['credit_note_id'] ) && $invoice['credit_note_id'] ) {
 			$template_name = 'credit_note_email';
 			$template_type = 'credit_note'; // this is used in our new json based hook feature
-		} else if ( $invoice['date_paid'] && $invoice['date_paid'] != '0000-00-00' ) {
+		} elseif ( $invoice['date_paid'] && $invoice['date_paid'] != '0000-00-00' ) {
 			$template_name = $template_prefix . '_paid';
 			$template_type = 'paid'; // this is used in our new json based hook feature
-		} else if ( $invoice['overdue'] && $invoice['date_sent'] && $invoice['date_sent'] != '0000-00-00' ) {
+		} elseif ( $invoice['overdue'] && $invoice['date_sent'] && $invoice['date_sent'] != '0000-00-00' ) {
 			$template_name = $template_prefix . '_overdue';
 			$template_type = 'overdue'; // this is used in our new json based hook feature
 		} else {
@@ -3836,7 +4169,7 @@ Job: <strong>{JOB_NAME}</strong> <br/>
 			$template_prefix = 'invoice_email';
 			if ( $invoice['date_paid'] && $invoice['date_paid'] != '0000-00-00' ) {
 				$template_name = $template_prefix . '_paid';
-			} else if ( $invoice['overdue'] && $invoice['date_sent'] && $invoice['date_sent'] != '0000-00-00' ) {
+			} elseif ( $invoice['overdue'] && $invoice['date_sent'] && $invoice['date_sent'] != '0000-00-00' ) {
 				$template_name = $template_prefix . '_overdue';
 			} else {
 				$template_name = $template_prefix . '_due';
@@ -3886,7 +4219,7 @@ Job: <strong>{JOB_NAME}</strong> <br/>
 					}
 				}
 			}
-		} else if ( $invoice['member_id'] ) {
+		} elseif ( $invoice['member_id'] ) {
 			$member                   = module_member::get_member( $invoice['member_id'] );
 			$to                       = array( $member );
 			$replace['customer_name'] = $member['first_name'];
@@ -3905,7 +4238,7 @@ Job: <strong>{JOB_NAME}</strong> <br/>
 			foreach ( $send_email_to as $send_email_t ) {
 				if ( ! empty( $send_email_t['user_id'] ) ) {
 					$email->set_to( 'user', $send_email_t['user_id'] );
-				} else if ( ! empty( $send_email_t['email'] ) ) {
+				} elseif ( ! empty( $send_email_t['email'] ) ) {
 					$email->set_to_manual( $send_email_t['email'] );
 				}
 			}
@@ -3913,7 +4246,7 @@ Job: <strong>{JOB_NAME}</strong> <br/>
 			foreach ( $to as $t ) {
 				if ( ! empty( $t['user_id'] ) ) {
 					$email->set_to( 'user', $t['user_id'] );
-				} else if ( ! empty( $t['email'] ) ) {
+				} elseif ( ! empty( $t['email'] ) ) {
 					$email->set_to_manual( $t['email'] );
 				}
 				break;// only 1? todo: all?
@@ -4003,7 +4336,7 @@ Job: <strong>{JOB_NAME}</strong> <br/>
 							'key' => $extra_field['extra_key'],
 							'val' => $extra_field['extra'],
 						);
-						$x ++;
+						$x++;
 					}
 				}
 
@@ -4044,6 +4377,15 @@ Job: <strong>{JOB_NAME}</strong> <br/>
 				}
 
 				module_cache::clear( 'invoice' );
+
+				if ( $new_invoice_id ) {
+					// The invoice was saved before its lines existed, so its cached totals
+					// were written as zero. get_invoice() recalculates them and writes
+					// them back. Without this a renewal reads as $0.00 everywhere the
+					// cached columns are trusted - the income forecast among them - until
+					// somebody happens to open it.
+					self::get_invoice( $new_invoice_id );
+				}
 
 				return $new_invoice_id;
 			}
@@ -4098,7 +4440,7 @@ Job: <strong>{JOB_NAME}</strong> <br/>
 						continue; // skip sendin repeat reminders.
 					}
 					$send_email_on = strtotime( '+' . module_config::c( 'overdue_email_auto_days_repeat', 7 ) . ' days', $last_invoice_sent );
-				} else if ( $invoice['date_sent'] && $invoice['date_sent'] != '0000-00-00' ) {
+				} elseif ( $invoice['date_sent'] && $invoice['date_sent'] != '0000-00-00' ) {
 					$invoice_is_due = strtotime( $invoice['date_due'] );
 					$send_email_on  = strtotime( '+' . module_config::c( 'overdue_email_auto_days', 3 ) . ' days', $invoice_is_due );
 					if ( $debug ) {
@@ -4282,7 +4624,24 @@ Job: <strong>{JOB_NAME}</strong> <br/>
 							} else {
 								echo " - failed to send subscription invoice " . module_invoice::link_open( $invoice_id, true ) . " to customer <br>\n";
 							}
-							exit;
+							// Send the invoice, then carry on and answer the caller. This
+							// used to exit here, which threw the payment away: the only
+							// callers are gateway notification handlers, and the money
+							// has already moved by the time one of them gets here. The
+							// caller takes the invoice and payment returned below and
+							// marks them paid; ending the request instead left the
+							// generated invoice sitting on a Pending Subscription payment
+							// of $0.00 with no paid date, the subscription period never
+							// advanced, and nothing anywhere recording that the customer
+							// had been charged.
+							//
+							// Reached whenever the gateway bills before UCM's own cron has
+							// generated the invoice for the period, which is the usual way
+							// round when the gateway charges before invoice_automatic_after_time.
+							// Reproduced by calling this directly against a paid
+							// subscription invoice: with automatic_email on it never
+							// returned, with it off it returned and the payment was
+							// recorded.
 						}
 
 						return array(
@@ -4417,7 +4776,6 @@ Job: <strong>{JOB_NAME}</strong> <br/>
 		$response['invoice'] = true;
 		switch ( $method ) {
 			case 'create':
-
 				$invoice_data = isset( $_POST['invoice_data'] ) && is_array( $_POST['invoice_data'] ) ? $_POST['invoice_data'] : array();
 
 				$response['invoice_id'] = 0;
@@ -4446,7 +4804,7 @@ Job: <strong>{JOB_NAME}</strong> <br/>
 					$new_invoice['invoice_invoice_item'] = array();
 					$x                                   = 0;
 					foreach ( $invoice_data['line_items'] as $line_item ) {
-						$new_invoice['invoice_invoice_item'][ 'new' . $x ++ ] = array(
+						$new_invoice['invoice_invoice_item'][ 'new' . $x++ ] = array(
 							'description'      => $line_item['title'],
 							'hours'            => $line_item['quantity'],
 							'hourly_rate'      => $line_item['cost'],
@@ -4463,7 +4821,6 @@ Job: <strong>{JOB_NAME}</strong> <br/>
 
 				break;
 			case 'search':
-
 				/*$search = isset($_REQUEST['search'])  && is_array($_REQUEST['search']) ? $_REQUEST['search'] : array();
 				$customers = self::get_customers($search);
 				$response['customers'] = array();
@@ -4603,6 +4960,10 @@ Job: <strong>{JOB_NAME}</strong> <br/>
 		}
 
 		$fields = get_fields( 'invoice_payment' );
+		if ( ! isset( $fields['method_key'] ) ) {
+			$sql .= 'ALTER TABLE `' . _DB_PREFIX . 'invoice_payment` ADD `method_key` varchar(40) NOT NULL DEFAULT \'\' AFTER `method`;';
+			$sql .= self::payment_method_key_backfill_sql();
+		}
 		if ( ! isset( $fields['currency_id'] ) ) {
 			$sql .= 'ALTER TABLE `' . _DB_PREFIX . 'invoice_payment` ADD `currency_id` int(11) NOT NULL DEFAULT \'1\' AFTER `method`;';
 		}
@@ -4865,6 +5226,7 @@ Job: <strong>{JOB_NAME}</strong> <br/>
 		`parent_finance_id` int(11) NULL,
 		`amount` decimal(10,2) NOT NULL,
 		`method` varchar(50) NOT NULL,
+		`method_key` varchar(40) NOT NULL DEFAULT '',
 		`currency_id` int(11) NOT NULL DEFAULT '1',
 		`date_paid` date NOT NULL,
 		`data` LONGBLOB NULL,
@@ -4941,8 +5303,6 @@ Job: <strong>{JOB_NAME}</strong> <br/>
 
 		return ob_get_clean();
 	}
-
-
 }
 
 

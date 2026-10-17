@@ -1,4 +1,5 @@
 <?php
+
 /**
  * PHPMailer - PHP email creation and transport class.
  * PHP Version 5
@@ -25,7 +26,8 @@
  * @author Andy Prevost (codeworxtech) <codeworxtech@users.sourceforge.net>
  * @author Brent R. Matzelle (original founder)
  */
-class PHPMailer {
+class PHPMailer
+{
 	/**
 	 * The PHPMailer Version number.
 	 * @var string
@@ -656,7 +658,7 @@ class PHPMailer {
 	 */
 	public function __construct( $exceptions = null ) {
 		if ( $exceptions !== null ) {
-			$this->exceptions = (boolean) $exceptions;
+			$this->exceptions = (bool) $exceptions;
 		}
 	}
 
@@ -891,7 +893,7 @@ class PHPMailer {
 		}
 		$params = array( $kind, $address, $name );
 		// Enqueue addresses with IDN until we know the PHPMailer::$CharSet.
-		if ( $this->has8bitChars( substr( $address, ++ $pos ) ) and $this->idnSupported() ) {
+		if ( $this->has8bitChars( substr( $address, ++$pos ) ) and $this->idnSupported() ) {
 			if ( $kind != 'Reply-To' ) {
 				if ( ! array_key_exists( $address, $this->RecipientsQueue ) ) {
 					$this->RecipientsQueue[ $address ] = $params;
@@ -1036,7 +1038,7 @@ class PHPMailer {
 		$name    = trim( preg_replace( '/[\r\n]+/', '', $name ) ); //Strip breaks and trim
 		// Don't validate now addresses with IDN. Will be done in send().
 		if ( ( $pos = strrpos( $address, '@' ) ) === false or
-		     ( ! $this->has8bitChars( substr( $address, ++ $pos ) ) or ! $this->idnSupported() ) and
+		     ( ! $this->has8bitChars( substr( $address, ++$pos ) ) or ! $this->idnSupported() ) and
 		     ! $this->validateAddress( $address ) ) {
 			$error_message = $this->lang( 'invalid_address' ) . " (setFrom) $address";
 			$this->setError( $error_message );
@@ -1131,7 +1133,7 @@ class PHPMailer {
 				 * @copyright 2009-2010 Michael Rushton
 				 * Feel free to use and redistribute this code. But please keep this copyright notice.
 				 */
-				return (boolean) preg_match(
+				return (bool) preg_match(
 					'/^(?!(?>(?1)"?(?>\\\[ -~]|[^"])"?(?1)){255,})(?!(?>(?1)"?(?>\\\[ -~]|[^"])"?(?1)){65,}@)' .
 					'((?>(?>(?>((?>(?>(?>\x0D\x0A)?[\t ])+|(?>[\t ]*\x0D\x0A)?[\t ]+)?)(\((?>(?2)' .
 					'(?>[\x01-\x08\x0B\x0C\x0E-\'*-\[\]-\x7F]|\\\[\x00-\x7F]|(?3)))*(?2)\)))+(?2))|(?2))?)' .
@@ -1145,7 +1147,7 @@ class PHPMailer {
 				);
 			case 'pcre':
 				//An older regex that doesn't need a recent PCRE
-				return (boolean) preg_match(
+				return (bool) preg_match(
 					'/^(?!(?>"?(?>\\\[ -~]|[^"])"?){255,})(?!(?>"?(?>\\\[ -~]|[^"])"?){65,}@)(?>' .
 					'[!#-\'*+\/-9=?^-~-]+|"(?>(?>[\x01-\x08\x0B\x0C\x0E-!#-\[\]-\x7F]|\\\[\x00-\xFF]))*")' .
 					'(?>\.(?>[!#-\'*+\/-9=?^-~-]+|"(?>(?>[\x01-\x08\x0B\x0C\x0E-!#-\[\]-\x7F]|\\\[\x00-\xFF]))*"))*' .
@@ -1163,7 +1165,7 @@ class PHPMailer {
 				 * This is the pattern used in the HTML5 spec for validation of 'email' type form input elements.
 				 * @link http://www.whatwg.org/specs/web-apps/current-work/#e-mail-state-(type=email)
 				 */
-				return (boolean) preg_match(
+				return (bool) preg_match(
 					'/^[a-zA-Z0-9.!#$%&\'*+\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}' .
 					'[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/sD',
 					$address
@@ -1176,7 +1178,7 @@ class PHPMailer {
 				             and strpos( $address, '@' ) != strlen( $address ) - 1 );
 			case 'php':
 			default:
-				return (boolean) filter_var( $address, FILTER_VALIDATE_EMAIL );
+				return (bool) filter_var( $address, FILTER_VALIDATE_EMAIL );
 		}
 	}
 
@@ -1208,7 +1210,7 @@ class PHPMailer {
 		if ( $this->idnSupported() and
 		     ! empty( $this->CharSet ) and
 		     ( $pos = strrpos( $address, '@' ) ) !== false ) {
-			$domain = substr( $address, ++ $pos );
+			$domain = substr( $address, ++$pos );
 			// Verify CharSet string is a valid one, and domain properly encoded in this CharSet.
 			if ( $this->has8bitChars( $domain ) and @mb_check_encoding( $domain, $this->CharSet ) ) {
 				$domain = mb_convert_encoding( $domain, 'UTF-8', $this->CharSet );
@@ -1478,7 +1480,7 @@ class PHPMailer {
 
 		$length = strlen( $string );
 
-		for ( $i = 0; $i < $length; $i ++ ) {
+		for ( $i = 0; $i < $length; $i++ ) {
 			$c = $string[ $i ];
 
 			// All other characters have a special meaning in at least one common shell, including = and +.
@@ -1550,7 +1552,7 @@ class PHPMailer {
 	public function getSMTPInstance() {
 		if ( ! is_object( $this->smtp ) ) {
 			require_once 'class.smtp.php'; // dtbaker
-			$this->smtp = new SMTP;
+			$this->smtp = new SMTP();
 		}
 
 		return $this->smtp;
@@ -1690,7 +1692,7 @@ class PHPMailer {
 			}
 			$host  = $hostinfo[3];
 			$port  = $this->Port;
-			$tport = (integer) $hostinfo[4];
+			$tport = (int) $hostinfo[4];
 			if ( $tport > 0 and $tport < 65536 ) {
 				$port = $tport;
 			}
@@ -1832,7 +1834,7 @@ class PHPMailer {
 		}
 		$this->language = $PHPMAILER_LANG;
 
-		return (boolean) $foundlang; // Returns false if language not found
+		return (bool) $foundlang; // Returns false if language not found
 	}
 
 	/**
@@ -1931,7 +1933,7 @@ class PHPMailer {
 							if ( $is_utf8 ) {
 								$len = $this->utf8CharBoundary( $word, $len );
 							} elseif ( substr( $word, $len - 1, 1 ) == '=' ) {
-								$len --;
+								$len--;
 							} elseif ( substr( $word, $len - 2, 1 ) == '=' ) {
 								$len -= 2;
 							}
@@ -1952,7 +1954,7 @@ class PHPMailer {
 						if ( $is_utf8 ) {
 							$len = $this->utf8CharBoundary( $word, $len );
 						} elseif ( substr( $word, $len - 1, 1 ) == '=' ) {
-							$len --;
+							$len--;
 						} elseif ( substr( $word, $len - 2, 1 ) == '=' ) {
 							$len -= 2;
 						}
@@ -2894,7 +2896,7 @@ class PHPMailer {
 	 * @return boolean
 	 */
 	public function has8bitChars( $text ) {
-		return (boolean) preg_match( '/[\x80-\xFF]/', $text );
+		return (bool) preg_match( '/[\x80-\xFF]/', $text );
 	}
 
 	/**
@@ -2931,7 +2933,7 @@ class PHPMailer {
 				$offset = $avgLength - $lookBack;
 				$chunk  = mb_substr( $str, $i, $offset, $this->CharSet );
 				$chunk  = base64_encode( $chunk );
-				$lookBack ++;
+				$lookBack++;
 			} while ( strlen( $chunk ) > $length );
 			$encoded .= $chunk . $linebreak;
 		}
@@ -3306,7 +3308,7 @@ class PHPMailer {
 	 * @return void
 	 */
 	protected function setError( $msg ) {
-		$this->error_count ++;
+		$this->error_count++;
 		if ( $this->Mailer == 'smtp' and ! is_null( $this->smtp ) ) {
 			$lasterror = $this->smtp->getError();
 			if ( ! empty( $lasterror['error'] ) ) {
@@ -3826,7 +3828,7 @@ class PHPMailer {
 	 */
 	public function DKIM_QP( $txt ) {
 		$line = '';
-		for ( $i = 0; $i < strlen( $txt ); $i ++ ) {
+		for ( $i = 0; $i < strlen( $txt ); $i++ ) {
 			$ord = ord( $txt[ $i ] );
 			if ( ( ( 0x21 <= $ord ) && ( $ord <= 0x3A ) ) || $ord == 0x3C || ( ( 0x3E <= $ord ) && ( $ord <= 0x7E ) ) ) {
 				$line .= $txt[ $i ];
@@ -4027,7 +4029,7 @@ class PHPMailer {
 	 */
 	public static function hasLineLongerThanMax( $str ) {
 		//+2 to include CRLF line break for a 1000 total
-		return (boolean) preg_match( '/^(.{' . ( self::MAX_LINE_LENGTH + 2 ) . ',})/m', $str );
+		return (bool) preg_match( '/^(.{' . ( self::MAX_LINE_LENGTH + 2 ) . ',})/m', $str );
 	}
 
 	/**
@@ -4103,7 +4105,8 @@ class PHPMailer {
  * PHPMailer exception handler
  * @package PHPMailer
  */
-class phpmailerException extends Exception {
+class phpmailerException extends Exception
+{
 	/**
 	 * Prettify error message output
 	 * @return string

@@ -1,15 +1,25 @@
 {
-  "title": "Users",
-  "description": "Users can be Customer Contacts or System Users.",
-  "topics": [
-    {
-      "title": "Customer Documentation",
-      "url": "http://ultimateclientmanager.com/support/documentation-wiki/customers/",
-      "wordpress_post_id": 735
-    }
-  ],
-  "config": {
-    "customer_signup_email_welcome_template": "Which template to email to customer after successful customer signup.",
-    "customer_signup_email_admin_template": "Which template to email to admin after successful customer signup."
-  }
+	"_generated": "Written by docs-site/scripts/build-app-artifacts.mjs. Edit the article frontmatter, not this file.",
+	"title": "Users",
+	"description": "Users can be Customer Contacts or System Users.",
+	"config": {
+		"customer_signup_email_welcome_template": "Which template to email to customer after successful customer signup.",
+		"customer_signup_email_admin_template": "Which template to email to admin after successful customer signup."
+	},
+	"article": "using/staff-and-permissions",
+	"pages": {
+		"user-contact_admin": "using/contacts",
+		"user-contact_admin_edit": "using/contacts",
+		"user-contact_admin_form": "using/contacts",
+		"user-contact_admin_list": "using/contacts",
+		"user-contact_summary": "using/contacts",
+		"user-user_admin": "using/staff-and-permissions",
+		"user-user_admin_edit": "using/staff-and-permissions",
+		"user-user_admin_edit_company": "using/staff-and-permissions",
+		"user-user_admin_edit_login": "using/staff-and-permissions",
+		"user-user_admin_edit_staff": "using/staff-and-permissions",
+		"user-user_admin_list": "using/staff-and-permissions",
+		"user-user_profile": "using/staff-and-permissions",
+		"user-user_summary": "using/staff-and-permissions"
+	}
 }

@@ -60,7 +60,6 @@ if ( ! $customer_id || ! $customer_data ) {
 			if ( ! empty( $_POST['portal_action'] ) && module_form::check_secure_key() ) {
 				switch ( $_POST['portal_action'] ) {
 					case 'generate_invoice':
-
 						// quantity and stuff.
 						$products = array();
 						foreach ( $contracts as $contract ) {

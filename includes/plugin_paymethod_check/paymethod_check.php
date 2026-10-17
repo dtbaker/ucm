@@ -1,8 +1,7 @@
 <?php
 
-
-class module_paymethod_check extends module_base {
-
+class module_paymethod_check extends module_base
+{
 	public static function can_i( $actions, $name = false, $category = false, $module = false ) {
 		if ( ! $module ) {
 			$module = __CLASS__;
@@ -15,13 +14,15 @@ class module_paymethod_check extends module_base {
 		return __CLASS__;
 	}
 
+	public function __construct() {
+		$this->module_name     = 'paymethod_check';
+		$this->module_position = 340;
+		$this->version         = 2.11;
+	}
+
 	function init() {
-		$this->version = 2.11;
 		//2.1 - 2014-11-27 - initial release
 		//2.11 - 2015-03-14 - better default payment method options
-
-		$this->module_name     = "paymethod_check";
-		$this->module_position = 8882;
 
 		if ( class_exists( 'module_template', false ) ) {
 			module_template::init_template( 'paymethod_check', 'Hello,
@@ -101,6 +102,22 @@ Amount: <strong>{AMOUNT}</strong>', 'Check details for invoice payments.' );
 	}
 
 
+	/**
+	 * The stable identifier for this payment method, never the admin-editable label.
+	 *
+	 * @return string
+	 */
+	public static function get_payment_method_key() {
+		return 'check';
+	}
+
+	/**
+	 * @return bool
+	 */
+	public function is_deprecated() {
+		return false;
+	}
+
 	public static function get_payment_method_name() {
 		return module_config::s( 'payment_method_check_label', 'Check' );
 	}
@@ -153,5 +170,4 @@ Amount: <strong>{AMOUNT}</strong>', 'Check details for invoice payments.' );
 		echo $template->render( 'pretty_html' );
 		exit;
 	}
-
 }

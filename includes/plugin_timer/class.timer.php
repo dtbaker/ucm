@@ -7,8 +7,8 @@ defined( '_UCM_VERSION' ) || die( '-5' );
 
 if ( class_exists( 'UCMBaseSingle' ) ) {
 
-	class UCMTimer extends UCMBaseSingle {
-
+	class UCMTimer extends UCMBaseSingle
+    {
 		public $db_id = 'timer_id';
 		public $db_table = 'timer';
 		public $display_key = 'description';
@@ -120,7 +120,7 @@ if ( class_exists( 'UCMBaseSingle' ) ) {
 				foreach ( $rows as $row ) {
 					if ( $row['duration_calc'] ) {
 						$total_time += $row['duration_calc'];
-					} else if ( $row['timer_status'] == _TIMER_STATUS_RUNNING ) {
+					} elseif ( $row['timer_status'] == _TIMER_STATUS_RUNNING ) {
 						$total_time += ( time() - $row['start_time'] );
 					}
 				}
@@ -210,11 +210,10 @@ if ( class_exists( 'UCMBaseSingle' ) ) {
 				}
 			}
 		}
-
 	}
 
-	class UCMTimerSegment extends UCMBaseSingle {
-
+	class UCMTimerSegment extends UCMBaseSingle
+    {
 		public $db_id = 'timer_segment_id';
 		public $db_table = 'timer_segment';
 		public $display_key = 'start_time';
@@ -229,10 +228,22 @@ if ( class_exists( 'UCMBaseSingle' ) ) {
 		);
 
 		public function paused() {
+			// A segment that is still running stops now. One that already carries an end
+			// time keeps it: pausing twice, or pausing a segment whose times have been
+			// corrected on the segment form, used to recalculate the duration from the
+			// wall clock and bill every hour since the start time.
+			$start_time   = (int) $this->get( 'start_time' );
+			$recorded_end = (int) $this->get( 'end_time' );
+			$end_time     = time();
+			if ( $this->get( 'timer_status' ) != _TIMER_STATUS_RUNNING
+			     && $recorded_end > 0
+			     && $recorded_end >= $start_time ) {
+				$end_time = $recorded_end;
+			}
 			$this->update( 'timer_status', _TIMER_STATUS_PAUSED );
-			$this->update( 'end_time', time() );
+			$this->update( 'end_time', $end_time );
 			// calc duration
-			$this->update( 'duration_calc', time() - $this->start_time );
+			$this->update( 'duration_calc', $end_time - $start_time );
 		}
 
 		public function get_status_text() {
@@ -249,10 +260,10 @@ if ( class_exists( 'UCMBaseSingle' ) ) {
 		public function get_total_time() {
 
 			$total_time = $this->duration_calc;
-
-			$hours   = floor( $total_time / 3600 );
-			$minutes = floor( ( $total_time / 60 ) % 60 );
-			$seconds = floor( $total_time % 60 );
+			$total_int  = (int) floor( $total_time );
+			$hours      = (int) ( $total_int / 3600 );
+			$minutes    = ( (int) floor( $total_time / 60 ) ) % 60;
+			$seconds    = $total_int % 60;
 
 			return sprintf( "%02d:%02d:%02d", $hours, $minutes, $seconds );
 		}
@@ -267,10 +278,10 @@ if ( class_exists( 'UCMBaseSingle' ) ) {
 
 					if ( isset( $_REQUEST['butt_del'] ) && $_REQUEST['butt_del'] && module_timer::can_i( 'delete', 'Timers' ) ) {
 
-						$return = self::link_open( $_REQUEST['timer_id'] );
-						$timer_segment->delete_with_confirm( false, $return );
+						// $this is the segment being deleted; the timer is where we go back to.
+						$this->delete_with_confirm( false, $timer->link_open() );
 
-					} else if ( module_timer::can_i( 'edit', 'Timers' ) ) {
+					} elseif ( module_timer::can_i( 'edit', 'Timers' ) ) {
 
 						$seg_data = array();
 						if ( ! empty( $_POST['start_time'] ) ) {
@@ -278,6 +289,11 @@ if ( class_exists( 'UCMBaseSingle' ) ) {
 							if ( ! empty( $_POST['end_time'] ) ) {
 								$seg_data['end_time']      = max( (int) $_POST['start_time'], (int) $_POST['end_time'] );
 								$seg_data['duration_calc'] = $seg_data['end_time'] - $seg_data['start_time'];
+								// An end time means this segment has finished. Without
+								// saying so the segment stayed "running", so the next
+								// pause recalculated its duration from the wall clock
+								// and threw the corrected times away.
+								$seg_data['timer_status'] = _TIMER_STATUS_PAUSED;
 							}
 						}
 						//                        print_r($_POST);
@@ -295,25 +311,21 @@ if ( class_exists( 'UCMBaseSingle' ) ) {
 			}
 
 		}
-
-
 	}
 
-	class UCMTimers extends UCMBaseMulti {
-
+	class UCMTimers extends UCMBaseMulti
+    {
 		public $db_id = 'timer_id';
 		public $db_table = 'timer';
 		public $display_name = 'Timer';
 		public $display_name_plural = 'Timers';
-
 	}
 
-	class UCMTimerSegments extends UCMBaseMulti {
-
+	class UCMTimerSegments extends UCMBaseMulti
+    {
 		public $db_id = 'timer_segment_id';
 		public $db_table = 'timer_segment';
 		public $display_name = 'Timer Segment';
 		public $display_name_plural = 'Timer Segments';
-
 	}
 }

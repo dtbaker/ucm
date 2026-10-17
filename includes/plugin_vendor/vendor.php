@@ -1,6 +1,5 @@
 <?php
 
-
 define( '_VENDOR_ACCESS_ALL', 'All vendors in system' ); // do not change string
 define( '_VENDOR_ACCESS_ALL_COMPANY', 'Only vendors from companies I have access to' ); // do not change string
 define( '_VENDOR_ACCESS_CONTACTS', 'Only vendor I am assigned to as a contact' ); // do not change string
@@ -12,8 +11,8 @@ define( '_VENDOR_STATUS_OWING', 2 );
 define( '_VENDOR_STATUS_PAID', 1 );
 
 
-class module_vendor extends module_base {
-
+class module_vendor extends module_base
+{
 	public $links;
 	public $vendor_types;
 	public $vendor_id;
@@ -30,12 +29,15 @@ class module_vendor extends module_base {
 		return __CLASS__;
 	}
 
-	public function init() {
-		$this->links           = array();
-		$this->vendor_types    = array();
-		$this->module_name     = "vendor";
-		$this->module_position = 5.1;
+	public function __construct() {
+		$this->module_name     = 'vendor';
+		$this->module_position = 560;
 		$this->version         = 2.122;
+	}
+
+	public function init() {
+		$this->links        = array();
+		$this->vendor_types = array();
 		// 2.122 - 2016-07-10 - big update to mysqli
 		// 2.121 - 2016-04-30 - update message
 		// 2.12 - 2014-07-31 - responsive improvements
@@ -334,7 +336,6 @@ class module_vendor extends module_base {
 		}
 		switch ( $vendor_access ) {
 			case _VENDOR_ACCESS_ALL:
-
 				break;
 			case _VENDOR_ACCESS_ALL_COMPANY:
 				if ( class_exists( 'module_company', false ) && module_company::is_enabled() ) {
@@ -450,7 +451,6 @@ class module_vendor extends module_base {
 
 				switch ( self::get_vendor_data_access() ) {
 					case _VENDOR_ACCESS_ALL:
-
 						break;
 					case _VENDOR_ACCESS_ALL_COMPANY:
 					case _VENDOR_ACCESS_CONTACTS:
@@ -499,6 +499,11 @@ class module_vendor extends module_base {
 
 
 	public function process() {
+		// Every form that reaches here is posted from a UCM page, so it carries the
+		// form auth key. Refuse anything that does not - see module_form::check_secure_key().
+		if ( ! module_form::check_secure_key() ) {
+			module_form::reject_invalid_form_auth();
+		}
 		if ( isset( $_REQUEST['butt_del'] ) && $_REQUEST['butt_del'] && $_REQUEST['vendor_id'] && module_vendor::can_i( 'delete', 'Vendors' ) ) {
 			$data = self::get_vendor( $_REQUEST['vendor_id'] );
 			if ( $data['vendor_id'] && $data['vendor_id'] = $_REQUEST['vendor_id'] ) {
@@ -524,7 +529,7 @@ class module_vendor extends module_base {
 					redirect_browser( self::link_open( false ) );
 				}
 			}
-		} else if ( "ajax_contact_list" == $_REQUEST['_process'] ) {
+		} elseif ( "ajax_contact_list" == $_REQUEST['_process'] ) {
 
 			$vendor_id = isset( $_REQUEST['vendor_id'] ) ? (int) $_REQUEST['vendor_id'] : 0;
 			$res       = module_user::get_contacts( array( 'vendor_id' => $vendor_id ) );
@@ -535,7 +540,7 @@ class module_vendor extends module_base {
 			echo json_encode( $options );
 			exit;
 
-		} else if ( "save_vendor" == $_REQUEST['_process'] ) {
+		} elseif ( "save_vendor" == $_REQUEST['_process'] ) {
 			$vendor_id = $this->save_vendor( $_REQUEST['vendor_id'], $_POST );
 			hook_handle_callback( 'vendor_save', $vendor_id );
 			set_message( "Vendor saved successfully" );
@@ -735,6 +740,9 @@ class module_vendor extends module_base {
 				// (this is so the above code works with its sql joins)
 				$sql = "DELETE FROM " . _DB_PREFIX . "vendor WHERE vendor_id = '" . $vendor_id . "' LIMIT 1";
 				query( $sql );
+				// get_vendor() and get_vendors() both cache, so without this the
+				// vendor's own screen keeps rendering the deleted record.
+				module_cache::clear( 'vendor' );
 			}
 		}
 	}
@@ -822,7 +830,7 @@ class module_vendor extends module_base {
 				$user_update['language'] = $row['primary_user_language'];
 			}
 			if ( isset( $row['password'] ) && strlen( $row['password'] ) ) {
-				$user_update['password'] = md5( trim( $row['password'] ) );
+				$user_update['password'] = ucm_password_hash( trim( $row['password'] ) );
 			}
 			$user_match = update_insert( "user_id", $user_match, "user", $user_update );
 			if ( $user_match && isset( $row['role'] ) && strlen( trim( $row['role'] ) ) ) {
@@ -895,7 +903,7 @@ class module_vendor extends module_base {
 						);
 						$extra_id = (int) $extra_id;
 						update_insert( 'extra_id', $extra_id, 'extra', $extra_db );
-					} else if ( $user_match && isset( $contact_fields[ $extra_key ] ) ) {
+					} elseif ( $user_match && isset( $contact_fields[ $extra_key ] ) ) {
 						// this is a primary contact extra field
 						$existing_extra = module_extra::get_extras( array(
 							'owner_table' => 'user',
@@ -1119,5 +1127,4 @@ class module_vendor extends module_base {
 		<?php
 		return ob_get_clean();
 	}
-
 }

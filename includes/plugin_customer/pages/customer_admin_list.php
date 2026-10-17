@@ -126,7 +126,7 @@ print_heading( array(
 ?>
 
 
-<form action="" method="post">
+<?php module_form::print_form_open_tag( array( 'action' => '' ) ); ?>
 
 	<?php $search_bar = array(
 		'elements' => array(
@@ -467,4 +467,4 @@ print_heading( array(
 	/** END TABLE LAYOUT **/
 
 	?>
-</form>
+<?php module_form::print_form_close_tag();

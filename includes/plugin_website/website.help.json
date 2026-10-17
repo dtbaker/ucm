@@ -1,11 +1,11 @@
 {
-  "title": "Websites/Projects",
-  "description": "Websites/Projects sit underneat a Customer and provide a nice way to group Quotes, Jobs and Invoices together.",
-  "topics": [
-    {
-      "title": "Website Documentation",
-      "url": "http://ultimateclientmanager.com/support/documentation-wiki/websites/",
-      "wordpress_post_id": 775
-    }
-  ]
+	"_generated": "Written by docs-site/scripts/build-app-artifacts.mjs. Edit the article frontmatter, not this file.",
+	"title": "Websites/Projects",
+	"description": "Websites/Projects sit underneat a Customer and provide a nice way to group Quotes, Jobs and Invoices together.",
+	"article": "using/websites",
+	"pages": {
+		"website-website_admin": "using/websites",
+		"website-website_admin_edit": "using/websites",
+		"website-website_admin_list": "using/websites"
+	}
 }

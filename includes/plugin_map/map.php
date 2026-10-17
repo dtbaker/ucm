@@ -1,8 +1,7 @@
 <?php
 
-
-class module_map extends module_base {
-
+class module_map extends module_base
+{
 	public $links;
 	public $map_types;
 
@@ -18,12 +17,15 @@ class module_map extends module_base {
 		return __CLASS__;
 	}
 
-	public function init() {
-		$this->links           = array();
-		$this->map_types       = array();
-		$this->module_name     = "map";
-		$this->module_position = 14;
+	public function __construct() {
+		$this->module_name     = 'map';
+		$this->module_position = 290;
 		$this->version         = 2.21;
+	}
+
+	public function init() {
+		$this->links    = array();
+		$this->map_types = array();
 		//2.21 - 2015-09-10 - map marker fix
 		//2.2 - 2015-09-09 - map marker fix
 		//2.1 - 2015-06-10 - initial release
@@ -74,6 +76,11 @@ class module_map extends module_base {
 	}
 
 	public function process() {
+		// Every form that reaches here is posted from a UCM page, so it carries the
+		// form auth key. Refuse anything that does not - see module_form::check_secure_key().
+		if ( ! module_form::check_secure_key() ) {
+			module_form::reject_invalid_form_auth();
+		}
 		if ( isset( $_REQUEST['_process'] ) && $_REQUEST['_process'] == 'ajax_save_map_coords' ) {
 
 			$address_id = (int) $_REQUEST['address_id'];
@@ -112,5 +119,4 @@ class module_map extends module_base {
 
 		return ob_get_clean();
 	}
-
 }

@@ -4,9 +4,15 @@ function config_sort_css( $a, $b ) {
 	return $a[3] > $b[3] ? 1 : -1;
 }
 
-class module_config extends module_base {
-
+class module_config extends module_base
+{
 	private static $config_vars = array();
+
+	public function __construct() {
+		$this->module_name     = 'config';
+		$this->module_position = 40;
+		$this->version         = 2.436;
+	}
 
 	public static function can_i( $actions, $name = false, $category = false, $module = false ) {
 		if ( ! $module ) {
@@ -21,9 +27,7 @@ class module_config extends module_base {
 	}
 
 	public function init() {
-		$this->module_name     = "config";
-		$this->module_position = 40;
-		$this->version         = 2.435;
+		//2.436 - 2026-10-17 - release version on the upgrade page
 		//2.435 - 2022-12-27 - uasort boolean error fix
 		//2.434 - 2022-10-22 - default to https update url
 		//2.433 - 2019-04-06 - php error fix
@@ -128,8 +132,10 @@ class module_config extends module_base {
 			// The 'G' modifier is available since PHP 5.1.0
 			case 'g':
 				$desired_limit *= 1024;
+				// no break
 			case 'm':
 				$desired_limit *= 1024;
+				// no break
 			case 'k':
 				$desired_limit *= 1024;
 		}
@@ -143,8 +149,10 @@ class module_config extends module_base {
 			// The 'G' modifier is available since PHP 5.1.0
 			case 'g':
 				$val *= 1024;
+				// no break
 			case 'm':
 				$val *= 1024;
+				// no break
 			case 'k':
 				$val *= 1024;
 		}
@@ -203,7 +211,7 @@ class module_config extends module_base {
 			$this->links[] = array(
 				"name"      => "Settings",
 				"p"         => "config_admin",
-				"order"     => 99,
+				"order"     => 9999,
 				'icon_name' => 'cogs',
 			);
 		}
@@ -238,8 +246,10 @@ class module_config extends module_base {
 							// The 'G' modifier is available since PHP 5.1.0
 							case 'g':
 								$desired_limit *= 1024;
+								// no break
 							case 'm':
 								$desired_limit *= 1024;
+								// no break
 							case 'k':
 								$desired_limit *= 1024;
 						}
@@ -252,8 +262,10 @@ class module_config extends module_base {
 							// The 'G' modifier is available since PHP 5.1.0
 							case 'g':
 								$val *= 1024;
+								// no break
 							case 'm':
 								$val *= 1024;
+								// no break
 							case 'k':
 								$val *= 1024;
 						}
@@ -365,6 +377,11 @@ class module_config extends module_base {
 
 
 	public function process() {
+		// Every form that reaches here is posted from a UCM page, so it carries the
+		// form auth key. Refuse anything that does not - see module_form::check_secure_key().
+		if ( ! module_form::check_secure_key() ) {
+			module_form::reject_invalid_form_auth();
+		}
 		if ( 'save_config' == $_REQUEST['_process'] ) {
 			$count = $this->handle_post_save_config();
 			set_message( $count . ' configuration values saved successfully' );
@@ -456,7 +473,7 @@ class module_config extends module_base {
 		if ( isset( $_POST['config'] ) && is_array( $_POST['config'] ) ) {
 			foreach ( $_POST['config'] as $key => $val ) {
 				$this->save_config( $key, $val );
-				$x ++;
+				$x++;
 			}
 		}
 
@@ -540,7 +557,7 @@ class module_config extends module_base {
 				$res = qa1( $sql );
 				if ( $res && $res['key'] == $key ) {
 					return $res['val'];
-				} else if ( $default !== false ) {
+				} elseif ( $default !== false ) {
 					self::save_config( $key, $default );
 				}
 				break;
@@ -589,12 +606,13 @@ class module_config extends module_base {
 			if ( strlen( $css_file_info[2] ) < 3 ) { // url is set to 'true', use the module/file name combo
 				?>
 				<link rel="stylesheet"
-				      href="<?php echo _BASE_HREF; ?>includes/plugin_<?php echo $css_file_info[0]; ?>/css/<?php echo $css_file_info[1];
-				      echo ( $version && strpos( '?', $css_file_info[1] ) === false ) ? '?ver=' . $version : ''; ?>"
+				      href="<?php echo htmlspecialchars( self::asset_version_url( _BASE_HREF . 'includes/plugin_' . $css_file_info[0] . '/css/' . $css_file_info[1], $version ) ); ?>"
 				      type="text/css"> <?php
 
 			} else { ?>
-				<link rel="stylesheet" href="<?php echo htmlspecialchars( $css_file_info[2] ); ?>" type="text/css"> <?php
+				<link rel="stylesheet"
+				      href="<?php echo htmlspecialchars( self::asset_version_url( $css_file_info[2], $version ) ); ?>"
+				      type="text/css"> <?php
 			}
 		}
 		if ( function_exists( 'hook_handle_callback' ) ) {
@@ -618,7 +636,7 @@ class module_config extends module_base {
 					unset( self::$css_files[ $hash ] );
 				}
 			}
-		} else if ( ! $reinit ) {
+		} elseif ( ! $reinit ) {
 			// time to generate a new cache file based on these css files.
 			$css_content = '';
 			foreach ( self::$css_files as $hash => $css_file_info ) {
@@ -660,6 +678,39 @@ class module_config extends module_base {
 		self::$js_files[ $module . $file_name ] = array( $module, $file_name, $url, $position );
 	}
 
+	/**
+	 * Add ?ver= to an asset URL so a browser picks up a new copy after an upgrade.
+	 *
+	 * Without this a script or stylesheet is cached by the browser indefinitely, and a
+	 * fix shipped in an update never reaches anyone who has already loaded the page. Only
+	 * our own files get the marker - an absolute URL to somebody else's CDN is left alone.
+	 *
+	 * @param string $url     Asset URL, relative or absolute.
+	 * @param string $version Usually _SCRIPT_VERSION. Falsy leaves the URL untouched.
+	 *
+	 * @return string
+	 */
+	public static function asset_version_url( $url, $version ) {
+		if ( ! $version || ! $url ) {
+			return $url;
+		}
+		// Already carries a query string - leave it, the caller is versioning it itself.
+		if ( strpos( $url, '?' ) !== false ) {
+			return $url;
+		}
+		// Someone else's host. We cannot know what their cache busting looks like, and
+		// adding a query string to a CDN URL can miss their cache entirely.
+		// Note _BASE_HREF is not usable for this test - it is often just "/".
+		if ( preg_match( '#^(https?:)?//([^/]+)#i', $url, $matches ) ) {
+			$our_host = isset( $_SERVER['HTTP_HOST'] ) ? $_SERVER['HTTP_HOST'] : '';
+			if ( ! $our_host || strcasecmp( $matches[2], $our_host ) !== 0 ) {
+				return $url;
+			}
+		}
+
+		return $url . '?ver=' . urlencode( $version );
+	}
+
 	public static function print_js( $version = false ) {
 		// sort the js files by position
 		uasort( self::$js_files, 'config_sort_css' ); // use the css function for sorting, does the same thing.
@@ -674,11 +725,11 @@ class module_config extends module_base {
 				// see if we have an override.
 				$js_file = module_theme::include_ucm( $js_file );
 				?>
-				<script type="text/javascript" language="javascript" src="<?php echo _BASE_HREF . $js_file;
-				echo ( $version && strpos( '?', $js_file[1] ) === false ) ? '?ver=' . $version : ''; ?>"></script> <?php
+				<script type="text/javascript" language="javascript"
+				        src="<?php echo htmlspecialchars( self::asset_version_url( _BASE_HREF . $js_file, $version ) ); ?>"></script> <?php
 			} else { ?>
 				<script type="text/javascript" language="javascript"
-				        src="<?php echo htmlspecialchars( $js_file_info[2] ); ?>"></script> <?php
+				        src="<?php echo htmlspecialchars( self::asset_version_url( $js_file_info[2], $version ) ); ?>"></script> <?php
 			}
 		}
 		if ( function_exists( 'hook_handle_callback' ) ) {
@@ -710,7 +761,7 @@ class module_config extends module_base {
 					unset( self::$js_files[ $hash ] );
 				}
 			}
-		} else if ( ! $reinit ) {
+		} elseif ( ! $reinit ) {
 			// time to generate a new cache file based on these js files.
 			$js_content = '';
 			foreach ( self::$js_files as $hash => $js_file_info ) {
@@ -853,6 +904,57 @@ public static function js_combine($version, $reinit=false){
 
 	}
 
+	/**
+	 * May updates be fetched from this URL?
+	 *
+	 * The update response is written into the installation as PHP and run, so the one
+	 * thing this setting must never be is "whatever is in the database". It used to be
+	 * compared against four literal strings, which also meant nobody could point a
+	 * development copy or a self-hosted mirror anywhere else.
+	 *
+	 * So: the official host, or a loopback address. Everything else is refused. Anyone who
+	 * can edit the configuration table to put a loopback address here can already run code
+	 * on the box, so that is not a way in - it is how the test suite and a local demo work.
+	 *
+	 * @param string $url
+	 *
+	 * @return bool
+	 */
+	public static function upgrade_url_is_allowed( $url ) {
+		if ( ! is_string( $url ) || ! strlen( $url ) ) {
+			return false;
+		}
+		$parts = parse_url( $url );
+		if ( ! is_array( $parts ) || empty( $parts['host'] ) || empty( $parts['scheme'] ) ) {
+			return false;
+		}
+		$scheme = strtolower( $parts['scheme'] );
+		if ( 'http' !== $scheme && 'https' !== $scheme ) {
+			return false;
+		}
+		$host = strtolower( $parts['host'] );
+
+		$official = array(
+			'ultimateclientmanager.com',
+			'api.ultimateclientmanager.com',
+			'www.ultimateclientmanager.com',
+			'demo.ultimateclientmanager.com',
+		);
+		if ( in_array( $host, $official, true ) ) {
+			return true;
+		}
+
+		if ( 'localhost' === $host || substr( $host, - 10 ) === '.localhost' ) {
+			return true;
+		}
+		$host = trim( $host, '[]' );
+		if ( filter_var( $host, FILTER_VALIDATE_IP ) ) {
+			return ! filter_var( $host, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE );
+		}
+
+		return false;
+	}
+
 	public static function check_for_upgrades( $requested_plugin = '', $get_file_contents = 0 ) {
 
 		// compile a list of current plugins
@@ -920,21 +1022,20 @@ public static function js_combine($version, $reinit=false){
 			'current_version'       => module_config::c( '_admin_system_version', 2.1 ),
 			'current_plugins'       => json_encode( $current_plugins ),
 			'current_files'         => json_encode( $current_files ),
-			'client_ip'             => $_SERVER['REMOTE_ADDR'],
+			'client_ip'             => isset( $_SERVER['REMOTE_ADDR'] ) ? $_SERVER['REMOTE_ADDR'] : '',
 			'installation_location' => full_link( '/' ),
 			'requested_plugin'      => $requested_plugin,
 			'get_file_contents'     => $get_file_contents,
+			// Asks a server that understands it to send a checksum with every file.
+			// An old server ignores the field, which is how an install still on the
+			// old protocol receives the update that teaches it this one.
+			'client_protocol'       => 2,
 		);
 		$url         = module_config::c( 'ucm_upgrade_url', 'https://api.ultimateclientmanager.com/upgrade.php' );
 		if ( $url == 'http://ultimateclientmanager.com/api/upgrade.php' ) {
 			$url = 'https://api.ultimateclientmanager.com/upgrade.php'; // hack to use new update subdomain
 		}
-		if (
-			$url != 'http://ultimateclientmanager.com/api/upgrade.php' &&
-	     $url != 'http://api.ultimateclientmanager.com/upgrade.php' &&
-	     $url != 'https://ultimateclientmanager.com/api/upgrade.php' &&
-	     $url != 'https://api.ultimateclientmanager.com/upgrade.php'
-		) {
+		if ( ! self::upgrade_url_is_allowed( $url ) ) {
 			set_error( 'Incorrect API url' );
 			redirect_browser( _BASE_HREF );
 		}
@@ -944,6 +1045,7 @@ public static function js_combine($version, $reinit=false){
 				'data'  => 'Posting to API',
 			) );
 		}
+		$user_agent = 'UCM/' . module_config::c( '_admin_system_version', 2.1 ) . ' (+' . full_link( '/' ) . ')';
 		if ( ! function_exists( 'curl_init' ) ) {
 			$postdata = http_build_query(
 				$post_fields
@@ -951,22 +1053,40 @@ public static function js_combine($version, $reinit=false){
 			$opts     = array(
 				'http' =>
 					array(
-						'method'  => 'POST',
-						'header'  => 'Content-type: application/x-www-form-urlencoded',
-						'content' => $postdata
-					)
+						'method'        => 'POST',
+						'header'        => "Content-type: application/x-www-form-urlencoded\r\n"
+						                   . 'User-Agent: ' . $user_agent . "\r\n",
+						'content'       => $postdata,
+						'timeout'       => 120,
+						// An update response is written to disk as PHP. Following a
+						// redirect would let the server hand that off to anywhere.
+						'max_redirects' => 0,
+					),
+				// The defaults are already these in supported PHP versions. Say so out
+				// loud: a silent downgrade here is a silent downgrade of the only thing
+				// standing between this install and somebody else's code.
+				'ssl'  => array(
+					'verify_peer'      => true,
+					'verify_peer_name' => true,
+				),
 			);
 			$context  = stream_context_create( $opts );
-			$result   = file_get_contents( $url, false, $context );
+			$result   = @file_get_contents( $url, false, $context );
 		} else {
-			//$url = 'http://localhost/ucm/web/api/upgrade.php';
 			$ch = curl_init( $url );
 			curl_setopt( $ch, CURLOPT_RETURNTRANSFER, true );
 			curl_setopt( $ch, CURLOPT_HEADER, false );
 			curl_setopt( $ch, CURLOPT_POST, true );
 			curl_setopt( $ch, CURLOPT_POSTFIELDS, $post_fields );
 			curl_setopt( $ch, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_1_0 ); // fixes netregistr, may break others?
+			curl_setopt( $ch, CURLOPT_SSL_VERIFYPEER, true );
+			curl_setopt( $ch, CURLOPT_SSL_VERIFYHOST, 2 );
+			curl_setopt( $ch, CURLOPT_FOLLOWLOCATION, false );
+			curl_setopt( $ch, CURLOPT_CONNECTTIMEOUT, 30 );
+			curl_setopt( $ch, CURLOPT_TIMEOUT, 120 );
+			curl_setopt( $ch, CURLOPT_USERAGENT, $user_agent );
 			$result = curl_exec( $ch );
+			curl_close( $ch );
 		}
 		$data = json_decode( $result, true );
 		if ( _DEBUG_MODE ) {
@@ -978,6 +1098,10 @@ public static function js_combine($version, $reinit=false){
 
 		if ( $data && isset( $data['available_updates'] ) && is_array( $data['available_updates'] ) ) {
 			$available_updates = $data['available_updates'];
+			// The protocol level belongs to the response, not to the update list, but the
+			// update list is all this function returns. ucm_upgrade_manager reads it from
+			// here to decide whether a missing checksum is fatal.
+			$available_updates['protocol'] = isset( $data['protocol'] ) ? (int) $data['protocol'] : 1;
 		}
 		if ( $data && isset( $data['licence_codes'] ) && is_array( $data['licence_codes'] ) ) {
 			// find out what the licence codes  are (url / name) so we can dispaly this under each code nicely.
@@ -989,7 +1113,9 @@ public static function js_combine($version, $reinit=false){
 		}
 
 		if ( ! $data ) {
-			echo $result;
+			// Whatever came back was not the JSON we asked for - a PHP warning, an error
+			// page, a captive portal. It used to be printed into the page as HTML.
+			echo '<pre class="error_text">' . htmlspecialchars( substr( (string) $result, 0, 2000 ) ) . '</pre>';
 		}
 
 		//echo '<pre>';print_r($current_plugins);print_r($result);echo '</pre>';
@@ -999,6 +1125,28 @@ public static function js_combine($version, $reinit=false){
 	}
 
 
+	/**
+	 * The release this install is running, as shown to people: _SCRIPT_VERSION in init.php.
+	 *
+	 * This is the one number to quote in support and in the changelog. It is bumped at every
+	 * release, and it lives in init.php, a core file, so it changes on disk whenever an
+	 * update lands.
+	 *
+	 * @return string
+	 */
+	public static function product_version() {
+		return (string) _SCRIPT_VERSION;
+	}
+
+	/**
+	 * The version number this install reports to the update server.
+	 *
+	 * Not the release number: it is a database setting that only an update writes, so a fresh
+	 * install reports the 2.1 default. Kept because the update protocol sends it. For the
+	 * number to show people, use product_version().
+	 *
+	 * @return string|float
+	 */
 	public static function current_version() {
 		return self::c( '_admin_system_version', 2.1 );
 	}
@@ -1006,6 +1154,4 @@ public static function js_combine($version, $reinit=false){
 	public static function set_system_version( $version ) {
 		return self::save_config( '_admin_system_version', $version );
 	}
-
-
 }

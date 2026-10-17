@@ -21,16 +21,13 @@ if ( isset( $_REQUEST['customer_type_id'] ) && $_REQUEST['customer_type_id'] ) {
 			'billing_type'     => 0,
 		);
 	}
-	?>
 
-
-	<form action="" method="post">
-		<input type="hidden" name="_process" value="save_customer_type">
-		<input type="hidden" name="customer_type_id" value="<?php echo $customer_type_id; ?>"/>
-
-		<?php
-
-		module_form::print_form_auth();
+		module_form::print_form_open_tag( array(
+			'process' => 'save_customer_type',
+			'hidden'  => array(
+				'customer_type_id' => $customer_type_id,
+			),
+		) );
 
 		$fieldset_data               = array(
 			'heading'  => array(
@@ -137,12 +134,8 @@ if ( isset( $_REQUEST['customer_type_id'] ) && $_REQUEST['customer_type_id'] ) {
 			),
 		);
 		echo module_form::generate_form_actions( $form_actions );
-		?>
 
-
-	</form>
-
-	<?php
+		module_form::print_form_close_tag();
 } else {
 
 	$customer_types = module_customer::get_customer_types();

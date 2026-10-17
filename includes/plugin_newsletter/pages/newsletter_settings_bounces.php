@@ -17,6 +17,14 @@ print_heading( 'Newsletter Bounce Checking' );
 
 ?>
 <p><?php _e( 'Bounces are checked automatically using the CRON job, however if you want to check for bounces manually (ie: to see any error) please click the button below.' ); ?></p>
-<form action="" method="post">
-	<input type="submit" name="go" value="<?php _e( 'Check for bounces' ); ?>">
-</form>
+<?php module_form::print_form_open_tag( array( 'action' => '' ) ); ?>
+	<?php echo module_form::generate_form_actions( array(
+		'elements' => array(
+			array(
+				'type'  => 'save_button',
+				'name'  => 'go',
+				'value' => _l( 'Check for bounces' ),
+			),
+		),
+	) ); ?>
+<?php module_form::print_form_close_tag();

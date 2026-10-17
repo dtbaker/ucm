@@ -144,7 +144,7 @@ $comments = array_reverse( $comments, true );
 						</div>
 					</div>
 					<?php
-					$x ++;
+					$x++;
 				}
 				?>
 			</div>

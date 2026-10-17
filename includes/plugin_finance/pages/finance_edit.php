@@ -106,10 +106,10 @@ if ( $finance_id > 0 && ( count( $linked_invoice_payments ) || count( $linked_fi
 ?>
 
 <script type="text/javascript">
-	<?php if(! $locked){ ?>
+	<?php if (! $locked) { ?>
   $(function () {
       if (typeof ucm.finance != 'undefined') {
-				<?php if($finance['amount'] > 0 && $finance['taxable_amount'] == 0){ ?>
+				<?php if ($finance['amount'] > 0 && $finance['taxable_amount'] == 0) { ?>
           ucm.finance.changing = 'subtotal';
 				<?php } ?>
           ucm.finance.init();
@@ -117,9 +117,14 @@ if ( $finance_id > 0 && ( count( $linked_invoice_payments ) || count( $linked_fi
   });
 	<?php } ?>
 </script>
-<form action="" method="post">
+<?php
+module_form::print_form_open_tag( array(
+	'process' => 'save_finance',
+	'hidden'  => array(
+		'finance_id' => $finance_id,
+	),
+) );
 
-	<?php
 	module_form::prevent_exit( array(
 			'valid_exits' => array(
 				// selectors for the valid ways to exit this form.
@@ -128,12 +133,7 @@ if ( $finance_id > 0 && ( count( $linked_invoice_payments ) || count( $linked_fi
 		)
 	);
 
-	?>
-
-
-	<input type="hidden" name="_process" value="save_finance"/>
-	<input type="hidden" name="finance_id" value="<?php echo $finance_id; ?>"/>
-	<?php if ( isset( $_REQUEST['invoice_payment_id'] ) ) { ?>
+	if ( isset( $_REQUEST['invoice_payment_id'] ) ) { ?>
 		<input type="hidden" name="invoice_payment_id"
 		       value="<?php echo isset( $_REQUEST['invoice_payment_id'] ) ? (int) $_REQUEST['invoice_payment_id'] : ''; ?>"/>
 	<?php } ?>
@@ -195,7 +195,7 @@ if ( $finance_id > 0 && ( count( $linked_invoice_payments ) || count( $linked_fi
 					foreach ( $linked_invoice_payments as $linked_invoice_payment ) {
 						if ( isset( $linked_invoice_payment['is_refund'] ) && $linked_invoice_payment['is_refund'] && isset( $linked_invoice_payment['refund_invoice_payments'] ) ) {
 							$is_refunds = array_merge( $is_refunds, $linked_invoice_payment['refund_invoice_payments'] );
-						} else if ( isset( $linked_invoice_payment['refunded'] ) && $linked_invoice_payment['refunded'] && isset( $linked_invoice_payment['refund_invoice_payments'] ) ) {
+						} elseif ( isset( $linked_invoice_payment['refunded'] ) && $linked_invoice_payment['refunded'] && isset( $linked_invoice_payment['refund_invoice_payments'] ) ) {
 							$refunded = array_merge( $refunded, $linked_invoice_payment['refund_invoice_payments'] );
 						}
 						echo module_invoice::link_open( $linked_invoice_payment['invoice_id'], true );
@@ -362,7 +362,7 @@ if ( $finance_id > 0 && ( count( $linked_invoice_payments ) || count( $linked_fi
 					(<?php echo dollar( $tax['amount'], true, $finance['currency_id'] ); ?>)
 				<br/>
 				<?php }
-				}else{
+				} else {
 
 				$incrementing = false;
 				//echo print_select_box(module_finance::get_tax_modes(),'tax_mode',isset($finance['tax_mode'])?$finance['tax_mode']:0,'',false);
@@ -507,6 +507,7 @@ if ( $finance_id > 0 && ( count( $linked_invoice_payments ) || count( $linked_fi
                           url: '<?php echo module_job::link_open( false );?>',
                           data: {
                               '_process': 'ajax_job_list',
+                              'form_auth_key': ucm.form_auth_key,
                               'customer_id': new_customer_id
                           },
                           dataType: 'json',
@@ -638,7 +639,7 @@ if ( $finance_id > 0 && ( count( $linked_invoice_payments ) || count( $linked_fi
 					'onclick' => "$('#recurring_next').val('" . htmlspecialchars( $next_data[1] ) . "');",
 				);
 				break;
-			} else if ( $next == 0 && $next_data[0] == $finance_recurring_id ) {
+			} elseif ( $next == 0 && $next_data[0] == $finance_recurring_id ) {
 				$next = - 1;
 			}
 		}
@@ -667,7 +668,4 @@ if ( $finance_id > 0 && ( count( $linked_invoice_payments ) || count( $linked_fi
 	);
 	echo module_form::generate_form_actions( $form_actions );
 
-	?>
-
-
-</form>
+	module_form::print_form_close_tag();

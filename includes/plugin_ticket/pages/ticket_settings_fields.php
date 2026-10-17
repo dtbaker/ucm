@@ -22,93 +22,100 @@ if ( isset( $_REQUEST['ticket_data_key_id'] ) && $_REQUEST['ticket_data_key_id']
 	?>
 
 
-	<form action="" method="post">
-		<input type="hidden" name="_process" value="save_ticket_data_key">
-		<input type="hidden" name="ticket_data_key_id" value="<?php echo $ticket_data_key_id; ?>"/>
-
-		<?php ob_start();
-		?>
-
-		<table width="100%" border="0" cellspacing="0" cellpadding="2" class="tableclass tableclass_form">
-			<tbody>
-			<tr>
-				<th class="width1">
-					<?php echo _l( 'Name/Label' ); ?>
-				</th>
-				<td>
-					<input type="text" name="key" value="<?php echo htmlspecialchars( $ticket_data_key['key'] ); ?>"/>
-				</td>
-			</tr>
-			<tr>
-				<th>
-					<?php echo _l( 'Type' ); ?>
-				</th>
-				<td>
-					<input type="radio" name="type"
-					       value="text"<?php echo $ticket_data_key['type'] == 'text' ? ' checked' : ''; ?>><?php _e( 'Text' ); ?>
-					<br/>
-					<input type="radio" name="type"
-					       value="textarea"<?php echo $ticket_data_key['type'] == 'textarea' ? ' checked' : ''; ?>><?php _e( 'Text Area' ); ?>
-					<br/>
-					<input type="radio" name="type"
-					       value="select"<?php echo $ticket_data_key['type'] == 'select' ? ' checked' : ''; ?>><?php _e( 'Select' ); ?>
-					<br/>
-				</td>
-			</tr>
-			<tr>
-				<th>
-					<?php echo _l( 'Order' ); ?>
-				</th>
-				<td>
-					<input type="text" name="order" value="<?php echo htmlspecialchars( $ticket_data_key['order'] ); ?>"/>
-				</td>
-			</tr>
-			<?php if ( $ticket_data_key['type'] == 'select' ) {
-				$options = isset( $ticket_data_key['options'] ) && $ticket_data_key['options'] ? unserialize( $ticket_data_key['options'] ) : array();
-				?>
-				<tr>
-					<th>
-						<?php _e( 'Drop Down Values:' ); ?>
-					</th>
-					<td>
-                                <textarea rows="9" cols="30" name="options"><?php foreach ( $options as $key => $val ) {
-		                                if ( ! strlen( $val ) ) {
-			                                continue;
-		                                }
-		                                if ( ! is_numeric( $key ) && $key != $val ) {
-			                                echo "$key|";
-		                                }
-		                                echo $val . "\n";
-	                                } ?></textarea> <?php _h( 'Drop down values, one per line' ); ?>
-					</td>
-				</tr>
-			<?php } ?>
-			<?php if ( class_exists( 'module_encrypt', false ) && ( $ticket_data_key['type'] == 'text' || $ticket_data_key['type'] == 'textarea' ) ) { ?>
-				<tr>
-					<th>
-						<?php echo _l( 'Encrypt Using Vault' ); ?>
-					</th>
-					<td>
-						<?php
-						$encryption_keys = module_encrypt::get_encrypt_keys();
-						echo print_select_box( $encryption_keys, 'encrypt_key_id', isset( $ticket_data_key['encrypt_key_id'] ) ? $ticket_data_key['encrypt_key_id'] : false, '', true, 'encrypt_key_name', false ); ?>
-					</td>
-				</tr>
-			<?php } ?>
-			</tbody>
-		</table>
+	<?php
+	module_form::print_form_open_tag( array(
+		'process' => 'save_ticket_data_key',
+		'hidden'  => array( 'ticket_data_key_id' => $ticket_data_key_id ),
+	) );
+	?>
 
 		<?php
-
+		$options_value = '';
+		if ( $ticket_data_key['type'] == 'select' && isset( $ticket_data_key['options'] ) && $ticket_data_key['options'] ) {
+			$options_arr = unserialize( $ticket_data_key['options'] );
+			if ( is_array( $options_arr ) ) {
+				foreach ( $options_arr as $key => $val ) {
+					if ( ! strlen( $val ) ) {
+						continue;
+					}
+					if ( ! is_numeric( $key ) && $key != $val ) {
+						$options_value .= $key . '|';
+					}
+					$options_value .= $val . "\n";
+				}
+			}
+		}
 
 		$fieldset_data = array(
-			'heading'         => array(
+			'heading'  => array(
 				'type'  => 'h3',
 				'main'  => true,
 				'title' => 'Edit Ticket Data Key',
 			),
-			'elements_before' => ob_get_clean(),
+			'class'    => 'tableclass tableclass_form',
+			'elements' => array(
+				'key'   => array(
+					'title'           => _l( 'Name/Label' ),
+					'row_title_class' => 'width1',
+					'field'           => array(
+						'type'  => 'text',
+						'name'  => 'key',
+						'value' => $ticket_data_key['key'],
+					),
+				),
+				'type'  => array(
+					'title' => _l( 'Type' ),
+					'field' => array(
+						'type'    => 'select',
+						'name'    => 'type',
+						'value'   => $ticket_data_key['type'],
+						'options' => array(
+							'text'     => _l( 'Text' ),
+							'textarea' => _l( 'Text Area' ),
+							'select'   => _l( 'Select' ),
+						),
+						'blank'   => false,
+					),
+				),
+				'order' => array(
+					'title' => _l( 'Order' ),
+					'field' => array(
+						'type'  => 'text',
+						'name'  => 'order',
+						'value' => $ticket_data_key['order'],
+					),
+				),
+				'options' => array(
+					'title'  => _l( 'Drop Down Values:' ),
+					'fields' => array(
+						array(
+							'type'  => 'textarea',
+							'name'  => 'options',
+							'value' => $options_value,
+							'style' => 'min-height: 150px;',
+						),
+						' ',
+						function () {
+							_h( 'Drop down values, one per line' );
+						},
+					),
+				),
+			),
 		);
+
+		if ( class_exists( 'module_encrypt', false ) ) {
+			$fieldset_data['elements']['encrypt_key_id'] = array(
+				'title' => _l( 'Encrypt Using Vault' ),
+				'field' => array(
+					'type'             => 'select',
+					'name'             => 'encrypt_key_id',
+					'value'            => isset( $ticket_data_key['encrypt_key_id'] ) ? $ticket_data_key['encrypt_key_id'] : false,
+					'options'          => module_encrypt::get_encrypt_keys(),
+					'options_array_id' => 'encrypt_key_name',
+					'blank'            => true,
+				),
+			);
+		}
 
 		echo module_form::generate_fieldset( $fieldset_data );
 		unset( $fieldset_data );
@@ -134,7 +141,7 @@ if ( isset( $_REQUEST['ticket_data_key_id'] ) && $_REQUEST['ticket_data_key_id']
 
 		?>
 
-	</form>
+	<?php module_form::print_form_close_tag(); ?>
 
 	<?php
 } else {
@@ -171,7 +178,7 @@ if ( isset( $_REQUEST['ticket_data_key_id'] ) && $_REQUEST['ticket_data_key_id']
 		$c = 0;
 		foreach ( $ticket_data_keys as $ticket_data_key ) {
 			?>
-			<tr class="<?php echo ( $c ++ % 2 ) ? "odd" : "even"; ?>">
+			<tr class="<?php echo ( $c++ % 2 ) ? "odd" : "even"; ?>">
 				<td class="row_action" nowrap="">
 					<?php echo module_ticket::link_open_field( $ticket_data_key['ticket_data_key_id'], true ); ?>
 				</td>

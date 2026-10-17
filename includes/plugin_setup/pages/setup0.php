@@ -86,17 +86,11 @@ if ( ! function_exists( 'imap_open' ) ) {
 if ( ! function_exists( 'curl_init' ) ) {
 	$setup_errors = true;
 	set_error( 'Sorry CURL is not enabled on your hosting account. Please contact your host to have this enabled.' );
-} else {
-	// do a test connection
-	$ch = curl_init( 'https://api.ultimateclientmanager.com/?curl_check' );
-	curl_setopt( $ch, CURLOPT_RETURNTRANSFER, true );
-	curl_setopt( $ch, CURLOPT_HEADER, false );
-	$result = curl_exec( $ch );
-	if ( trim( $result ) != 'success' ) {
-		$setup_errors = true;
-		set_error( 'There was a problem with CURL. Please check CURL is enabled and your server has a connection to the internet.' );
-	}
 }
+// NOTE: there used to be a live connectivity test against an external endpoint here that
+// hard-failed the entire installer unless it returned exactly "success". The endpoint is
+// gone, so the check blocked every fresh install. Outbound connectivity is not required
+// to install or run UCM - only to check for updates - so it is no longer a setup gate.
 
 
 if ( $setup_errors ) {

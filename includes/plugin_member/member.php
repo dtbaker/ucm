@@ -1,8 +1,7 @@
 <?php
 
-
-class module_member extends module_base {
-
+class module_member extends module_base
+{
 	public $links;
 	public $member_types;
 	public $member_id;
@@ -19,12 +18,15 @@ class module_member extends module_base {
 		return __CLASS__;
 	}
 
-	public function init() {
-		$this->links           = array();
-		$this->member_types    = array();
-		$this->module_name     = "member";
-		$this->module_position = 20.1;
+	public function __construct() {
+		$this->module_name     = 'member';
+		$this->module_position = 300;
 		$this->version         = 2.185;
+	}
+
+	public function init() {
+		$this->links        = array();
+		$this->member_types = array();
 		// 2.185 - 2016-07-10 - big update to mysqli
 		// 2.184 - 2014-11-26 - duplicate member warning on add
 		// 2.183 - 2014-08-10 - responsive fixes
@@ -300,7 +302,7 @@ class module_member extends module_base {
 			$x   = 1;
 			while ( isset( $member[ $key ] ) ) {
 				$key = $extra['extra_key'] . $x;
-				$x ++;
+				$x++;
 			}
 			$member[ $key ] = trim( $extra['extra'] );
 		}
@@ -312,14 +314,19 @@ class module_member extends module_base {
 
 
 	public function process() {
-		if ( isset( $_REQUEST['butt_del'] ) && $_REQUEST['butt_del'] && $_REQUEST['member_id'] ) {
+		// Every form that reaches here is posted from a UCM page, so it carries the
+		// form auth key. Refuse anything that does not - see module_form::check_secure_key().
+		if ( ! module_form::check_secure_key() ) {
+			module_form::reject_invalid_form_auth();
+		}
+		if ( isset( $_REQUEST['butt_del'] ) && $_REQUEST['butt_del'] && $_REQUEST['member_id'] && self::can_i( 'delete', 'Members' ) ) {
 			$data = self::get_member( $_REQUEST['member_id'] );
 			if ( module_form::confirm_delete( 'member_id', "Really delete member: " . $data['first_name'] . ' ' . $data['last_name'], self::link_open( $_REQUEST['member_id'] ) ) ) {
 				$this->delete_member( $_REQUEST['member_id'] );
 				set_message( "Member deleted successfully" );
 				redirect_browser( self::link_open( false ) );
 			}
-		} else if ( "save_member" == $_REQUEST['_process'] ) {
+		} elseif ( "save_member" == $_REQUEST['_process'] ) {
 			$member_id = $this->save_member( $_REQUEST['member_id'], $_POST );
 			hook_handle_callback( 'member_save', $member_id );
 			set_message( "Member saved successfully" );
@@ -368,6 +375,8 @@ class module_member extends module_base {
 				module_group::delete_member( $member_id, 'newsletter_subscription' );
 			}
 			hook_handle_callback( 'member_deleted', $member_id );
+			// get_members() caches, so without this the deleted member keeps coming back.
+			module_cache::clear( 'member' );
 		}
 	}
 
@@ -474,11 +483,10 @@ class module_member extends module_base {
 				// handle subscriptions to the member database and also the newsletter system.
 				// todo - tie in with "subscription" module to allow users to select which subscription they want as well.
 			case 'subscribe':
-
 				$member = isset( $_REQUEST['member'] ) && is_array( $_REQUEST['member'] ) ? $_REQUEST['member'] : false;
 
 				$provided_member_id = ( isset( $_REQUEST['i'] ) ) ? (int) $_REQUEST['i'] : false;
-				$hash               = ( isset( $_REQUEST['hash'] ) ) ? trim( $_REQUEST['hash'] ) : false;
+				$hash               = ucm_request_string( 'hash' );
 				$member_id          = false;
 
 				if ( $member ) {
@@ -491,7 +499,7 @@ class module_member extends module_base {
 							// are we adding a new member to the system or updating an old one
 							if ( $provided_member_id && $hash ) {
 								$real_hash = $this->link_public_details( $provided_member_id, true );
-								if ( $real_hash == $hash ) {
+								if ( hash_equals( $real_hash, $hash ) ) {
 									$existing_member = get_single( 'member', 'email', $email );
 									if ( $existing_member && $existing_member['member_id'] != $provided_member_id ) {
 										// this user is trying to update their email address to a user who exists in the system already
@@ -635,7 +643,7 @@ class module_member extends module_base {
 					}
 					if ( $provided_member_id && $hash ) {
 						$real_hash = $this->link_public_details( $provided_member_id, true );
-						if ( $real_hash == $hash ) {
+						if ( hash_equals( $real_hash, $hash ) ) {
 							// we can load these details into the forum successfully.
 							$member = array_merge( $member, $this->get_member( $provided_member_id ) );
 							// get their fields:
@@ -761,6 +769,4 @@ class module_member extends module_base {
 		<?php
 		return ob_get_clean();
 	}
-
-
 }

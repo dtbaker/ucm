@@ -5,6 +5,12 @@ if ( ! module_config::can_i( 'view', 'Settings' ) ) {
 	redirect_browser( _BASE_HREF );
 }
 
+module_invoice::print_deprecated_payment_method_notice(
+	module_paymethod_multisafepay::get_payment_method_name(),
+	_l( 'MultiSafepay replaced the XML API this uses with a JSON one. The old endpoint still answers, but it receives no new payment methods, features or tools, and MultiSafepay has published no date for switching it off.' ),
+	''
+);
+
 /*
 define('MSP_TEST_API',     true); // seperate testaccount needed
 define('MSP_ACCOUNT_ID',   '1001001');

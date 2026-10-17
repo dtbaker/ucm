@@ -2,12 +2,10 @@
 
 switch ( $display_mode ) {
 	case 'ajax':
-
 		break;
 	case 'iframe':
 	case 'normal':
 	default:
-
 		//$header_nav_mini = '';
 		ob_start();
 		$menu_include_parent = false;
@@ -25,7 +23,7 @@ switch ( $display_mode ) {
 			<meta name="viewport" content="width=device-width, initial-scale=1.0">
 			<title><?php echo $page_title; ?></title>
 
-			<?php $header_favicon = module_theme::get_config( 'theme_favicon', '' );
+			<?php $header_favicon = module_theme::favicon_url();
 			if ( $header_favicon ) { ?>
 				<link rel="icon" href="<?php echo htmlspecialchars( $header_favicon ); ?>">
 			<?php } ?>
@@ -52,7 +50,7 @@ switch ( $display_mode ) {
               ucm.init_interface();
               if (typeof ucm.metis != 'undefined') {
                   ucm.metis.init();
-								<?php if(module_theme::get_config( 'metismenustyle', 'normal' ) == 'fixed'){ ?>
+								<?php if (module_theme::get_config( 'metismenustyle', 'normal' ) == 'fixed') { ?>
                   $('#menu').affix({offset: {top: $('#menu').offset().top}}, 100);
 								<?php } ?>
               }
@@ -67,7 +65,7 @@ switch ( $display_mode ) {
 
 
 		</head>
-		<?php //fixed side-right 
+		<?php //fixed side-right
 		?>
 	<body class="theme-metis <?php
 	if ( module_theme::get_config( 'metissidebar-position', 'left' ) == 'right' ) {
@@ -84,11 +82,11 @@ switch ( $display_mode ) {
 		echo ' style="background:#FFF;"';
 	} ?>>
 
-		<?php if ( $display_mode == 'iframe' ){ ?>
+		<?php if ( $display_mode == 'iframe' ) { ?>
 
 	<div id="iframe">
 
-		<?php }else{ ?>
+		<?php } else { ?>
 
 		<?php if ( _DEBUG_MODE ) {
 			module_debug::print_heading();
@@ -105,7 +103,7 @@ switch ( $display_mode ) {
 							<span class="icon-bar"></span>
 							<span class="icon-bar"></span>
 						</button>
-						<?php if ( $header_logo = module_theme::get_config( 'theme_logo', _BASE_HREF . 'images/logo.png' ) ) { ?>
+						<?php if ( $header_logo = module_theme::logo_url() ) { ?>
 							<a href="<?php echo _BASE_HREF; ?>" class="navbar-mini-brand"><img
 									src="<?php echo htmlspecialchars( $header_logo ); ?>" border="0"
 									title="<?php echo htmlspecialchars( module_config::s( 'header_title', 'UCM' ) ); ?>"></a>
@@ -123,7 +121,10 @@ switch ( $display_mode ) {
 								}
 								?>
 								<li>
-									<form class="mini-search" action="<?php echo _BASE_HREF; ?>?p=search_results" method="post">
+									<?php module_form::print_form_open_tag( array(
+										'class'  => 'mini-search',
+										'action' => _BASE_HREF . '?p=search_results',
+									) ); ?>
 										<div class="input-group">
 											<input type="text" class="input-small form-control"
 											       value="<?php echo isset( $_REQUEST['search'] ) && is_string( $_REQUEST['search'] ) ? htmlspecialchars( $_REQUEST['search'] ) : ''; ?>"
@@ -133,7 +134,7 @@ switch ( $display_mode ) {
 		                                    class="fa fa-search"></i></button>
                                 </span>
 										</div>
-									</form>
+									<?php module_form::print_form_close_tag(); ?>
 								</li>
 								<?php
 							}
@@ -170,7 +171,7 @@ switch ( $display_mode ) {
 			<nav class="navbar navbar-inverse navbar-static-top hidden-xs">
 				<!-- Brand and toggle get grouped for better mobile display -->
 				<header class="navbar-header">
-					<?php if ( $header_logo = module_theme::get_config( 'theme_logo', _BASE_HREF . 'images/logo.png' ) ) { ?>
+					<?php if ( $header_logo = module_theme::logo_url() ) { ?>
 						<a href="<?php echo _BASE_HREF; ?>" class="navbar-brand"><img
 								src="<?php echo htmlspecialchars( $header_logo ); ?>" border="0"
 								title="<?php echo htmlspecialchars( module_config::s( 'header_title', 'UCM' ) ); ?>"></a>
@@ -238,7 +239,8 @@ switch ( $display_mode ) {
 									</ul>
 								<?php } else { ?>
 									<a id="<?php echo $header_button['id']; ?>" data-placement="bottom"
-									   data-original-title="<?php echo $header_button['title']; ?>" href="#" data-toggle="tooltip"
+									   data-original-title="<?php echo $header_button['title']; ?>"
+									   <?php echo header_button_link_attributes( $header_button ); ?> data-toggle="tooltip"
 									   class="btn btn-default btn-sm">
 										<i class="fa fa-<?php echo $header_button['fa-icon']; ?>"></i>
 									</a>
@@ -259,24 +261,7 @@ switch ( $display_mode ) {
 			</nav>
 			<!-- /.navbar -->
 
-			<div>
-				<div style="position:absolute; z-index:1004; margin-left:367px;width:293px; display:none;" id="message_popdown">
-					<?php if ( print_header_message() ) {
-						?>
-						<script type="text/javascript">
-                $('#message_popdown').fadeIn('slow');
-								<?php if(module_config::c( 'header_messages_fade_out', 1 )){ ?>
-                $(function () {
-                    setTimeout(function () {
-                        $('#message_popdown').fadeOut();
-                    }, 4000);
-                });
-								<?php } ?>
-						</script>
-						<?php
-					} ?>
-				</div>
-			</div>
+			<?php print_header_message_popdown(); ?>
 
 			<!-- header.head -->
 			<header class="head">
@@ -293,7 +278,10 @@ switch ( $display_mode ) {
 							module_form::set_default_field( 'ajax_search_text' );
 						}
 						?>
-						<form class="main-search" action="<?php echo _BASE_HREF; ?>?p=search_results" method="post">
+						<?php module_form::print_form_open_tag( array(
+							'class'  => 'main-search',
+							'action' => _BASE_HREF . '?p=search_results',
+						) ); ?>
 							<div class="input-group">
 
 								<input type="text" class="input-small form-control" name="quicksearch"
@@ -305,7 +293,7 @@ switch ( $display_mode ) {
 		                                class="fa fa-search"></i></button>
                             </span>
 							</div>
-						</form>
+						<?php module_form::print_form_close_tag(); ?>
 						<?php
 					} ?>
 				</div>
@@ -361,12 +349,12 @@ switch ( $display_mode ) {
 			<!-- /#left -->
 		<?php } // logged in ?>
 
-	<?php } // iframe 
+	<?php } // iframe
 		?>
 
 		<div id="content">
 		<div class="outer">
-		<?php // <div class="inner"> moved to design_menu in a hack to get it looking better 
+		<?php // <div class="inner"> moved to design_menu in a hack to get it looking better
 		?>
 		<div class="inner">
 

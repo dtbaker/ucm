@@ -1,9 +1,7 @@
 <?php
 
-
-class module_finance extends module_base {
-
-
+class module_finance extends module_base
+{
 	public static function can_i( $actions, $name = false, $category = false, $module = false ) {
 		if ( ! $module ) {
 			$module = __CLASS__;
@@ -16,7 +14,11 @@ class module_finance extends module_base {
 		return __CLASS__;
 	}
 
-	public $version = 2.311;
+	public function __construct() {
+		$this->module_name     = 'finance';
+		$this->module_position = 210;
+		$this->version         = 2.311;
+	}
 	// 2.311 - 2017-06-14 - tax report fixes
 	// 2.310 - 2017-05-02 - big changes
 	// 2.309 - 2017-01-12 - job finance totals
@@ -95,9 +97,7 @@ class module_finance extends module_base {
 	// 2.264 - 2013-08-12 - better searching in upcoming payments
 
 	function init() {
-		$this->links           = array();
-		$this->module_name     = "finance";
-		$this->module_position = 28;
+		$this->links = array();
 
 		module_config::register_css( 'finance', 'finance.css' );
 		module_config::register_js( 'finance', 'finance.js' );
@@ -233,21 +233,24 @@ class module_finance extends module_base {
 
 
 	public function process() {
+		// Every form that reaches here is posted from a UCM page, so it carries the
+		// form auth key. Refuse anything that does not - see module_form::check_secure_key().
+		if ( ! module_form::check_secure_key() ) {
+			module_form::reject_invalid_form_auth();
+		}
 		switch ( $_REQUEST['_process'] ) {
 			case 'quick_save_finance':
-
-
 				if ( isset( $_REQUEST['link_go'] ) && $_REQUEST['link_go'] == 'go' ) {
 					module_finance::handle_link_transactions();
 				} else {
 					// check for date / name at least.
-					$date = trim( $_REQUEST['transaction_date'] );
-					$name = trim( $_REQUEST['name'] );
+					$date = isset( $_REQUEST['transaction_date'] ) ? trim( $_REQUEST['transaction_date'] ) : '';
+					$name = isset( $_REQUEST['name'] ) ? trim( $_REQUEST['name'] ) : '';
 					if ( ! $date || ! $name ) {
 						redirect_browser( module_finance::link_open( false ) );
 					}
-					$credit = trim( $_REQUEST['credit'] );
-					$debit  = trim( $_REQUEST['debit'] );
+					$credit = isset( $_REQUEST['credit'] ) ? trim( $_REQUEST['credit'] ) : '';
+					$debit  = isset( $_REQUEST['debit'] ) ? trim( $_REQUEST['debit'] ) : '';
 					if ( $credit > 0 ) {
 						$_POST['type']   = 'i';
 						$_POST['amount'] = $credit;
@@ -255,31 +258,51 @@ class module_finance extends module_base {
 						$_POST['type']   = 'e';
 						$_POST['amount'] = $debit;
 					}
+					// The quick add row has no tax fields, so the transaction is its own
+					// sub total. Leaving sub_amount at 0 breaks the invariant the upgrade
+					// in get_upgrade_sql() restores (sub_amount = amount where it is 0),
+					// and the tax report prints a blank sub total for the row.
+					$_POST['sub_amount'] = $_POST['amount'];
 				}
-
+				// no break
 			case 'save_finance':
+				$posted_finance_id = isset( $_REQUEST['finance_id'] ) ? (int) $_REQUEST['finance_id'] : 0;
 				if ( isset( $_REQUEST['butt_del'] ) ) {
-					$this->delete( $_REQUEST['finance_id'] );
+					$this->delete( $posted_finance_id );
 					redirect_browser( self::link_open( false ) );
 				}
 				if ( isset( $_REQUEST['butt_unlink'] ) ) {
 					// unlink this finance_id from other finance_ids.
-					$sql = "UPDATE `" . _DB_PREFIX . "finance` SET parent_finance_id = 0 WHERE parent_finance_id = '" . (int) $_REQUEST['finance_id'] . "'";
+					$sql = "UPDATE `" . _DB_PREFIX . "finance` SET parent_finance_id = 0 WHERE parent_finance_id = '" . $posted_finance_id . "'";
 					query( $sql );
-					$sql = "UPDATE `" . _DB_PREFIX . "invoice_payment` SET parent_finance_id = 0 WHERE parent_finance_id = '" . (int) $_REQUEST['finance_id'] . "'";
+					$sql = "UPDATE `" . _DB_PREFIX . "invoice_payment` SET parent_finance_id = 0 WHERE parent_finance_id = '" . $posted_finance_id . "'";
 					query( $sql );
 					redirect_browser( self::link_open( false ) );
 				}
-				$temp_data = $this->get_finance( $_REQUEST['finance_id'] );
-				$data      = $_POST + $temp_data;
-				// save the finance categories and account.
-				$account_id = $_REQUEST['finance_account_id'];
-				if ( (string) (int) $account_id != (string) $account_id && strlen( $account_id ) > 2 ) {
-					// we have a new account to create.
-					$account_id = update_insert( 'finance_account_id', 'new', 'finance_account', array( 'name' => $account_id ) );
+				$request_finance_id = isset( $_REQUEST['finance_id'] ) ? $_REQUEST['finance_id'] : 'new';
+				$temp_data          = $this->get_finance( $request_finance_id );
+				$data               = $_POST + $temp_data;
+				// Save the finance categories and account. A save that does not carry the
+				// account field at all - a user whose permissions had the select stripped
+				// out of the form, for one - must leave the account already on the record
+				// alone. Reading the key regardless warned twice under E_ALL, and because
+				// that printed before the redirect the save then never redirected at all.
+				if ( isset( $_REQUEST['finance_account_id'] ) ) {
+					$account_id = $_REQUEST['finance_account_id'];
+					if ( (string) (int) $account_id != (string) $account_id && strlen( $account_id ) > 2 ) {
+						// we have a new account to create.
+						$account_id = update_insert( 'finance_account_id', 'new', 'finance_account', array( 'name' => $account_id ) );
+					}
+					$data['finance_account_id'] = $account_id;
 				}
-				$data['finance_account_id'] = $account_id;
-				$finance_id                 = update_insert( 'finance_id', isset( $_REQUEST['finance_id'] ) ? $_REQUEST['finance_id'] : 'new', 'finance', $data );
+				// update_insert() hands back whatever id it was given for an existing record,
+				// and that id came out of the request. The category queries below put it
+				// straight into SQL unquoted, so make it a number here rather than there.
+				$finance_id                 = (int) update_insert( 'finance_id', $request_finance_id, 'finance', $data );
+
+				// the dashboard income summary is cached under this group, so it shows
+				// the old totals until this clears it.
+				module_cache::clear( 'finance' );
 
 				module_extra::save_extras( 'finance', 'finance_id', $finance_id );
 
@@ -318,7 +341,7 @@ class module_finance extends module_base {
 							'amount'     => isset( $data['tax_amount'][ $key ] ) ? $data['tax_amount'][ $key ] : 0,
 							// calculated in js frontend.
 							'name'       => isset( $data['tax_names'][ $key ] ) ? $data['tax_names'][ $key ] : 'TAX',
-							'order'      => $order ++,
+							'order'      => $order++,
 							'increment'  => isset( $data['tax_increment_checkbox'] ) && $data['tax_increment_checkbox'] ? 1 : 0,
 						);
 						$finance_tax_id   = update_insert( 'finance_tax_id', $finance_tax_id, 'finance_tax', $finance_tax_data );
@@ -358,17 +381,17 @@ class module_finance extends module_base {
 				if ( isset( $_REQUEST['finance_recurring_id'] ) && (int) $_REQUEST['finance_recurring_id'] > 0 ) {
 					// if we have set a custom "next recurring date" then we don't recalculate this date unless we are saving a new finance id.
 					$recurring = self::get_recurring( $_REQUEST['finance_recurring_id'] );
-					if ( ! (int) $_REQUEST['finance_id'] || ! $recurring['next_due_date_custom'] ) {
+					if ( ! (int) $request_finance_id || ! $recurring['next_due_date_custom'] ) {
 						self::calculate_recurring_date( (int) $_REQUEST['finance_recurring_id'], true );
 					}
 					// we also have to adjust the starting balance of our recurring amount by this amount.
 					// just a little helpful feature.
-					if ( ! (int) $_REQUEST['finance_id'] ) {
+					if ( ! (int) $request_finance_id ) {
 						$balance = module_config::c( 'finance_recurring_start_balance', 0 );
 						if ( $balance != 0 ) {
 							if ( $data['type'] == 'e' ) {
 								$balance -= $data['amount'];
-							} else if ( $data['type'] == 'i' ) {
+							} elseif ( $data['type'] == 'i' ) {
 								$balance += $data['amount'];
 							}
 							module_config::save_config( 'finance_recurring_start_balance', $balance );
@@ -400,13 +423,14 @@ class module_finance extends module_base {
 				break;
 			case 'save_recurring':
 				if ( isset( $_REQUEST['butt_del'] ) ) {
-					$this->delete_recurring( $_REQUEST['finance_recurring_id'] );
+					$this->delete_recurring( isset( $_REQUEST['finance_recurring_id'] ) ? $_REQUEST['finance_recurring_id'] : 0 );
 					redirect_browser( self::link_open_recurring( false ) );
 				}
 				$data = $_POST;
-				// save the finance categories and account.
-				$account_id = $_REQUEST['finance_account_id'];
-				if ( (string) (int) $account_id != (string) $account_id && strlen( $account_id ) > 2 ) {
+				// Save the finance categories and account. Same as save_finance above: a
+				// save that does not carry the account field leaves the account alone.
+				$account_id = isset( $_REQUEST['finance_account_id'] ) ? $_REQUEST['finance_account_id'] : null;
+				if ( $account_id !== null && (string) (int) $account_id != (string) $account_id && strlen( $account_id ) > 2 ) {
 					// we have a new account to create.
 					$account_id = update_insert( 'finance_account_id', 'new', 'finance_account', array( 'name' => $account_id ) );
 				}
@@ -416,8 +440,12 @@ class module_finance extends module_base {
 					$original_finance_recurring = array();
 				}
 
-				$data['finance_account_id'] = $account_id;
-				$finance_recurring_id       = update_insert( 'finance_recurring_id', isset( $_REQUEST['finance_recurring_id'] ) ? $_REQUEST['finance_recurring_id'] : 'new', 'finance_recurring', $data );
+				if ( $account_id !== null ) {
+					$data['finance_account_id'] = $account_id;
+				}
+				// Same as save_finance above: the id comes back out of the request, and the
+				// catrel queries below interpolate it unquoted.
+				$finance_recurring_id       = (int) update_insert( 'finance_recurring_id', isset( $_REQUEST['finance_recurring_id'] ) ? $_REQUEST['finance_recurring_id'] : 'new', 'finance_recurring', $data );
 
 				if ( (int) $finance_recurring_id > 0 ) {
 					$category_ids = isset( $_REQUEST['finance_category_id'] ) && is_array( $_REQUEST['finance_category_id'] ) ? $_REQUEST['finance_category_id'] : array();
@@ -489,6 +517,9 @@ class module_finance extends module_base {
 				query( $sql );
 				$sql = "DELETE FROM " . _DB_PREFIX . "finance_category_rel WHERE finance_id = '" . $finance_id . "'";
 				query( $sql );
+				// the tax rows belong to this transaction alone, and nothing cleared them.
+				$sql = "DELETE FROM " . _DB_PREFIX . "finance_tax WHERE finance_id = '" . $finance_id . "'";
+				query( $sql );
 				$sql = "UPDATE " . _DB_PREFIX . "finance SET parent_finance_id = 0 WHERE parent_finance_id = '" . $finance_id . "'";
 				query( $sql );
 				$sql = "UPDATE " . _DB_PREFIX . "invoice_payment SET parent_finance_id = 0 WHERE parent_finance_id = '" . $finance_id . "'";
@@ -496,6 +527,8 @@ class module_finance extends module_base {
 				if ( isset( $finance['finance_recurring_id'] ) && $finance['finance_recurring_id'] ) {
 					self::calculate_recurring_date( $finance['finance_recurring_id'], true );
 				}
+				// the dashboard income summary is cached under this group.
+				module_cache::clear( 'finance' );
 			}
 		}
 	}
@@ -533,7 +566,7 @@ class module_finance extends module_base {
 			$linked_finances = $linked_invoice_payments = array();
 			// find any child / linked transactions to this one.
 			if ( (int) $finance_id > 0 && isset( $finance['parent_finance_id'] ) && $finance['parent_finance_id'] > 0 ) {
-				// todo - this could cause problems! 
+				// todo - this could cause problems!
 				$foo = module_finance::get_finance( $finance['parent_finance_id'], false );
 				if ( $foo['finance_id'] != $finance_id ) {
 					// copied from get_finances() method
@@ -636,7 +669,7 @@ class module_finance extends module_base {
 							$finance['sub_amount']     = $invoice_payments['sub_amount'];
 						}
 						$linked_invoice_payments [ $invoice_payments['invoice_payment_id'] ] = $invoice_payments;
-					} else if ( ! $invoice_payments ) {
+					} elseif ( ! $invoice_payments ) {
 						// todo: this shou;ldnt happen, fix!
 					}
 				}
@@ -738,7 +771,7 @@ class module_finance extends module_base {
 				$invoice_payment_data['taxable_amount'] = abs( $invoice_payment_data['amount'] );
 				$invoice_payment_data['credit']         = 0;
 				$invoice_payment_data['type']           = 'e';
-			} else if ( $invoice_payment_data['amount'] < 0 || ( isset( $invoice_payment_data['payment_type'] ) && $invoice_payment_data['payment_type'] == _INVOICE_PAYMENT_TYPE_REFUND ) ) {
+			} elseif ( $invoice_payment_data['amount'] < 0 || ( isset( $invoice_payment_data['payment_type'] ) && $invoice_payment_data['payment_type'] == _INVOICE_PAYMENT_TYPE_REFUND ) ) {
 				$invoice_payment_data['name']        = ! isset( $invoice_payment_data['name'] ) ? _l( 'Invoice Refund' ) : $invoice_payment_data['name'];
 				$invoice_payment_data['description'] = ! isset( $invoice_payment_data['description'] ) ? _l( 'Refund against invoice <a href="%s">#%s</a> via "%s" method', module_invoice::link_open( $invoice_payment_data['invoice_id'], false ), $invoice_data['name'], $invoice_payment_data['method'] ) : $invoice_payment_data['description'];
 				// refund
@@ -781,7 +814,7 @@ class module_finance extends module_base {
 				// user overpaid this invoice amount.
 				// check if there hasn't been any refunds or anything or assigning deposits.
 
-			} else if ( $invoice_payment_data['amount'] == $invoice_data['total_amount'] ) {
+			} elseif ( $invoice_payment_data['amount'] == $invoice_data['total_amount'] ) {
 				// then we can work out any sub non taxable items.
 				if ( $invoice_data['total_tax'] > 0 ) {
 					//$finance['sub_amount'] = $finance['amount'] - $invoice_data['total_tax'];
@@ -1141,7 +1174,6 @@ class module_finance extends module_base {
 			}
 			switch ( module_job::get_job_access_permissions() ) {
 				case _JOB_ACCESS_ALL:
-
 					break;
 				case _JOB_ACCESS_ASSIGNED:
 					// only assigned jobs!
@@ -1299,7 +1331,7 @@ class module_finance extends module_base {
 			if ( isset( $search['type'] ) && $search['type'] != '' && $search['type'] != 'ie' ) {
 				if ( $search['type'] == 'i' ) {
 					$where .= " AND p.amount > 0";
-				} else if ( $search['type'] == 'e' ) {
+				} elseif ( $search['type'] == 'e' ) {
 					$where .= " AND p.amount < 0";
 				}
 			}
@@ -1372,14 +1404,15 @@ class module_finance extends module_base {
 					if ( isset( $a['finance_id'] ) && ! isset( $b['finance_id'] ) ) {
 						// put $a before $b
 						return - 1;
-					} else if ( ! isset( $a['finance_id'] ) && isset( $b['finance_id'] ) ) {
+					} elseif ( ! isset( $a['finance_id'] ) && isset( $b['finance_id'] ) ) {
 						// put $b before $a
 						return 1;
 					} else {
-						return $a['amount'] > $b['amount'];
+						return $a['amount'] <=> $b['amount'];
 					}
 				} else {
-					return $t1 < $t2;
+					// newest transaction first.
+					return $t2 <=> $t1;
 				}
 			}
 		}
@@ -1397,7 +1430,7 @@ class module_finance extends module_base {
 			if ( isset( $finance['finance_id'] ) && $finance['finance_id'] ) {
 				// displayed before already?
 				if ( isset( $displayed_finance_ids[ $finance['finance_id'] ] ) ) {
-					$finances[ $displayed_finance_ids[ $finance['finance_id'] ] ]['link_count'] ++;
+					$finances[ $displayed_finance_ids[ $finance['finance_id'] ] ]['link_count']++;
 					unset( $finances[ $finance_id ] );
 					continue;
 				}
@@ -1405,17 +1438,17 @@ class module_finance extends module_base {
 				if ( isset( $finance['invoice_payment_id'] ) && $finance['invoice_payment_id'] ) {
 					$displayed_invoice_payment_ids[ $finance['invoice_payment_id'] ] = $finance_id; // so we dont display again.
 				}
-			} else if ( isset( $finance['invoice_payment_id'] ) && $finance['invoice_payment_id'] && isset( $finance['invoice_id'] ) && $finance['invoice_id'] ) {
+			} elseif ( isset( $finance['invoice_payment_id'] ) && $finance['invoice_payment_id'] && isset( $finance['invoice_id'] ) && $finance['invoice_id'] ) {
 				// this is an invoice payment (incoming payment)
 				// displayed before already?
 				if ( isset( $displayed_invoice_payment_ids[ $finance['invoice_payment_id'] ] ) && isset( $finances[ $displayed_invoice_payment_ids[ $finance['invoice_payment_id'] ] ] ) ) {
 					$finances[ $displayed_invoice_payment_ids[ $finance['invoice_payment_id'] ] ] = array_merge( $finance, $finances[ $displayed_invoice_payment_ids[ $finance['invoice_payment_id'] ] ] );
-					$finances[ $displayed_invoice_payment_ids[ $finance['invoice_payment_id'] ] ]['link_count'] ++;
+					$finances[ $displayed_invoice_payment_ids[ $finance['invoice_payment_id'] ] ]['link_count']++;
 					unset( $finances[ $finance_id ] );
 					continue;
 				}
 				$displayed_invoice_payment_ids[ $finance['invoice_payment_id'] ] = $finance_id; // so we dont display again.
-			} else if ( isset( $finance['c_staff_total_amount'] ) ) {
+			} elseif ( isset( $finance['c_staff_total_amount'] ) ) {
 				// staff expense.
 			} else {
 				// nfi?
@@ -1428,7 +1461,7 @@ class module_finance extends module_base {
 				// check if it's parent finance id has been displayed already somewhere.
 				if ( isset( $displayed_finance_ids[ $finance['parent_finance_id'] ] ) ) {
 
-					$finances[ $displayed_finance_ids[ $finance['parent_finance_id'] ] ]['link_count'] ++;
+					$finances[ $displayed_finance_ids[ $finance['parent_finance_id'] ] ]['link_count']++;
 					unset( $finances[ $finance_id ] );
 					continue; // already done it on this page.
 				}
@@ -1467,7 +1500,55 @@ class module_finance extends module_base {
 			$finances[ $finance_id ] = $finance;
 		}
 
+		self::fill_missing_sub_amounts( $finances );
+
 		return $finances;
+	}
+
+	/**
+	 * Give every row a sub total, so a report that prints one can add its columns up.
+	 *
+	 * `finance.sub_amount` is a column with a default of 0 and nothing but the full
+	 * transaction form fills it in, so a transaction entered on the quick add row - and
+	 * every transaction recorded before the column existed - stores 0 against a real
+	 * amount. The tax report prints the sub total column straight from these rows and
+	 * skips a 0, so such a transaction showed an empty sub total next to its full total,
+	 * and the sub total column's own footer did not reconcile with the total column's.
+	 *
+	 * The sub total is the amount less whatever tax the transaction carries, which is the
+	 * same rule get_upgrade_sql() applies to the table itself. One query covers the whole
+	 * page, and rows that already carry a sub total are left exactly as they are.
+	 */
+	private static function fill_missing_sub_amounts( &$finances ) {
+		$missing = array();
+		foreach ( $finances as $key => $finance ) {
+			if (
+				isset( $finance['finance_id'] ) && (int) $finance['finance_id'] > 0
+				&& isset( $finance['amount'] ) && (float) $finance['amount'] > 0
+				&& ( ! isset( $finance['sub_amount'] ) || (float) $finance['sub_amount'] == 0 )
+			) {
+				$missing[ (int) $finance['finance_id'] ][] = $key;
+			}
+		}
+		if ( ! $missing ) {
+			return;
+		}
+
+		$tax_totals = array();
+		$sql        = "SELECT finance_id, SUM(amount) AS tax_total FROM `" . _DB_PREFIX . "finance_tax` ";
+		$sql        .= " WHERE finance_id IN (" . implode( ', ', array_keys( $missing ) ) . ") ";
+		$sql        .= " GROUP BY finance_id ";
+		foreach ( qa( $sql ) as $row ) {
+			$tax_totals[ (int) $row['finance_id'] ] = (float) $row['tax_total'];
+		}
+
+		foreach ( $missing as $finance_id => $keys ) {
+			foreach ( $keys as $key ) {
+				$tax_total = isset( $tax_totals[ $finance_id ] ) ? $tax_totals[ $finance_id ] : 0;
+
+				$finances[ $key ]['sub_amount'] = (float) $finances[ $key ]['amount'] - $tax_total;
+			}
+		}
 	}
 
 
@@ -1600,7 +1681,6 @@ class module_finance extends module_base {
 	public function handle_hook( $hook, $mod = false ) {
 		switch ( $hook ) {
 			case 'dashboard_widgets':
-
 				$widgets = array();
 				include( 'pages/dashboard_summary_widgets.php' );
 
@@ -1641,7 +1721,8 @@ class module_finance extends module_base {
 
 	public static function get_finance_summary( $week_start, $week_end, $multiplyer = 1, $row_limit = 7, $customer_id = false ) {
 
-		$cache_key = 'finance_sum_' . md5( module_security::get_loggedin_id() . '_' . serialize( func_get_args() ) );;
+		$cache_key = 'finance_sum_' . md5( module_security::get_loggedin_id() . '_' . serialize( func_get_args() ) );
+;
 		$cache_timeout = module_config::c( 'cache_objects', 60 );
 		if ( $cached_item = module_cache::get( 'finance', $cache_key ) ) {
 			return $cached_item;
@@ -1661,9 +1742,9 @@ class module_finance extends module_base {
 
 		// init structure:
 		if ( $multiplyer > 1 ) {
-			$row_limit ++;
+			$row_limit++;
 		}
-		for ( $x = 0; $x < $row_limit; $x ++ ) {
+		for ( $x = 0; $x < $row_limit; $x++ ) {
 			//$time = strtotime("+$x days",strtotime($week_start));
 			$time                         = strtotime( "+" . ( $x * $multiplyer ) . " days", strtotime( $week_start ) );
 			$data[ date( "Ymd", $time ) ] = array(

@@ -20,7 +20,7 @@ print_heading( array(
 ?>
 
 
-<form action="" method="post">
+<?php module_form::print_form_open_tag( array( 'action' => '' ) ); ?>
 
 	<table width="100%" border="0" cellspacing="0" cellpadding="2" class="tableclass tableclass_rows">
 		<thead>
@@ -35,7 +35,7 @@ print_heading( array(
 		foreach ( $templates as $template ) {
 			$template = module_template::get_template( $template['template_id'] );
 			?>
-			<tr class="<?php echo ( $c ++ % 2 ) ? "odd" : "even"; ?>">
+			<tr class="<?php echo ( $c++ % 2 ) ? "odd" : "even"; ?>">
 				<td class="row_action">
 					<?php echo module_template::link_open( $template['template_id'], true ); ?>
 				</td>
@@ -46,4 +46,4 @@ print_heading( array(
 		<?php } ?>
 		</tbody>
 	</table>
-</form>
+<?php module_form::print_form_close_tag();

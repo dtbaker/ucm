@@ -1,7 +1,7 @@
 <?php
 
-class module_job_discussion extends module_base {
-
+class module_job_discussion extends module_base
+{
 	public static function can_i( $actions, $name = false, $category = false, $module = false ) {
 		if ( ! $module ) {
 			$module = __CLASS__;
@@ -14,12 +14,14 @@ class module_job_discussion extends module_base {
 		return __CLASS__;
 	}
 
-	function init() {
-		$this->links           = array();
-		$this->module_name     = "job_discussion";
-		$this->module_position = 17.1; //17 is job
+	public function __construct() {
+		$this->module_name     = 'job_discussion';
+		$this->module_position = 270;
+		$this->version         = 2.153;
+	}
 
-		$this->version = 2.153;
+	function init() {
+		$this->links = array();
 		// 2.1 - initial
 		// 2.11 - date change
 		// 2.12 - better linking and auto open
@@ -105,10 +107,10 @@ Thank you,<br><br>
 			case 'public':
 				$job_id  = ( isset( $_REQUEST['i'] ) ) ? (int) $_REQUEST['i'] : false;
 				$task_id = ( isset( $_REQUEST['t'] ) ) ? (int) $_REQUEST['t'] : false;
-				$hash    = ( isset( $_REQUEST['hash'] ) ) ? trim( $_REQUEST['hash'] ) : false;
+				$hash    = ucm_request_string( 'hash' );
 				if ( $job_id && $task_id && $hash ) {
 					$correct_hash = self::link_public( $job_id, $task_id, true );
-					if ( $correct_hash == $hash ) {
+					if ( hash_equals( $correct_hash, $hash ) ) {
 						module_job_discussion::print_discussion( $job_id, $task_id );
 					}
 				}
@@ -161,7 +163,7 @@ Thank you,<br><br>
 		if ( isset( $_POST['job_discussion_add_job_id'] ) && isset( $_POST['job_discussion_add_task_id'] ) && $_POST['job_discussion_add_job_id'] == $job_id && $_POST['job_discussion_add_task_id'] == $task_id && isset( $_POST['note'] ) && strlen( $_POST['note'] ) ) {
 
 			$x = 0;
-			while ( ob_get_level() && $x ++ < 10 ) {
+			while ( ob_get_level() && $x++ < 10 ) {
 				ob_end_clean();
 			}
 
@@ -333,7 +335,7 @@ Thank you,<br><br>
 
 			}
 			$x = 0;
-			while ( $x ++ < 5 && ob_get_level() ) {
+			while ( $x++ < 5 && ob_get_level() ) {
 				ob_end_clean();
 			}
 			header( "Content-type: text/javascript", true );

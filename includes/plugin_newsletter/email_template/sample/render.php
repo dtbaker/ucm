@@ -8,4 +8,3 @@
  *
  * Please rename this file from render.SAMPLE.php to render.php
  */
-

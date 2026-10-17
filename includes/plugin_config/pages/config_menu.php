@@ -20,8 +20,7 @@ if ( isset( $_REQUEST['save_menu_config'] ) && is_array( $_REQUEST['save_menu_co
 }
 ?>
 
-<form action="" method="post">
-	<?php module_form::print_form_auth(); ?>
+<?php module_form::print_form_open_tag( array( 'action' => '' ) ); ?>
 	<table class="tableclass tableclass_rows">
 		<thead>
 		<tr>
@@ -65,7 +64,7 @@ if ( isset( $_REQUEST['save_menu_config'] ) && is_array( $_REQUEST['save_menu_co
 		}
 		foreach ( $menu_items as $menu_id => $menu_data ) {
 			?>
-			<tr class="<?php echo $c ++ % 2 ? 'odd' : 'even'; ?>">
+			<tr class="<?php echo $c++ % 2 ? 'odd' : 'even'; ?>">
 				<td>
 					<?php echo ! empty( $menu_data['module'] ) ? htmlspecialchars( $menu_data['module'] ) : ''; ?>
 				</td>
@@ -92,5 +91,13 @@ if ( isset( $_REQUEST['save_menu_config'] ) && is_array( $_REQUEST['save_menu_co
 		?>
 		</tbody>
 	</table>
-	<input type="submit" name="save" value="<?php _e( 'Update menu settings' ); ?>">
-</form>
+	<?php echo module_form::generate_form_actions( array(
+		'elements' => array(
+			array(
+				'type'  => 'save_button',
+				'name'  => 'save',
+				'value' => _l( 'Update menu settings' ),
+			),
+		),
+	) ); ?>
+<?php module_form::print_form_close_tag();

@@ -1,0 +1,5410 @@
+parameters:
+	ignoreErrors:
+		-
+			message: '#^Variable \$plugins might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: ajax.php
+
+		-
+			message: '#^Constant _DB_NAME not found\.$#'
+			identifier: constant.notFound
+			count: 1
+			path: cron.php
+
+		-
+			message: '#^Constant _DB_PREFIX not found\.$#'
+			identifier: constant.notFound
+			count: 1
+			path: cron.php
+
+		-
+			message: '#^Variable \$plugins might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: cron.php
+
+		-
+			message: '#^Variable \$load_modules might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: ext.php
+
+		-
+			message: '#^Call to an undefined static method module_db\:\:db_close\(\)\.$#'
+			identifier: staticMethod.notFound
+			count: 1
+			path: includes/database.php
+
+		-
+			message: '#^Call to an undefined static method module_db\:\:delete_from_db\(\)\.$#'
+			identifier: staticMethod.notFound
+			count: 1
+			path: includes/database.php
+
+		-
+			message: '#^Call to an undefined static method module_db\:\:get_single\(\)\.$#'
+			identifier: staticMethod.notFound
+			count: 1
+			path: includes/database.php
+
+		-
+			message: '#^Constant _DB_PREFIX not found\.$#'
+			identifier: constant.notFound
+			count: 7
+			path: includes/database.php
+
+		-
+			message: '#^Variable \$fields in isset\(\) is never defined\.$#'
+			identifier: isset.variable
+			count: 1
+			path: includes/database.php
+
+		-
+			message: '#^Variable \$maxlength might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/database.php
+
+		-
+			message: '#^Variable \$size might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/database.php
+
+		-
+			message: '#^Constant _DATE_FORMAT not found\.$#'
+			identifier: constant.notFound
+			count: 1
+			path: includes/functions.php
+
+		-
+			message: '#^Constant _DATE_INPUT not found\.$#'
+			identifier: constant.notFound
+			count: 2
+			path: includes/functions.php
+
+		-
+			message: '#^Constant _ERROR_EMAIL not found\.$#'
+			identifier: constant.notFound
+			count: 1
+			path: includes/functions.php
+
+		-
+			message: '#^Inner named functions are not supported by PHPStan\. Consider refactoring to an anonymous function, class method, or a top\-level\-defined function\. See issue \#165 \(https\://github\.com/phpstan/phpstan/issues/165\) for more details\.$#'
+			identifier: function.inner
+			count: 1
+			path: includes/functions.php
+
+		-
+			message: '#^Constant _UCM_HOST not found\.$#'
+			identifier: constant.notFound
+			count: 1
+			path: includes/links.php
+
+		-
+			message: '#^Call to an undefined static method module_base\:\:link_open\(\)\.$#'
+			identifier: staticMethod.notFound
+			count: 1
+			path: includes/plugin.php
+
+		-
+			message: '#^Constant _DB_PREFIX not found\.$#'
+			identifier: constant.notFound
+			count: 4
+			path: includes/plugin.php
+
+		-
+			message: '#^Constant _UCM_INSTALLED not found\.$#'
+			identifier: constant.notFound
+			count: 1
+			path: includes/plugin.php
+
+		-
+			message: '#^Function qa invoked with 2 parameters, 1 required\.$#'
+			identifier: arguments.count
+			count: 1
+			path: includes/plugin.php
+
+		-
+			message: '#^Method module_base\:\:get_upgrade_sql\(\) invoked with 2 parameters, 0 required\.$#'
+			identifier: arguments.count
+			count: 1
+			path: includes/plugin.php
+
+		-
+			message: '#^Constant _DB_PREFIX not found\.$#'
+			identifier: constant.notFound
+			count: 5
+			path: includes/plugin_address/address.php
+
+		-
+			message: '#^Variable \$address_hash might not be defined\.$#'
+			identifier: variable.undefined
+			count: 7
+			path: includes/plugin_address/pages/address_block.php
+
+		-
+			message: '#^Variable \$address_id might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_address/pages/address_block.php
+
+		-
+			message: '#^Variable \$address_type might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_address/pages/address_block.php
+
+		-
+			message: '#^Variable \$owner_id might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_address/pages/address_block.php
+
+		-
+			message: '#^Variable \$owner_table might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_address/pages/address_block.php
+
+		-
+			message: '#^Variable \$module might not be defined\.$#'
+			identifier: variable.undefined
+			count: 2
+			path: includes/plugin_address/pages/address_popup.php
+
+		-
+			message: '#^Constant _DB_PREFIX not found\.$#'
+			identifier: constant.notFound
+			count: 3
+			path: includes/plugin_backup/backup.php
+
+		-
+			message: '#^Constant _DB_PREFIX not found\.$#'
+			identifier: constant.notFound
+			count: 2
+			path: includes/plugin_backup/pages/backup_settings.php
+
+		-
+			message: '#^Variable \$module might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_backup/pages/backup_settings.php
+
+		-
+			message: '#^Constant _DB_NAME not found\.$#'
+			identifier: constant.notFound
+			count: 1
+			path: includes/plugin_cache/cache.php
+
+		-
+			message: '#^Constant _DB_PASS not found\.$#'
+			identifier: constant.notFound
+			count: 1
+			path: includes/plugin_cache/cache.php
+
+		-
+			message: '#^Constant _DB_PREFIX not found\.$#'
+			identifier: constant.notFound
+			count: 12
+			path: includes/plugin_cache/cache.php
+
+		-
+			message: '#^Constant _DB_USER not found\.$#'
+			identifier: constant.notFound
+			count: 1
+			path: includes/plugin_cache/cache.php
+
+		-
+			message: '#^Access to an undefined property \$this\(UCMBaseCache\)\:\:\$db_details\.$#'
+			identifier: property.notFound
+			count: 1
+			path: includes/plugin_cache/class.base-cache.php
+
+		-
+			message: '#^Access to an undefined property UCMBaseCache\:\:\$db_details\.$#'
+			identifier: property.notFound
+			count: 2
+			path: includes/plugin_cache/class.base-cache.php
+
+		-
+			message: '#^Access to an undefined property UCMBaseCache\:\:\$db_table\.$#'
+			identifier: property.notFound
+			count: 1
+			path: includes/plugin_cache/class.base-cache.php
+
+		-
+			message: '#^Call to an undefined method UCMBaseCache\:\:load\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: includes/plugin_cache/class.base-cache.php
+
+		-
+			message: '#^Constant _DB_PREFIX not found\.$#'
+			identifier: constant.notFound
+			count: 1
+			path: includes/plugin_cache/class.base-cache.php
+
+		-
+			message: '#^Binary operation "\+\=" between string and 12 results in an error\.$#'
+			identifier: assignOp.invalid
+			count: 2
+			path: includes/plugin_calendar/calendar.php
+
+		-
+			message: '#^Binary operation "\-" between ''01''\|''02''\|''03''\|''04''\|''05''\|''06''\|''07''\|''08''\|''09''\|''10''\|''11''\|''12''\|''13''\|''14''\|''15''\|''16''\|''17''\|''18''\|''19''\|''20''\|''21''\|''22''\|''23''\|''24''\|''25''\|''26''\|''27''\|''28''\|''29''\|''30''\|''31'' and ''1''\|''2''\|''3''\|''4''\|''5''\|''6''\|''7'' results in an error\.$#'
+			identifier: binaryOp.invalid
+			count: 1
+			path: includes/plugin_calendar/calendar.php
+
+		-
+			message: '#^Constant _DB_PREFIX not found\.$#'
+			identifier: constant.notFound
+			count: 5
+			path: includes/plugin_calendar/calendar.php
+
+		-
+			message: '#^Variable \$et might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_calendar/calendar.php
+
+		-
+			message: '#^Variable \$st might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_calendar/calendar.php
+
+		-
+			message: '#^Variable \$earr might not be defined\.$#'
+			identifier: variable.undefined
+			count: 2
+			path: includes/plugin_calendar/pages/calendar_admin_edit2.php
+
+		-
+			message: '#^Variable \$sarr might not be defined\.$#'
+			identifier: variable.undefined
+			count: 2
+			path: includes/plugin_calendar/pages/calendar_admin_edit2.php
+
+		-
+			message: '#^File ends with a trailing whitespace\. This may cause problems when running the code in the web browser\. Remove the closing \?\> mark or remove the whitespace\.$#'
+			identifier: whitespace.fileEnd
+			count: 1
+			path: includes/plugin_calendar/pages/calendar_settings.php
+
+		-
+			message: '#^Binary operation "\+" between ''01''\|''02''\|''03''\|''04''\|''05''\|''06''\|''07''\|''08''\|''09''\|''10''\|''11''\|''12''\|''13''\|''14''\|''15''\|''16''\|''17''\|''18''\|''19''\|''20''\|''21''\|''22''\|''23''\|''24''\|''25''\|''26''\|''27''\|''28''\|''29''\|''30''\|''31'' and 0\|1\|2\|3\|4\|5\|6 results in an error\.$#'
+			identifier: binaryOp.invalid
+			count: 1
+			path: includes/plugin_calendar/pages/ical_finance_summary.php
+
+		-
+			message: '#^Binary operation "\-" between ''01''\|''02''\|''03''\|''04''\|''05''\|''06''\|''07''\|''08''\|''09''\|''10''\|''11''\|''12''\|''13''\|''14''\|''15''\|''16''\|''17''\|''18''\|''19''\|''20''\|''21''\|''22''\|''23''\|''24''\|''25''\|''26''\|''27''\|''28''\|''29''\|''30''\|''31'' and ''0''\|''1''\|''2''\|''3''\|''4''\|''5''\|''6'' results in an error\.$#'
+			identifier: binaryOp.invalid
+			count: 1
+			path: includes/plugin_calendar/pages/ical_finance_summary.php
+
+		-
+			message: '#^Call to method verifyResponse\(\) on an unknown class ReCaptcha\.$#'
+			identifier: class.notFound
+			count: 1
+			path: includes/plugin_captcha/captcha.php
+
+		-
+			message: '#^Function recaptcha_check_answer not found\.$#'
+			identifier: function.notFound
+			count: 1
+			path: includes/plugin_captcha/captcha.php
+
+		-
+			message: '#^Function recaptcha_get_html not found\.$#'
+			identifier: function.notFound
+			count: 1
+			path: includes/plugin_captcha/captcha.php
+
+		-
+			message: '#^Instantiated class ReCaptcha not found\.$#'
+			identifier: class.notFound
+			count: 1
+			path: includes/plugin_captcha/captcha.php
+
+		-
+			message: '#^Access to an undefined property module_email\:\:\$error_text\.$#'
+			identifier: property.notFound
+			count: 1
+			path: includes/plugin_change_request/change_request.php
+
+		-
+			message: '#^Access to an undefined property module_email\:\:\$replace_values\.$#'
+			identifier: property.notFound
+			count: 1
+			path: includes/plugin_change_request/change_request.php
+
+		-
+			message: '#^Access to an undefined property module_email\:\:\$status\.$#'
+			identifier: property.notFound
+			count: 1
+			path: includes/plugin_change_request/change_request.php
+
+		-
+			message: '#^Access to an undefined property module_email\:\:\$to\.$#'
+			identifier: property.notFound
+			count: 1
+			path: includes/plugin_change_request/change_request.php
+
+		-
+			message: '#^Call to an undefined method module_email\:\:send\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: includes/plugin_change_request/change_request.php
+
+		-
+			message: '#^Call to an undefined method module_email\:\:set_from\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: includes/plugin_change_request/change_request.php
+
+		-
+			message: '#^Call to an undefined method module_email\:\:set_html\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: includes/plugin_change_request/change_request.php
+
+		-
+			message: '#^Call to an undefined method module_email\:\:set_subject\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: includes/plugin_change_request/change_request.php
+
+		-
+			message: '#^Call to an undefined method module_email\:\:set_to\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: includes/plugin_change_request/change_request.php
+
+		-
+			message: '#^Constant _DB_PREFIX not found\.$#'
+			identifier: constant.notFound
+			count: 7
+			path: includes/plugin_change_request/change_request.php
+
+		-
+			message: '#^Variable \$change_requests might not be defined\.$#'
+			identifier: variable.undefined
+			count: 2
+			path: includes/plugin_change_request/hooks/website_main.php
+
+		-
+			message: '#^Variable \$job_id might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_change_request/hooks/website_main.php
+
+		-
+			message: '#^Variable \$tasks might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_change_request/hooks/website_main.php
+
+		-
+			message: '#^Variable \$website_id might not be defined\.$#'
+			identifier: variable.undefined
+			count: 3
+			path: includes/plugin_change_request/hooks/website_main.php
+
+		-
+			message: '#^Variable \$website_id might not be defined\.$#'
+			identifier: variable.undefined
+			count: 4
+			path: includes/plugin_change_request/hooks/website_sidebar.php
+
+		-
+			message: '#^Variable \$change_history might not be defined\.$#'
+			identifier: variable.undefined
+			count: 4
+			path: includes/plugin_change_request/pages/popup.php
+
+		-
+			message: '#^Variable \$step might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_change_request/pages/popup.php
+
+		-
+			message: '#^Variable \$change_history might not be defined\.$#'
+			identifier: variable.undefined
+			count: 12
+			path: includes/plugin_change_request/pages/popup_content_1.php
+
+		-
+			message: '#^Variable \$change_history might not be defined\.$#'
+			identifier: variable.undefined
+			count: 3
+			path: includes/plugin_change_request/pages/popup_content_2.php
+
+		-
+			message: '#^Variable \$change_id might not be defined\.$#'
+			identifier: variable.undefined
+			count: 2
+			path: includes/plugin_change_request/pages/popup_content_3.php
+
+		-
+			message: '#^Variable \$change_request might not be defined\.$#'
+			identifier: variable.undefined
+			count: 3
+			path: includes/plugin_change_request/pages/popup_content_3.php
+
+		-
+			message: '#^Variable \$website_id might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_change_request/pages/popup_content_3.php
+
+		-
+			message: '#^Constant _DB_PREFIX not found\.$#'
+			identifier: constant.notFound
+			count: 48
+			path: includes/plugin_company/company.php
+
+		-
+			message: '#^Variable \$module might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_company/pages/company_edit.php
+
+		-
+			message: '#^Variable \$module might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_company/pages/company_settings.php
+
+		-
+			message: '#^Binary operation "\*\=" between string and 1024 results in an error\.$#'
+			identifier: assignOp.invalid
+			count: 2
+			path: includes/plugin_config/config.php
+
+		-
+			message: '#^Constant _DB_NAME not found\.$#'
+			identifier: constant.notFound
+			count: 1
+			path: includes/plugin_config/config.php
+
+		-
+			message: '#^Constant _DB_PREFIX not found\.$#'
+			identifier: constant.notFound
+			count: 8
+			path: includes/plugin_config/config.php
+
+		-
+			message: '#^Constant _DB_USER not found\.$#'
+			identifier: constant.notFound
+			count: 1
+			path: includes/plugin_config/config.php
+
+		-
+			message: '#^Variable \$module might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_config/pages/config_admin.php
+
+		-
+			message: '#^Variable \$module might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_config/pages/config_basic_settings.php
+
+		-
+			message: '#^Variable \$module might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_config/pages/config_settings.php
+
+		-
+			message: '#^Variable \$plugins might not be defined\.$#'
+			identifier: variable.undefined
+			count: 2
+			path: includes/plugin_config/pages/config_upgrade.php
+
+		-
+			message: '#^Variable \$settings might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_config/pages/settings_form.php
+
+		-
+			message: '#^Unsafe usage of new static\(\)\.$#'
+			identifier: new.static
+			count: 2
+			path: includes/plugin_contract/class.contract.php
+
+		-
+			message: '#^Access to an undefined property UCMContract\:\:\$customer_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: includes/plugin_contract/contract.php
+
+		-
+			message: '#^Access to an undefined property module_email\:\:\$contract_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: includes/plugin_contract/contract.php
+
+		-
+			message: '#^Access to an undefined property module_email\:\:\$customer_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: includes/plugin_contract/contract.php
+
+		-
+			message: '#^Access to an undefined property module_email\:\:\$prevent_duplicates\.$#'
+			identifier: property.notFound
+			count: 1
+			path: includes/plugin_contract/contract.php
+
+		-
+			message: '#^Access to an undefined property module_email\:\:\$replace_values\.$#'
+			identifier: property.notFound
+			count: 1
+			path: includes/plugin_contract/contract.php
+
+		-
+			message: '#^Call to an undefined method module_email\:\:add_attachment\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: includes/plugin_contract/contract.php
+
+		-
+			message: '#^Call to an undefined method module_email\:\:send\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: includes/plugin_contract/contract.php
+
+		-
+			message: '#^Call to an undefined method module_email\:\:set_bcc_manual\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: includes/plugin_contract/contract.php
+
+		-
+			message: '#^Call to an undefined method module_email\:\:set_html\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: includes/plugin_contract/contract.php
+
+		-
+			message: '#^Call to an undefined method module_email\:\:set_subject\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: includes/plugin_contract/contract.php
+
+		-
+			message: '#^Call to an undefined method module_email\:\:set_to\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: includes/plugin_contract/contract.php
+
+		-
+			message: '#^Constant _DB_PREFIX not found\.$#'
+			identifier: constant.notFound
+			count: 13
+			path: includes/plugin_contract/contract.php
+
+		-
+			message: '#^Variable \$cache_timeout might not be defined\.$#'
+			identifier: variable.undefined
+			count: 2
+			path: includes/plugin_contract/contract.php
+
+		-
+			message: '#^Variable \$module might not be defined\.$#'
+			identifier: variable.undefined
+			count: 3
+			path: includes/plugin_contract/pages/contract_admin_edit.php
+
+		-
+			message: '#^Variable \$quote might not be defined\.$#'
+			identifier: variable.undefined
+			count: 18
+			path: includes/plugin_contract/template/contract_task_list.php
+
+		-
+			message: '#^Variable \$quote_id might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_contract/template/contract_task_list.php
+
+		-
+			message: '#^Access to an undefined property UCMBaseTask\:\:\$amount\.$#'
+			identifier: property.notFound
+			count: 1
+			path: includes/plugin_core/class.base-document.php
+
+		-
+			message: '#^Access to an undefined property UCMBaseTask\:\:\$billable\.$#'
+			identifier: property.notFound
+			count: 1
+			path: includes/plugin_core/class.base-document.php
+
+		-
+			message: '#^Access to an undefined property UCMBaseTask\:\:\$date_done\.$#'
+			identifier: property.notFound
+			count: 1
+			path: includes/plugin_core/class.base-document.php
+
+		-
+			message: '#^Access to an undefined property UCMBaseTask\:\:\$date_due\.$#'
+			identifier: property.notFound
+			count: 1
+			path: includes/plugin_core/class.base-document.php
+
+		-
+			message: '#^Access to an undefined property UCMBaseTask\:\:\$description\.$#'
+			identifier: property.notFound
+			count: 1
+			path: includes/plugin_core/class.base-document.php
+
+		-
+			message: '#^Access to an undefined property UCMBaseTask\:\:\$document\.$#'
+			identifier: property.notFound
+			count: 2
+			path: includes/plugin_core/class.base-document.php
+
+		-
+			message: '#^Access to an undefined property UCMBaseTask\:\:\$fully_completed\.$#'
+			identifier: property.notFound
+			count: 1
+			path: includes/plugin_core/class.base-document.php
+
+		-
+			message: '#^Access to an undefined property UCMBaseTask\:\:\$hours\.$#'
+			identifier: property.notFound
+			count: 1
+			path: includes/plugin_core/class.base-document.php
+
+		-
+			message: '#^Access to an undefined property UCMBaseTask\:\:\$long_description\.$#'
+			identifier: property.notFound
+			count: 1
+			path: includes/plugin_core/class.base-document.php
+
+		-
+			message: '#^Access to an undefined property UCMBaseTask\:\:\$manual_task_type\.$#'
+			identifier: property.notFound
+			count: 1
+			path: includes/plugin_core/class.base-document.php
+
+		-
+			message: '#^Access to an undefined property UCMBaseTask\:\:\$taxable\.$#'
+			identifier: property.notFound
+			count: 1
+			path: includes/plugin_core/class.base-document.php
+
+		-
+			message: '#^Access to an undefined property UCMBaseTask\:\:\$user_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: includes/plugin_core/class.base-document.php
+
+		-
+			message: '#^Call to an undefined method UCMBaseDocument\:\:link_public\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: includes/plugin_core/class.base-document.php
+
+		-
+			message: '#^Constant _DB_PREFIX not found\.$#'
+			identifier: constant.notFound
+			count: 2
+			path: includes/plugin_core/class.base-multi.php
+
+		-
+			message: '#^Constant _DB_PREFIX not found\.$#'
+			identifier: constant.notFound
+			count: 9
+			path: includes/plugin_core/class.base-single.php
+
+		-
+			message: '#^Undefined variable\: \$post_data$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_core/class.base-single.php
+
+		-
+			message: '#^Unsafe usage of new static\(\)\.$#'
+			identifier: new.static
+			count: 1
+			path: includes/plugin_core/class.base-single.php
+
+		-
+			message: '#^Variable \$post_data in empty\(\) is never defined\.$#'
+			identifier: empty.variable
+			count: 1
+			path: includes/plugin_core/class.base-single.php
+
+		-
+			message: '#^Binary operation "\*" between non\-falsy\-string and 60 results in an error\.$#'
+			identifier: binaryOp.invalid
+			count: 1
+			path: includes/plugin_core/core.php
+
+		-
+			message: '#^Binary operation "\-" between string and 60 results in an error\.$#'
+			identifier: binaryOp.invalid
+			count: 1
+			path: includes/plugin_core/core.php
+
+		-
+			message: '#^Access to an undefined property module_email\:\:\$customer_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: includes/plugin_customer/customer.php
+
+		-
+			message: '#^Access to an undefined property module_email\:\:\$replace_values\.$#'
+			identifier: property.notFound
+			count: 2
+			path: includes/plugin_customer/customer.php
+
+		-
+			message: '#^Call to an undefined method module_email\:\:send\(\)\.$#'
+			identifier: method.notFound
+			count: 2
+			path: includes/plugin_customer/customer.php
+
+		-
+			message: '#^Call to an undefined method module_email\:\:set_html\(\)\.$#'
+			identifier: method.notFound
+			count: 2
+			path: includes/plugin_customer/customer.php
+
+		-
+			message: '#^Call to an undefined method module_email\:\:set_subject\(\)\.$#'
+			identifier: method.notFound
+			count: 2
+			path: includes/plugin_customer/customer.php
+
+		-
+			message: '#^Call to an undefined method module_email\:\:set_to\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: includes/plugin_customer/customer.php
+
+		-
+			message: '#^Call to an undefined method module_email\:\:set_to_manual\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: includes/plugin_customer/customer.php
+
+		-
+			message: '#^Constant _DB_PREFIX not found\.$#'
+			identifier: constant.notFound
+			count: 52
+			path: includes/plugin_customer/customer.php
+
+		-
+			message: '#^Function check_required not found\.$#'
+			identifier: function.notFound
+			count: 2
+			path: includes/plugin_customer/customer.php
+
+		-
+			message: '#^Function customer_signup_complete not found\.$#'
+			identifier: function.notFound
+			count: 5
+			path: includes/plugin_customer/customer.php
+
+		-
+			message: '#^Inner named functions are not supported by PHPStan\. Consider refactoring to an anonymous function, class method, or a top\-level\-defined function\. See issue \#165 \(https\://github\.com/phpstan/phpstan/issues/165\) for more details\.$#'
+			identifier: function.inner
+			count: 2
+			path: includes/plugin_customer/customer.php
+
+		-
+			message: '#^Variable \$module might not be defined\.$#'
+			identifier: variable.undefined
+			count: 6
+			path: includes/plugin_customer/pages/customer_admin_edit.php
+
+		-
+			message: '#^Variable \$module might not be defined\.$#'
+			identifier: variable.undefined
+			count: 3
+			path: includes/plugin_customer/pages/customer_admin_email.php
+
+		-
+			message: '#^Variable \$module might not be defined\.$#'
+			identifier: variable.undefined
+			count: 2
+			path: includes/plugin_customer/pages/customer_admin_email_welcome.php
+
+		-
+			message: '#^Variable \$module might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_customer/pages/customer_admin_list.php
+
+		-
+			message: '#^Variable \$module might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_customer/pages/customer_admin_open.php
+
+		-
+			message: '#^Variable \$customer_data might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_customer/pages/customer_public.php
+
+		-
+			message: '#^Variable \$customer_id might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_customer/pages/customer_public.php
+
+		-
+			message: '#^Variable \$module might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_customer/pages/customer_settings.php
+
+		-
+			message: '#^Variable \$module might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_customer/pages/customer_settings_types.php
+
+		-
+			message: '#^Variable \$module might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_customer/pages/customer_signup.php
+
+		-
+			message: '#^Variable \$customer_data might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_customer/pages/customer_summary.php
+
+		-
+			message: '#^Variable \$customer_id might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_customer/pages/customer_summary.php
+
+		-
+			message: '#^Variable \$contracts might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_customer/portal/contracts.php
+
+		-
+			message: '#^Variable \$customer_data might not be defined\.$#'
+			identifier: variable.undefined
+			count: 2
+			path: includes/plugin_customer/portal/header.php
+
+		-
+			message: '#^Access to an undefined property module_email\:\:\$customer_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: includes/plugin_customer/portal/index.php
+
+		-
+			message: '#^Access to an undefined property module_email\:\:\$prevent_duplicates\.$#'
+			identifier: property.notFound
+			count: 1
+			path: includes/plugin_customer/portal/index.php
+
+		-
+			message: '#^Access to an undefined property module_email\:\:\$replace_values\.$#'
+			identifier: property.notFound
+			count: 1
+			path: includes/plugin_customer/portal/index.php
+
+		-
+			message: '#^Call to an undefined method module_email\:\:send\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: includes/plugin_customer/portal/index.php
+
+		-
+			message: '#^Call to an undefined method module_email\:\:set_html\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: includes/plugin_customer/portal/index.php
+
+		-
+			message: '#^Call to an undefined method module_email\:\:set_subject\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: includes/plugin_customer/portal/index.php
+
+		-
+			message: '#^Call to an undefined method module_email\:\:set_to_manual\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: includes/plugin_customer/portal/index.php
+
+		-
+			message: '#^Variable \$customer_data might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_customer/portal/index.php
+
+		-
+			message: '#^Variable \$customer_id might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_customer/portal/index.php
+
+		-
+			message: '#^Variable \$invoices might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_customer/portal/invoices.php
+
+		-
+			message: '#^Variable \$jobs might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_customer/portal/jobs.php
+
+		-
+			message: '#^Variable \$contracts might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_customer/portal/menu.php
+
+		-
+			message: '#^Variable \$customer_id might not be defined\.$#'
+			identifier: variable.undefined
+			count: 8
+			path: includes/plugin_customer/portal/menu.php
+
+		-
+			message: '#^Variable \$invoices might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_customer/portal/menu.php
+
+		-
+			message: '#^Variable \$jobs might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_customer/portal/menu.php
+
+		-
+			message: '#^Variable \$quotes might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_customer/portal/menu.php
+
+		-
+			message: '#^Variable \$tickets might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_customer/portal/menu.php
+
+		-
+			message: '#^Variable \$timers might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_customer/portal/menu.php
+
+		-
+			message: '#^Variable \$websites might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_customer/portal/menu.php
+
+		-
+			message: '#^Variable \$quotes might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_customer/portal/quotes.php
+
+		-
+			message: '#^Variable \$contracts might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_customer/portal/shop.php
+
+		-
+			message: '#^Variable \$timers might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_customer/portal/timers.php
+
+		-
+			message: '#^Variable \$websites might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_customer/portal/websites.php
+
+		-
+			message: '#^Inner named functions are not supported by PHPStan\. Consider refactoring to an anonymous function, class method, or a top\-level\-defined function\. See issue \#165 \(https\://github\.com/phpstan/phpstan/issues/165\) for more details\.$#'
+			identifier: function.inner
+			count: 1
+			path: includes/plugin_dashboard/dashboard.php
+
+		-
+			message: '#^Variable \$dashboard_alerts might not be defined\.$#'
+			identifier: variable.undefined
+			count: 2
+			path: includes/plugin_dashboard/pages/dashboard_alerts.php
+
+		-
+			message: '#^Access to an undefined property module_data\:\:\$has_files\.$#'
+			identifier: property.notFound
+			count: 1
+			path: includes/plugin_data/data.php
+
+		-
+			message: '#^Constant _DB_PREFIX not found\.$#'
+			identifier: constant.notFound
+			count: 31
+			path: includes/plugin_data/data.php
+
+		-
+			message: '#^Function export_data_type_id not found\.$#'
+			identifier: function.notFound
+			count: 2
+			path: includes/plugin_data/data.php
+
+		-
+			message: '#^Inner named functions are not supported by PHPStan\. Consider refactoring to an anonymous function, class method, or a top\-level\-defined function\. See issue \#165 \(https\://github\.com/phpstan/phpstan/issues/165\) for more details\.$#'
+			identifier: function.inner
+			count: 1
+			path: includes/plugin_data/data.php
+
+		-
+			message: '#^Static call to instance method module_data\:\:get_data_record\(\)\.$#'
+			identifier: method.staticCall
+			count: 2
+			path: includes/plugin_data/data.php
+
+		-
+			message: '#^Undefined variable\: \$previous_data_items$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_data/data.php
+
+		-
+			message: '#^Variable \$have_www might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_data/data.php
+
+		-
+			message: '#^Variable \$previous_data_items in isset\(\) is never defined\.$#'
+			identifier: isset.variable
+			count: 1
+			path: includes/plugin_data/data.php
+
+		-
+			message: '#^Variable \$previous_files in empty\(\) always exists and is always falsy\.$#'
+			identifier: empty.variable
+			count: 1
+			path: includes/plugin_data/data.php
+
+		-
+			message: '#^Variable \$width in isset\(\) always exists and is not nullable\.$#'
+			identifier: isset.variable
+			count: 2
+			path: includes/plugin_data/data.php
+
+		-
+			message: '#^Variable \$module might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_data/pages/admin_data_list.php
+
+		-
+			message: '#^Variable \$data_type_id might not be defined\.$#'
+			identifier: variable.undefined
+			count: 2
+			path: includes/plugin_data/pages/admin_data_list_embed.php
+
+		-
+			message: '#^Variable \$hook_location might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_data/pages/admin_data_list_embed.php
+
+		-
+			message: '#^Variable \$owner_id might not be defined\.$#'
+			identifier: variable.undefined
+			count: 2
+			path: includes/plugin_data/pages/admin_data_list_embed.php
+
+		-
+			message: '#^Variable \$owner_table might not be defined\.$#'
+			identifier: variable.undefined
+			count: 5
+			path: includes/plugin_data/pages/admin_data_list_embed.php
+
+		-
+			message: '#^Undefined variable\: \$embed_form$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_data/pages/admin_data_list_output.php
+
+		-
+			message: '#^Variable \$allow_search might not be defined\.$#'
+			identifier: variable.undefined
+			count: 2
+			path: includes/plugin_data/pages/admin_data_list_output.php
+
+		-
+			message: '#^Variable \$data_type might not be defined\.$#'
+			identifier: variable.undefined
+			count: 2
+			path: includes/plugin_data/pages/admin_data_list_output.php
+
+		-
+			message: '#^Variable \$data_type_id might not be defined\.$#'
+			identifier: variable.undefined
+			count: 2
+			path: includes/plugin_data/pages/admin_data_list_output.php
+
+		-
+			message: '#^Variable \$element might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_data/pages/admin_data_list_output.php
+
+		-
+			message: '#^Variable \$embed_form in isset\(\) is never defined\.$#'
+			identifier: isset.variable
+			count: 1
+			path: includes/plugin_data/pages/admin_data_list_output.php
+
+		-
+			message: '#^Variable \$module might not be defined\.$#'
+			identifier: variable.undefined
+			count: 10
+			path: includes/plugin_data/pages/admin_data_list_output.php
+
+		-
+			message: '#^Variable \$allow_search might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_data/pages/admin_data_list_type.php
+
+		-
+			message: '#^Variable \$data_type_id might not be defined\.$#'
+			identifier: variable.undefined
+			count: 2
+			path: includes/plugin_data/pages/admin_data_list_type.php
+
+		-
+			message: '#^Variable \$module might not be defined\.$#'
+			identifier: variable.undefined
+			count: 8
+			path: includes/plugin_data/pages/admin_data_list_type.php
+
+		-
+			message: '#^Variable \$module might not be defined\.$#'
+			identifier: variable.undefined
+			count: 2
+			path: includes/plugin_data/pages/admin_data_new.php
+
+		-
+			message: '#^Constant _DB_PREFIX not found\.$#'
+			identifier: constant.notFound
+			count: 2
+			path: includes/plugin_data/pages/admin_data_open.php
+
+		-
+			message: '#^File ends with a trailing whitespace\. This may cause problems when running the code in the web browser\. Remove the closing \?\> mark or remove the whitespace\.$#'
+			identifier: whitespace.fileEnd
+			count: 1
+			path: includes/plugin_data/pages/admin_data_open.php
+
+		-
+			message: '#^Variable \$data_record might not be defined\.$#'
+			identifier: variable.undefined
+			count: 6
+			path: includes/plugin_data/pages/admin_data_open.php
+
+		-
+			message: '#^Variable \$data_record_revisions might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_data/pages/admin_data_open.php
+
+		-
+			message: '#^Variable \$module might not be defined\.$#'
+			identifier: variable.undefined
+			count: 37
+			path: includes/plugin_data/pages/admin_data_open.php
+
+		-
+			message: '#^Variable \$module might not be defined\.$#'
+			identifier: variable.undefined
+			count: 11
+			path: includes/plugin_data/pages/admin_data_search.php
+
+		-
+			message: '#^Variable \$module might not be defined\.$#'
+			identifier: variable.undefined
+			count: 4
+			path: includes/plugin_data/pages/data_type_admin_field_open.php
+
+		-
+			message: '#^Variable \$data_field_group might not be defined\.$#'
+			identifier: variable.undefined
+			count: 5
+			path: includes/plugin_data/pages/data_type_admin_group_open.php
+
+		-
+			message: '#^Variable \$module might not be defined\.$#'
+			identifier: variable.undefined
+			count: 11
+			path: includes/plugin_data/pages/data_type_admin_group_open.php
+
+		-
+			message: '#^Variable \$module might not be defined\.$#'
+			identifier: variable.undefined
+			count: 2
+			path: includes/plugin_data/pages/data_type_admin_list.php
+
+		-
+			message: '#^Variable \$module might not be defined\.$#'
+			identifier: variable.undefined
+			count: 10
+			path: includes/plugin_data/pages/data_type_admin_open.php
+
+		-
+			message: '#^Variable \$data_field_group_id might not be defined\.$#'
+			identifier: variable.undefined
+			count: 7
+			path: includes/plugin_data/pages/render_group.php
+
+		-
+			message: '#^Variable \$data_record_id might not be defined\.$#'
+			identifier: variable.undefined
+			count: 2
+			path: includes/plugin_data/pages/render_group.php
+
+		-
+			message: '#^Variable \$module might not be defined\.$#'
+			identifier: variable.undefined
+			count: 6
+			path: includes/plugin_data/pages/render_group.php
+
+		-
+			message: '#^Constant _DB_NAME not found\.$#'
+			identifier: constant.notFound
+			count: 1
+			path: includes/plugin_db/db.php
+
+		-
+			message: '#^Constant _DB_PASS not found\.$#'
+			identifier: constant.notFound
+			count: 1
+			path: includes/plugin_db/db.php
+
+		-
+			message: '#^Constant _DB_PREFIX not found\.$#'
+			identifier: constant.notFound
+			count: 3
+			path: includes/plugin_db/db.php
+
+		-
+			message: '#^Constant _DB_SERVER not found\.$#'
+			identifier: constant.notFound
+			count: 1
+			path: includes/plugin_db/db.php
+
+		-
+			message: '#^Constant _DB_USER not found\.$#'
+			identifier: constant.notFound
+			count: 1
+			path: includes/plugin_db/db.php
+
+		-
+			message: '#^Variable \$maxlength might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_db/db.php
+
+		-
+			message: '#^Variable \$size might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_db/db.php
+
+		-
+			message: '#^Undefined variable\: \$x$#'
+			identifier: variable.undefined
+			count: 2
+			path: includes/plugin_debug/debug.php
+
+		-
+			message: '#^Access to an undefined property UCMEmail\:\:\$bcc\.$#'
+			identifier: property.notFound
+			count: 2
+			path: includes/plugin_email/email.php
+
+		-
+			message: '#^Access to an undefined property UCMEmail\:\:\$bounce_address\.$#'
+			identifier: property.notFound
+			count: 1
+			path: includes/plugin_email/email.php
+
+		-
+			message: '#^Access to an undefined property UCMEmail\:\:\$cc\.$#'
+			identifier: property.notFound
+			count: 2
+			path: includes/plugin_email/email.php
+
+		-
+			message: '#^Access to an undefined property UCMEmail\:\:\$custom_data\.$#'
+			identifier: property.notFound
+			count: 1
+			path: includes/plugin_email/email.php
+
+		-
+			message: '#^Access to an undefined property UCMEmail\:\:\$error_text\.$#'
+			identifier: property.notFound
+			count: 2
+			path: includes/plugin_email/email.php
+
+		-
+			message: '#^Access to an undefined property UCMEmail\:\:\$from\.$#'
+			identifier: property.notFound
+			count: 5
+			path: includes/plugin_email/email.php
+
+		-
+			message: '#^Access to an undefined property UCMEmail\:\:\$message_html\.$#'
+			identifier: property.notFound
+			count: 6
+			path: includes/plugin_email/email.php
+
+		-
+			message: '#^Access to an undefined property UCMEmail\:\:\$message_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: includes/plugin_email/email.php
+
+		-
+			message: '#^Access to an undefined property UCMEmail\:\:\$message_text\.$#'
+			identifier: property.notFound
+			count: 5
+			path: includes/plugin_email/email.php
+
+		-
+			message: '#^Access to an undefined property UCMEmail\:\:\$reply_to\.$#'
+			identifier: property.notFound
+			count: 2
+			path: includes/plugin_email/email.php
+
+		-
+			message: '#^Access to an undefined property UCMEmail\:\:\$schedule_time\.$#'
+			identifier: property.notFound
+			count: 2
+			path: includes/plugin_email/email.php
+
+		-
+			message: '#^Access to an undefined property UCMEmail\:\:\$status\.$#'
+			identifier: property.notFound
+			count: 5
+			path: includes/plugin_email/email.php
+
+		-
+			message: '#^Access to an undefined property UCMEmail\:\:\$subject\.$#'
+			identifier: property.notFound
+			count: 4
+			path: includes/plugin_email/email.php
+
+		-
+			message: '#^Access to an undefined property UCMEmail\:\:\$to\.$#'
+			identifier: property.notFound
+			count: 4
+			path: includes/plugin_email/email.php
+
+		-
+			message: '#^Access to an undefined property module_email\:\:\$company_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: includes/plugin_email/email.php
+
+		-
+			message: '#^Access to an undefined property module_email\:\:\$custom_data\.$#'
+			identifier: property.notFound
+			count: 1
+			path: includes/plugin_email/email.php
+
+		-
+			message: '#^Access to an undefined property module_email\:\:\$customer_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: includes/plugin_email/email.php
+
+		-
+			message: '#^Access to an undefined property module_email\:\:\$debug_message\.$#'
+			identifier: property.notFound
+			count: 1
+			path: includes/plugin_email/email.php
+
+		-
+			message: '#^Access to an undefined property module_email\:\:\$error_text\.$#'
+			identifier: property.notFound
+			count: 1
+			path: includes/plugin_email/email.php
+
+		-
+			message: '#^Access to an undefined property module_email\:\:\$file_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: includes/plugin_email/email.php
+
+		-
+			message: '#^Access to an undefined property module_email\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: includes/plugin_email/email.php
+
+		-
+			message: '#^Access to an undefined property module_email\:\:\$invoice_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: includes/plugin_email/email.php
+
+		-
+			message: '#^Access to an undefined property module_email\:\:\$job_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: includes/plugin_email/email.php
+
+		-
+			message: '#^Access to an undefined property module_email\:\:\$newsletter_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: includes/plugin_email/email.php
+
+		-
+			message: '#^Access to an undefined property module_email\:\:\$note_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: includes/plugin_email/email.php
+
+		-
+			message: '#^Access to an undefined property module_email\:\:\$quote_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: includes/plugin_email/email.php
+
+		-
+			message: '#^Access to an undefined property module_email\:\:\$send_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: includes/plugin_email/email.php
+
+		-
+			message: '#^Access to an undefined property module_email\:\:\$status\.$#'
+			identifier: property.notFound
+			count: 1
+			path: includes/plugin_email/email.php
+
+		-
+			message: '#^Access to an undefined property module_email\:\:\$subject\.$#'
+			identifier: property.notFound
+			count: 1
+			path: includes/plugin_email/email.php
+
+		-
+			message: '#^Access to an undefined property module_email\:\:\$website_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: includes/plugin_email/email.php
+
+		-
+			message: '#^Access to property \$AltBody on an unknown class PHPMailer\.$#'
+			identifier: class.notFound
+			count: 2
+			path: includes/plugin_email/email.php
+
+		-
+			message: '#^Access to property \$Body on an unknown class PHPMailer\.$#'
+			identifier: class.notFound
+			count: 2
+			path: includes/plugin_email/email.php
+
+		-
+			message: '#^Access to property \$CharSet on an unknown class PHPMailer\.$#'
+			identifier: class.notFound
+			count: 2
+			path: includes/plugin_email/email.php
+
+		-
+			message: '#^Access to property \$ErrorInfo on an unknown class PHPMailer\.$#'
+			identifier: class.notFound
+			count: 1
+			path: includes/plugin_email/email.php
+
+		-
+			message: '#^Access to property \$From on an unknown class PHPMailer\.$#'
+			identifier: class.notFound
+			count: 2
+			path: includes/plugin_email/email.php
+
+		-
+			message: '#^Access to property \$FromName on an unknown class PHPMailer\.$#'
+			identifier: class.notFound
+			count: 2
+			path: includes/plugin_email/email.php
+
+		-
+			message: '#^Access to property \$Host on an unknown class PHPMailer\.$#'
+			identifier: class.notFound
+			count: 2
+			path: includes/plugin_email/email.php
+
+		-
+			message: '#^Access to property \$MessageID on an unknown class PHPMailer\.$#'
+			identifier: class.notFound
+			count: 2
+			path: includes/plugin_email/email.php
+
+		-
+			message: '#^Access to property \$Password on an unknown class PHPMailer\.$#'
+			identifier: class.notFound
+			count: 2
+			path: includes/plugin_email/email.php
+
+		-
+			message: '#^Access to property \$SMTPAuth on an unknown class PHPMailer\.$#'
+			identifier: class.notFound
+			count: 3
+			path: includes/plugin_email/email.php
+
+		-
+			message: '#^Access to property \$SMTPOptions on an unknown class PHPMailer\.$#'
+			identifier: class.notFound
+			count: 2
+			path: includes/plugin_email/email.php
+
+		-
+			message: '#^Access to property \$SMTPSecure on an unknown class PHPMailer\.$#'
+			identifier: class.notFound
+			count: 2
+			path: includes/plugin_email/email.php
+
+		-
+			message: '#^Access to property \$Sender on an unknown class PHPMailer\.$#'
+			identifier: class.notFound
+			count: 2
+			path: includes/plugin_email/email.php
+
+		-
+			message: '#^Access to property \$Subject on an unknown class PHPMailer\.$#'
+			identifier: class.notFound
+			count: 2
+			path: includes/plugin_email/email.php
+
+		-
+			message: '#^Access to property \$Username on an unknown class PHPMailer\.$#'
+			identifier: class.notFound
+			count: 2
+			path: includes/plugin_email/email.php
+
+		-
+			message: '#^Call to an undefined method module_email\:\:AddAttachment\(\)\.$#'
+			identifier: method.notFound
+			count: 2
+			path: includes/plugin_email/email.php
+
+		-
+			message: '#^Call to an undefined method module_email\:\:load\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: includes/plugin_email/email.php
+
+		-
+			message: '#^Call to an undefined method module_email\:\:replace\(\)\.$#'
+			identifier: method.notFound
+			count: 8
+			path: includes/plugin_email/email.php
+
+		-
+			message: '#^Call to an undefined method module_email\:\:send\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: includes/plugin_email/email.php
+
+		-
+			message: '#^Call to an undefined method module_email\:\:set_bcc_manual\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: includes/plugin_email/email.php
+
+		-
+			message: '#^Call to an undefined method module_email\:\:set_bounce_address\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: includes/plugin_email/email.php
+
+		-
+			message: '#^Call to an undefined method module_email\:\:set_cc_manual\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: includes/plugin_email/email.php
+
+		-
+			message: '#^Call to an undefined method module_email\:\:set_custom_data\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: includes/plugin_email/email.php
+
+		-
+			message: '#^Call to an undefined method module_email\:\:set_from_manual\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: includes/plugin_email/email.php
+
+		-
+			message: '#^Call to an undefined method module_email\:\:set_html\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: includes/plugin_email/email.php
+
+		-
+			message: '#^Call to an undefined method module_email\:\:set_schedule\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: includes/plugin_email/email.php
+
+		-
+			message: '#^Call to an undefined method module_email\:\:set_to\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: includes/plugin_email/email.php
+
+		-
+			message: '#^Call to an undefined method module_email\:\:set_to_manual\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: includes/plugin_email/email.php
+
+		-
+			message: '#^Call to method AddAddress\(\) on an unknown class PHPMailer\.$#'
+			identifier: class.notFound
+			count: 1
+			path: includes/plugin_email/email.php
+
+		-
+			message: '#^Call to method AddAttachment\(\) on an unknown class PHPMailer\.$#'
+			identifier: class.notFound
+			count: 2
+			path: includes/plugin_email/email.php
+
+		-
+			message: '#^Call to method AddBCC\(\) on an unknown class PHPMailer\.$#'
+			identifier: class.notFound
+			count: 1
+			path: includes/plugin_email/email.php
+
+		-
+			message: '#^Call to method AddCC\(\) on an unknown class PHPMailer\.$#'
+			identifier: class.notFound
+			count: 1
+			path: includes/plugin_email/email.php
+
+		-
+			message: '#^Call to method AddReplyTo\(\) on an unknown class PHPMailer\.$#'
+			identifier: class.notFound
+			count: 1
+			path: includes/plugin_email/email.php
+
+		-
+			message: '#^Call to method IsMail\(\) on an unknown class PHPMailer\.$#'
+			identifier: class.notFound
+			count: 1
+			path: includes/plugin_email/email.php
+
+		-
+			message: '#^Call to method IsSMTP\(\) on an unknown class PHPMailer\.$#'
+			identifier: class.notFound
+			count: 1
+			path: includes/plugin_email/email.php
+
+		-
+			message: '#^Call to method Send\(\) on an unknown class PHPMailer\.$#'
+			identifier: class.notFound
+			count: 1
+			path: includes/plugin_email/email.php
+
+		-
+			message: '#^Call to method isHTML\(\) on an unknown class PHPMailer\.$#'
+			identifier: class.notFound
+			count: 1
+			path: includes/plugin_email/email.php
+
+		-
+			message: '#^Constant _DB_PREFIX not found\.$#'
+			identifier: constant.notFound
+			count: 13
+			path: includes/plugin_email/email.php
+
+		-
+			message: '#^Instantiated class PHPMailer not found\.$#'
+			identifier: class.notFound
+			count: 1
+			path: includes/plugin_email/email.php
+
+		-
+			message: '#^Static method module_customer\:\:get_replace_fields\(\) invoked with 3 parameters, 1\-2 required\.$#'
+			identifier: arguments.count
+			count: 1
+			path: includes/plugin_email/pages/email_admin_edit.php
+
+		-
+			message: '#^Variable \$current_template in isset\(\) always exists and is not nullable\.$#'
+			identifier: isset.variable
+			count: 1
+			path: includes/plugin_email/pages/email_admin_edit.php
+
+		-
+			message: '#^Variable \$find_other_templates in isset\(\) always exists and is not nullable\.$#'
+			identifier: isset.variable
+			count: 1
+			path: includes/plugin_email/pages/email_admin_edit.php
+
+		-
+			message: '#^Variable \$plugins might not be defined\.$#'
+			identifier: variable.undefined
+			count: 6
+			path: includes/plugin_email/pages/email_admin_edit.php
+
+		-
+			message: '#^Anonymous function has an unused use \$options\.$#'
+			identifier: closure.unusedUse
+			count: 4
+			path: includes/plugin_email/pages/email_compose_basic.php
+
+		-
+			message: '#^Variable \$attachments might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_email/pages/email_compose_basic.php
+
+		-
+			message: '#^Variable \$bcc might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_email/pages/email_compose_basic.php
+
+		-
+			message: '#^Variable \$cancel_url might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_email/pages/email_compose_basic.php
+
+		-
+			message: '#^Variable \$content might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_email/pages/email_compose_basic.php
+
+		-
+			message: '#^Variable \$from_email might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_email/pages/email_compose_basic.php
+
+		-
+			message: '#^Variable \$from_name might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_email/pages/email_compose_basic.php
+
+		-
+			message: '#^Variable \$subject might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_email/pages/email_compose_basic.php
+
+		-
+			message: '#^Variable \$to might not be defined\.$#'
+			identifier: variable.undefined
+			count: 3
+			path: includes/plugin_email/pages/email_compose_basic.php
+
+		-
+			message: '#^Variable \$to_select might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_email/pages/email_compose_basic.php
+
+		-
+			message: '#^Access to an undefined property module_email\:\:\$error_text\.$#'
+			identifier: property.notFound
+			count: 1
+			path: includes/plugin_email/pages/email_settings.php
+
+		-
+			message: '#^Call to an undefined method module_email\:\:send\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: includes/plugin_email/pages/email_settings.php
+
+		-
+			message: '#^Call to an undefined method module_email\:\:set_html\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: includes/plugin_email/pages/email_settings.php
+
+		-
+			message: '#^Call to an undefined method module_email\:\:set_subject\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: includes/plugin_email/pages/email_settings.php
+
+		-
+			message: '#^Call to an undefined method module_email\:\:set_to_manual\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: includes/plugin_email/pages/email_settings.php
+
+		-
+			message: '#^Variable \$emails might not be defined\.$#'
+			identifier: variable.undefined
+			count: 2
+			path: includes/plugin_email/pages/email_widget.php
+
+		-
+			message: '#^Variable \$options might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_email/pages/email_widget.php
+
+		-
+			message: '#^Call to method encrypt\(\) on an unknown class Crypt_RSA\.$#'
+			identifier: class.notFound
+			count: 1
+			path: includes/plugin_encrypt/encrypt.php
+
+		-
+			message: '#^Call to method loadKey\(\) on an unknown class Crypt_RSA\.$#'
+			identifier: class.notFound
+			count: 1
+			path: includes/plugin_encrypt/encrypt.php
+
+		-
+			message: '#^Call to method setEncryptionMode\(\) on an unknown class Crypt_RSA\.$#'
+			identifier: class.notFound
+			count: 1
+			path: includes/plugin_encrypt/encrypt.php
+
+		-
+			message: '#^Call to method setPublicKeyFormat\(\) on an unknown class Crypt_RSA\.$#'
+			identifier: class.notFound
+			count: 1
+			path: includes/plugin_encrypt/encrypt.php
+
+		-
+			message: '#^Constant CRYPT_RSA_ENCRYPTION_PKCS1 not found\.$#'
+			identifier: constant.notFound
+			count: 1
+			path: includes/plugin_encrypt/encrypt.php
+
+		-
+			message: '#^Constant CRYPT_RSA_PUBLIC_FORMAT_RAW not found\.$#'
+			identifier: constant.notFound
+			count: 2
+			path: includes/plugin_encrypt/encrypt.php
+
+		-
+			message: '#^Constant _DB_PREFIX not found\.$#'
+			identifier: constant.notFound
+			count: 6
+			path: includes/plugin_encrypt/encrypt.php
+
+		-
+			message: '#^Instantiated class Crypt_RSA not found\.$#'
+			identifier: class.notFound
+			count: 1
+			path: includes/plugin_encrypt/encrypt.php
+
+		-
+			message: '#^Instantiated class Math_BigInteger not found\.$#'
+			identifier: class.notFound
+			count: 2
+			path: includes/plugin_encrypt/encrypt.php
+
+		-
+			message: '#^Path in require_once\(\) "Crypt/RSA\.php" is not a file or it does not exist\.$#'
+			identifier: requireOnce.fileNotFound
+			count: 1
+			path: includes/plugin_encrypt/encrypt.php
+
+		-
+			message: '#^Variable \$plugins might not be defined\.$#'
+			identifier: variable.undefined
+			count: 3
+			path: includes/plugin_encrypt/pages/encrypt_popup.php
+
+		-
+			message: '#^Constant _DB_PREFIX not found\.$#'
+			identifier: constant.notFound
+			count: 15
+			path: includes/plugin_extra/extra.php
+
+		-
+			message: '#^Constant _DB_PREFIX not found\.$#'
+			identifier: constant.notFound
+			count: 8
+			path: includes/plugin_faq/faq.php
+
+		-
+			message: '#^Variable \$all_items_rel might not be defined\.$#'
+			identifier: variable.undefined
+			count: 2
+			path: includes/plugin_faq/pages/faq_products.php
+
+		-
+			message: '#^Variable \$module might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_faq/pages/faq_products.php
+
+		-
+			message: '#^Variable \$module might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_faq/pages/faq_questions.php
+
+		-
+			message: '#^Variable \$module might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_faq/pages/faq_settings.php
+
+		-
+			message: '#^Access to an undefined property module_email\:\:\$email_id\.$#'
+			identifier: property.notFound
+			count: 2
+			path: includes/plugin_file/file.php
+
+		-
+			message: '#^Access to an undefined property module_email\:\:\$file_id\.$#'
+			identifier: property.notFound
+			count: 2
+			path: includes/plugin_file/file.php
+
+		-
+			message: '#^Access to an undefined property module_email\:\:\$replace_values\.$#'
+			identifier: property.notFound
+			count: 2
+			path: includes/plugin_file/file.php
+
+		-
+			message: '#^Call to an undefined method module_email\:\:send\(\)\.$#'
+			identifier: method.notFound
+			count: 2
+			path: includes/plugin_file/file.php
+
+		-
+			message: '#^Call to an undefined method module_email\:\:set_from\(\)\.$#'
+			identifier: method.notFound
+			count: 2
+			path: includes/plugin_file/file.php
+
+		-
+			message: '#^Call to an undefined method module_email\:\:set_html\(\)\.$#'
+			identifier: method.notFound
+			count: 2
+			path: includes/plugin_file/file.php
+
+		-
+			message: '#^Call to an undefined method module_email\:\:set_subject\(\)\.$#'
+			identifier: method.notFound
+			count: 2
+			path: includes/plugin_file/file.php
+
+		-
+			message: '#^Call to an undefined method module_email\:\:set_to\(\)\.$#'
+			identifier: method.notFound
+			count: 2
+			path: includes/plugin_file/file.php
+
+		-
+			message: '#^Constant _DB_PREFIX not found\.$#'
+			identifier: constant.notFound
+			count: 27
+			path: includes/plugin_file/file.php
+
+		-
+			message: '#^Variable \$owner_id might not be defined\.$#'
+			identifier: variable.undefined
+			count: 2
+			path: includes/plugin_file/file.php
+
+		-
+			message: '#^Variable \$quote_data might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_file/file.php
+
+		-
+			message: '#^Variable \$file might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_file/pages/file_admin_bucket.php
+
+		-
+			message: '#^Variable \$file_id might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_file/pages/file_admin_bucket.php
+
+
+		-
+			message: '#^Variable \$module might not be defined\.$#'
+			identifier: variable.undefined
+			count: 2
+			path: includes/plugin_file/pages/file_admin_bucket.php
+
+		-
+			message: '#^Variable \$ucm_file might not be defined\.$#'
+			identifier: variable.undefined
+			count: 2
+			path: includes/plugin_file/pages/file_admin_bucket.php
+
+		-
+			message: '#^Anonymous function has an unused use \$file_id\.$#'
+			identifier: closure.unusedUse
+			count: 1
+			path: includes/plugin_file/pages/file_admin_edit.php
+
+		-
+			message: '#^Cannot call method link\(\) on null\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: includes/plugin_file/pages/file_admin_edit.php
+
+		-
+			message: '#^Variable \$file_id might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_file/pages/file_admin_edit.php
+
+
+		-
+			message: '#^Variable \$module might not be defined\.$#'
+			identifier: variable.undefined
+			count: 2
+			path: includes/plugin_file/pages/file_admin_edit.php
+
+		-
+			message: '#^Variable \$ucm_file might not be defined\.$#'
+			identifier: variable.undefined
+			count: 2
+			path: includes/plugin_file/pages/file_admin_edit.php
+
+		-
+			message: '#^Variable \$file_id might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_file/pages/file_admin_email.php
+
+
+		-
+			message: '#^Variable \$module might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_file/pages/file_admin_list.php
+
+		-
+			message: '#^Variable \$module might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_file/pages/file_customer_edit.php
+
+		-
+			message: '#^Variable \$module might not be defined\.$#'
+			identifier: variable.undefined
+			count: 4
+			path: includes/plugin_file/pages/file_edit.php
+
+		-
+			message: '#^Variable \$editable might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_file/pages/file_list.php
+
+		-
+			message: '#^Variable \$file_items might not be defined\.$#'
+			identifier: variable.undefined
+			count: 2
+			path: includes/plugin_file/pages/file_list.php
+
+		-
+			message: '#^Variable \$layout_type might not be defined\.$#'
+			identifier: variable.undefined
+			count: 2
+			path: includes/plugin_file/pages/file_list.php
+
+		-
+			message: '#^Variable \$options might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_file/pages/file_list.php
+
+		-
+			message: '#^Variable \$owner_id might not be defined\.$#'
+			identifier: variable.undefined
+			count: 17
+			path: includes/plugin_file/pages/file_list.php
+
+		-
+			message: '#^Variable \$owner_table might not be defined\.$#'
+			identifier: variable.undefined
+			count: 17
+			path: includes/plugin_file/pages/file_list.php
+
+		-
+			message: '#^Variable \$plugins might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_file/pages/file_list.php
+
+		-
+			message: '#^Variable \$title might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_file/pages/file_list.php
+
+		-
+			message: '#^Calling self\:\:get_file\(\) outside of class scope\.$#'
+			identifier: outOfClass.self
+			count: 1
+			path: includes/plugin_file/pages/file_list_preview.php
+
+		-
+			message: '#^Variable \$file_items might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_file/pages/file_list_preview.php
+
+		-
+			message: '#^Variable \$owner_id might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_file/pages/file_list_preview.php
+
+		-
+			message: '#^Variable \$owner_table might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_file/pages/file_list_preview.php
+
+		-
+			message: '#^Binary operation "\+" between ''01''\|''02''\|''03''\|''04''\|''05''\|''06''\|''07''\|''08''\|''09''\|''10''\|''11''\|''12''\|''13''\|''14''\|''15''\|''16''\|''17''\|''18''\|''19''\|''20''\|''21''\|''22''\|''23''\|''24''\|''25''\|''26''\|''27''\|''28''\|''29''\|''30''\|''31'' and \-1\|0\|1\|2\|3\|4\|5 results in an error\.$#'
+			identifier: binaryOp.invalid
+			count: 6
+			path: includes/plugin_finance/finance.php
+
+		-
+			message: '#^Binary operation "\-" between ''01''\|''02''\|''03''\|''04''\|''05''\|''06''\|''07''\|''08''\|''09''\|''10''\|''11''\|''12''\|''13''\|''14''\|''15''\|''16''\|''17''\|''18''\|''19''\|''20''\|''21''\|''22''\|''23''\|''24''\|''25''\|''26''\|''27''\|''28''\|''29''\|''30''\|''31'' and ''1''\|''2''\|''3''\|''4''\|''5''\|''6''\|''7'' results in an error\.$#'
+			identifier: binaryOp.invalid
+			count: 6
+			path: includes/plugin_finance/finance.php
+
+		-
+			message: '#^Constant _DB_PREFIX not found\.$#'
+			identifier: constant.notFound
+			count: 83
+			path: includes/plugin_finance/finance.php
+
+		-
+			message: '#^Inner named functions are not supported by PHPStan\. Consider refactoring to an anonymous function, class method, or a top\-level\-defined function\. See issue \#165 \(https\://github\.com/phpstan/phpstan/issues/165\) for more details\.$#'
+			identifier: function.inner
+			count: 1
+			path: includes/plugin_finance/finance.php
+
+		-
+			message: '#^Undefined variable\: \$show_previous_weeks$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_finance/finance.php
+
+		-
+			message: '#^Constant _DB_PREFIX not found\.$#'
+			identifier: constant.notFound
+			count: 4
+			path: includes/plugin_finance/pages/dashboard_popup.php
+
+		-
+			message: '#^Variable \$end_date might not be defined\.$#'
+			identifier: variable.undefined
+			count: 2
+			path: includes/plugin_finance/pages/dashboard_popup_amount_paid.php
+
+		-
+			message: '#^Variable \$end_date_str might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_finance/pages/dashboard_popup_amount_paid.php
+
+		-
+			message: '#^Variable \$start_date might not be defined\.$#'
+			identifier: variable.undefined
+			count: 3
+			path: includes/plugin_finance/pages/dashboard_popup_amount_paid.php
+
+		-
+			message: '#^Variable \$end_date might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_finance/pages/dashboard_popup_amount_spent.php
+
+		-
+			message: '#^Variable \$end_date_str might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_finance/pages/dashboard_popup_amount_spent.php
+
+		-
+			message: '#^Variable \$start_date might not be defined\.$#'
+			identifier: variable.undefined
+			count: 2
+			path: includes/plugin_finance/pages/dashboard_popup_amount_spent.php
+
+		-
+			message: '#^Constant _DB_PREFIX not found\.$#'
+			identifier: constant.notFound
+			count: 3
+			path: includes/plugin_finance/pages/dashboard_popup_hours_logged.php
+
+		-
+			message: '#^Variable \$end_date might not be defined\.$#'
+			identifier: variable.undefined
+			count: 3
+			path: includes/plugin_finance/pages/dashboard_popup_hours_logged.php
+
+		-
+			message: '#^Variable \$end_date_str might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_finance/pages/dashboard_popup_hours_logged.php
+
+		-
+			message: '#^Variable \$start_date might not be defined\.$#'
+			identifier: variable.undefined
+			count: 4
+			path: includes/plugin_finance/pages/dashboard_popup_hours_logged.php
+
+		-
+			message: '#^Variable \$col1 might not be defined\.$#'
+			identifier: variable.undefined
+			count: 2
+			path: includes/plugin_finance/pages/dashboard_summary.php
+
+		-
+			message: '#^Variable \$data might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_finance/pages/dashboard_summary.php
+
+		-
+			message: '#^Variable \$table_name might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_finance/pages/dashboard_summary.php
+
+		-
+			message: '#^Variable \$this might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_finance/pages/dashboard_summary.php
+
+		-
+			message: '#^Variable \$col1 might not be defined\.$#'
+			identifier: variable.undefined
+			count: 2
+			path: includes/plugin_finance/pages/dashboard_summary_widgets.php
+
+		-
+			message: '#^Variable \$data might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_finance/pages/dashboard_summary_widgets.php
+
+		-
+			message: '#^Variable \$table_name might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_finance/pages/dashboard_summary_widgets.php
+
+		-
+			message: '#^Variable \$this might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_finance/pages/dashboard_summary_widgets.php
+
+		-
+			message: '#^Variable \$module might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_finance/pages/finance.php
+
+		-
+			message: '#^Anonymous function has an unused use \$finance\.$#'
+			identifier: closure.unusedUse
+			count: 1
+			path: includes/plugin_finance/pages/finance_edit.php
+
+		-
+			message: '#^Anonymous function has an unused use \$locked\.$#'
+			identifier: closure.unusedUse
+			count: 6
+			path: includes/plugin_finance/pages/finance_edit.php
+
+		-
+			message: '#^Undefined variable\: \$finance_recurring$#'
+			identifier: variable.undefined
+			count: 2
+			path: includes/plugin_finance/pages/finance_edit.php
+
+		-
+			message: '#^Variable \$finance_recurring in isset\(\) is never defined\.$#'
+			identifier: isset.variable
+			count: 1
+			path: includes/plugin_finance/pages/finance_edit.php
+
+		-
+			message: '#^Variable \$module might not be defined\.$#'
+			identifier: variable.undefined
+			count: 2
+			path: includes/plugin_finance/pages/finance_edit.php
+
+		-
+			message: '#^Variable \$invoice_id might not be defined\.$#'
+			identifier: variable.undefined
+			count: 2
+			path: includes/plugin_finance/pages/finance_invoice_edit.php
+
+		-
+			message: '#^Variable \$job_id might not be defined\.$#'
+			identifier: variable.undefined
+			count: 2
+			path: includes/plugin_finance/pages/finance_job_edit.php
+
+		-
+			message: '#^Variable \$days might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_finance/pages/recurring_edit.php
+
+		-
+			message: '#^Variable \$module might not be defined\.$#'
+			identifier: variable.undefined
+			count: 2
+			path: includes/plugin_finance/pages/recurring_edit.php
+
+		-
+			message: '#^Variable \$module might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_finance/pages/recurring_list.php
+
+		-
+			message: '#^Constant _DB_PREFIX not found\.$#'
+			identifier: constant.notFound
+			count: 3
+			path: includes/plugin_form/form.php
+
+		-
+			message: '#^Variable \$form_name in isset\(\) always exists and is not nullable\.$#'
+			identifier: isset.variable
+			count: 1
+			path: includes/plugin_form/form.php
+
+		-
+			message: '#^Variable \$multiple_id might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_form/form.php
+
+		-
+			message: '#^Variable \$module might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_form/pages/confirm_delete.php
+
+		-
+			message: '#^Constant _DB_PREFIX not found\.$#'
+			identifier: constant.notFound
+			count: 1
+			path: includes/plugin_form/pages/dynamic_select_box.php
+
+		-
+			message: '#^Constant _DB_PREFIX not found\.$#'
+			identifier: constant.notFound
+			count: 28
+			path: includes/plugin_group/group.php
+
+		-
+			message: '#^Variable \$module might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_group/pages/group_edit.php
+
+		-
+			message: '#^Variable \$module might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_group/pages/group_settings.php
+
+		-
+			message: '#^Constant _DB_PREFIX not found\.$#'
+			identifier: constant.notFound
+			count: 2
+			path: includes/plugin_import_export/import_export.php
+
+		-
+			message: '#^Constant _DB_PREFIX not found\.$#'
+			identifier: constant.notFound
+			count: 1
+			path: includes/plugin_import_export/pages/import.php
+
+		-
+			message: '#^Unsafe usage of new static\(\)\.$#'
+			identifier: new.static
+			count: 2
+			path: includes/plugin_invoice/class.invoice.php
+
+		-
+			message: '#^Access to an undefined property UCMInvoice\:\:\$customer_id\.$#'
+			identifier: property.notFound
+			count: 3
+			path: includes/plugin_invoice/invoice.php
+
+		-
+			message: '#^Access to an undefined property UCMTimer\:\:\$description\.$#'
+			identifier: property.notFound
+			count: 1
+			path: includes/plugin_invoice/invoice.php
+
+		-
+			message: '#^Access to an undefined property module_email\:\:\$customer_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: includes/plugin_invoice/invoice.php
+
+		-
+			message: '#^Access to an undefined property module_email\:\:\$invoice_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: includes/plugin_invoice/invoice.php
+
+		-
+			message: '#^Access to an undefined property module_email\:\:\$prevent_duplicates\.$#'
+			identifier: property.notFound
+			count: 1
+			path: includes/plugin_invoice/invoice.php
+
+		-
+			message: '#^Access to an undefined property module_email\:\:\$replace_values\.$#'
+			identifier: property.notFound
+			count: 1
+			path: includes/plugin_invoice/invoice.php
+
+		-
+			message: '#^Call to an undefined method module_email\:\:add_attachment\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: includes/plugin_invoice/invoice.php
+
+		-
+			message: '#^Call to an undefined method module_email\:\:send\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: includes/plugin_invoice/invoice.php
+
+		-
+			message: '#^Call to an undefined method module_email\:\:set_bcc_manual\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: includes/plugin_invoice/invoice.php
+
+		-
+			message: '#^Call to an undefined method module_email\:\:set_html\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: includes/plugin_invoice/invoice.php
+
+		-
+			message: '#^Call to an undefined method module_email\:\:set_subject\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: includes/plugin_invoice/invoice.php
+
+		-
+			message: '#^Call to an undefined method module_email\:\:set_to\(\)\.$#'
+			identifier: method.notFound
+			count: 2
+			path: includes/plugin_invoice/invoice.php
+
+		-
+			message: '#^Call to an undefined method module_email\:\:set_to_manual\(\)\.$#'
+			identifier: method.notFound
+			count: 2
+			path: includes/plugin_invoice/invoice.php
+
+		-
+			message: '#^Constant _DB_PREFIX not found\.$#'
+			identifier: constant.notFound
+			count: 111
+			path: includes/plugin_invoice/invoice.php
+
+		-
+			message: '#^Function get_multiple invoked with 6 parameters, 1\-5 required\.$#'
+			identifier: arguments.count
+			count: 1
+			path: includes/plugin_invoice/invoice.php
+
+		-
+			message: '#^Undefined variable\: \$invoice_data$#'
+			identifier: variable.undefined
+			count: 2
+			path: includes/plugin_invoice/invoice.php
+
+		-
+			message: '#^Variable \$cache_timeout might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_invoice/invoice.php
+
+		-
+			message: '#^Variable \$invoice_data in isset\(\) is never defined\.$#'
+			identifier: isset.variable
+			count: 1
+			path: includes/plugin_invoice/invoice.php
+
+		-
+			message: '#^Variable \$invoice_template_suffix in isset\(\) always exists and is not nullable\.$#'
+			identifier: isset.variable
+			count: 2
+			path: includes/plugin_invoice/invoice.php
+
+		-
+			message: '#^Anonymous function has an unused use \$invoice_id\.$#'
+			identifier: closure.unusedUse
+			count: 2
+			path: includes/plugin_invoice/pages/invoice_admin_credit.php
+
+		-
+			message: '#^Variable \$find_other_templates in isset\(\) always exists and is not nullable\.$#'
+			identifier: isset.variable
+			count: 1
+			path: includes/plugin_invoice/pages/invoice_admin_credit.php
+
+		-
+			message: '#^Variable \$module might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_invoice/pages/invoice_admin_credit.php
+
+		-
+			message: '#^Variable \$default_payment_method_text might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_invoice/pages/invoice_admin_edit.php
+
+		-
+			message: '#^Variable \$module might not be defined\.$#'
+			identifier: variable.undefined
+			count: 2
+			path: includes/plugin_invoice/pages/invoice_admin_edit.php
+
+		-
+			message: '#^Variable \$module might not be defined\.$#'
+			identifier: variable.undefined
+			count: 3
+			path: includes/plugin_invoice/pages/invoice_admin_print.php
+
+		-
+			message: '#^Constant _DB_PREFIX not found\.$#'
+			identifier: constant.notFound
+			count: 1
+			path: includes/plugin_invoice/pages/invoice_settings.php
+
+		-
+			message: '#^Variable \$module might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_invoice/pages/invoice_settings.php
+
+		-
+			message: '#^Variable \$invoice_id might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_invoice/template/invoice_payment_history.php
+
+		-
+			message: '#^Variable \$invoice might not be defined\.$#'
+			identifier: variable.undefined
+			count: 5
+			path: includes/plugin_invoice/template/invoice_payment_methods.php
+
+		-
+			message: '#^Variable \$invoice_data might not be defined\.$#'
+			identifier: variable.undefined
+			count: 2
+			path: includes/plugin_invoice/template/invoice_payment_methods.php
+
+		-
+			message: '#^Variable \$invoice_id might not be defined\.$#'
+			identifier: variable.undefined
+			count: 8
+			path: includes/plugin_invoice/template/invoice_payment_methods.php
+
+		-
+			message: '#^Variable \$invoice might not be defined\.$#'
+			identifier: variable.undefined
+			count: 51
+			path: includes/plugin_invoice/template/invoice_task_list.php
+
+		-
+			message: '#^Variable \$invoice_id might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_invoice/template/invoice_task_list.php
+
+		-
+			message: '#^Constant _DB_PREFIX not found\.$#'
+			identifier: constant.notFound
+			count: 7
+			path: includes/plugin_job/class.job.php
+
+		-
+			message: '#^Unsafe usage of new static\(\)\.$#'
+			identifier: new.static
+			count: 2
+			path: includes/plugin_job/class.job.php
+
+		-
+			message: '#^Access to an undefined property UCMJob\:\:\$customer_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: includes/plugin_job/job.php
+
+		-
+			message: '#^Access to an undefined property module_email\:\:\$customer_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: includes/plugin_job/job.php
+
+		-
+			message: '#^Access to an undefined property module_email\:\:\$job_id\.$#'
+			identifier: property.notFound
+			count: 3
+			path: includes/plugin_job/job.php
+
+		-
+			message: '#^Access to an undefined property module_email\:\:\$prevent_duplicates\.$#'
+			identifier: property.notFound
+			count: 3
+			path: includes/plugin_job/job.php
+
+		-
+			message: '#^Access to an undefined property module_email\:\:\$replace_values\.$#'
+			identifier: property.notFound
+			count: 3
+			path: includes/plugin_job/job.php
+
+		-
+			message: '#^Call to an undefined method module_email\:\:send\(\)\.$#'
+			identifier: method.notFound
+			count: 3
+			path: includes/plugin_job/job.php
+
+		-
+			message: '#^Call to an undefined method module_email\:\:set_bcc_manual\(\)\.$#'
+			identifier: method.notFound
+			count: 3
+			path: includes/plugin_job/job.php
+
+		-
+			message: '#^Call to an undefined method module_email\:\:set_html\(\)\.$#'
+			identifier: method.notFound
+			count: 3
+			path: includes/plugin_job/job.php
+
+		-
+			message: '#^Call to an undefined method module_email\:\:set_subject\(\)\.$#'
+			identifier: method.notFound
+			count: 3
+			path: includes/plugin_job/job.php
+
+		-
+			message: '#^Call to an undefined method module_email\:\:set_to\(\)\.$#'
+			identifier: method.notFound
+			count: 2
+			path: includes/plugin_job/job.php
+
+		-
+			message: '#^Call to an undefined method module_email\:\:set_to_manual\(\)\.$#'
+			identifier: method.notFound
+			count: 2
+			path: includes/plugin_job/job.php
+
+		-
+			message: '#^Constant _DB_PREFIX not found\.$#'
+			identifier: constant.notFound
+			count: 99
+			path: includes/plugin_job/job.php
+
+		-
+			message: '#^Function qa invoked with 2 parameters, 1 required\.$#'
+			identifier: arguments.count
+			count: 1
+			path: includes/plugin_job/job.php
+
+		-
+			message: '#^Variable \$cache_timeout might not be defined\.$#'
+			identifier: variable.undefined
+			count: 2
+			path: includes/plugin_job/job.php
+
+		-
+			message: '#^Variable \$job might not be defined\.$#'
+			identifier: variable.undefined
+			count: 84
+			path: includes/plugin_job/pages/ajax_job_summary.php
+
+		-
+			message: '#^Variable \$show_hours_summary might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_job/pages/ajax_job_summary.php
+
+		-
+			message: '#^Variable \$show_task_numbers might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_job/pages/ajax_job_summary.php
+
+		-
+			message: '#^Variable \$job might not be defined\.$#'
+			identifier: variable.undefined
+			count: 11
+			path: includes/plugin_job/pages/ajax_task_edit.php
+
+		-
+			message: '#^Variable \$job_id might not be defined\.$#'
+			identifier: variable.undefined
+			count: 5
+			path: includes/plugin_job/pages/ajax_task_edit.php
+
+		-
+			message: '#^Variable \$job_task_creation_permissions might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_job/pages/ajax_task_edit.php
+
+		-
+			message: '#^Variable \$percentage might not be defined\.$#'
+			identifier: variable.undefined
+			count: 2
+			path: includes/plugin_job/pages/ajax_task_edit.php
+
+		-
+			message: '#^Variable \$show_task_numbers might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_job/pages/ajax_task_edit.php
+
+		-
+			message: '#^Variable \$staff_member_rel might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_job/pages/ajax_task_edit.php
+
+		-
+			message: '#^Variable \$task_data might not be defined\.$#'
+			identifier: variable.undefined
+			count: 73
+			path: includes/plugin_job/pages/ajax_task_edit.php
+
+		-
+			message: '#^Variable \$task_editable might not be defined\.$#'
+			identifier: variable.undefined
+			count: 2
+			path: includes/plugin_job/pages/ajax_task_edit.php
+
+		-
+			message: '#^Variable \$task_id might not be defined\.$#'
+			identifier: variable.undefined
+			count: 58
+			path: includes/plugin_job/pages/ajax_task_edit.php
+
+		-
+			message: '#^Variable \$job might not be defined\.$#'
+			identifier: variable.undefined
+			count: 11
+			path: includes/plugin_job/pages/ajax_task_preview.php
+
+		-
+			message: '#^Variable \$job_id might not be defined\.$#'
+			identifier: variable.undefined
+			count: 3
+			path: includes/plugin_job/pages/ajax_task_preview.php
+
+		-
+			message: '#^Variable \$percentage might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_job/pages/ajax_task_preview.php
+
+		-
+			message: '#^Variable \$show_task_numbers might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_job/pages/ajax_task_preview.php
+
+		-
+			message: '#^Variable \$task_data might not be defined\.$#'
+			identifier: variable.undefined
+			count: 64
+			path: includes/plugin_job/pages/ajax_task_preview.php
+
+		-
+			message: '#^Variable \$task_due_time might not be defined\.$#'
+			identifier: variable.undefined
+			count: 3
+			path: includes/plugin_job/pages/ajax_task_preview.php
+
+		-
+			message: '#^Variable \$task_editable might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_job/pages/ajax_task_preview.php
+
+		-
+			message: '#^Variable \$task_id might not be defined\.$#'
+			identifier: variable.undefined
+			count: 8
+			path: includes/plugin_job/pages/ajax_task_preview.php
+
+		-
+			message: '#^Anonymous function has an unused use \$job\.$#'
+			identifier: closure.unusedUse
+			count: 1
+			path: includes/plugin_job/pages/job_admin_create.php
+
+		-
+			message: '#^Anonymous function has an unused use \$job_id\.$#'
+			identifier: closure.unusedUse
+			count: 2
+			path: includes/plugin_job/pages/job_admin_create.php
+
+		-
+			message: '#^Anonymous function has an unused use \$job\.$#'
+			identifier: closure.unusedUse
+			count: 1
+			path: includes/plugin_job/pages/job_admin_edit.php
+
+		-
+			message: '#^File ends with a trailing whitespace\. This may cause problems when running the code in the web browser\. Remove the closing \?\> mark or remove the whitespace\.$#'
+			identifier: whitespace.fileEnd
+			count: 1
+			path: includes/plugin_job/pages/job_admin_edit.php
+
+		-
+			message: '#^Variable \$module might not be defined\.$#'
+			identifier: variable.undefined
+			count: 3
+			path: includes/plugin_job/pages/job_admin_edit.php
+
+		-
+			message: '#^Access to an undefined property UCMJob\:\:\$job_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: includes/plugin_job/pages/job_admin_task_edit.php
+
+		-
+			message: '#^Variable \$module might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_job/pages/job_admin_task_edit.php
+
+		-
+			message: '#^Variable \$job_data might not be defined\.$#'
+			identifier: variable.undefined
+			count: 2
+			path: includes/plugin_job/pages/job_public.php
+
+		-
+			message: '#^Variable \$job_id might not be defined\.$#'
+			identifier: variable.undefined
+			count: 2
+			path: includes/plugin_job/pages/job_public.php
+
+		-
+			message: '#^Variable \$allow_new might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_job_discussion/inc/comment_list.php
+
+		-
+			message: '#^Variable \$current_user_id might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_job_discussion/inc/comment_list.php
+
+		-
+			message: '#^Variable \$customer might not be defined\.$#'
+			identifier: variable.undefined
+			count: 7
+			path: includes/plugin_job_discussion/inc/comment_list.php
+
+		-
+			message: '#^Variable \$job_data might not be defined\.$#'
+			identifier: variable.undefined
+			count: 7
+			path: includes/plugin_job_discussion/inc/comment_list.php
+
+		-
+			message: '#^Variable \$job_id might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_job_discussion/inc/comment_list.php
+
+		-
+			message: '#^Variable \$task_data might not be defined\.$#'
+			identifier: variable.undefined
+			count: 4
+			path: includes/plugin_job_discussion/inc/comment_list.php
+
+		-
+			message: '#^Variable \$task_id might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_job_discussion/inc/comment_list.php
+
+		-
+			message: '#^Access to an undefined property module_email\:\:\$error_text\.$#'
+			identifier: property.notFound
+			count: 2
+			path: includes/plugin_job_discussion/job_discussion.php
+
+		-
+			message: '#^Access to an undefined property module_email\:\:\$replace_values\.$#'
+			identifier: property.notFound
+			count: 2
+			path: includes/plugin_job_discussion/job_discussion.php
+
+		-
+			message: '#^Access to an undefined property module_email\:\:\$status\.$#'
+			identifier: property.notFound
+			count: 2
+			path: includes/plugin_job_discussion/job_discussion.php
+
+		-
+			message: '#^Call to an undefined method module_email\:\:send\(\)\.$#'
+			identifier: method.notFound
+			count: 2
+			path: includes/plugin_job_discussion/job_discussion.php
+
+		-
+			message: '#^Call to an undefined method module_email\:\:set_html\(\)\.$#'
+			identifier: method.notFound
+			count: 2
+			path: includes/plugin_job_discussion/job_discussion.php
+
+		-
+			message: '#^Call to an undefined method module_email\:\:set_reply_to\(\)\.$#'
+			identifier: method.notFound
+			count: 2
+			path: includes/plugin_job_discussion/job_discussion.php
+
+		-
+			message: '#^Call to an undefined method module_email\:\:set_subject\(\)\.$#'
+			identifier: method.notFound
+			count: 2
+			path: includes/plugin_job_discussion/job_discussion.php
+
+		-
+			message: '#^Call to an undefined method module_email\:\:set_to\(\)\.$#'
+			identifier: method.notFound
+			count: 2
+			path: includes/plugin_job_discussion/job_discussion.php
+
+		-
+			message: '#^Constant _DB_PREFIX not found\.$#'
+			identifier: constant.notFound
+			count: 1
+			path: includes/plugin_job_discussion/job_discussion.php
+
+		-
+			message: '#^Constant _DB_PREFIX not found\.$#'
+			identifier: constant.notFound
+			count: 25
+			path: includes/plugin_language/language.php
+
+		-
+			message: '#^Variable \$module might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_language/pages/language_settings.php
+
+		-
+			message: '#^Constant _DB_PREFIX not found\.$#'
+			identifier: constant.notFound
+			count: 2
+			path: includes/plugin_language/pages/language_translations.php
+
+		-
+			message: '#^Constant _DB_PREFIX not found\.$#'
+			identifier: constant.notFound
+			count: 4
+			path: includes/plugin_log/log.php
+
+		-
+			message: '#^Constant _DB_PREFIX not found\.$#'
+			identifier: constant.notFound
+			count: 1
+			path: includes/plugin_map/map.php
+
+		-
+			message: '#^Constant _DB_PREFIX not found\.$#'
+			identifier: constant.notFound
+			count: 8
+			path: includes/plugin_member/member.php
+
+		-
+			message: '#^Static call to instance method module_member\:\:delete_member\(\)\.$#'
+			identifier: method.staticCall
+			count: 2
+			path: includes/plugin_member/member.php
+
+		-
+			message: '#^Variable \$module might not be defined\.$#'
+			identifier: variable.undefined
+			count: 3
+			path: includes/plugin_member/pages/member_admin_edit.php
+
+		-
+			message: '#^Access to an undefined property module_email\:\:\$error_text\.$#'
+			identifier: property.notFound
+			count: 2
+			path: includes/plugin_newsletter/newsletter.php
+
+		-
+			message: '#^Access to an undefined property module_email\:\:\$message_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: includes/plugin_newsletter/newsletter.php
+
+		-
+			message: '#^Access to an undefined property module_email\:\:\$replace_values\.$#'
+			identifier: property.notFound
+			count: 3
+			path: includes/plugin_newsletter/newsletter.php
+
+		-
+			message: '#^Access to an undefined property module_email\:\:\$status\.$#'
+			identifier: property.notFound
+			count: 2
+			path: includes/plugin_newsletter/newsletter.php
+
+		-
+			message: '#^Call to an undefined method module_email\:\:AddAttachment\(\)\.$#'
+			identifier: method.notFound
+			count: 2
+			path: includes/plugin_newsletter/newsletter.php
+
+		-
+			message: '#^Call to an undefined method module_email\:\:send\(\)\.$#'
+			identifier: method.notFound
+			count: 3
+			path: includes/plugin_newsletter/newsletter.php
+
+		-
+			message: '#^Call to an undefined method module_email\:\:set_bounce_address\(\)\.$#'
+			identifier: method.notFound
+			count: 2
+			path: includes/plugin_newsletter/newsletter.php
+
+		-
+			message: '#^Call to an undefined method module_email\:\:set_from_manual\(\)\.$#'
+			identifier: method.notFound
+			count: 3
+			path: includes/plugin_newsletter/newsletter.php
+
+		-
+			message: '#^Call to an undefined method module_email\:\:set_html\(\)\.$#'
+			identifier: method.notFound
+			count: 3
+			path: includes/plugin_newsletter/newsletter.php
+
+		-
+			message: '#^Call to an undefined method module_email\:\:set_subject\(\)\.$#'
+			identifier: method.notFound
+			count: 3
+			path: includes/plugin_newsletter/newsletter.php
+
+		-
+			message: '#^Call to an undefined method module_email\:\:set_to_manual\(\)\.$#'
+			identifier: method.notFound
+			count: 3
+			path: includes/plugin_newsletter/newsletter.php
+
+		-
+			message: '#^Constant _DB_PREFIX not found\.$#'
+			identifier: constant.notFound
+			count: 93
+			path: includes/plugin_newsletter/newsletter.php
+
+		-
+			message: '#^Default value of the parameter \#3 \$open_type \(false\) of method module_newsletter\:\:member_opened_newsletter\(\) is incompatible with type string\.$#'
+			identifier: parameter.defaultValue
+			count: 1
+			path: includes/plugin_newsletter/newsletter.php
+
+		-
+			message: '#^Default value of the parameter \#4 \$open_id \(false\) of method module_newsletter\:\:member_opened_newsletter\(\) is incompatible with type int\.$#'
+			identifier: parameter.defaultValue
+			count: 1
+			path: includes/plugin_newsletter/newsletter.php
+
+		-
+			message: '#^Function qa1 invoked with 2 parameters, 1 required\.$#'
+			identifier: arguments.count
+			count: 9
+			path: includes/plugin_newsletter/newsletter.php
+
+		-
+			message: '#^Variable \$module might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_newsletter/pages/newsletter_admin.php
+
+		-
+			message: '#^Variable \$module might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_newsletter/pages/newsletter_dashboard.php
+
+		-
+			message: '#^Variable \$module might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_newsletter/pages/newsletter_edit.php
+
+		-
+			message: '#^Variable \$member_data might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_newsletter/pages/newsletter_member.php
+
+		-
+			message: '#^Variable \$module might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_newsletter/pages/newsletter_member.php
+
+		-
+			message: '#^Variable \$module might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_newsletter/pages/newsletter_preview.php
+
+		-
+			message: '#^Variable \$module might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_newsletter/pages/newsletter_queue.php
+
+		-
+			message: '#^Variable \$module might not be defined\.$#'
+			identifier: variable.undefined
+			count: 2
+			path: includes/plugin_newsletter/pages/newsletter_queue_watch.php
+
+		-
+			message: '#^Variable \$statistics in isset\(\) always exists and is not nullable\.$#'
+			identifier: isset.variable
+			count: 1
+			path: includes/plugin_newsletter/pages/newsletter_queue_watch.php
+
+		-
+			message: '#^Variable \$module might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_newsletter/pages/newsletter_send.php
+
+		-
+			message: '#^Variable \$send might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_newsletter/pages/newsletter_send.php
+
+		-
+			message: '#^Variable \$module might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_newsletter/pages/newsletter_settings.php
+
+		-
+			message: '#^Variable \$module might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_newsletter/pages/newsletter_settings_bounces.php
+
+		-
+			message: '#^Constant _DB_PREFIX not found\.$#'
+			identifier: constant.notFound
+			count: 3
+			path: includes/plugin_newsletter/pages/newsletter_statistics_link_clicks.php
+
+		-
+			message: '#^Variable \$db might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_newsletter/pages/newsletter_statistics_link_clicks.php
+
+		-
+			message: '#^Variable \$module might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_newsletter/pages/newsletter_statistics_link_clicks.php
+
+		-
+			message: '#^Variable \$module might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_newsletter/pages/newsletter_template_edit.php
+
+		-
+			message: '#^File ends with a trailing whitespace\. This may cause problems when running the code in the web browser\. Remove the closing \?\> mark or remove the whitespace\.$#'
+			identifier: whitespace.fileEnd
+			count: 1
+			path: includes/plugin_newsletter/pages/newsletter_template_list.php
+
+		-
+			message: '#^Constant _DB_PREFIX not found\.$#'
+			identifier: constant.notFound
+			count: 9
+			path: includes/plugin_note/note.php
+
+		-
+			message: '#^Variable \$options in isset\(\) always exists and is not nullable\.$#'
+			identifier: isset.variable
+			count: 1
+			path: includes/plugin_note/pages/note_admin.php
+
+		-
+			message: '#^Variable \$note might not be defined\.$#'
+			identifier: variable.undefined
+			count: 9
+			path: includes/plugin_note/pages/note_edit.php
+
+		-
+			message: '#^Variable \$note_id might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_note/pages/note_edit.php
+
+		-
+			message: '#^Variable \$can_create might not be defined\.$#'
+			identifier: variable.undefined
+			count: 2
+			path: includes/plugin_note/pages/note_list.php
+
+		-
+			message: '#^Variable \$can_delete might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_note/pages/note_list.php
+
+		-
+			message: '#^Variable \$can_edit might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_note/pages/note_list.php
+
+		-
+			message: '#^Variable \$display_summary might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_note/pages/note_list.php
+
+		-
+			message: '#^Variable \$note_items might not be defined\.$#'
+			identifier: variable.undefined
+			count: 4
+			path: includes/plugin_note/pages/note_list.php
+
+		-
+			message: '#^Variable \$options might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_note/pages/note_list.php
+
+		-
+			message: '#^Variable \$owner_id might not be defined\.$#'
+			identifier: variable.undefined
+			count: 4
+			path: includes/plugin_note/pages/note_list.php
+
+		-
+			message: '#^Variable \$owner_table might not be defined\.$#'
+			identifier: variable.undefined
+			count: 4
+			path: includes/plugin_note/pages/note_list.php
+
+		-
+			message: '#^Variable \$rel_data might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_note/pages/note_list.php
+
+		-
+			message: '#^Access to property \$VERIFY_PEER on an unknown class AuthorizeNetAIM\.$#'
+			identifier: class.notFound
+			count: 2
+			path: includes/plugin_paymethod_authorize/paymethod_authorize.php
+
+		-
+			message: '#^Access to property \$amount on an unknown class AuthorizeNetAIM\.$#'
+			identifier: class.notFound
+			count: 2
+			path: includes/plugin_paymethod_authorize/paymethod_authorize.php
+
+		-
+			message: '#^Call to method authorizeAndCapture\(\) on an unknown class AuthorizeNetAIM\.$#'
+			identifier: class.notFound
+			count: 1
+			path: includes/plugin_paymethod_authorize/paymethod_authorize.php
+
+		-
+			message: '#^Call to method setField\(\) on an unknown class AuthorizeNetAIM\.$#'
+			identifier: class.notFound
+			count: 4
+			path: includes/plugin_paymethod_authorize/paymethod_authorize.php
+
+		-
+			message: '#^Call to method setSandbox\(\) on an unknown class AuthorizeNetAIM\.$#'
+			identifier: class.notFound
+			count: 1
+			path: includes/plugin_paymethod_authorize/paymethod_authorize.php
+
+		-
+			message: '#^Constant _DB_PREFIX not found\.$#'
+			identifier: constant.notFound
+			count: 1
+			path: includes/plugin_paymethod_authorize/paymethod_authorize.php
+
+		-
+			message: '#^Instantiated class AuthorizeNetAIM not found\.$#'
+			identifier: class.notFound
+			count: 1
+			path: includes/plugin_paymethod_authorize/paymethod_authorize.php
+
+		-
+			message: '#^Constant _DB_PREFIX not found\.$#'
+			identifier: constant.notFound
+			count: 1
+			path: includes/plugin_paymethod_banktransfer/paymethod_banktransfer.php
+
+		-
+			message: '#^Constant _DB_PREFIX not found\.$#'
+			identifier: constant.notFound
+			count: 1
+			path: includes/plugin_paymethod_check/paymethod_check.php
+
+		-
+			message: '#^Call to static method withApiKey\(\) on an unknown class Coinbase\.$#'
+			identifier: class.notFound
+			count: 1
+			path: includes/plugin_paymethod_coinbase/pages/coinbase_form.php
+
+		-
+			message: '#^Variable \$currency_code might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_paymethod_coinbase/pages/coinbase_form.php
+
+		-
+			message: '#^Variable \$invoice_id might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_paymethod_coinbase/pages/coinbase_form.php
+
+		-
+			message: '#^Variable \$invoice_payment_id might not be defined\.$#'
+			identifier: variable.undefined
+			count: 2
+			path: includes/plugin_paymethod_coinbase/pages/coinbase_form.php
+
+		-
+			message: '#^Call to static method setApiKey\(\) on an unknown class coinbase\.$#'
+			identifier: class.notFound
+			count: 1
+			path: includes/plugin_paymethod_coinbase/pages/coinbase_subscribe_form.php
+
+		-
+			message: '#^Path in require_once\(\) "includes/plugin_paymethod_coinbase/coinbase\-php/lib/coinbase\.php" is not a file or it does not exist\.$#'
+			identifier: requireOnce.fileNotFound
+			count: 1
+			path: includes/plugin_paymethod_coinbase/pages/coinbase_subscribe_form.php
+
+		-
+			message: '#^Call to an undefined method Exception\:\:getJsonBody\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: includes/plugin_paymethod_coinbase/paymethod_coinbase.php
+
+		-
+			message: '#^Call to method getJsonBody\(\) on an unknown class coinbase_CardError\.$#'
+			identifier: class.notFound
+			count: 1
+			path: includes/plugin_paymethod_coinbase/paymethod_coinbase.php
+
+		-
+			message: '#^Call to static method create\(\) on an unknown class coinbase_Customer\.$#'
+			identifier: class.notFound
+			count: 1
+			path: includes/plugin_paymethod_coinbase/paymethod_coinbase.php
+
+		-
+			message: '#^Call to static method setApiKey\(\) on an unknown class coinbase\.$#'
+			identifier: class.notFound
+			count: 1
+			path: includes/plugin_paymethod_coinbase/paymethod_coinbase.php
+
+		-
+			message: '#^Caught class coinbase_CardError not found\.$#'
+			identifier: class.notFound
+			count: 1
+			path: includes/plugin_paymethod_coinbase/paymethod_coinbase.php
+
+		-
+			message: '#^Constant _DB_PREFIX not found\.$#'
+			identifier: constant.notFound
+			count: 1
+			path: includes/plugin_paymethod_coinbase/paymethod_coinbase.php
+
+		-
+			message: '#^Path in require_once\(\) "includes/plugin_paymethod_coinbase/coinbase\-php/lib/coinbase\.php" is not a file or it does not exist\.$#'
+			identifier: requireOnce.fileNotFound
+			count: 1
+			path: includes/plugin_paymethod_coinbase/paymethod_coinbase.php
+
+		-
+			message: '#^Access to property \$customer on an unknown class MultiSafepay\.$#'
+			identifier: class.notFound
+			count: 14
+			path: includes/plugin_paymethod_multisafepay/paymethod_multisafepay.php
+
+		-
+			message: '#^Access to property \$error on an unknown class MultiSafepay\.$#'
+			identifier: class.notFound
+			count: 4
+			path: includes/plugin_paymethod_multisafepay/paymethod_multisafepay.php
+
+		-
+			message: '#^Access to property \$error_code on an unknown class MultiSafepay\.$#'
+			identifier: class.notFound
+			count: 2
+			path: includes/plugin_paymethod_multisafepay/paymethod_multisafepay.php
+
+		-
+			message: '#^Access to property \$merchant on an unknown class MultiSafepay\.$#'
+			identifier: class.notFound
+			count: 18
+			path: includes/plugin_paymethod_multisafepay/paymethod_multisafepay.php
+
+		-
+			message: '#^Access to property \$test on an unknown class MultiSafepay\.$#'
+			identifier: class.notFound
+			count: 4
+			path: includes/plugin_paymethod_multisafepay/paymethod_multisafepay.php
+
+		-
+			message: '#^Access to property \$transaction on an unknown class MultiSafepay\.$#'
+			identifier: class.notFound
+			count: 21
+			path: includes/plugin_paymethod_multisafepay/paymethod_multisafepay.php
+
+		-
+			message: '#^Call to method getStatus\(\) on an unknown class MultiSafepay\.$#'
+			identifier: class.notFound
+			count: 1
+			path: includes/plugin_paymethod_multisafepay/paymethod_multisafepay.php
+
+		-
+			message: '#^Call to method parseCustomerAddress\(\) on an unknown class MultiSafepay\.$#'
+			identifier: class.notFound
+			count: 1
+			path: includes/plugin_paymethod_multisafepay/paymethod_multisafepay.php
+
+		-
+			message: '#^Call to method startTransaction\(\) on an unknown class MultiSafepay\.$#'
+			identifier: class.notFound
+			count: 1
+			path: includes/plugin_paymethod_multisafepay/paymethod_multisafepay.php
+
+		-
+			message: '#^Constant _DB_PREFIX not found\.$#'
+			identifier: constant.notFound
+			count: 1
+			path: includes/plugin_paymethod_multisafepay/paymethod_multisafepay.php
+
+		-
+			message: '#^Instantiated class MultiSafepay not found\.$#'
+			identifier: class.notFound
+			count: 2
+			path: includes/plugin_paymethod_multisafepay/paymethod_multisafepay.php
+
+		-
+			message: '#^Constant _DB_PREFIX not found\.$#'
+			identifier: constant.notFound
+			count: 1
+			path: includes/plugin_paymethod_other/paymethod_other.php
+
+		-
+			message: '#^Constant _DB_PREFIX not found\.$#'
+			identifier: constant.notFound
+			count: 2
+			path: includes/plugin_paymethod_paynl/paymethod_paynl.php
+
+		-
+			message: '#^Constant _DB_PREFIX not found\.$#'
+			identifier: constant.notFound
+			count: 1
+			path: includes/plugin_paymethod_square/paymethod_square.php
+
+		-
+			message: '#^Constant _ERROR_EMAIL not found\.$#'
+			identifier: constant.notFound
+			count: 1
+			path: includes/plugin_paymethod_paypal/pages/paypal_settings.php
+
+		-
+			message: '#^Constant _DB_PREFIX not found\.$#'
+			identifier: constant.notFound
+			count: 1
+			path: includes/plugin_paymethod_paypal/paymethod_paypal.php
+
+		-
+			message: '#^Constant _ERROR_EMAIL not found\.$#'
+			identifier: constant.notFound
+			count: 4
+			path: includes/plugin_paymethod_paypal/paymethod_paypal.php
+
+		-
+			message: '#^Call to an undefined method Exception\:\:getJsonBody\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: includes/plugin_paymethod_stripe/pages/stripe_form.php
+
+		-
+			message: '#^Call to method getJsonBody\(\) on an unknown class Stripe_CardError\.$#'
+			identifier: class.notFound
+			count: 1
+			path: includes/plugin_paymethod_stripe/pages/stripe_form.php
+
+		-
+			message: '#^Call to static method create\(\) on an unknown class Stripe_Charge\.$#'
+			identifier: class.notFound
+			count: 1
+			path: includes/plugin_paymethod_stripe/pages/stripe_form.php
+
+		-
+			message: '#^Call to static method setApiKey\(\) on an unknown class Stripe\.$#'
+			identifier: class.notFound
+			count: 1
+			path: includes/plugin_paymethod_stripe/pages/stripe_form.php
+
+		-
+			message: '#^Caught class Stripe_CardError not found\.$#'
+			identifier: class.notFound
+			count: 1
+			path: includes/plugin_paymethod_stripe/pages/stripe_form.php
+
+		-
+			message: '#^Variable \$currency_code might not be defined\.$#'
+			identifier: variable.undefined
+			count: 2
+			path: includes/plugin_paymethod_stripe/pages/stripe_form.php
+
+		-
+			message: '#^Variable \$description might not be defined\.$#'
+			identifier: variable.undefined
+			count: 4
+			path: includes/plugin_paymethod_stripe/pages/stripe_form.php
+
+		-
+			message: '#^Variable \$invoice_id might not be defined\.$#'
+			identifier: variable.undefined
+			count: 2
+			path: includes/plugin_paymethod_stripe/pages/stripe_form.php
+
+		-
+			message: '#^Variable \$invoice_payment_data might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_paymethod_stripe/pages/stripe_form.php
+
+		-
+			message: '#^Variable \$invoice_payment_id might not be defined\.$#'
+			identifier: variable.undefined
+			count: 6
+			path: includes/plugin_paymethod_stripe/pages/stripe_form.php
+
+		-
+			message: '#^Constant _DB_PREFIX not found\.$#'
+			identifier: constant.notFound
+			count: 3
+			path: includes/plugin_paymethod_stripe/paymethod_stripe.php
+
+		-
+			message: '#^Call to method loadHtml\(\) on an unknown class Dompdf\\Dompdf\.$#'
+			identifier: class.notFound
+			count: 1
+			path: includes/plugin_pdf/pdf.php
+
+		-
+			message: '#^Call to method output\(\) on an unknown class Dompdf\\Dompdf\.$#'
+			identifier: class.notFound
+			count: 1
+			path: includes/plugin_pdf/pdf.php
+
+		-
+			message: '#^Call to method render\(\) on an unknown class Dompdf\\Dompdf\.$#'
+			identifier: class.notFound
+			count: 1
+			path: includes/plugin_pdf/pdf.php
+
+		-
+			message: '#^Call to method setPaper\(\) on an unknown class Dompdf\\Dompdf\.$#'
+			identifier: class.notFound
+			count: 1
+			path: includes/plugin_pdf/pdf.php
+
+		-
+			message: '#^Instantiated class Dompdf\\Dompdf not found\.$#'
+			identifier: class.notFound
+			count: 1
+			path: includes/plugin_pdf/pdf.php
+
+		-
+			message: '#^Variable \$this might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_pin/inc/pin_menu.php
+
+		-
+			message: '#^Access to an undefined property UCMProduct\:\:\$product_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: includes/plugin_product/class.product.php
+
+		-
+			message: '#^Access to an undefined property module_email\:\:\$replace_values\.$#'
+			identifier: property.notFound
+			count: 1
+			path: includes/plugin_product/class.product.php
+
+		-
+			message: '#^Call to an undefined method module_email\:\:send\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: includes/plugin_product/class.product.php
+
+		-
+			message: '#^Call to an undefined method module_email\:\:set_html\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: includes/plugin_product/class.product.php
+
+		-
+			message: '#^Call to an undefined method module_email\:\:set_subject\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: includes/plugin_product/class.product.php
+
+		-
+			message: '#^Call to an undefined method module_email\:\:set_to_manual\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: includes/plugin_product/class.product.php
+
+		-
+			message: '#^Constant _DB_PREFIX not found\.$#'
+			identifier: constant.notFound
+			count: 1
+			path: includes/plugin_product/class.product.php
+
+		-
+			message: '#^Variable \$module might not be defined\.$#'
+			identifier: variable.undefined
+			count: 3
+			path: includes/plugin_product/pages/product_admin_category_edit.php
+
+		-
+			message: '#^Variable \$product_category might not be defined\.$#'
+			identifier: variable.undefined
+			count: 2
+			path: includes/plugin_product/pages/product_admin_category_edit.php
+
+		-
+			message: '#^Variable \$product_category_id might not be defined\.$#'
+			identifier: variable.undefined
+			count: 3
+			path: includes/plugin_product/pages/product_admin_category_edit.php
+
+		-
+			message: '#^Access to an undefined property UCMProduct\:\:\$product_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: includes/plugin_product/pages/product_admin_edit.php
+
+		-
+			message: '#^Variable \$module might not be defined\.$#'
+			identifier: variable.undefined
+			count: 7
+			path: includes/plugin_product/pages/product_admin_edit.php
+
+		-
+			message: '#^Variable \$module might not be defined\.$#'
+			identifier: variable.undefined
+			count: 2
+			path: includes/plugin_product/pages/product_admin_list.php
+
+		-
+			message: '#^Variable \$module might not be defined\.$#'
+			identifier: variable.undefined
+			count: 3
+			path: includes/plugin_product/pages/product_settings.php
+
+		-
+			message: '#^Variable \$module might not be defined\.$#'
+			identifier: variable.undefined
+			count: 3
+			path: includes/plugin_product/pages/product_supplier_admin.php
+
+		-
+			message: '#^Constant _DB_PREFIX not found\.$#'
+			identifier: constant.notFound
+			count: 20
+			path: includes/plugin_product/product.php
+
+		-
+			message: '#^Unsafe usage of new static\(\)\.$#'
+			identifier: new.static
+			count: 2
+			path: includes/plugin_quote/class.quote.php
+
+		-
+			message: '#^Variable \$quote might not be defined\.$#'
+			identifier: variable.undefined
+			count: 42
+			path: includes/plugin_quote/pages/ajax_quote_summary.php
+
+		-
+			message: '#^Variable \$show_task_numbers might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_quote/pages/ajax_quote_summary.php
+
+		-
+			message: '#^Variable \$quote might not be defined\.$#'
+			identifier: variable.undefined
+			count: 6
+			path: includes/plugin_quote/pages/ajax_task_edit.php
+
+		-
+			message: '#^Variable \$quote_task_id might not be defined\.$#'
+			identifier: variable.undefined
+			count: 26
+			path: includes/plugin_quote/pages/ajax_task_edit.php
+
+		-
+			message: '#^Variable \$show_task_numbers might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_quote/pages/ajax_task_edit.php
+
+		-
+			message: '#^Variable \$staff_member_rel might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_quote/pages/ajax_task_edit.php
+
+		-
+			message: '#^Variable \$task_data might not be defined\.$#'
+			identifier: variable.undefined
+			count: 29
+			path: includes/plugin_quote/pages/ajax_task_edit.php
+
+		-
+			message: '#^Variable \$task_editable might not be defined\.$#'
+			identifier: variable.undefined
+			count: 2
+			path: includes/plugin_quote/pages/ajax_task_edit.php
+
+		-
+			message: '#^Variable \$quote might not be defined\.$#'
+			identifier: variable.undefined
+			count: 5
+			path: includes/plugin_quote/pages/ajax_task_preview.php
+
+		-
+			message: '#^Variable \$quote_task_id might not be defined\.$#'
+			identifier: variable.undefined
+			count: 5
+			path: includes/plugin_quote/pages/ajax_task_preview.php
+
+		-
+			message: '#^Variable \$show_task_numbers might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_quote/pages/ajax_task_preview.php
+
+		-
+			message: '#^Variable \$task_data might not be defined\.$#'
+			identifier: variable.undefined
+			count: 28
+			path: includes/plugin_quote/pages/ajax_task_preview.php
+
+		-
+			message: '#^Variable \$task_editable might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_quote/pages/ajax_task_preview.php
+
+		-
+			message: '#^Variable \$unit_measurement might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_quote/pages/ajax_task_preview.php
+
+		-
+			message: '#^Anonymous function has an unused use \$quote\.$#'
+			identifier: closure.unusedUse
+			count: 1
+			path: includes/plugin_quote/pages/quote_admin_edit.php
+
+		-
+			message: '#^Variable \$import_tasks_link might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_quote/pages/quote_admin_edit.php
+
+		-
+			message: '#^Variable \$module might not be defined\.$#'
+			identifier: variable.undefined
+			count: 3
+			path: includes/plugin_quote/pages/quote_admin_edit.php
+
+		-
+			message: '#^Access to an undefined property UCMQuote\:\:\$customer_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: includes/plugin_quote/quote.php
+
+		-
+			message: '#^Access to an undefined property module_email\:\:\$customer_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: includes/plugin_quote/quote.php
+
+		-
+			message: '#^Access to an undefined property module_email\:\:\$prevent_duplicates\.$#'
+			identifier: property.notFound
+			count: 1
+			path: includes/plugin_quote/quote.php
+
+		-
+			message: '#^Access to an undefined property module_email\:\:\$quote_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: includes/plugin_quote/quote.php
+
+		-
+			message: '#^Access to an undefined property module_email\:\:\$replace_values\.$#'
+			identifier: property.notFound
+			count: 1
+			path: includes/plugin_quote/quote.php
+
+		-
+			message: '#^Call to an undefined method module_email\:\:add_attachment\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: includes/plugin_quote/quote.php
+
+		-
+			message: '#^Call to an undefined method module_email\:\:send\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: includes/plugin_quote/quote.php
+
+		-
+			message: '#^Call to an undefined method module_email\:\:set_bcc_manual\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: includes/plugin_quote/quote.php
+
+		-
+			message: '#^Call to an undefined method module_email\:\:set_html\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: includes/plugin_quote/quote.php
+
+		-
+			message: '#^Call to an undefined method module_email\:\:set_subject\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: includes/plugin_quote/quote.php
+
+		-
+			message: '#^Call to an undefined method module_email\:\:set_to\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: includes/plugin_quote/quote.php
+
+		-
+			message: '#^Constant _DB_PREFIX not found\.$#'
+			identifier: constant.notFound
+			count: 43
+			path: includes/plugin_quote/quote.php
+
+		-
+			message: '#^Function qa invoked with 2 parameters, 1 required\.$#'
+			identifier: arguments.count
+			count: 1
+			path: includes/plugin_quote/quote.php
+
+		-
+			message: '#^Variable \$cache_timeout might not be defined\.$#'
+			identifier: variable.undefined
+			count: 2
+			path: includes/plugin_quote/quote.php
+
+		-
+			message: '#^Variable \$quote might not be defined\.$#'
+			identifier: variable.undefined
+			count: 18
+			path: includes/plugin_quote/template/quote_task_list.php
+
+		-
+			message: '#^Variable \$quote_id might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_quote/template/quote_task_list.php
+
+		-
+			message: '#^Variable \$data might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_security/pages/data_access.php
+
+		-
+			message: '#^Variable \$table_name might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_security/pages/data_access.php
+
+		-
+			message: '#^Constant _DB_PREFIX not found\.$#'
+			identifier: constant.notFound
+			count: 5
+			path: includes/plugin_security/pages/login_history.php
+
+		-
+			message: '#^Variable \$export_json might not be defined\.$#'
+			identifier: variable.undefined
+			count: 2
+			path: includes/plugin_security/pages/security_role_edit.php
+
+		-
+			message: '#^Variable \$module might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_security/pages/security_role_edit.php
+
+		-
+			message: '#^Cannot call method link_open_role\(\) on null\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: includes/plugin_security/pages/security_role_list.php
+
+		-
+			message: '#^Variable \$module might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_security/pages/security_role_list.php
+
+		-
+			message: '#^Access to an undefined property module_email\:\:\$replace_values\.$#'
+			identifier: property.notFound
+			count: 1
+			path: includes/plugin_security/security.php
+
+		-
+			message: '#^Call to an undefined method module_email\:\:send\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: includes/plugin_security/security.php
+
+		-
+			message: '#^Call to an undefined method module_email\:\:set_html\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: includes/plugin_security/security.php
+
+		-
+			message: '#^Call to an undefined method module_email\:\:set_subject\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: includes/plugin_security/security.php
+
+		-
+			message: '#^Call to an undefined method module_email\:\:set_to\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: includes/plugin_security/security.php
+
+		-
+			message: '#^Constant _DB_PREFIX not found\.$#'
+			identifier: constant.notFound
+			count: 36
+			path: includes/plugin_security/security.php
+
+		-
+			message: '#^Function qa invoked with 2 parameters, 1 required\.$#'
+			identifier: arguments.count
+			count: 1
+			path: includes/plugin_security/security.php
+
+		-
+			message: '#^Variable \$available_perms might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_security/security.php
+
+		-
+			message: '#^Constant _DB_PREFIX not found\.$#'
+			identifier: constant.notFound
+			count: 9
+			path: includes/plugin_session/session.php
+
+		-
+			message: '#^Comparison operation "\!\=" between \(SimpleXMLElement\|null\) and 123 results in an error\.$#'
+			identifier: notEqual.invalid
+			count: 1
+			path: includes/plugin_setup/pages/setup0.php
+
+		-
+			message: '#^Constant _UCM_INSTALLED not found\.$#'
+			identifier: constant.notFound
+			count: 1
+			path: includes/plugin_setup/pages/setup0.php
+
+		-
+			message: '#^Constant _DB_NAME not found\.$#'
+			identifier: constant.notFound
+			count: 1
+			path: includes/plugin_setup/pages/setup1.php
+
+		-
+			message: '#^Constant _DB_PASS not found\.$#'
+			identifier: constant.notFound
+			count: 1
+			path: includes/plugin_setup/pages/setup1.php
+
+		-
+			message: '#^Constant _DB_PREFIX not found\.$#'
+			identifier: constant.notFound
+			count: 1
+			path: includes/plugin_setup/pages/setup1.php
+
+		-
+			message: '#^Constant _DB_SERVER not found\.$#'
+			identifier: constant.notFound
+			count: 1
+			path: includes/plugin_setup/pages/setup1.php
+
+		-
+			message: '#^Constant _DB_USER not found\.$#'
+			identifier: constant.notFound
+			count: 1
+			path: includes/plugin_setup/pages/setup1.php
+
+		-
+			message: '#^Constant _UCM_INSTALLED not found\.$#'
+			identifier: constant.notFound
+			count: 1
+			path: includes/plugin_setup/pages/setup1.php
+
+		-
+			message: '#^Variable \$step might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_setup/pages/setup1.php
+
+		-
+			message: '#^Variable \$plugins might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_setup/pages/setup2.php
+
+		-
+			message: '#^Constant _UCM_INSTALLED not found\.$#'
+			identifier: constant.notFound
+			count: 1
+			path: includes/plugin_setup/pages/setup2.php
+
+		-
+			message: '#^Constant _UCM_INSTALLED not found\.$#'
+			identifier: constant.notFound
+			count: 2
+			path: includes/plugin_setup/pages/setup3.php
+
+		-
+			message: '#^Constant _UCM_INSTALLED not found\.$#'
+			identifier: constant.notFound
+			count: 1
+			path: includes/plugin_setup/pages/setup4.php
+
+		-
+			message: '#^Constant _UCM_INSTALLED not found\.$#'
+			identifier: constant.notFound
+			count: 1
+			path: includes/plugin_setup/pages/setup5.php
+
+		-
+			message: '#^Constant _DB_PREFIX not found\.$#'
+			identifier: constant.notFound
+			count: 2
+			path: includes/plugin_signature/pages/signature_job_task.php
+
+		-
+			message: '#^Variable \$args might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_signature/pages/signature_job_task.php
+
+		-
+			message: '#^Variable \$existing_signature might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_signature/pages/signature_job_task.php
+
+		-
+			message: '#^Constant _DB_PREFIX not found\.$#'
+			identifier: constant.notFound
+			count: 2
+			path: includes/plugin_signature/signature.php
+
+		-
+			message: '#^Constant _DB_PREFIX not found\.$#'
+			identifier: constant.notFound
+			count: 2
+			path: includes/plugin_statistic/pages/ticket_report_staff.php
+
+		-
+			message: '#^Constant _DB_PREFIX not found\.$#'
+			identifier: constant.notFound
+			count: 14
+			path: includes/plugin_statistic/statistic.php
+
+		-
+			message: '#^Variable \$subscriptions might not be defined\.$#'
+			identifier: variable.undefined
+			count: 2
+			path: includes/plugin_subscription/hooks/invoice_sidebar.php
+
+		-
+			message: '#^Variable \$member_id might not be defined\.$#'
+			identifier: variable.undefined
+			count: 3
+			path: includes/plugin_subscription/hooks/member_edit.php
+
+		-
+			message: '#^Variable \$owner_table might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_subscription/hooks/member_edit.php
+
+		-
+			message: '#^Variable \$remaining_invoices might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_subscription/hooks/member_edit.php
+
+		-
+			message: '#^Variable \$module might not be defined\.$#'
+			identifier: variable.undefined
+			count: 2
+			path: includes/plugin_subscription/pages/subscription_admin_edit.php
+
+		-
+			message: '#^Constant _DB_NAME not found\.$#'
+			identifier: constant.notFound
+			count: 1
+			path: includes/plugin_subscription/subscription.php
+
+		-
+			message: '#^Constant _DB_PREFIX not found\.$#'
+			identifier: constant.notFound
+			count: 47
+			path: includes/plugin_subscription/subscription.php
+
+		-
+			message: '#^Variable \$module might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_template/pages/template_edit.php
+
+		-
+			message: '#^Variable \$module might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_template/pages/template_print.php
+
+		-
+			message: '#^Variable \$template might not be defined\.$#'
+			identifier: variable.undefined
+			count: 3
+			path: includes/plugin_template/pages/template_print.php
+
+		-
+			message: '#^Constant _DB_PREFIX not found\.$#'
+			identifier: constant.notFound
+			count: 2
+			path: includes/plugin_template/template.php
+
+		-
+			message: '#^Constant _UCM_INSTALLED not found\.$#'
+			identifier: constant.notFound
+			count: 1
+			path: includes/plugin_theme/themes/left/design_menu.php
+
+		-
+			message: '#^Variable \$display_mode might not be defined\.$#'
+			identifier: variable.undefined
+			count: 3
+			path: includes/plugin_theme/themes/left/design_menu.php
+
+		-
+			message: '#^Variable \$load_pages might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_theme/themes/left/design_menu.php
+
+		-
+			message: '#^Variable \$plugins might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_theme/themes/left/design_menu.php
+
+		-
+			message: '#^Variable \$display_mode might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_theme/themes/metis/design_footer.php
+
+		-
+			message: '#^Variable \$start_time might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_theme/themes/metis/design_footer.php
+
+		-
+			message: '#^Variable \$display_mode might not be defined\.$#'
+			identifier: variable.undefined
+			count: 3
+			path: includes/plugin_theme/themes/metis/design_header.php
+
+		-
+			message: '#^Variable \$page_title might not be defined\.$#'
+			identifier: variable.undefined
+			count: 2
+			path: includes/plugin_theme/themes/metis/design_header.php
+
+		-
+			message: '#^Constant _UCM_INSTALLED not found\.$#'
+			identifier: constant.notFound
+			count: 1
+			path: includes/plugin_theme/themes/metis/design_menu.php
+
+		-
+			message: '#^Variable \$display_mode might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_theme/themes/metis/design_menu.php
+
+		-
+			message: '#^Variable \$load_pages might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_theme/themes/metis/design_menu.php
+
+		-
+			message: '#^Variable \$plugins might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_theme/themes/metis/design_menu.php
+
+		-
+			message: '#^Variable \$this might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_theme/themes/metis/includes/plugin_pin/inc/pin_menu.php
+
+		-
+			message: '#^Variable \$plugins might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_theme/themes/metis/pages/search_results.php
+
+		-
+			message: '#^Variable \$display_mode might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_theme/themes/whitelabel1/design_footer.php
+
+		-
+			message: '#^Variable \$page might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_theme/themes/whitelabel1/design_footer.php
+
+		-
+			message: '#^Variable \$page_title might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_theme/themes/whitelabel1/design_footer.php
+
+		-
+			message: '#^Variable \$start_time might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_theme/themes/whitelabel1/design_footer.php
+
+		-
+			message: '#^Variable \$display_mode might not be defined\.$#'
+			identifier: variable.undefined
+			count: 4
+			path: includes/plugin_theme/themes/whitelabel1/design_header.php
+
+		-
+			message: '#^Variable \$page might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_theme/themes/whitelabel1/design_header.php
+
+		-
+			message: '#^Variable \$page_title might not be defined\.$#'
+			identifier: variable.undefined
+			count: 2
+			path: includes/plugin_theme/themes/whitelabel1/design_header.php
+
+		-
+			message: '#^Constant _UCM_INSTALLED not found\.$#'
+			identifier: constant.notFound
+			count: 1
+			path: includes/plugin_theme/themes/whitelabel1/design_menu.php
+
+		-
+			message: '#^Variable \$display_mode might not be defined\.$#'
+			identifier: variable.undefined
+			count: 3
+			path: includes/plugin_theme/themes/whitelabel1/design_menu.php
+
+		-
+			message: '#^Variable \$header_submenu_content might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_theme/themes/whitelabel1/design_menu.php
+
+		-
+			message: '#^Variable \$load_pages might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_theme/themes/whitelabel1/design_menu.php
+
+		-
+			message: '#^Variable \$plugins might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_theme/themes/whitelabel1/design_menu.php
+
+		-
+			message: '#^Binary operation "\+" between ''01''\|''02''\|''03''\|''04''\|''05''\|''06''\|''07''\|''08''\|''09''\|''10''\|''11''\|''12''\|''13''\|''14''\|''15''\|''16''\|''17''\|''18''\|''19''\|''20''\|''21''\|''22''\|''23''\|''24''\|''25''\|''26''\|''27''\|''28''\|''29''\|''30''\|''31'' and \-1\|0\|1\|2\|3\|4\|5 results in an error\.$#'
+			identifier: binaryOp.invalid
+			count: 1
+			path: includes/plugin_theme/themes/whitelabel1/init.php
+
+		-
+			message: '#^Binary operation "\-" between ''01''\|''02''\|''03''\|''04''\|''05''\|''06''\|''07''\|''08''\|''09''\|''10''\|''11''\|''12''\|''13''\|''14''\|''15''\|''16''\|''17''\|''18''\|''19''\|''20''\|''21''\|''22''\|''23''\|''24''\|''25''\|''26''\|''27''\|''28''\|''29''\|''30''\|''31'' and ''1''\|''2''\|''3''\|''4''\|''5''\|''6''\|''7'' results in an error\.$#'
+			identifier: binaryOp.invalid
+			count: 1
+			path: includes/plugin_theme/themes/whitelabel1/init.php
+
+		-
+			message: '#^Binary operation "\+" between ''01''\|''02''\|''03''\|''04''\|''05''\|''06''\|''07''\|''08''\|''09''\|''10''\|''11''\|''12''\|''13''\|''14''\|''15''\|''16''\|''17''\|''18''\|''19''\|''20''\|''21''\|''22''\|''23''\|''24''\|''25''\|''26''\|''27''\|''28''\|''29''\|''30''\|''31'' and \-1\|0\|1\|2\|3\|4\|5 results in an error\.$#'
+			identifier: binaryOp.invalid
+			count: 1
+			path: includes/plugin_theme_adminlte/dashboard_widgets/widget_finance_chart.php
+
+		-
+			message: '#^Binary operation "\-" between ''01''\|''02''\|''03''\|''04''\|''05''\|''06''\|''07''\|''08''\|''09''\|''10''\|''11''\|''12''\|''13''\|''14''\|''15''\|''16''\|''17''\|''18''\|''19''\|''20''\|''21''\|''22''\|''23''\|''24''\|''25''\|''26''\|''27''\|''28''\|''29''\|''30''\|''31'' and ''1''\|''2''\|''3''\|''4''\|''5''\|''6''\|''7'' results in an error\.$#'
+			identifier: binaryOp.invalid
+			count: 1
+			path: includes/plugin_theme_adminlte/dashboard_widgets/widget_finance_chart.php
+
+		-
+			message: '#^Variable \$display_mode might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_theme_adminlte/design_footer.php
+
+		-
+			message: '#^Variable \$display_mode might not be defined\.$#'
+			identifier: variable.undefined
+			count: 3
+			path: includes/plugin_theme_adminlte/design_header.php
+
+		-
+			message: '#^Variable \$page_title might not be defined\.$#'
+			identifier: variable.undefined
+			count: 2
+			path: includes/plugin_theme_adminlte/design_header.php
+
+		-
+			message: '#^Constant _UCM_INSTALLED not found\.$#'
+			identifier: constant.notFound
+			count: 1
+			path: includes/plugin_theme_adminlte/design_menu.php
+
+		-
+			message: '#^Variable \$display_mode might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_theme_adminlte/design_menu.php
+
+		-
+			message: '#^Variable \$load_pages might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_theme_adminlte/design_menu.php
+
+		-
+			message: '#^Variable \$plugins might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_theme_adminlte/design_menu.php
+
+		-
+			message: '#^Variable \$allow_new might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_theme_adminlte/includes/plugin_job_discussion/inc/comment_list.php
+
+		-
+			message: '#^Variable \$current_user_id might not be defined\.$#'
+			identifier: variable.undefined
+			count: 4
+			path: includes/plugin_theme_adminlte/includes/plugin_job_discussion/inc/comment_list.php
+
+		-
+			message: '#^Variable \$customer might not be defined\.$#'
+			identifier: variable.undefined
+			count: 7
+			path: includes/plugin_theme_adminlte/includes/plugin_job_discussion/inc/comment_list.php
+
+		-
+			message: '#^Variable \$job_data might not be defined\.$#'
+			identifier: variable.undefined
+			count: 8
+			path: includes/plugin_theme_adminlte/includes/plugin_job_discussion/inc/comment_list.php
+
+		-
+			message: '#^Variable \$job_id might not be defined\.$#'
+			identifier: variable.undefined
+			count: 7
+			path: includes/plugin_theme_adminlte/includes/plugin_job_discussion/inc/comment_list.php
+
+		-
+			message: '#^Variable \$task_data might not be defined\.$#'
+			identifier: variable.undefined
+			count: 5
+			path: includes/plugin_theme_adminlte/includes/plugin_job_discussion/inc/comment_list.php
+
+		-
+			message: '#^Variable \$task_id might not be defined\.$#'
+			identifier: variable.undefined
+			count: 7
+			path: includes/plugin_theme_adminlte/includes/plugin_job_discussion/inc/comment_list.php
+
+		-
+			message: '#^File ends with a trailing whitespace\. This may cause problems when running the code in the web browser\. Remove the closing \?\> mark or remove the whitespace\.$#'
+			identifier: whitespace.fileEnd
+			count: 1
+			path: includes/plugin_theme_adminlte/pages/home.php
+
+		-
+			message: '#^Offset 1 on array\<string, array\{column\: string, column_number\: string, page_order\: int\<1, max\>, deleted\: bool\}\> in isset\(\) does not exist\.$#'
+			identifier: isset.offset
+			count: 4
+			path: includes/plugin_theme_adminlte/pages/home.php
+
+		-
+			message: '#^Offset 1\|2 on array\<string, array\{column\: string, column_number\: string, page_order\: int\<1, max\>, deleted\: bool\}\> in isset\(\) does not exist\.$#'
+			identifier: isset.offset
+			count: 4
+			path: includes/plugin_theme_adminlte/pages/home.php
+
+		-
+			message: '#^Offset int\<2, max\> on array\<string, array\{column\: string, column_number\: string, page_order\: int\<1, max\>, deleted\: bool\}\> in isset\(\) does not exist\.$#'
+			identifier: isset.offset
+			count: 3
+			path: includes/plugin_theme_adminlte/pages/home.php
+
+		-
+			message: '#^Variable \$plugins might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_theme_adminlte/pages/search_results.php
+
+		-
+			message: '#^Binary operation "\+" between ''01''\|''02''\|''03''\|''04''\|''05''\|''06''\|''07''\|''08''\|''09''\|''10''\|''11''\|''12''\|''13''\|''14''\|''15''\|''16''\|''17''\|''18''\|''19''\|''20''\|''21''\|''22''\|''23''\|''24''\|''25''\|''26''\|''27''\|''28''\|''29''\|''30''\|''31'' and \-1\|0\|1\|2\|3\|4\|5 results in an error\.$#'
+			identifier: binaryOp.invalid
+			count: 1
+			path: includes/plugin_theme_blocks/dashboard_widgets/widget_finance_chart.php
+
+		-
+			message: '#^Binary operation "\-" between ''01''\|''02''\|''03''\|''04''\|''05''\|''06''\|''07''\|''08''\|''09''\|''10''\|''11''\|''12''\|''13''\|''14''\|''15''\|''16''\|''17''\|''18''\|''19''\|''20''\|''21''\|''22''\|''23''\|''24''\|''25''\|''26''\|''27''\|''28''\|''29''\|''30''\|''31'' and ''1''\|''2''\|''3''\|''4''\|''5''\|''6''\|''7'' results in an error\.$#'
+			identifier: binaryOp.invalid
+			count: 1
+			path: includes/plugin_theme_blocks/dashboard_widgets/widget_finance_chart.php
+
+		-
+			message: '#^Variable \$display_mode might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_theme_blocks/design_footer.php
+
+		-
+			message: '#^Variable \$display_mode might not be defined\.$#'
+			identifier: variable.undefined
+			count: 3
+			path: includes/plugin_theme_blocks/design_header.php
+
+		-
+			message: '#^Variable \$page_title might not be defined\.$#'
+			identifier: variable.undefined
+			count: 2
+			path: includes/plugin_theme_blocks/design_header.php
+
+		-
+			message: '#^Variable \$page_unique_id might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_theme_blocks/design_header.php
+
+		-
+			message: '#^Variable \$plugins might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_theme_blocks/design_header.php
+
+		-
+			message: '#^Constant _UCM_INSTALLED not found\.$#'
+			identifier: constant.notFound
+			count: 1
+			path: includes/plugin_theme_blocks/design_menu.php
+
+		-
+			message: '#^Variable \$display_mode might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_theme_blocks/design_menu.php
+
+		-
+			message: '#^Variable \$load_pages might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_theme_blocks/design_menu.php
+
+		-
+			message: '#^Variable \$plugins might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_theme_blocks/design_menu.php
+
+		-
+			message: '#^Offset 1 on array\<string, array\{row_id\: string, column_number\: string, page_order\: int\<1, max\>\}\> in isset\(\) does not exist\.$#'
+			identifier: isset.offset
+			count: 4
+			path: includes/plugin_theme_blocks/header_widgets.php
+
+		-
+			message: '#^Offset 1\|2 on array\<string, array\{row_id\: string, column_number\: string, page_order\: int\<1, max\>\}\> in isset\(\) does not exist\.$#'
+			identifier: isset.offset
+			count: 4
+			path: includes/plugin_theme_blocks/header_widgets.php
+
+		-
+			message: '#^Offset int\<1, max\> on array\<string, array\{row_id\: string, column_number\: string, page_order\: int\<1, max\>\}\> in isset\(\) does not exist\.$#'
+			identifier: isset.offset
+			count: 4
+			path: includes/plugin_theme_blocks/header_widgets.php
+
+		-
+			message: '#^Binary operation "\+" between ''01''\|''02''\|''03''\|''04''\|''05''\|''06''\|''07''\|''08''\|''09''\|''10''\|''11''\|''12''\|''13''\|''14''\|''15''\|''16''\|''17''\|''18''\|''19''\|''20''\|''21''\|''22''\|''23''\|''24''\|''25''\|''26''\|''27''\|''28''\|''29''\|''30''\|''31'' and \-1\|0\|1\|2\|3\|4\|5 results in an error\.$#'
+			identifier: binaryOp.invalid
+			count: 1
+			path: includes/plugin_theme_blocks/includes/plugin_customer/pages/customer_admin_edit.php
+
+		-
+			message: '#^Binary operation "\-" between ''01''\|''02''\|''03''\|''04''\|''05''\|''06''\|''07''\|''08''\|''09''\|''10''\|''11''\|''12''\|''13''\|''14''\|''15''\|''16''\|''17''\|''18''\|''19''\|''20''\|''21''\|''22''\|''23''\|''24''\|''25''\|''26''\|''27''\|''28''\|''29''\|''30''\|''31'' and ''1''\|''2''\|''3''\|''4''\|''5''\|''6''\|''7'' results in an error\.$#'
+			identifier: binaryOp.invalid
+			count: 1
+			path: includes/plugin_theme_blocks/includes/plugin_customer/pages/customer_admin_edit.php
+
+		-
+			message: '#^Constant _DB_PREFIX not found\.$#'
+			identifier: constant.notFound
+			count: 1
+			path: includes/plugin_theme_blocks/includes/plugin_customer/pages/customer_admin_edit.php
+
+		-
+			message: '#^Variable \$this might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_theme_blocks/includes/plugin_pin/inc/pin_menu.php
+
+		-
+			message: '#^Variable \$plugins might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_theme_blocks/pages/search_results.php
+
+		-
+			message: '#^Variable \$ticket might not be defined\.$#'
+			identifier: variable.undefined
+			count: 2
+			path: includes/plugin_ticket/inc/ticket_billing.php
+
+		-
+			message: '#^Variable \$ticket_id might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_ticket/inc/ticket_billing.php
+
+		-
+			message: '#^Undefined variable\: \$extras_editable$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_ticket/inc/ticket_extras_sidebar.php
+
+		-
+			message: '#^Variable \$extras_editable in isset\(\) is never defined\.$#'
+			identifier: isset.variable
+			count: 1
+			path: includes/plugin_ticket/inc/ticket_extras_sidebar.php
+
+		-
+			message: '#^Variable \$ticket might not be defined\.$#'
+			identifier: variable.undefined
+			count: 2
+			path: includes/plugin_ticket/inc/ticket_extras_sidebar.php
+
+		-
+			message: '#^Variable \$ticket might not be defined\.$#'
+			identifier: variable.undefined
+			count: 14
+			path: includes/plugin_ticket/inc/ticket_priority_sidebar.php
+
+		-
+			message: '#^Anonymous function has an unused use \$limit_time\.$#'
+			identifier: closure.unusedUse
+			count: 2
+			path: includes/plugin_ticket/pages/ticket_admin_edit.php
+
+		-
+			message: '#^Anonymous function has an unused use \$ticket_id\.$#'
+			identifier: closure.unusedUse
+			count: 1
+			path: includes/plugin_ticket/pages/ticket_admin_edit.php
+
+		-
+			message: '#^Variable \$limit_time might not be defined\.$#'
+			identifier: variable.undefined
+			count: 3
+			path: includes/plugin_ticket/pages/ticket_admin_edit.php
+
+		-
+			message: '#^Variable \$module might not be defined\.$#'
+			identifier: variable.undefined
+			count: 2
+			path: includes/plugin_ticket/pages/ticket_admin_edit.php
+
+		-
+			message: '#^Variable \$admins_rel might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_ticket/pages/ticket_admin_edit_messages.php
+
+		-
+			message: '#^Variable \$next_ticket might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_ticket/pages/ticket_admin_edit_messages.php
+
+		-
+			message: '#^Variable \$prev_ticket might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_ticket/pages/ticket_admin_edit_messages.php
+
+		-
+			message: '#^Variable \$ticket might not be defined\.$#'
+			identifier: variable.undefined
+			count: 10
+			path: includes/plugin_ticket/pages/ticket_admin_edit_messages.php
+
+		-
+			message: '#^Variable \$ticket_id might not be defined\.$#'
+			identifier: variable.undefined
+			count: 4
+			path: includes/plugin_ticket/pages/ticket_admin_edit_messages.php
+
+		-
+			message: '#^Variable \$ticket_messages might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_ticket/pages/ticket_admin_edit_messages.php
+
+		-
+			message: '#^Variable \$tickets_in_reverse might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_ticket/pages/ticket_admin_edit_messages.php
+
+		-
+			message: '#^Variable \$envato_count might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_ticket/pages/ticket_admin_list.php
+
+		-
+			message: '#^Variable \$limit_time might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_ticket/pages/ticket_admin_list.php
+
+		-
+			message: '#^Variable \$module might not be defined\.$#'
+			identifier: variable.undefined
+			count: 2
+			path: includes/plugin_ticket/pages/ticket_admin_list.php
+
+		-
+			message: '#^Variable \$module might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_ticket/pages/ticket_settings.php
+
+		-
+			message: '#^Constant _DB_PREFIX not found\.$#'
+			identifier: constant.notFound
+			count: 4
+			path: includes/plugin_ticket/pages/ticket_settings_bulk.php
+
+		-
+			message: '#^Variable \$ticket might not be defined\.$#'
+			identifier: variable.undefined
+			count: 3
+			path: includes/plugin_ticket/public/ticket_customer_new.php
+
+		-
+			message: '#^Variable \$ticket_account might not be defined\.$#'
+			identifier: variable.undefined
+			count: 2
+			path: includes/plugin_ticket/public/ticket_customer_new.php
+
+		-
+			message: '#^Variable \$ticket_id might not be defined\.$#'
+			identifier: variable.undefined
+			count: 2
+			path: includes/plugin_ticket/public/ticket_customer_new.php
+
+		-
+			message: '#^Variable \$send_as_address might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_ticket/public/ticket_customer_view.php
+
+		-
+			message: '#^Variable \$send_as_name might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_ticket/public/ticket_customer_view.php
+
+		-
+			message: '#^Variable \$ticket might not be defined\.$#'
+			identifier: variable.undefined
+			count: 23
+			path: includes/plugin_ticket/public/ticket_customer_view.php
+
+		-
+			message: '#^Variable \$ticket_id might not be defined\.$#'
+			identifier: variable.undefined
+			count: 3
+			path: includes/plugin_ticket/public/ticket_customer_view.php
+
+		-
+			message: '#^Variable \$to_user_a might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_ticket/public/ticket_customer_view.php
+
+		-
+			message: '#^Access to an undefined property module_email\:\:\$replace_values\.$#'
+			identifier: property.notFound
+			count: 2
+			path: includes/plugin_ticket/ticket.php
+
+		-
+			message: '#^Access to property \$decode_bodies on an unknown class mime_parser_class\.$#'
+			identifier: class.notFound
+			count: 2
+			path: includes/plugin_ticket/ticket.php
+
+		-
+			message: '#^Access to property \$ignore_syntax_errors on an unknown class mime_parser_class\.$#'
+			identifier: class.notFound
+			count: 2
+			path: includes/plugin_ticket/ticket.php
+
+		-
+			message: '#^Access to property \$mbox on an unknown class mime_parser_class\.$#'
+			identifier: class.notFound
+			count: 2
+			path: includes/plugin_ticket/ticket.php
+
+		-
+			message: '#^Call to an undefined method module_email\:\:AddAttachment\(\)\.$#'
+			identifier: method.notFound
+			count: 2
+			path: includes/plugin_ticket/ticket.php
+
+		-
+			message: '#^Call to an undefined method module_email\:\:replace\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: includes/plugin_ticket/ticket.php
+
+		-
+			message: '#^Call to an undefined method module_email\:\:send\(\)\.$#'
+			identifier: method.notFound
+			count: 4
+			path: includes/plugin_ticket/ticket.php
+
+		-
+			message: '#^Call to an undefined method module_email\:\:set_bcc_manual\(\)\.$#'
+			identifier: method.notFound
+			count: 2
+			path: includes/plugin_ticket/ticket.php
+
+		-
+			message: '#^Call to an undefined method module_email\:\:set_bounce_address\(\)\.$#'
+			identifier: method.notFound
+			count: 2
+			path: includes/plugin_ticket/ticket.php
+
+		-
+			message: '#^Call to an undefined method module_email\:\:set_cc_manual\(\)\.$#'
+			identifier: method.notFound
+			count: 3
+			path: includes/plugin_ticket/ticket.php
+
+		-
+			message: '#^Call to an undefined method module_email\:\:set_from\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: includes/plugin_ticket/ticket.php
+
+		-
+			message: '#^Call to an undefined method module_email\:\:set_from_manual\(\)\.$#'
+			identifier: method.notFound
+			count: 3
+			path: includes/plugin_ticket/ticket.php
+
+		-
+			message: '#^Call to an undefined method module_email\:\:set_html\(\)\.$#'
+			identifier: method.notFound
+			count: 3
+			path: includes/plugin_ticket/ticket.php
+
+		-
+			message: '#^Call to an undefined method module_email\:\:set_reply_to\(\)\.$#'
+			identifier: method.notFound
+			count: 3
+			path: includes/plugin_ticket/ticket.php
+
+		-
+			message: '#^Call to an undefined method module_email\:\:set_subject\(\)\.$#'
+			identifier: method.notFound
+			count: 5
+			path: includes/plugin_ticket/ticket.php
+
+		-
+			message: '#^Call to an undefined method module_email\:\:set_to\(\)\.$#'
+			identifier: method.notFound
+			count: 3
+			path: includes/plugin_ticket/ticket.php
+
+		-
+			message: '#^Call to an undefined method module_email\:\:set_to_manual\(\)\.$#'
+			identifier: method.notFound
+			count: 4
+			path: includes/plugin_ticket/ticket.php
+
+		-
+			message: '#^Call to method Analyze\(\) on an unknown class mime_parser_class\.$#'
+			identifier: class.notFound
+			count: 1
+			path: includes/plugin_ticket/ticket.php
+
+		-
+			message: '#^Call to method Decode\(\) on an unknown class mime_parser_class\.$#'
+			identifier: class.notFound
+			count: 1
+			path: includes/plugin_ticket/ticket.php
+
+		-
+			message: '#^Constant _DB_PREFIX not found\.$#'
+			identifier: constant.notFound
+			count: 72
+			path: includes/plugin_ticket/ticket.php
+
+		-
+			message: '#^Constant _ERROR_EMAIL not found\.$#'
+			identifier: constant.notFound
+			count: 1
+			path: includes/plugin_ticket/ticket.php
+
+		-
+			message: '#^Function qa1 invoked with 2 parameters, 1 required\.$#'
+			identifier: arguments.count
+			count: 5
+			path: includes/plugin_ticket/ticket.php
+
+		-
+			message: '#^Inner named functions are not supported by PHPStan\. Consider refactoring to an anonymous function, class method, or a top\-level\-defined function\. See issue \#165 \(https\://github\.com/phpstan/phpstan/issues/165\) for more details\.$#'
+			identifier: function.inner
+			count: 1
+			path: includes/plugin_ticket/ticket.php
+
+		-
+			message: '#^Instantiated class mime_parser_class not found\.$#'
+			identifier: class.notFound
+			count: 1
+			path: includes/plugin_ticket/ticket.php
+
+		-
+			message: '#^Static method module_ticket\:\:send_autoreply\(\) invoked with 2 parameters, 1 required\.$#'
+			identifier: arguments.count
+			count: 1
+			path: includes/plugin_ticket/ticket.php
+
+		-
+			message: '#^Variable \$decoded might not be defined\.$#'
+			identifier: variable.undefined
+			count: 3
+			path: includes/plugin_ticket/ticket.php
+
+		-
+			message: '#^Variable \$results might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_ticket/ticket.php
+
+		-
+			message: '#^Access to an undefined property UCMTimer\:\:\$customer_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: includes/plugin_timer/class.timer.php
+
+		-
+			message: '#^Access to an undefined property UCMTimer\:\:\$duration_calc\.$#'
+			identifier: property.notFound
+			count: 1
+			path: includes/plugin_timer/class.timer.php
+
+		-
+			message: '#^Access to an undefined property UCMTimer\:\:\$invoice_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: includes/plugin_timer/class.timer.php
+
+		-
+			message: '#^Access to an undefined property UCMTimer\:\:\$owner_child_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: includes/plugin_timer/class.timer.php
+
+		-
+			message: '#^Access to an undefined property UCMTimer\:\:\$owner_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: includes/plugin_timer/class.timer.php
+
+		-
+			message: '#^Access to an undefined property UCMTimer\:\:\$owner_table\.$#'
+			identifier: property.notFound
+			count: 1
+			path: includes/plugin_timer/class.timer.php
+
+		-
+			message: '#^Access to an undefined property UCMTimer\:\:\$timer_id\.$#'
+			identifier: property.notFound
+			count: 3
+			path: includes/plugin_timer/class.timer.php
+
+		-
+			message: '#^Access to an undefined property UCMTimer\:\:\$timer_status\.$#'
+			identifier: property.notFound
+			count: 4
+			path: includes/plugin_timer/class.timer.php
+
+		-
+			message: '#^Access to an undefined property UCMTimerSegment\:\:\$duration_calc\.$#'
+			identifier: property.notFound
+			count: 1
+			path: includes/plugin_timer/class.timer.php
+
+		-
+			message: '#^Constant _DB_PREFIX not found\.$#'
+			identifier: constant.notFound
+			count: 1
+			path: includes/plugin_timer/class.timer.php
+
+		-
+			message: '#^Access to an undefined property UCMTimer\:\:\$timer_status\.$#'
+			identifier: property.notFound
+			count: 2
+			path: includes/plugin_timer/inc/sidebar_widget.php
+
+		-
+			message: '#^Static method module_timer\:\:link_open\(\) invoked with 3 parameters, 1\-2 required\.$#'
+			identifier: arguments.count
+			count: 1
+			path: includes/plugin_timer/inc/sidebar_widget.php
+
+		-
+			message: '#^Variable \$options might not be defined\.$#'
+			identifier: variable.undefined
+			count: 6
+			path: includes/plugin_timer/inc/sidebar_widget.php
+
+		-
+			message: '#^Variable \$timers might not be defined\.$#'
+			identifier: variable.undefined
+			count: 2
+			path: includes/plugin_timer/inc/sidebar_widget.php
+
+		-
+			message: '#^Variable \$timer might not be defined\.$#'
+			identifier: variable.undefined
+			count: 6
+			path: includes/plugin_timer/inc/stopwatch.php
+
+		-
+			message: '#^Access to an undefined property UCMTimer\:\:\$timer_id\.$#'
+			identifier: property.notFound
+			count: 2
+			path: includes/plugin_timer/pages/timer_admin_edit.php
+
+		-
+			message: '#^Access to an undefined property UCMTimerSegment\:\:\$timer_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: includes/plugin_timer/pages/timer_admin_edit.php
+
+		-
+			message: '#^Variable \$module might not be defined\.$#'
+			identifier: variable.undefined
+			count: 4
+			path: includes/plugin_timer/pages/timer_admin_edit.php
+
+		-
+			message: '#^Variable \$timer_id might not be defined\.$#'
+			identifier: variable.undefined
+			count: 3
+			path: includes/plugin_timer/pages/timer_admin_edit_segment.php
+
+		-
+			message: '#^Access to an undefined property UCMTimer\:\:\$timer_status\.$#'
+			identifier: property.notFound
+			count: 1
+			path: includes/plugin_timer/pages/timer_admin_list.php
+
+		-
+			message: '#^Static method module_timer\:\:link_open\(\) invoked with 3 parameters, 1\-2 required\.$#'
+			identifier: arguments.count
+			count: 1
+			path: includes/plugin_timer/pages/timer_admin_list.php
+
+		-
+			message: '#^Access to an undefined property UCMTimer\:\:\$owner_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: includes/plugin_timer/timer.php
+
+		-
+			message: '#^Access to an undefined property UCMTimer\:\:\$owner_table\.$#'
+			identifier: property.notFound
+			count: 1
+			path: includes/plugin_timer/timer.php
+
+		-
+			message: '#^Access to an undefined property UCMTimer\:\:\$timer_id\.$#'
+			identifier: property.notFound
+			count: 4
+			path: includes/plugin_timer/timer.php
+
+		-
+			message: '#^Access to an undefined property UCMTimer\:\:\$timer_status\.$#'
+			identifier: property.notFound
+			count: 2
+			path: includes/plugin_timer/timer.php
+
+		-
+			message: '#^Access to an undefined property UCMTimerSegment\:\:\$timer_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: includes/plugin_timer/timer.php
+
+		-
+			message: '#^Constant _DB_PREFIX not found\.$#'
+			identifier: constant.notFound
+			count: 2
+			path: includes/plugin_timer/timer.php
+
+		-
+			message: '#^Variable \$module might not be defined\.$#'
+			identifier: variable.undefined
+			count: 5
+			path: includes/plugin_user/pages/contact_admin_edit.php
+
+		-
+			message: '#^Variable \$user might not be defined\.$#'
+			identifier: variable.undefined
+			count: 7
+			path: includes/plugin_user/pages/contact_admin_form.php
+
+		-
+			message: '#^Variable \$user_id might not be defined\.$#'
+			identifier: variable.undefined
+			count: 4
+			path: includes/plugin_user/pages/contact_admin_form.php
+
+		-
+			message: '#^Variable \$module might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_user/pages/contact_admin_list.php
+
+		-
+			message: '#^Variable \$user_data might not be defined\.$#'
+			identifier: variable.undefined
+			count: 6
+			path: includes/plugin_user/pages/contact_summary.php
+
+		-
+			message: '#^Variable \$user_id might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_user/pages/contact_summary.php
+
+		-
+			message: '#^Constant _UCM_HOST not found\.$#'
+			identifier: constant.notFound
+			count: 1
+			path: includes/plugin_user/pages/user_admin_edit.php
+
+		-
+			message: '#^Variable \$module might not be defined\.$#'
+			identifier: variable.undefined
+			count: 4
+			path: includes/plugin_user/pages/user_admin_edit.php
+
+		-
+			message: '#^Variable \$user might not be defined\.$#'
+			identifier: variable.undefined
+			count: 2
+			path: includes/plugin_user/pages/user_admin_edit_login.php
+
+		-
+			message: '#^Variable \$user_id might not be defined\.$#'
+			identifier: variable.undefined
+			count: 7
+			path: includes/plugin_user/pages/user_admin_edit_login.php
+
+		-
+			message: '#^Variable \$user_id might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_user/pages/user_admin_edit_staff.php
+
+		-
+			message: '#^Variable \$module might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_user/pages/user_admin_list.php
+
+		-
+			message: '#^Variable \$module might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_user/pages/user_profile.php
+
+		-
+			message: '#^Variable \$plugins might not be defined\.$#'
+			identifier: variable.undefined
+			count: 2
+			path: includes/plugin_user/pages/user_summary.php
+
+		-
+			message: '#^Variable \$user_data might not be defined\.$#'
+			identifier: variable.undefined
+			count: 6
+			path: includes/plugin_user/pages/user_summary.php
+
+		-
+			message: '#^Variable \$user_id might not be defined\.$#'
+			identifier: variable.undefined
+			count: 2
+			path: includes/plugin_user/pages/user_summary.php
+
+		-
+			message: '#^Constant _DB_PREFIX not found\.$#'
+			identifier: constant.notFound
+			count: 47
+			path: includes/plugin_user/user.php
+
+		-
+			message: '#^Constant _UCM_HOST not found\.$#'
+			identifier: constant.notFound
+			count: 1
+			path: includes/plugin_user/user.php
+
+		-
+			message: '#^Variable \$module might not be defined\.$#'
+			identifier: variable.undefined
+			count: 6
+			path: includes/plugin_vendor/pages/vendor_admin_edit.php
+
+		-
+			message: '#^Variable \$module might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_vendor/pages/vendor_admin_list.php
+
+		-
+			message: '#^Constant _DB_PREFIX not found\.$#'
+			identifier: constant.notFound
+			count: 17
+			path: includes/plugin_vendor/vendor.php
+
+		-
+			message: '#^Static method module_timer\:\:link_open\(\) invoked with 3 parameters, 1\-2 required\.$#'
+			identifier: arguments.count
+			count: 1
+			path: includes/plugin_website/pages/website_admin_edit.php
+
+		-
+			message: '#^Variable \$module might not be defined\.$#'
+			identifier: variable.undefined
+			count: 4
+			path: includes/plugin_website/pages/website_admin_edit.php
+
+		-
+			message: '#^Static method module_website\:\:link_open\(\) invoked with 3 parameters, 1\-2 required\.$#'
+			identifier: arguments.count
+			count: 1
+			path: includes/plugin_website/pages/website_admin_list.php
+
+		-
+			message: '#^Constant _DB_PREFIX not found\.$#'
+			identifier: constant.notFound
+			count: 10
+			path: includes/plugin_website/website.php
+
+		-
+			message: '#^Constant _UCM_INSTALLED not found\.$#'
+			identifier: constant.notFound
+			count: 1
+			path: index.php
+
+		-
+			message: '#^Variable \$current_selected_link might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: index.php
+
+		-
+			message: '#^Variable \$inner_content might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: index.php
+
+		-
+			message: '#^Variable \$load_modules might not be defined\.$#'
+			identifier: variable.undefined
+			count: 2
+			path: index.php
+
+		-
+			message: '#^Variable \$module in isset\(\) always exists and is not nullable\.$#'
+			identifier: isset.variable
+			count: 1
+			path: index.php
+
+		-
+			message: '#^Variable \$page_test might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: index.php
+
+		-
+			message: '#^Variable \$page_title might not be defined\.$#'
+			identifier: variable.undefined
+			count: 2
+			path: index.php
+
+		-
+			message: '#^Variable \$page_title_delim might not be defined\.$#'
+			identifier: variable.undefined
+			count: 2
+			path: index.php
+
+		-
+			message: '#^Variable \$plugins might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: index.php
+
+		-
+			message: '#^Path in require_once\(\) "custom/includes/plugin_session/session\.php" is not a file or it does not exist\.$#'
+			identifier: requireOnce.fileNotFound
+			count: 1
+			path: init.php

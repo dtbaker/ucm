@@ -183,7 +183,7 @@ print_heading( array(
 </div>
 
 
-<form action="" method="post">
+<?php module_form::print_form_open_tag( array( 'action' => '' ) ); ?>
 
 	<?php $search_bar = array(
 		'elements' => array(
@@ -343,4 +343,4 @@ print_heading( array(
 	$table_manager->print_table();
 
 	?>
-</form>
+<?php module_form::print_form_close_tag();

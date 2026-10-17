@@ -53,7 +53,7 @@ if ( $existing_job_task_signature ) {
 		if ( $args['show_signature'] == $existing_job_task_signature['staff_signature_id'] ) {
 			// showing the staff signature.
 			$show_signature = get_single( 'signature', 'signature_id', $existing_job_task_signature['staff_signature_id'] );
-		} else if ( $args['show_signature'] == $existing_job_task_signature['customer_signature_id'] ) {
+		} elseif ( $args['show_signature'] == $existing_job_task_signature['customer_signature_id'] ) {
 			// showing the customer signature.
 			$show_signature = get_single( 'signature', 'signature_id', $existing_job_task_signature['customer_signature_id'] );
 		} else {
@@ -149,7 +149,7 @@ if ( isset( $_REQUEST['save_signature'] ) ) {
 			if ( $existing_signature ) {
 				if ( $existing_signature['update_user_id'] ) {
 					$user_string = _l( 'by user %s (%s)', module_user::link_open( $existing_signature['update_user_id'], true ), htmlspecialchars( $existing_signature['signator'] ) );
-				} else if ( $existing_signature['create_user_id'] ) {
+				} elseif ( $existing_signature['create_user_id'] ) {
 					$user_string = _l( 'by user %s (%s)', module_user::link_open( $existing_signature['create_user_id'], true ), htmlspecialchars( $existing_signature['signator'] ) );
 				} else {
 					$user_string = _l( 'by the customer (%s)', htmlspecialchars( $existing_signature['signator'] ) );
@@ -170,7 +170,7 @@ if ( isset( $_REQUEST['save_signature'] ) ) {
 			if ( $existing_signature ) {
 				if ( $existing_signature['update_user_id'] ) {
 					$user_string = _l( 'by user %s (%s)', module_user::link_open( $existing_signature['update_user_id'], true ), htmlspecialchars( $existing_signature['signator'] ) );
-				} else if ( $existing_signature['create_user_id'] ) {
+				} elseif ( $existing_signature['create_user_id'] ) {
 					$user_string = _l( 'by user %s (%s)', module_user::link_open( $existing_signature['create_user_id'], true ), htmlspecialchars( $existing_signature['signator'] ) );
 				} else {
 					$user_string = _l( 'by the customer (%s)', htmlspecialchars( $existing_signature['signator'] ) );
@@ -208,7 +208,10 @@ if ( isset( $_REQUEST['save_signature'] ) ) {
 		<link rel="stylesheet"
 		      href="<?php echo _BASE_HREF . "includes/plugin_signature/css/jquery.signaturepad.css"; ?>"
 		      type="text/css"/>
-		<form method="post" action="" class="sigPad">
+		<?php module_form::print_form_open_tag( array(
+			'action' => '',
+			'class'  => 'sigPad',
+		) ); ?>
 			<input type="hidden" name="job_id" value="<?php echo $job_id; ?>">
 			<input type="hidden" name="task_id" value="<?php echo $task_id; ?>">
 			<input type="hidden" name="save_signature" value="1">
@@ -225,15 +228,15 @@ if ( isset( $_REQUEST['save_signature'] ) ) {
 				<canvas class="pad" width="350" height="100"></canvas>
 				<input type="hidden" name="output" class="output">
 			</div>
-		</form>
+		<?php module_form::print_form_close_tag(); ?>
 		<script type="text/javascript">
         setTimeout(function () {
-					<?php if(false && $existing_signature){ ?>
+					<?php if (false && $existing_signature) { ?>
             $('.sigPad').signaturePad({
                 drawOnly: true,
                 lineTop: 80
-            }).regenerate(<?php echo json_encode( json_decode( $existing_signature['signature'] ) );?>);
-					<?php }else{ ?>
+            }).regenerate(<?php echo ucm_json_for_script( json_decode( $existing_signature['signature'] ) );?>);
+					<?php } else { ?>
             $('.sigPad').signaturePad({drawOnly: true, lineTop: 80});
 					<?php } ?>
         }, 300);

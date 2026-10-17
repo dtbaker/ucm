@@ -1,6 +1,5 @@
 <?php
 
-
 /**
  * Ultimate Client Manager
  * Version 2
@@ -13,6 +12,12 @@
  *
  * If you would like to re-use parts of this system or ideas from this system elsewhere please ask permission first.
  */
+
+$required_php_version = '8.2.0';
+if ( version_compare( PHP_VERSION, $required_php_version ) < 0 ) {
+	header( 'Content-Type: text/html; charset=UTF-8' );
+	die( "PHP version of 8.2 or above is REQUIRED to run this software. Current version: " . PHP_VERSION . ". Please contact your hosting provider to upgrade PHP." );
+}
 
 $start_time   = microtime( true );
 $debug_info   = array();
@@ -55,12 +60,6 @@ if ( _DEBUG_MODE ) {
 }
 
 
-$required_php_version = '5.3.0';
-if ( version_compare( PHP_VERSION, $required_php_version ) < 0 ) {
-	$setup_errors = true;
-	echo "PHP version of 5.3 or above is REQUIRED to run this software - the current PHP version is: " . PHP_VERSION . ". Please contact the web hosting provider and request a PHP version upgrade.";
-}
-
 if ( ! _UCM_INSTALLED ) {
 	$_REQUEST['m']            = 'setup';
 	$_REQUEST['display_mode'] = 'normal';
@@ -81,11 +80,6 @@ $menu_module_index = count( $menu_modules );
 $page_unique_id = ''; // used for styling.
 
 
-$required_php_version = '5.3.0';
-if ( version_compare( PHP_VERSION, $required_php_version ) < 0 ) {
-	echo( "I'm sorry, a PHP version of $required_php_version or above is REQUIRED to run this - the current PHP version is: " . PHP_VERSION . ". Please ask the web hosting provider to upgrade you." );
-}
-
 try {
 	foreach ( $load_modules as $load_module_key => $load_module ) {
 
@@ -95,12 +89,17 @@ try {
 		if ( ! _UCM_INSTALLED || $load_module == 'setup' ) {
 			$load_page   = 'setup';
 			$load_module = 'setup';
-		} else if ( ! getcred() ) {
+		} elseif ( ! getcred() ) {
+			if ( ucm_is_background_request() ) {
+				// Scripts and XHR used to get the whole login page back with a 200, which
+				// is how the dashboard ended up stuck on "Loading Alerts...".
+				ucm_send_auth_required();
+			}
 			if ( is_callable( 'module_security::check_ssl' ) ) {
 				module_security::check_ssl();
 			}
 			$load_page = 'login';
-		} else if ( ! $load_page ) {
+		} elseif ( ! $load_page ) {
 			$load_page = 'home';
 		}
 		if ( $load_page ) { //} && is_file("pages/".$load_page.".php")){
@@ -118,6 +117,13 @@ try {
 
 			// handle any form submits for this module.
 			if ( isset( $_REQUEST['_process'] ) && $_REQUEST['_process'] ) {
+				// A post that outgrew max_input_vars arrives with its tail missing and no
+				// way for the handler to tell. Saving what fitted is worse than not
+				// saving at all, so say so instead. See request_input_overflow().
+				$overflow = module_form::request_input_overflow();
+				if ( $overflow ) {
+					module_form::reject_truncated_request( $overflow );
+				}
 				if ( $module ) {
 					module_debug::log( array(
 						'title' => 'Process Post Back',
@@ -137,7 +143,7 @@ try {
 			if ( $module && $load_page && is_file( $page_test ) ) {
 				// pull out the module in a local var ready for these pages to use.
 				$page = "includes/plugin_" . $load_module . "/pages/" . $load_page . ".php";
-			} else if ( $load_page ) { // && is_file("pages/".$load_page.".php")){
+			} elseif ( $load_page ) { // && is_file("pages/".$load_page.".php")){
 				$page = "pages/" . $load_page . ".php";
 			}
 
@@ -164,6 +170,17 @@ try {
 			if ( ! is_file( $page_final ) ) {
 				$page_final = module_theme::include_ucm( 'pages/home.php' );
 			}
+			// Fires once for every page this request loads, and a URL can name more than
+			// one - "/customer.customer_admin_open/quote.quote_admin" loads two.
+			//
+			// It fires BEFORE the menu is built, and the menu is what triggers each
+			// plugin's pre_menu(). So a callback registered from a pre_menu() is missing
+			// from the first page's firing and present from the second onwards, which is
+			// why this hook used to look like it ran "before some plugins had
+			// registered". Register from init() if the callback has to run every time.
+			//
+			// Nothing here should be relied on for correctness - a redirect, a permission
+			// gate - for the same reason. It is for banners.
 			hook_handle_callback( 'inner_content_start', $module, $page_final, $page_unique_id );
 			include( $page_final );
 			//include($page);
@@ -203,7 +220,7 @@ try {
 					// maybe instead of "include parents" we just pass whatever level we are currently on to the script
 					// and it will work out the rest.
 					// could maybe move the design_menu call from design_header.php up here to fix the issue. all in 1 place then :)
-					$current_menu_level ++;
+					$current_menu_level++;
 					?>
 					<div class="content">
 						<?php
@@ -215,7 +232,7 @@ try {
 								'data'  => "Displaying content from the 'inner_content' array.",
 							) );
 							echo array_shift( $inner_content );
-						} else if ( $current_selected_link ) {
+						} elseif ( $current_selected_link ) {
 							if ( isset( $current_selected_link['default_page'] ) && is_file( "includes/plugin_" . $current_selected_link['m'] . "/pages/" . basename( $current_selected_link['default_page'] ) . ".php" ) ) {
 								$module_page = "includes/plugin_" . $current_selected_link['m'] . "/pages/" . basename( $current_selected_link['default_page'] ) . ".php";
 								module_debug::log( array(
@@ -238,7 +255,7 @@ try {
 						echo '</div>';
 					}
 					echo ob_get_clean(); // END MENU OB
-				} else if ( ! isset( $do_menu_wrap ) ) {
+				} elseif ( ! isset( $do_menu_wrap ) ) {
 					// no sub links!
 					$do_menu_wrap = false;
 					$content      = ob_get_contents();

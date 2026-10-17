@@ -1,9 +1,7 @@
 <?php
 
-
-class module_paymethod_multisafepay extends module_base {
-
-
+class module_paymethod_multisafepay extends module_base
+{
 	public static function can_i( $actions, $name = false, $category = false, $module = false ) {
 		if ( ! $module ) {
 			$module = __CLASS__;
@@ -16,11 +14,13 @@ class module_paymethod_multisafepay extends module_base {
 		return __CLASS__;
 	}
 
-	function init() {
+	public function __construct() {
+		$this->module_name     = 'paymethod_multisafepay';
+		$this->module_position = 360;
 		$this->version         = 2.222;
-		$this->module_name     = "paymethod_multisafepay";
-		$this->module_position = 8882;
+	}
 
+	function init() {
 		// 2.1 - initial release
 		// 2.22 - 2013-07-29 - new _UCM_SECRET hash in config.php
 		// 2.221 - 2013-08-07 - currency fix
@@ -29,7 +29,7 @@ class module_paymethod_multisafepay extends module_base {
 
 	public function pre_menu() {
 
-		if ( module_config::can_i( 'view', 'Settings' ) ) {
+		if ( module_config::can_i( 'view', 'Settings' ) && self::show_settings_page() ) {
 			$this->links[] = array(
 				"name"                => "MultiSafepay",
 				"p"                   => "multisafepay_settings",
@@ -38,6 +38,24 @@ class module_paymethod_multisafepay extends module_base {
 				'menu_include_parent' => 1,
 			);
 		}
+	}
+
+	/**
+	 * Whether this install should see the settings page at all.
+	 *
+	 * Retired, so it is hidden from a fresh install - but an install that is using it,
+	 * that was using it before an upgrade turned it off, or that has payment history
+	 * against it keeps the page, because that is where the explanation lives and where
+	 * the credentials can still be read.
+	 *
+	 * @return bool
+	 */
+	public static function show_settings_page() {
+		if ( self::is_enabled() || module_config::c( 'payment_method_multisafepay_was_enabled', false ) ) {
+			return true;
+		}
+
+		return module_invoice::payment_method_has_history( self::get_payment_method_key(), array( 'MultiSafepay', 'Multisafepay (IPN)', self::get_payment_method_name() ) );
 	}
 
 	public static function is_sandbox() {
@@ -84,6 +102,26 @@ class module_paymethod_multisafepay extends module_base {
 	public function set_allowed_for_invoice( $invoice_id, $allowed = 1 ) {
 		$sql = "REPLACE INTO `" . _DB_PREFIX . "invoice_payment_method` SET `invoice_id` = " . (int) $invoice_id . ", `payment_method` = 'multisafepay', `enabled` = " . (int) $allowed;
 		query( $sql );
+	}
+
+	/**
+	 * The stable identifier for this payment method, never the admin-editable label.
+	 *
+	 * @return string
+	 */
+	public static function get_payment_method_key() {
+		return 'multisafepay';
+	}
+
+	/**
+	 * Retired. The method still works everywhere it is already in use - it starts
+	 * payments, answers its notification endpoint, and its history renders unchanged -
+	 * but a fresh install never sees it.
+	 *
+	 * @return bool
+	 */
+	public function is_deprecated() {
+		return true;
 	}
 
 	public static function get_payment_method_name() {
@@ -194,7 +232,7 @@ class module_paymethod_multisafepay extends module_base {
 			if ( $invoice_item_data['amount'] != 0 && $invoice_item_data['amount'] != ( $invoice_item_data['hours'] * $task_hourly_rate ) ) {
 				$invoice_item_amount = $invoice_item_data['amount'];
 				$task_hourly_rate    = false;
-			} else if ( $invoice_item_data['hours'] > 0 ) {
+			} elseif ( $invoice_item_data['hours'] > 0 ) {
 				$invoice_item_amount = $invoice_item_data['hours'] * $task_hourly_rate;
 			} else {
 				$invoice_item_amount = 0;
@@ -226,7 +264,7 @@ class module_paymethod_multisafepay extends module_base {
 		redirect_browser( $url );
 		/*
 						$url = 'https://www.'. (self::is_sandbox()? 'sandbox.' : '') . 'multisafepay.com/cgi-bin/webscr?';
-		
+
 						$fields = array(
 								'cmd' => '_xclick',
 								'business' => module_config::c('payment_method_multisafepay_email',_ERROR_EMAIL),
@@ -237,13 +275,13 @@ class module_paymethod_multisafepay extends module_base {
 								'notify_url' => full_link(_EXTERNAL_TUNNEL.'?m=paymethod_multisafepay&h=ipn&method=multisafepay'),
 								'custom' => self::multisafepay_custom($user_id,$payment_id,$invoice_id),
 						);
-		
+
 						foreach($fields as $key=>$val){
 								$url .= $key.'='.urlencode($val).'&';
 						}
-		
+
 						//echo '<a href="'.$url.'">'.$url.'</a>';exit;
-		
+
 						redirect_browser($url);
 		*/
 	}
@@ -418,7 +456,7 @@ class module_paymethod_multisafepay extends module_base {
 							// populate $_REQUEST vars then do something like $payment_history_id = update_insert("payment_history_id","new","payment_history");
 							send_error( "Multisafepay Error! The payment $payment_id has been refunded or reversed! BAD BAD! You have to follup up customer for money manually now." );
 
-						} else if ( $_REQUEST['payment_status'] == "Completed" ) {
+						} elseif ( $_REQUEST['payment_status'] == "Completed" ) {
 
 							// payment is completed! yeye getting closer...
 
@@ -430,7 +468,7 @@ class module_paymethod_multisafepay extends module_base {
 									$url    = 'https://www.' . ( self::is_sandbox() ? 'sandbox.' : '' ) . 'multisafepay.com/cgi-bin/webscr';
 									$result = self::fsockPost( $url, $_POST );
 									//send_error('multisafepay sock post: '.$url."\n\n".var_export($result,true));
-									if ( eregi( "VERIFIED", $result ) ) {
+									if ( preg_match( '/VERIFIED/i', (string) $result ) ) {
 										// finally have everything.
 										// mark the payment as completed.
 										update_insert( "invoice_payment_id", $payment_id, "invoice_payment", array(

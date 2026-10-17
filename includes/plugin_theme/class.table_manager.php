@@ -9,8 +9,8 @@
  */
 
 
-class ucm_table_manager {
-
+class ucm_table_manager
+{
 	public $pagination = false;
 	public $pagination_per_page = 20;
 	public $pagination_hide_single_page = false;
@@ -111,7 +111,7 @@ class ucm_table_manager {
 				while ( $row = mysqli_fetch_assoc( $this->rows ) ) {
 					$row_data[] = $row;
 				}
-			} else if ( is_array( $this->rows ) ) {
+			} elseif ( is_array( $this->rows ) ) {
 				$row_data = $this->rows;
 			}
 			$this->rows = array(
@@ -137,7 +137,7 @@ class ucm_table_manager {
 			<tr class="title">
 				<?php foreach ( $this->columns as $column_id => $column_data ) {
 					$title = is_array( $column_data ) ? $column_data['title'] : $column_data;
-					$colspan ++;
+					$colspan++;
 					?>
 					<th id="<?php echo $column_id; ?>"><?php echo _l( $title ); ?></th>
 				<?php }
@@ -149,7 +149,7 @@ class ucm_table_manager {
 				if ( class_exists( 'module_subscription', false ) && count( $this->subscription_fields ) ) {
 					foreach ( $this->subscription_fields as $extra_field ) {
 						module_subscription::print_table_header( $extra_field['type'] );
-						$colspan ++;
+						$colspan++;
 					}
 				}
 				?>
@@ -223,7 +223,7 @@ class ucm_table_manager {
 			$row = array_merge( $row, $result );
 		}
 		// options for this row output...
-		$row_class = $this->row_class . ' ' . ( ( $c ++ % 2 ) ? "odd" : "even" );
+		$row_class = $this->row_class . ' ' . ( ( $c++ % 2 ) ? "odd" : "even" );
 		?>
 		<tr<?php echo $this->row_id ? ' id="' . $this->row_id . '"' : '' ?> class="<?php echo $row_class; ?>"<?php
 		foreach ( $this->row_attributes as $key => $val ) {
@@ -235,19 +235,19 @@ class ucm_table_manager {
 				<td<?php
 				if ( isset( $row[ $column_id ] ) && is_array( $row[ $column_id ] ) && isset( $row[ $column_id ]['cell_class'] ) ) {
 					echo ' class="' . $row[ $column_id ]['cell_class'] . '"';
-				} else if ( isset( $column_data['cell_class'] ) ) {
+				} elseif ( isset( $column_data['cell_class'] ) ) {
 					echo ' class="' . $column_data['cell_class'] . '"';
 				}
 				if ( isset( $row[ $column_id ] ) && is_array( $row[ $column_id ] ) && isset( $row[ $column_id ]['cell_colspan'] ) ) {
 					echo ' colspan="' . $row[ $column_id ]['cell_colspan'] . '"';
-				} else if ( isset( $column_data['cell_colspan'] ) ) {
+				} elseif ( isset( $column_data['cell_colspan'] ) ) {
 					echo ' colspan="' . $column_data['cell_colspan'] . '"';
 				}
 				?>>
 					<?php
 					if ( is_array( $column_data ) && isset( $column_data['callback'] ) && is_closure( $column_data['callback'] ) ) {
 						$column_data['callback']( $row );
-					} else if ( isset( $row[ $column_id ] ) ) {
+					} elseif ( isset( $row[ $column_id ] ) ) {
 						echo $row[ $column_id ];
 					} else {
 						_e( 'N/A' );
@@ -289,12 +289,12 @@ class ucm_table_manager {
 					<td<?php
 					if ( isset( $row[ $column_id ] ) && is_array( $row[ $column_id ] ) && isset( $row[ $column_id ]['cell_class'] ) ) {
 						echo ' class="' . $row[ $column_id ]['cell_class'] . '"';
-					} else if ( isset( $column_data['cell_class'] ) ) {
+					} elseif ( isset( $column_data['cell_class'] ) ) {
 						echo ' class="' . $column_data['cell_class'] . '"';
 					}
 					if ( isset( $row[ $column_id ] ) && is_array( $row[ $column_id ] ) && isset( $row[ $column_id ]['cell_colspan'] ) ) {
 						echo ' colspan="' . $row[ $column_id ]['cell_colspan'] . '"';
-					} else if ( isset( $column_data['cell_colspan'] ) ) {
+					} elseif ( isset( $column_data['cell_colspan'] ) ) {
 						echo ' colspan="' . $column_data['cell_colspan'] . '"';
 					}
 					?>>

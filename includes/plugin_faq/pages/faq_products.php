@@ -29,7 +29,7 @@ if ( isset( $_REQUEST['faq_product_id'] ) && $_REQUEST['faq_product_id'] ) {
 	?>
 
 
-	<form action="" method="post">
+	<?php module_form::print_form_open_tag( array( 'action' => '' ) ); ?>
 		<input type="hidden" name="_process" value="save_faq_product">
 		<input type="hidden" name="faq_product_id" value="<?php echo $faq_product_id; ?>"/>
 
@@ -133,7 +133,7 @@ if ( isset( $_REQUEST['faq_product_id'] ) && $_REQUEST['faq_product_id'] ) {
 		?>
 
 
-	</form>
+	<?php module_form::print_form_close_tag(); ?>
 
 	<?php
 } else {

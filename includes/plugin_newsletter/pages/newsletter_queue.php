@@ -86,7 +86,7 @@ if ( isset( $_REQUEST['f'] ) && is_array( $_REQUEST['f'] ) ) {
 	<tr>
 		<td width="70%" valign="top">
 
-			<form action="" method="post">
+			<?php module_form::print_form_open_tag( array( 'action' => '' ) ); ?>
 				<input type="hidden" name="newsletter_id" value="<?php echo (int) $newsletter_id; ?>">
 				<input type="hidden" name="send_id" value="<?php echo (int) $send_id; ?>">
 				<input type="hidden" name="_process" value="send_send">
@@ -132,7 +132,7 @@ if ( isset( $_REQUEST['f'] ) && is_array( $_REQUEST['f'] ) ) {
 						foreach ( $send_members_pagination['rows'] as $send_member ) {
 							$cache = unserialize( $send_member['data_cache'] );
 							?>
-							<tr class="<?php echo $x ++ % 2 ? 'odd' : 'even'; ?>">
+							<tr class="<?php echo $x++ % 2 ? 'odd' : 'even'; ?>">
 								<td><?php echo htmlspecialchars( $send_member['company_name'] ); ?></td>
 								<td><?php echo htmlspecialchars( $send_member['first_name'] ); ?></td>
 								<td><?php echo htmlspecialchars( $send_member['last_name'] ); ?></td>
@@ -187,22 +187,22 @@ if ( isset( $_REQUEST['f'] ) && is_array( $_REQUEST['f'] ) ) {
 							// list all members from thsi send.
 							foreach ( $problem_members_pagination['rows'] as $problem_member ) {
 								?>
-								<tr class="<?php echo $x ++ % 2 ? 'odd' : 'even'; ?>">
+								<tr class="<?php echo $x++ % 2 ? 'odd' : 'even'; ?>">
 									<td><?php echo htmlspecialchars( $problem_member['company_name'] ); ?></td>
 									<td><?php echo htmlspecialchars( $problem_member['first_name'] . ' ' . $problem_member['last_name'] ); ?></td>
 									<td><?php echo htmlspecialchars( $problem_member['email'] ); ?></td>
 									<td><?php
 										if ( ! $problem_member['receive_email'] ) {
 											_e( 'Marked as do-not-email' );
-										} else if ( $problem_member['unsubscribe_date'] && $problem_member['unsubscribe_date'] != '0000-00-00' ) {
+										} elseif ( $problem_member['unsubscribe_date'] && $problem_member['unsubscribe_date'] != '0000-00-00' ) {
 											echo _l( 'Unsubscribed on %s', print_date( $problem_member['unsubscribe_date'] ) );
-										} else if ( $problem_member['bounce_count'] >= module_config::c( 'newsletter_bounce_threshold', 3 ) ) {
+										} elseif ( $problem_member['bounce_count'] >= module_config::c( 'newsletter_bounce_threshold', 3 ) ) {
 											echo _l( 'Bounced %s times', $problem_member['bounce_count'] );
-										} else if ( trim( $problem_member['email'] ) == '' ) {
+										} elseif ( trim( $problem_member['email'] ) == '' ) {
 											echo _l( 'No email address' );
-										} else if ( isset( $problem_member['reason'] ) && $problem_member['reason'] == 'doubleoptin' ) {
+										} elseif ( isset( $problem_member['reason'] ) && $problem_member['reason'] == 'doubleoptin' ) {
 											_e( 'Double opt-in incomplete on %s', print_date( $problem_member['time'] ) );
-										} else if ( $problem_member['newsletter_blacklist_id'] ) {
+										} elseif ( $problem_member['newsletter_blacklist_id'] ) {
 											echo _l( 'Unsubscribed on %s', print_date( $problem_member['unsubscribe_time2'], true ) );
 										} else {
 											echo _l( 'Other error' );
@@ -229,42 +229,43 @@ if ( isset( $_REQUEST['f'] ) && is_array( $_REQUEST['f'] ) ) {
 						       class="save_button submit_button">
 					<?php } ?>
 				</p>
-			</form>
+			<?php module_form::print_form_close_tag(); ?>
 
 		</td>
 		<td width="30%" valign="top">
 
-			<form action="" method="POST">
+			<?php module_form::print_form_open_tag( array( 'action' => '' ) ); ?>
 				<input type="hidden" name="newsletter_id" value="<?php echo $newsletter_id; ?>">
 				<input type="hidden" name="send_id" value="<?php echo $send_id; ?>">
 				<?php print_heading( array(
 					'type'  => 'h3',
 					'title' => 'Send Options',
 				) ); ?>
-				<table class="tableclass tableclass_form tableclass_full">
-					<tbody>
-					<tr>
-						<th class="width1"><?php _e( 'Shedule send' ); ?></th>
-						<td>
-							<?php if ( $start_time <= time() ) {
-								_e( 'Now' );
-							} else {
-								echo print_date( $start_time, true );
-							} ?>
-						</td>
-					</tr>
-					<?php // has this been sent before?
-					if ( $past_sends ) {
-						?>
-						<tr>
-							<th><?php _e( 'Duplicates' ); ?></th>
-							<td>
-								<?php echo $send['allow_duplicates'] ? _l( 'Yes, send duplicate emails' ) : _l( 'No, do not send duplicate emails' ); ?>
-							</td>
-						</tr>
-					<?php } ?>
-					</tbody>
-				</table>
+				<?php
+				$send_elements = array(
+					'start_time' => array(
+						'title'  => _l( 'Shedule send' ),
+						'fields' => array(
+							$start_time <= time() ? _l( 'Now' ) : print_date( $start_time, true ),
+						),
+					),
+				);
+				// has this been sent before?
+				if ( $past_sends ) {
+					$send_elements['allow_duplicates'] = array(
+						'title'  => _l( 'Duplicates' ),
+						'fields' => array(
+							$send['allow_duplicates']
+								? _l( 'Yes, send duplicate emails' )
+								: _l( 'No, do not send duplicate emails' ),
+						),
+					);
+				}
+				echo module_form::generate_fieldset( array(
+					'class'    => 'tableclass tableclass_form tableclass_full',
+					'elements' => $send_elements,
+				) );
+				?>
 
 				<?php
 				print_heading( array(
@@ -272,44 +273,52 @@ if ( isset( $_REQUEST['f'] ) && is_array( $_REQUEST['f'] ) ) {
 					'title' => 'Preview Dynamic Fields:',
 				) );
 				?>
-				<table width="100%" border="0" cellspacing="0" cellpadding="2" class="tableclass tableclass_form tbl_fixed">
-					<tbody>
-					<?php
-					$x      = 0;
-					$fields = module_newsletter::get_replace_fields( $newsletter_id, $send_id, $first_newsletter_member_id );
-					foreach ( $fields as $key => $val ) {
-						?>
-						<tr>
-							<td width="30">
-								<?php
-								if ( $x > 4 ) {
-									foreach ( array_keys( $extra_fields ) as $extra_field ) {
-										if ( strtoupper( $extra_field ) == $key ) { ?>
-											<input type="checkbox" name="f[]"
-											       value="<?php echo htmlspecialchars( $key ); ?>" <?php echo isset( $display_extra_fields[ $key ] ) ? 'checked' : ''; ?>>
-										<?php }
-									}
-								}
-								?>
-							</td>
-							<td>
-								<?php echo '{' . htmlspecialchars( $key ) . '}'; ?>
-							</td>
-							<td style="word-wrap: break-word;">
-								<?php echo htmlspecialchars( ( trim( $val ) ? $val : '' ) ); ?>
-							</td>
-						</tr>
-						<?php
-						$x ++;
-					} ?>
-					<tr>
-						<td colspan="3" align="center">
-							<input type="submit" name="pp" value="<?php _e( 'Preview' ); ?>">
-						</td>
-					</tr>
-					</tbody>
-				</table>
-			</form>
+				<?php
+				// One element per placeholder. The checkbox that was in its own first column
+				// sits beside the placeholder now - a fieldset is a title and a cell, and the
+				// column it used to have carried nothing else.
+				$preview_elements = array();
+				$x                = 0;
+				$fields           = module_newsletter::get_replace_fields( $newsletter_id, $send_id, $first_newsletter_member_id );
+				foreach ( $fields as $key => $val ) {
+					ob_start();
+					if ( $x > 4 ) {
+						foreach ( array_keys( $extra_fields ) as $extra_field ) {
+							if ( strtoupper( $extra_field ) == $key ) { ?>
+								<input type="checkbox" name="f[]"
+								       value="<?php echo htmlspecialchars( $key ); ?>" <?php echo isset( $display_extra_fields[ $key ] ) ? 'checked' : ''; ?>>
+							<?php }
+						}
+					}
+					echo '{' . htmlspecialchars( $key ) . '}';
+					$preview_elements[ 'field_' . $key ] = array(
+						'title'  => '',
+						'fields' => array(
+							ob_get_clean(),
+							// A replace value for a column that is not set arrives as null, which
+							// PHP 8 deprecates passing to trim(). The cast changes nothing about
+							// what is printed - null was already coming out as the empty string.
+							'<span style="word-wrap: break-word;">'
+							. htmlspecialchars( trim( (string) $val ) !== '' ? (string) $val : '' )
+							. '</span>',
+						),
+					);
+					$x++;
+				}
+				ob_start();
+				?>
+				<input type="submit" name="pp" value="<?php _e( 'Preview' ); ?>">
+				<?php
+				$preview_elements['preview'] = array(
+					'message' => ob_get_clean(),
+				);
+
+				echo module_form::generate_fieldset( array(
+					'class'    => 'tableclass tableclass_form tbl_fixed',
+					'elements' => $preview_elements,
+				) );
+				?>
+			<?php module_form::print_form_close_tag(); ?>
 
 		</td>
 	</tr>

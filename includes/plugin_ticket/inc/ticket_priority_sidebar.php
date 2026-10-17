@@ -3,10 +3,6 @@
 	$responsive_summary = array();
 	ob_start();
 	?>
-	<table class="tableclass tableclass_form tableclass_full">
-		<tbody>
-		<tr>
-			<td>
 				<?php
 				if ( $ticket['priority'] != _TICKET_PRIORITY_STATUS_ID ) {
 					echo '<p>';
@@ -27,7 +23,7 @@
 							update_insert( 'ticket_id', $ticket['ticket_id'], 'ticket', array( 'invoice_id' => 0 ) );
 						}
 						echo 'invoice removed... please refresh';
-					} else if ( $invoice_data['total_amount_due'] > 0 ) {
+					} elseif ( $invoice_data['total_amount_due'] > 0 ) {
 						$responsive_summary[] = _l( "Please pay <strong>%s</strong>.", dollar( $invoice_data['total_amount_due'], true, $invoice_data['currency_id'] ) );
 						echo '<p>';
 						echo _l( "Please pay <strong>%s</strong> to receive Priority Support. To make payment please click the button below.", dollar( $invoice_data['total_amount_due'], true, $invoice_data['currency_id'] ) );
@@ -58,21 +54,23 @@
 				}
 
 				?>
-			</td>
-		</tr>
-		</tbody>
-	</table>
 	<?php
 
 	$fieldset_data = array(
-		'heading'         => array(
+		'heading'  => array(
 			'title'      => _l( 'Priority Support' ),
 			'type'       => 'h3',
 			'responsive' => array(
 				'summary' => implode( ', ', $responsive_summary ),
 			),
 		),
-		'elements_before' => ob_get_clean(),
+		// One cell, no title: both renderers emit a <th> only when an element has a
+		// 'title', so an element with just 'fields' is the single-cell row this had.
+		'elements' => array(
+			'priority' => array(
+				'fields' => array( ob_get_clean() ),
+			),
+		),
 	);
 	echo module_form::generate_fieldset( $fieldset_data );
 	unset( $fieldset_data );

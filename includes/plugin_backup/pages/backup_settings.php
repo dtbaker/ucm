@@ -36,7 +36,7 @@ if ( isset( $_REQUEST['backup_id'] ) && $_REQUEST['backup_id'] ) {
 
 			?>
 
-			<form action="" method="post">
+			<?php module_form::print_form_open_tag( array( 'action' => '' ) ); ?>
 				<input type="hidden" name="_process" value="save_backup">
 
 				<script type="text/javascript">
@@ -45,7 +45,6 @@ if ( isset( $_REQUEST['backup_id'] ) && $_REQUEST['backup_id'] ) {
 				</script>
 				<?php
 
-				module_form::print_form_auth();
 
 				$fieldset_data = array(
 					'heading'  => array(
@@ -96,7 +95,7 @@ if ( isset( $_REQUEST['backup_id'] ) && $_REQUEST['backup_id'] ) {
 				echo module_form::generate_form_actions( $form_actions );
 
 				?>
-			</form>
+			<?php module_form::print_form_close_tag(); ?>
 
 
 			<script type="text/javascript">
@@ -151,10 +150,10 @@ if ( isset( $_REQUEST['backup_id'] ) && $_REQUEST['backup_id'] ) {
 							$tables[] = $row[0];
 						}
 					}
-					if(! count( $tables )){
+					if (! count( $tables )) {
 						//_e('Error: could not find any database tables to backup.');
-					}else{
-					foreach($tables as $table){
+					} else {
+					foreach ($tables as $table) {
 					?>
           ucm.backup.database_list.push({
               name: '<?php echo $table;?>',
@@ -234,7 +233,7 @@ if ( isset( $_REQUEST['backup_id'] ) && $_REQUEST['backup_id'] ) {
 						function () use ( $backup_id, $backup ) {
 							if ( ! $backup_id ) {
 								_e( 'Please click Create Backup button first' );
-							} else if ( ! $backup['backup_file'] || ! strlen( $backup['backup_file'] ) ) {
+							} elseif ( ! $backup['backup_file'] || ! strlen( $backup['backup_file'] ) ) {
 								_e( 'Error: Backup File Not Found: %s', _BACKUP_BASE_DIR . basename( $backup['backup_file'] ) );
 							} else {
 								if ( file_exists( _BACKUP_BASE_DIR . basename( $backup['backup_file'] ) . '.sql' ) ) {
@@ -254,12 +253,11 @@ if ( isset( $_REQUEST['backup_id'] ) && $_REQUEST['backup_id'] ) {
 
 			?>
 
-			<form action="" method="post">
+			<?php module_form::print_form_open_tag( array( 'action' => '' ) ); ?>
 				<input type="hidden" name="_process" value="save_backup">
 
 				<?php
 
-				module_form::print_form_auth();
 
 				echo module_form::generate_fieldset( $fieldset_data );
 				unset( $fieldset_data );
@@ -285,7 +283,7 @@ if ( isset( $_REQUEST['backup_id'] ) && $_REQUEST['backup_id'] ) {
 				echo module_form::generate_form_actions( $form_actions );
 
 				?>
-			</form>
+			<?php module_form::print_form_close_tag(); ?>
 
 			<?php
 
@@ -304,12 +302,11 @@ if ( isset( $_REQUEST['backup_id'] ) && $_REQUEST['backup_id'] ) {
 		);
 		?>
 
-		<form action="" method="post">
+		<?php module_form::print_form_open_tag( array( 'action' => '' ) ); ?>
 			<input type="hidden" name="_process" value="save_backup">
 
 			<?php
 
-			module_form::print_form_auth();
 
 			echo module_form::generate_fieldset( $fieldset_data );
 			unset( $fieldset_data );
@@ -337,7 +334,7 @@ if ( isset( $_REQUEST['backup_id'] ) && $_REQUEST['backup_id'] ) {
 			echo module_form::generate_form_actions( $form_actions );
 
 			?>
-		</form>
+		<?php module_form::print_form_close_tag(); ?>
 
 		<?php
 	}

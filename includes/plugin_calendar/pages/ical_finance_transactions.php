@@ -53,10 +53,9 @@ UID:' . md5( mt_rand( 1, 100 ) ) . '@ultimateclientmanager.com
 	echo 'DTSTAMP:' . date( 'Ymd' ) . 'T090000Z
 DTSTART;VALUE=DATE:' . date( 'Ymd', $time ) . '
 DTEND;VALUE=DATE:' . date( 'Ymd', strtotime( '+1 day', $time ) ) . '
-SUMMARY:' . ( $recent_transaction['credit'] > 0 ? '+' . dollar( $recent_transaction['credit'] ) : '' ) . ( $recent_transaction['debit'] > 0 ? '-' . dollar( $recent_transaction['debit'] ) : '' ) . " " . $recent_transaction['name'] . '
-DESCRIPTION:' . preg_replace( '#[\r\n]+#', '<br>', $recent_transaction['description'] ) . ' <br><a href="' . $recent_transaction['url'] . '">' . _( 'Open Link' ) . '</a>
+SUMMARY:' . ( $recent_transaction['credit'] > 0 ? '+' . dollar( $recent_transaction['credit'] ) : '' ) . ( $recent_transaction['debit'] > 0 ? '-' . dollar( $recent_transaction['debit'] ) : '' ) . " " . module_calendar::ical_text( $recent_transaction['name'] ) . '
+DESCRIPTION:' . module_calendar::ical_text( $recent_transaction['description'] ) . '\\n' . module_calendar::ical_text( $recent_transaction['url'] ) . '
 END:VEVENT
 ';
 }
 echo 'END:VCALENDAR';
-

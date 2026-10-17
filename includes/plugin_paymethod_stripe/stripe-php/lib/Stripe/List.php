@@ -2,7 +2,7 @@
 
 class Stripe_List extends Stripe_Object {
 	public static function constructFrom( $values, $apiKey = null ) {
-		$class = get_class();
+		$class = __CLASS__;
 
 		return self::scopedConstructFrom( $class, $values, $apiKey );
 	}

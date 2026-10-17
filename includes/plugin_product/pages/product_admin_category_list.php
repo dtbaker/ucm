@@ -24,10 +24,10 @@ if ( module_product::can_i( 'create', 'Products' ) ) {
 print_heading( $heading );
 ?>
 
-<form action="" method="post">
+<?php module_form::print_form_open_tag( array( 'action' => '' ) ); ?>
 
 	<?php
-	/** START TABLE LAYOUT **/
+	/* START TABLE LAYOUT */
 	$table_manager           = module_theme::new_table_manager();
 	$columns                 = array();
 	$columns['product_name'] = array(
@@ -45,4 +45,4 @@ print_heading( $heading );
 	/** END TABLE LAYOUT **/
 	?>
 
-</form>
+<?php module_form::print_form_close_tag();

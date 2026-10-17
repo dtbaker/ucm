@@ -1,8 +1,38 @@
 <?php
 
+/**
+ * Session handler implementing SessionHandlerInterface for PHP 8+.
+ * Delegates to module_session static methods.
+ */
+class UcmSessionHandler implements SessionHandlerInterface
+{
+	public function open( string $path, string $name ): bool {
+		return true;
+	}
 
-class module_session extends module_base {
+	public function close(): bool {
+		return true;
+	}
 
+	public function read( string $id ): string|false {
+		return module_session::read( $id );
+	}
+
+	public function write( string $id, string $data ): bool {
+		return module_session::write( $id, $data );
+	}
+
+	public function destroy( string $id ): bool {
+		return module_session::destroy( $id );
+	}
+
+	public function gc( int $max_lifetime ): int|false {
+		return module_session::gc( $max_lifetime );
+	}
+}
+
+class module_session extends module_base
+{
 	public static $session_id = false;
 	public static $member_id = false;
 	private static $destroyed = false;
@@ -21,18 +51,16 @@ class module_session extends module_base {
 	}
 
 	public function __construct() {
+		$this->module_name     = 'session';
+		$this->module_position = 0;
+		$this->version         = 2.168;
 
-		if(isset($_SESSION))return true;
+		if ( isset( $_SESSION ) ) {
+			return true;
+		}
 		if ( self::is_db_sessions_enabled() ) {
 			try {
-				session_set_save_handler(
-					array( $this, 'open' ),
-					array( $this, 'close' ),
-					array( $this, 'read' ),
-					array( $this, 'write' ),
-					array( $this, 'destroy' ),
-					array( $this, 'gc' )
-				);
+				session_set_save_handler( new UcmSessionHandler() );
 				// the following prevents unexpected effects when using objects as save handlers
 				register_shutdown_function( 'session_write_close' );
 			} catch ( Exception $e ) {
@@ -43,7 +71,7 @@ class module_session extends module_base {
 		return true;
 	}
 
-	static $_db_sessions = null;
+	public static $_db_sessions = null;
 
 	public static function is_db_sessions_enabled() {
 		if ( _DEMO_MODE ) {
@@ -71,11 +99,6 @@ class module_session extends module_base {
 	}
 
 	public function init() {
-		$this->module_name     = "session";
-		$this->module_position = 0;
-
-
-		$this->version = 2.168;
 		//2.168 - 2019-04-20 - fix database sessions
 		//2.167 - 2019-04-06 - fix database sessions
 		//2.166 - 2017-05-02 - file path configuration
@@ -115,7 +138,7 @@ class module_session extends module_base {
 				if ( function_exists( 'mb_detect_encoding' ) && mb_detect_encoding( $res['session_data'] ) != $matches[1] ) {
 					$res['session_data'] = iconv( mb_detect_encoding( $res['session_data'] ), $matches[1], $res['session_data'] );
 				}
-			} else if ( $foo ) {
+			} elseif ( $foo ) {
 				$res['session_data'] = $foo;
 			}
 			self::$session_hash = md5( $res['session_data'] );
@@ -145,7 +168,7 @@ class module_session extends module_base {
 			// are we creating or reading?
 			$sql = "SELECT session_id FROM `" . _DB_PREFIX . "session` WHERE `session_id` = '" . db_escape( self::$session_id ) . "'";
 			$res = query( $sql );
-			if ( ( $res instanceOf mysqli_result && mysqli_num_rows( $res ) ) || ( is_resource( $res ) && mysql_num_rows( $res ) ) ) {
+			if ( $res instanceof mysqli_result && mysqli_num_rows( $res ) ) {
 				// we have a session! woo!
 				// update existing
 				$data = base64_encode( $data );
@@ -182,21 +205,20 @@ class module_session extends module_base {
 		}
 		$sql = "DELETE FROM `" . _DB_PREFIX . "session` WHERE `session_id` = '" . db_escape( $session_id ) . "'";
 		query( $sql );
+
+		return true;
 	}
 
-	public static function gc() {
+	public static function gc( int $max_lifetime = 0 ) {
 		if ( ! self::db_table_exists( 'session', true ) ) {
 			return false;
 		}
-		$life = get_cfg_var( "session.gc_maxlifetime" );
-		if ( ! $life ) {
-			$life = '1440';
-		}
+		$life = $max_lifetime > 0 ? $max_lifetime : ( (int) get_cfg_var( "session.gc_maxlifetime" ) ?: 1440 );
 		$last_access = time() - $life;
 		$sql         = "DELETE FROM `" . _DB_PREFIX . "session` WHERE `user_id` = 0 AND `last_access` < '" . (int) $last_access . "'";
 		query( $sql );
 
-		return true;
+		return 0;
 	}
 
 	public static function close() {
@@ -232,6 +254,4 @@ class module_session extends module_base {
 		<?php
 		return ob_get_clean();
 	}
-
-
 }

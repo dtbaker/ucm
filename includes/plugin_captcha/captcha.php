@@ -1,10 +1,15 @@
 <?php
 
-
-class module_captcha extends module_base {
-
+class module_captcha extends module_base
+{
 	// 2.2 - fix for ssl captcha
 	private static $captcha_store = array();
+
+	public function __construct() {
+		$this->module_name     = 'captcha';
+		$this->module_position = 110;
+		$this->version         = 2.24;
+	}
 
 	public static function can_i( $actions, $name = false, $category = false, $module = false ) {
 		if ( ! $module ) {
@@ -19,10 +24,6 @@ class module_captcha extends module_base {
 	}
 
 	public function init() {
-		$this->version         = 2.24;
-		$this->module_name     = "captcha";
-		$this->module_position = 65;
-
 		// 2.21 - 2013-04-12 - fix for auto login
 		// 2.22 - 2014-12-19 - php fix
 		// 2.23 - 2016-10-06 - new captcha
@@ -33,6 +34,11 @@ class module_captcha extends module_base {
 	public static function display_captcha_form() {
 
 		$publickey = module_config::c( 'recaptcha_public_key', '6Leym88SAAAAAK6APyjTzJwtwY0zAdcU8yIXwgvR' );
+
+		if ( empty($publickey) || $publickey === '6Leym88SAAAAAK6APyjTzJwtwY0zAdcU8yIXwgvR' ) {
+			// no private key, so we can't check the captcha.
+			return;
+		}
 
 		if ( module_config::c( 'recaptcha_version', '2' ) == '2' ) {
 			require_once( 'inc/recaptchalib2.php' );
@@ -45,6 +51,11 @@ class module_captcha extends module_base {
 	public static function check_captcha_form() {
 
 		$privatekey = module_config::c( 'recaptcha_private_key', '6Leym88SAAAAANbBjtrjNfeu6NXDSCXGBSbKzqnN' );
+
+		if ( empty($privatekey) || $privatekey === '6Leym88SAAAAANbBjtrjNfeu6NXDSCXGBSbKzqnN' ) {
+			// no private key, so we can't check the captcha.
+			return true;
+		}
 
 		if ( module_config::c( 'recaptcha_version', '2' ) == '2' ) {
 			require_once( 'inc/recaptchalib2.php' );
@@ -82,5 +93,4 @@ class module_captcha extends module_base {
 		}
 
 	}
-
 }

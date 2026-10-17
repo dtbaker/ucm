@@ -1,8 +1,7 @@
 <?php
 
-
-class module_product extends module_base {
-
+class module_product extends module_base
+{
 	public $links;
 	public $product_types;
 	public $product_id;
@@ -19,12 +18,15 @@ class module_product extends module_base {
 		return __CLASS__;
 	}
 
-	public function init() {
-		$this->links           = array();
-		$this->product_types   = array();
-		$this->module_name     = "product";
-		$this->module_position = 31;
+	public function __construct() {
+		$this->module_name     = 'product';
+		$this->module_position = 430;
 		$this->version         = 2.168;
+	}
+
+	public function init() {
+		$this->links         = array();
+		$this->product_types = array();
 		// 2.168 - 2018-04-01 - log integration
 		// 2.167 - 2017-07-26 - starting on basic shop functionality
 		// 2.166 - 2017-05-02 - big changes
@@ -82,7 +84,6 @@ Current Inventory Level: {PRODUCT_QUANTITY} <br/><br/>
 			if ( isset( $_REQUEST['_products_ajax'] ) ) {
 				switch ( $_REQUEST['_products_ajax'] ) {
 					case 'products_ajax_search':
-
 						//                        $sent = headers_sent($file, $line);
 						//                        echo 'here';
 						//                        print_r($sent);
@@ -120,11 +121,11 @@ Current Inventory Level: {PRODUCT_QUANTITY} <br/><br/>
 								<ul>
 									<?php foreach ( $products_in_categories
 
-									as $category_name => $cat_products ){ ?>
+ as $category_name => $cat_products ) { ?>
 									<li>
 										<a href="#" class="product_category_parent"><?php echo htmlspecialchars( $category_name ); ?></a>
 										(<?php _e( '%s products', count( $cat_products ) ); ?>)
-										<ul style="display:none;" id="product_category_<?php echo $cat_id ++; ?>">
+										<ul style="display:none;" id="product_category_<?php echo $cat_id++; ?>">
 											<?php foreach ( $cat_products as $product ) { ?>
 												<li>
 													<a href="#"
@@ -136,7 +137,7 @@ Current Inventory Level: {PRODUCT_QUANTITY} <br/><br/>
 										<?php } ?>
 										<?php foreach ( $products
 
-										as $product ){ ?>
+ as $product ) { ?>
 									<li>
 										<a href="#"
 										   onclick="return ucm.product.select_product(<?php echo $product['product_id']; ?>);"><?php
@@ -150,7 +151,7 @@ Current Inventory Level: {PRODUCT_QUANTITY} <br/><br/>
 								</ul>
 								<?php
 							}
-						} else if ( ! strlen( $product_name ) ) {
+						} elseif ( ! strlen( $product_name ) ) {
 							_e( 'Pleae create Products first by going to Settings > Products' );
 						}
 
@@ -498,17 +499,22 @@ Current Inventory Level: {PRODUCT_QUANTITY} <br/><br/>
 	}
 
 	public function process() {
+		// Every form that reaches here is posted from a UCM page, so it carries the
+		// form auth key. Refuse anything that does not - see module_form::check_secure_key().
+		if ( ! module_form::check_secure_key() ) {
+			module_form::reject_invalid_form_auth();
+		}
 		if ( "save_product" == $_REQUEST['_process'] ) {
 
 			$product = new UCMProduct();
 			$product->handle_submit();
 
-		} else if ( "save_product_supplier" == $_REQUEST['_process'] ) {
+		} elseif ( "save_product_supplier" == $_REQUEST['_process'] ) {
 
 			$product_supplier = new UCMProductSupplier();
 			$product_supplier->handle_submit();
 
-		} else if ( "save_product_category" == $_REQUEST['_process'] ) {
+		} elseif ( "save_product_category" == $_REQUEST['_process'] ) {
 			if ( isset( $_REQUEST['butt_del'] ) && $_REQUEST['butt_del'] && $_REQUEST['product_category_id'] ) {
 				$data = self::get_product_category( $_REQUEST['product_category_id'] );
 				if ( module_form::confirm_delete( 'product_category_id', _l( "Really delete product category: %s", $data['product_category_name'] ), self::link_open_category( $_REQUEST['product_category_id'] ) ) ) {
@@ -657,7 +663,7 @@ Current Inventory Level: {PRODUCT_QUANTITY} <br/><br/>
 						) );
 					}
 				}
-				$count ++;
+				$count++;
 			}
 		}
 
@@ -710,7 +716,7 @@ Current Inventory Level: {PRODUCT_QUANTITY} <br/><br/>
 					}
 					$new_qty = $data['inventory_level'] - $inventory_usage;
 					if ( class_exists( 'module_log', false ) && module_log::is_plugin_enabled() && $data['inventory_level_current'] != $new_qty ) {
-						module_log::log( 'inventory', $product_id, 'invoice', false, "Invoice Saved: " . $invoice_data['name'], "Quantity changed from " . $data['inventory_level_current'] . " to " . ( $new_qty ) . " after saving this invoice." );
+						module_log::log( 'inventory', $product_id, 'invoice', "Invoice Saved: " . $invoice_data['name'], "Quantity changed from " . $data['inventory_level_current'] . " to " . ( $new_qty ) . " after saving this invoice.", false );
 					}
 					update_insert( "product_id", $product_id, "product", array(
 						'inventory_level_current' => $new_qty
@@ -729,8 +735,15 @@ Current Inventory Level: {PRODUCT_QUANTITY} <br/><br/>
 		$products_ids = array();
 		foreach ( $invoice_items as $invoice_item ) {
 			if ( ! empty( $invoice_item['product_id'] ) ) {
-				// we store how many "qty" is been deleted, and hence return this number to the inventory pool
-				$products_ids[ $invoice_item['product_id'] ] = $invoice_item['hours'];
+				// We store how many "qty" is being deleted, and hence return this number to
+				// the inventory pool. An invoice can list the same product on more than one
+				// line, and get_product_usage() below counts every one of them - so these
+				// have to add up. Assigning instead of adding kept only the last line's
+				// quantity, and the rest of the stock was never returned.
+				if ( ! isset( $products_ids[ $invoice_item['product_id'] ] ) ) {
+					$products_ids[ $invoice_item['product_id'] ] = 0;
+				}
+				$products_ids[ $invoice_item['product_id'] ] += $invoice_item['hours'];
 			}
 		}
 		foreach ( $products_ids as $product_id => $qty_deleted ) {
@@ -751,7 +764,7 @@ Current Inventory Level: {PRODUCT_QUANTITY} <br/><br/>
 					}
 					$inventory_usage -= $qty_deleted;
 					if ( class_exists( 'module_log', false ) && module_log::is_plugin_enabled() ) {
-						module_log::log( 'inventory', $product_id, 'invoice', false, "Invoice Deleted: " . $invoice_data['name'], "Quantity changed from " . $data['inventory_level_current'] . " to " . ( $data['inventory_level'] - $inventory_usage ) . " after removing " . $qty_deleted . " items from this deleted invoice." );
+						module_log::log( 'inventory', $product_id, 'invoice', "Invoice Deleted: " . $invoice_data['name'], "Quantity changed from " . $data['inventory_level_current'] . " to " . ( $data['inventory_level'] - $inventory_usage ) . " after removing " . $qty_deleted . " items from this deleted invoice.", false );
 					}
 					update_insert( "product_id", $product_id, "product", array(
 						'inventory_level_current' => $data['inventory_level'] - $inventory_usage
@@ -911,8 +924,6 @@ Current Inventory Level: {PRODUCT_QUANTITY} <br/><br/>
 		<?php
 		return ob_get_clean();
 	}
-
-
 }
 
 

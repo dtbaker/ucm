@@ -33,10 +33,10 @@ function full_link( $link, $secure = false ) {
 				if ( count( $m ) == 2 ) {
 					if ( $doing_external ) {
 						$new_url_part .= '' . $m[0] . '=' . $m[1] . '&';
-					} else if ( strlen( $m[1] ) > 3 ) {
+					} elseif ( strlen( $m[1] ) > 3 ) {
 						$new_url_part .= 'm[' . $module_number . ']=' . $m[0] . '&';
 						$new_url_part .= 'p[' . $module_number . ']=' . $m[1] . '&';
-						$module_number ++;
+						$module_number++;
 					}
 				}
 			}
@@ -67,7 +67,8 @@ function full_link( $link, $secure = false ) {
 
 	// hack for iframe
 	if ( get_display_mode() == 'iframe' && ! preg_match( '#display_mode#', $url ) ) {
-		$url .= ( strpos( $url, '?' ) === false ? '?' : '&' ) . 'display_mode=iframe';;
+		$url .= ( strpos( $url, '?' ) === false ? '?' : '&' ) . 'display_mode=iframe';
+;
 	}
 
 	return $url;
@@ -114,17 +115,24 @@ function link_generate( $link_options ) {
 				$args[ $key ] = $val;
 			}
 		}
-		$m ++;
+		$m++;
 	}
 
 	$link  = rtrim( $link, '&' );
 	$link  = full_link( $link );
 	$argcc = 0;
 	foreach ( $args as $key => $val ) {
-		if ( $val === false ) {
+		if ( $val === false || is_array( $val ) || is_object( $val ) ) {
 			continue;
 		}
-		$link .= ( ( strpos( $link, '?' ) !== false ) ? '&' : '?' ) . "$key=$val";
+		// Argument values are data, not URL syntax. Unencoded, a quote or an angle
+		// bracket in an id travelled through the link and out the other side into
+		// whatever href, src or onclick the link was printed into. Square brackets stay
+		// literal so array-style names still read as arrays.
+		$safe  = static function ( $part ) {
+			return str_replace( array( '%5B', '%5D' ), array( '[', ']' ), urlencode( (string) $part ) );
+		};
+		$link  .= ( ( strpos( $link, '?' ) !== false ) ? '&' : '?' ) . $safe( $key ) . '=' . $safe( $val );
 	}
 	if ( $full_link ) {
 		$link = '<a href="' . $link . '"';
@@ -169,7 +177,7 @@ function generate_link( $page = '', $args = array(), $module = false, $include_p
 			if ( $allow_nesting === false && in_array( $module, $load_modules ) ) {
 				// reply newer definitions of older module with new settings.
 				$x = array_search( $module, $load_modules );
-			} else if ( $allow_nesting !== false ) {
+			} elseif ( $allow_nesting !== false ) {
 				// we allow nesting of this module up to the defined number of times.
 				// 1 will allow this module to exist once before the specified link.
 				foreach ( array_keys( $load_modules, $module ) as $key => $val ) {
@@ -271,6 +279,7 @@ function create_link( $label, $type, $href = '', $id = '' ) {
 			break;
 		case "thickbox":
 			$class .= ' thickbox';
+			// no break
 		case 'link':
 			if ( ! $href ) {
 				ob_end_clean();

@@ -1,9 +1,7 @@
 <?php
 
-
-class module_paymethod_authorize extends module_base {
-
-
+class module_paymethod_authorize extends module_base
+{
 	public static function can_i( $actions, $name = false, $category = false, $module = false ) {
 		if ( ! $module ) {
 			$module = __CLASS__;
@@ -16,11 +14,13 @@ class module_paymethod_authorize extends module_base {
 		return __CLASS__;
 	}
 
-	function init() {
+	public function __construct() {
+		$this->module_name     = 'paymethod_authorize';
+		$this->module_position = 320;
 		$this->version         = 2.23;
-		$this->module_name     = "paymethod_authorize";
-		$this->module_position = 8882;
+	}
 
+	function init() {
 		// 2.24 - 2017-03-21 - authorize fee charge percent
 		// 2.229 - 2015-11-26 - processing fee
 		// 2.229 - 2015-11-26 - processing fee
@@ -35,11 +35,42 @@ class module_paymethod_authorize extends module_base {
 		// 2.22 - 2013-04-27 - cancel url on payments screen
 		// 2.21 - 2013-04-20 - initial release
 
+		self::retire();
+	}
+
+	/**
+	 * Switch this payment method off, once, on the first page load after upgrading.
+	 *
+	 * The rule everywhere else in this release is that an install which upgrades and does
+	 * nothing else behaves exactly as before. This is the one deliberate exception. An
+	 * earlier version let a payer set the amount their own card was charged and mark an
+	 * invoice paid in full for a cent; the hole itself is fixed, but leaving a method
+	 * that collects raw card numbers on the merchant's own server switched on, in a
+	 * release that retires it, is worse than making the admin turn it back on knowingly.
+	 *
+	 * Nothing is deleted. Every credential and setting stays where it is, the settings
+	 * page stays reachable, and payment history is untouched. The admin is told what
+	 * happened and why on that page.
+	 *
+	 * @return void
+	 */
+	private static function retire() {
+		if ( module_config::c( 'payment_method_authorize_retired', false ) ) {
+			return;
+		}
+		module_config::save_config( 'payment_method_authorize_retired', 1 );
+
+		if ( ! module_config::c( 'payment_method_authorize_enabled', 0 ) ) {
+			return;
+		}
+		module_config::save_config( 'payment_method_authorize_enabled', 0 );
+		// Remembered so the settings page keeps showing, and can explain itself.
+		module_config::save_config( 'payment_method_authorize_was_enabled', 1 );
 	}
 
 	public function pre_menu() {
 
-		if ( module_config::can_i( 'view', 'Settings' ) ) {
+		if ( module_config::can_i( 'view', 'Settings' ) && self::show_settings_page() ) {
 			$this->links[] = array(
 				"name"                => "Authorize",
 				"p"                   => "authorize_settings",
@@ -48,6 +79,24 @@ class module_paymethod_authorize extends module_base {
 				'menu_include_parent' => 1,
 			);
 		}
+	}
+
+	/**
+	 * Whether this install should see the settings page at all.
+	 *
+	 * Retired, so it is hidden from a fresh install - but an install that is using it,
+	 * that was using it before an upgrade turned it off, or that has payment history
+	 * against it keeps the page, because that is where the explanation lives and where
+	 * the credentials can still be read.
+	 *
+	 * @return bool
+	 */
+	public static function show_settings_page() {
+		if ( self::is_enabled() || module_config::c( 'payment_method_authorize_was_enabled', false ) ) {
+			return true;
+		}
+
+		return module_invoice::payment_method_has_history( self::get_payment_method_key(), array( 'Authorize', self::get_payment_method_name() ) );
 	}
 
 	public function handle_hook( $hook ) {
@@ -90,6 +139,26 @@ class module_paymethod_authorize extends module_base {
 	public function set_allowed_for_invoice( $invoice_id, $allowed = 1 ) {
 		$sql = "REPLACE INTO `" . _DB_PREFIX . "invoice_payment_method` SET `invoice_id` = " . (int) $invoice_id . ", `payment_method` = 'authorize', `enabled` = " . (int) $allowed;
 		query( $sql );
+	}
+
+	/**
+	 * The stable identifier for this payment method, never the admin-editable label.
+	 *
+	 * @return string
+	 */
+	public static function get_payment_method_key() {
+		return 'authorize';
+	}
+
+	/**
+	 * Retired. The method still works everywhere it is already in use - it starts
+	 * payments, answers its notification endpoint, and its history renders unchanged -
+	 * but a fresh install never sees it.
+	 *
+	 * @return bool
+	 */
+	public function is_deprecated() {
+		return true;
 	}
 
 	public static function get_payment_method_name() {
@@ -164,15 +233,17 @@ class module_paymethod_authorize extends module_base {
 				//                $form->content = ob_get_clean();
 				ob_start();
 				?>
-				<form action="<?php echo full_link( _EXTERNAL_TUNNEL . '?m=paymethod_authorize&h=pay&method=authorize' ); ?>"
-				      method="POST" id="authorize-payment-form">
+				<?php module_form::print_form_open_tag( array(
+					'action' => ( full_link( _EXTERNAL_TUNNEL . '?m=paymethod_authorize&h=pay&method=authorize' ) ),
+					'id'     => 'authorize-payment-form',
+				) ); ?>
 					<input type="hidden" name="invoice_payment_id" value="<?php echo $invoice_payment_id; ?>">
 					<input type="hidden" name="invoice_id" value="<?php echo $invoice_id; ?>">
 					<input type="hidden" name="invoice_num" value="<?php echo htmlspecialchars( $invoice_data['name'] ); ?>">
 					<input type="hidden" name="description"
 					       value="<?php _e( 'Payment for Invoice #%', htmlspecialchars( $invoice_data['name'] ) ); ?>">
 					<?php echo $form->content; ?>
-				</form>
+				<?php module_form::print_form_close_tag(); ?>
 				<?php
 				$form->content = ob_get_clean();
 				$form->assign_values(
@@ -197,6 +268,14 @@ class module_paymethod_authorize extends module_base {
 	}
 
 	public function external_hook( $hook ) {
+		// Unlike the other retired gateways, this hook is not a provider callback with a
+		// payment possibly in flight behind it - it is the merchant's own card form
+		// posting back, synchronously. There is nothing to lose by closing it with the
+		// method, and it is the surface that carries the card number.
+		if ( ! self::is_enabled() ) {
+			echo _l( 'This payment method is no longer available.' );
+			exit;
+		}
 		switch ( $hook ) {
 			case 'pay':
 				// result is retured via ajax and displayed on the page.
@@ -217,72 +296,26 @@ class module_paymethod_authorize extends module_base {
 						$transaction->setSandbox( module_config::c( 'payment_method_authorize_sandbox', 0 ) );
 						$transaction->VERIFY_PEER = module_config::c( 'payment_method_authorize_ssl_verify', 1 );
 						$transaction->amount      = $invoice_payment_data['amount']; // USD ONLY
+						// Only the billing details the payment form actually asks for. This used to be
+						// the entire AIM field list, which let the browser set "amount" and
+						// "test_request" - and because __set() and setField() write the same
+						// _x_post_fields slot, a posted amount overwrote the invoice amount set just
+						// above. Anyone holding a payment link could pay a cent, or send
+						// test_request=TRUE for an approval that moves no money, and the invoice was
+						// then marked paid in full.
 						foreach (
 							array(
 								"address",
-								"allow_partial_auth",
-								"amount",
-								"auth_code",
-								"authentication_indicator",
-								"bank_aba_code",
-								"bank_acct_name",
-								"bank_acct_num",
-								"bank_acct_type",
-								"bank_check_number",
-								"bank_name",
-								"card_code",
-								"card_num",
-								"cardholder_authentication_value",
 								"city",
 								"company",
 								"country",
-								"cust_id",
-								"customer_ip",
-								"delim_char",
-								"delim_data",
-								"description",
-								"duplicate_window",
-								"duty",
-								"echeck_type",
-								"email",
-								"email_customer",
-								"encap_char",
-								"exp_date",
-								"fax",
 								"first_name",
-								"footer_email_receipt",
-								"freight",
-								"header_email_receipt",
-								"invoice_num",
 								"last_name",
-								"line_item",
-								"login",
-								"method",
-								"phone",
-								"po_num",
-								"recurring_billing",
-								"relay_response",
-								"ship_to_address",
-								"ship_to_city",
-								"ship_to_company",
-								"ship_to_country",
-								"ship_to_first_name",
-								"ship_to_last_name",
-								"ship_to_state",
-								"ship_to_zip",
-								"split_tender_id",
 								"state",
-								"tax",
-								"tax_exempt",
-								"test_request",
-								"tran_key",
-								"trans_id",
-								"type",
-								"version",
-								"zip"
+								"zip",
 							) as $possible_value
 						) {
-							if ( isset( $_POST[ $possible_value ] ) ) {
+							if ( isset( $_POST[ $possible_value ] ) && is_string( $_POST[ $possible_value ] ) ) {
 								$transaction->setField( $possible_value, $_POST[ $possible_value ] );
 							}
 						}
@@ -294,6 +327,18 @@ class module_paymethod_authorize extends module_base {
 						//$transaction->card_code = $_POST['cvv'];
 
 						$response = $transaction->authorizeAndCapture();
+
+						// Check what was actually charged before calling it paid. An approval on
+						// its own says nothing about the amount, and this used to record the
+						// payment without ever looking.
+						$expected_amount = (float) $invoice_payment_data['amount'];
+						$charged_amount  = isset( $response->amount ) ? (float) $response->amount : false;
+						if ( $response->approved && $charged_amount !== false && abs( $charged_amount - $expected_amount ) > 0.001 ) {
+							module_paymethod_stripe::add_payment_data( $invoice_payment_id, 'log',
+								'Authorize.Net approved ' . $charged_amount . ' but the payment was for ' . $expected_amount . '. Not recorded as paid.' );
+							echo 'The amount charged did not match this invoice. Please contact us.';
+							exit;
+						}
 
 						if ( $response->approved ) {
 							//                          echo "<h1>Success! The test credit card has been charged!</h1>";
@@ -318,5 +363,4 @@ class module_paymethod_authorize extends module_base {
 				exit;
 		}
 	}
-
 }

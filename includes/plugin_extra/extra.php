@@ -4,13 +4,18 @@ define( '_EXTRA_FIELD_DELIM', '$#%|' );
 define( '_EXTRA_DISPLAY_TYPE_COLUMN', 1 );
 
 function sort_extra_defaults( $a, $b ) {
-	return $a['order'] > $b['order'];
+	return $a['order'] <=> $b['order'];
 }
 
-class module_extra extends module_base {
+class module_extra extends module_base
+{
+	public $links;
 
-	var $links;
-
+	public function __construct() {
+		$this->module_name     = 'extra';
+		$this->module_position = 180;
+		$this->version         = 2.265;
+	}
 
 	public static function can_i( $actions, $name = false, $category = false, $module = false ) {
 		if ( ! $module ) {
@@ -25,7 +30,6 @@ class module_extra extends module_base {
 	}
 
 	function init() {
-		$this->version = 2.265;
 		// 2.265 - 2017-02-20 - custom data extra field integration
 		// 2.264 - 2016-12-20 - ajax lookup fields
 		// 2.263 - 2016-10-25 - extra field update
@@ -62,9 +66,7 @@ class module_extra extends module_base {
 		// 2.245 - 2013-12-19 - extra fields now available when creating a job
 		// 2.246 - 2014-01-23 - searching by extra fields
 
-		$this->links           = array();
-		$this->module_name     = "extra";
-		$this->module_position = 8882;
+		$this->links = array();
 		module_config::register_css( 'extra', 'extra.css' );
 		module_config::register_js( 'extra', 'extra.js' );
 	}
@@ -83,6 +85,11 @@ class module_extra extends module_base {
 	}
 
 	public function process() {
+		// Every form that reaches here is posted from a UCM page, so it carries the
+		// form auth key. Refuse anything that does not - see module_form::check_secure_key().
+		if ( ! module_form::check_secure_key() ) {
+			module_form::reject_invalid_form_auth();
+		}
 		if ( 'save_extra_default' == $_REQUEST['_process'] ) {
 
 			if ( ! module_config::can_i( 'edit', 'Settings' ) ) {
@@ -287,16 +294,28 @@ class module_extra extends module_base {
 				$extra_items = array();
 				$extra_items = self::sort_extras( $extra_items, $default_fields, $allow_new );
 			}
+			// One screen can show more than one block of extras - the customer edit screen
+			// shows the customer's and the contact user's - and the ids below only run
+			// unique inside a single block. The owner table separates the usual case; the
+			// counter covers a screen that shows the same table twice.
+			static $blocks_rendered = array();
+
+			$blocks_rendered[ $owner_table ] = isset( $blocks_rendered[ $owner_table ] ) ? $blocks_rendered[ $owner_table ] + 1 : 1;
+			$id_prefix                       = 'extra_' . $owner_table . ( $blocks_rendered[ $owner_table ] > 1 ? '_' . $blocks_rendered[ $owner_table ] : '' ) . '_';
+
 			$more_fields_available = false;
 			foreach ( $extra_items as $extra_item ) {
 				$extra_id = $extra_item['extra_id'];
-				$id       = 'extra_' . preg_replace( '#\W+#', '_', $extra_item['extra_key'] );
+				// The key on its own collapses every run of punctuation to a single
+				// underscore, so two keys that differ only in punctuation would share an
+				// id. The extra's own id keeps them apart.
+				$id = $id_prefix . preg_replace( '#\W+#', '_', $extra_item['extra_key'] ) . '_' . $extra_id;
 				if ( ! empty( $extra_item['hidden'] ) ) {
 					$more_fields_available = true;
 				}
 				ob_start();
 				?>
-				<tr id="extra_<?php echo $extra_id; ?>"
+				<tr id="<?php echo $id_prefix . $extra_id; ?>"
 				    class="extra_field_row<?php echo ! empty( $extra_item['hidden'] ) ? ' extra_field_row_hidden' : ''; ?>">
 					<th <?php if ( $can_edit_settings && isset( $default_fields[ $extra_item['extra_key'] ]['field_type'] ) ) {
 						echo ' data-settings-url="' . module_extra::link_open_extra_default( $default_fields[ $extra_item['extra_key'] ]['extra_default_id'], false ) . '"';
@@ -362,7 +381,7 @@ class module_extra extends module_base {
 											);
 										}
 									}
-								} else if ( $field_type == 'select' ) {
+								} elseif ( $field_type == 'select' ) {
 									$form_element['options'] = array();
 									if ( isset( $default_fields[ $extra_item['extra_key'] ]['options'] ) && is_array( $default_fields[ $extra_item['extra_key'] ]['options'] ) && isset( $default_fields[ $extra_item['extra_key'] ]['options']['select'] ) ) {
 										foreach ( explode( "\n", $default_fields[ $extra_item['extra_key'] ]['options']['select'] ) as $val ) {
@@ -390,11 +409,11 @@ class module_extra extends module_base {
 				$extra_id = 'new';
 				ob_start();
 				?>
-				<tr id="extra_<?php echo $owner_table; ?>_options_<?php echo $extra_id; ?>" class="extra_fields_show_more">
+				<tr id="<?php echo $id_prefix . 'options_' . $extra_id; ?>" class="extra_fields_show_more">
 					<th></th>
 					<td>
 						<a href="#" class="extra_fields_show_button"
-						   onclick="$('#extra_<?php echo $owner_table; ?>_options_<?php echo $extra_id; ?>').hide();$('#extra_<?php echo $owner_table; ?>_holder_<?php echo $extra_id; ?>').show(); return false;"><?php _e( 'more fields &raquo;' ); ?></a>
+						   onclick="$('#<?php echo $id_prefix . 'options_' . $extra_id; ?>').hide();$('#<?php echo $id_prefix . 'holder_' . $extra_id; ?>').show(); return false;"><?php _e( 'more fields &raquo;' ); ?></a>
 					</td>
 				</tr>
 				<?php
@@ -403,7 +422,7 @@ class module_extra extends module_base {
 					$extra_id = 'new';
 					ob_start();
 					?>
-					<tr id="extra_<?php echo $extra_id; ?>" class="extra_field_row_hidden">
+					<tr id="<?php echo $id_prefix . $extra_id; ?>" class="extra_field_row_hidden">
 						<th>
 							<input type="text" name="extra_<?php echo $owner_table; ?>_field[<?php echo $extra_id; ?>][key]"
 							       value="<?php ?>" class="extra_field" placeholder="<?php _e( 'New Field' ); ?>">
@@ -615,7 +634,7 @@ class module_extra extends module_base {
 				} else {
 					$extra_items[ $key ]['hidden'] = ! $allow_new ? true : ( $val['field_type'] == 'file' ? false : module_config::c( 'hide_extra', 1 ) );
 				}
-				$new_id ++;
+				$new_id++;
 			}
 		}
 
@@ -660,7 +679,7 @@ class module_extra extends module_base {
 				$nextorder[ $r['owner_table'] ] = 0;
 			}
 			if ( ! isset( $defaults[ $r['owner_table'] ] ) || ! isset( $defaults[ $r['owner_table'] ][ $r['extra_key'] ] ) ) {
-				$nextorder[ $r['owner_table'] ] ++;
+				$nextorder[ $r['owner_table'] ]++;
 				$extra_default_id                                                     = update_insert( 'extra_default_id', false, 'extra_default', array(
 					'owner_table'       => $r['owner_table'],
 					'owner_table_child' => $owner_table_child,
@@ -803,7 +822,7 @@ class module_extra extends module_base {
 		}
 	}
 
-	static $column_headers = array();
+	public static $column_headers = array();
 
 	public static function print_table_header( $owner_table, $options = array() ) {
 		$cols = 0;
@@ -834,7 +853,7 @@ class module_extra extends module_base {
 					<?php echo $column_header['key']; ?>
 				</th>
 				<?php
-				$cols ++;
+				$cols++;
 			}
 		}
 
@@ -853,7 +872,7 @@ class module_extra extends module_base {
 					<?php
 					if ( ! empty( $column_header['field_type'] ) && $column_header['field_type'] == 'reference' && ! empty( $column_header['options']['reference'] ) ) {
 						echo self::get_reference( $owner_table, $owner_id, $column_header, $column_header['options']['reference'] );
-					} else if ( isset( $extra_data[ $column_header['key'] ] ) ) {
+					} elseif ( isset( $extra_data[ $column_header['key'] ] ) ) {
 						echo forum_text( $extra_data[ $column_header['key'] ]['extra'] );
 					} else {
 						echo '';
@@ -1026,5 +1045,4 @@ PRIMARY KEY (`extra_key_id`),
 KEY `owner_table` (`owner_table`)
 ) ENGINE=InnoDB  DEFAULT CHARSET=utf8;*/
 	}
-
 }

@@ -2,9 +2,9 @@
 
 define( '_THEME_CONFIG_PREFIX', '_theme_' );
 
-class module_theme extends module_base {
-
-	var $links;
+class module_theme extends module_base
+{
+	public $links;
 
 	public static $current_theme = '';
 	public static $current_theme_settings = array();
@@ -23,13 +23,16 @@ class module_theme extends module_base {
 	}
 
 	public function __construct() {
+		$this->module_name     = 'theme';
+		$this->module_position = 520;
+		$this->version         = 2.408;
 		// here because init() doesn't run on install.
 		hook_add( 'plugins_loaded', 'module_theme::hook_plugins_loaded' );
 		hook_add( 'page_header', 'module_theme::hook_page_header' );
 	}
 
 	public function init() {
-		$this->version = 2.407;
+		// 2.408 - 2026-10-17 - new SVG logo and favicon
 		// 2.407 - 2022-12-27 - php8.1 fixes
 		// 2.406 - 2017-05-02 - big changes
 		// 2.405 - 2017-02-27 - custom page header code
@@ -97,9 +100,7 @@ class module_theme extends module_base {
 		// 2.346 - css fixes
 
 
-		$this->links           = array();
-		$this->module_name     = "theme";
-		$this->module_position = 8882;
+		$this->links = array();
 
 		if ( file_exists( 'includes/plugin_theme/pages/theme_settings.php' ) && module_security::has_feature_access( array(
 				'name'        => 'Settings',
@@ -547,6 +548,61 @@ class module_theme extends module_base {
 		}
 
 		return $style;
+	}
+
+	/** Where the bundled logo and favicon live. Inside this plugin, so an update delivers them. */
+	const BRAND_IMAGES = 'includes/plugin_theme/images/';
+
+	/**
+	 * The product logo that ships with UCM.
+	 *
+	 * @param bool $on_light true for a theme whose header is light: the wordmark is drawn in
+	 *                       dark ink instead of white.
+	 *
+	 * @return string
+	 */
+	public static function default_logo_url( $on_light = false ) {
+		return _BASE_HREF . self::BRAND_IMAGES . ( $on_light ? 'ucm-logo-on-light.svg' : 'ucm-logo.svg' );
+	}
+
+	/**
+	 * The logo to put in the header: the one set under Theme Settings, or the bundled one.
+	 *
+	 * A setting that is only the old stock `images/logo.png` counts as not set, so installs
+	 * that saved Theme Settings without changing the logo get the current one. An empty
+	 * setting means the logo was deliberately removed, and stays empty.
+	 *
+	 * @param bool $on_light see default_logo_url()
+	 *
+	 * @return string
+	 */
+	public static function logo_url( $on_light = false ) {
+		$stored = self::get_config( 'theme_logo', null );
+		if ( null === $stored ) {
+			return self::default_logo_url( $on_light );
+		}
+		$host = isset( $_SERVER['HTTP_HOST'] ) && is_string( $_SERVER['HTTP_HOST'] ) ? $_SERVER['HTTP_HOST'] : '';
+		// includes/functions.php reaches an updating install as a core file, after the
+		// plugins, so for a moment this file can be newer than it.
+		if ( function_exists( 'ucm_is_stock_logo_url' ) && ucm_is_stock_logo_url( (string) $stored, _BASE_HREF, $host ) ) {
+			return self::default_logo_url( $on_light );
+		}
+
+		return (string) $stored;
+	}
+
+	/**
+	 * The favicon: the one set under Theme Settings, or the bundled pinwheel.
+	 *
+	 * Theme Settings saves this field empty when nobody fills it in, so empty means "use the
+	 * default" here rather than "no favicon".
+	 *
+	 * @return string
+	 */
+	public static function favicon_url() {
+		$stored = (string) self::get_config( 'theme_favicon', '' );
+
+		return '' !== trim( $stored ) ? $stored : _BASE_HREF . self::BRAND_IMAGES . 'ucm-favicon.svg';
 	}
 
 	public static function new_table_manager() {

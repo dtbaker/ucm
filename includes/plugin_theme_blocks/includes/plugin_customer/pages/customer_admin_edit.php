@@ -86,7 +86,7 @@ if ( ! module_config::c( 'customer_widgets', 1 ) || ! (int) $customer_id || isse
 					if ( isset( $invoice['date_cancel'] ) && $invoice['date_cancel'] != '0000-00-00' ) {
 						continue;
 					}
-					$count ++;
+					$count++;
 				}
 
 				$count_widgets['invoices'] = array(
@@ -162,7 +162,7 @@ if ( ! module_config::c( 'customer_widgets', 1 ) || ! (int) $customer_id || isse
 								}
 								if ( empty( $counter_circle['color'] ) ) {
 									$counter_circle['color'] = $colors[ $color_count ];
-									$color_count ++;
+									$color_count++;
 									if ( $color_count >= count( $colors ) ) {
 										$color_count = 0;
 									}
@@ -213,7 +213,7 @@ if ( ! module_config::c( 'customer_widgets', 1 ) || ! (int) $customer_id || isse
 
 			$x = 0;
 			foreach ( $home_summary as $home_sum ) {
-				$x ++;
+				$x++;
 				extract( $home_sum ); // hacky, better than old code tho.
 				$data = module_finance::get_finance_summary( $week_start, $week_end, $multiplyer, $row_limit, $customer_id );
 				// return the bits that will be used in the output of the HTML table (and now in the calendar module output)

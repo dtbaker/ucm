@@ -219,7 +219,7 @@ function metris_search_bar( $callback, $options ) {
 										$field['class'] .= ' form-control input-sm';
 										module_form::generate_form_element( $field );
 										echo ' ';
-									} else if ( is_closure( $field ) ) {
+									} elseif ( is_closure( $field ) ) {
 										$field();
 									} else {
 										echo $field . ' ';
@@ -274,42 +274,63 @@ function metris_generate_fieldset( $callback, $options ) {
 		'class'           => 'tableclass tableclass_form',
 		'extra_settings'  => array(),
 		'elements_before' => '',
+		'tbody_after'     => '',
 		'elements_after'  => '',
 	);
 	$options  = array_merge( $defaults, $options );
 	if ( function_exists( 'hook_filter_var' ) ) {
 		$options = hook_filter_var( 'generate_fieldset_options', $options );
 	}
-	$fieldset_id = $options['id'] ? $options['id'] : 'fieldset_' . substr( md5( serialize( $options['heading'] ) ), 0, 5 );
+	// Must match module_form::generate_fieldset. Without the heading guard every fieldset
+	// that deliberately carries neither an id nor a heading - the read-only blocks and the
+	// public pages, which must not touch the `form` table - got the same id back,
+	// 'fieldset_' . substr( md5( serialize( false ) ), 0, 5 ). Nothing was ever written
+	// under it (the write still runs in module_form, where the id is correctly false), but
+	// every such fieldset read the `form` table under that shared id, emitted it as its own
+	// HTML id, repeated it in every <tr> id on the page, and - because the id looked real -
+	// came out editable, offering field-customisation controls with nowhere to save them.
+	$fieldset_id = ! empty( $options['id'] )
+		? $options['id']
+		: ( ! empty( $options['heading'] ) ? 'fieldset_' . substr( md5( serialize( $options['heading'] ) ), 0, 5 ) : false );
 	// read out the custom field display options for this form (e.g. hidden fields)
 	$user_display_settings = module_form::get_fieldset_settings( $fieldset_id );
 	$fieldset_settings     = array();
-	if ( isset( $options['editable'] ) && ! $options['editable'] ) {
+	if ( ! $fieldset_id || ( isset( $options['editable'] ) && ! $options['editable'] ) ) {
 		$fieldset_settings['editable'] = 0;
 	}
 	$fieldset_settings['fields'] = count( $options['elements'] );
+	// Must match module_form::generate_fieldset. 'rows' renders the <tr>s on their own -
+	// no box, no heading, no table - for a caller building a fragment to drop into a
+	// table that already exists.
+	$rows_only = $options['type'] === 'rows';
 	ob_start();
-	?>
+	if ( ! $rows_only ) {
+		?>
 
 	<div class="box <?php echo isset( $options['heading']['responsive'] ) ? ' box-responsive' : ''; ?>"
 	     data-fieldset-settings="<?php echo htmlspecialchars( json_encode( $fieldset_settings ), ENT_QUOTES, 'UTF-8' ); ?>"
 	     data-fieldset-id="<?php echo $fieldset_id; ?>" id="<?php echo $fieldset_id; ?>">
 		<header>
-			<?php if ( $options['heading'] ){
+			<?php if ( $options['heading'] ) {
 				if ( ! isset( $options['heading']['type'] ) || $options['heading']['type'] != 'h5' ) {
 					$options['heading']['type'] = 'h5';
 				}
 				print_heading( $options['heading'] );
-			}else if ( $options['title'] ){ ?>
+			} elseif ( $options['title'] ) { ?>
 			<<?php echo $options['title_type']; ?>><?php _e( $options['title'] ); ?></<?php echo $options['title_type']; ?>>
 		<?php } ?>
 		</header>
 		<!-- .block -->
 		<div class="body">
-			<?php echo $options['elements_before']; ?>
+			<?php
+			echo $options['elements_before'];
+		}
+		?>
 			<?php if ( $options['elements'] ) { ?>
+				<?php if ( ! $rows_only ) { ?>
 				<table class="<?php echo $options['class']; ?>">
 					<tbody>
+				<?php } ?>
 					<?php
 					foreach ( $options['elements'] as $element_id => $element ) {
 						if ( isset( $element['ignore'] ) && $element['ignore'] ) {
@@ -320,7 +341,9 @@ function metris_generate_fieldset( $callback, $options ) {
 							unset( $element['field'] );
 						}
 						?>
-					<tr id="<?php echo $fieldset_id . '_' . $element_id; ?>" <?php
+					<tr id="<?php echo isset( $element['row_attributes']['id'] )
+						? htmlspecialchars( (string) $element['row_attributes']['id'], ENT_QUOTES, 'UTF-8' )
+						: $fieldset_id . '_' . $element_id; ?>" <?php
 					if ( ! empty( $element['dependency'] ) && is_array( $element['dependency'] ) ) {
 						if ( empty( $element['dependency']['fieldset_id'] ) ) {
 							$element['dependency']['fieldset_id'] = $fieldset_id;
@@ -328,45 +351,58 @@ function metris_generate_fieldset( $callback, $options ) {
 						?> data-dependency="<?php echo htmlspecialchars( json_encode( $element['dependency'] ), ENT_QUOTES, 'UTF-8' ); ?>" <?php
 					}
 					echo ' data-element-id="' . $element_id . '"';
-					if ( ! empty( $user_display_settings['hidden'][ $element_id ] ) ) {
-						echo ' class="fieldset_element_hidden"';
+					// Kept in step with module_form::generate_fieldset(), which this replaces.
+					// A caller that asks for a row class has to get one under every theme, or
+					// the page's own show and hide works on the default theme only.
+					$row_classes = array();
+					if ( ! empty( $element['row_class'] ) ) {
+						$row_classes[] = $element['row_class'];
 					}
+					if ( ! empty( $user_display_settings['hidden'][ $element_id ] ) ) {
+						$row_classes[] = 'fieldset_element_hidden';
+					}
+					if ( $row_classes ) {
+						echo ' class="' . htmlspecialchars( implode( ' ', $row_classes ), ENT_QUOTES, 'UTF-8' ) . '"';
+					}
+					if ( ! empty( $element['row_style'] ) ) {
+						echo ' style="' . htmlspecialchars( $element['row_style'], ENT_QUOTES, 'UTF-8' ) . '"';
+					}
+					// row_attributes puts arbitrary attributes on the row. id, class and style are
+					// left out: the id is emitted above (a caller supplied one replaces the generated
+					// one), and class and style have their own options, so emitting them here too
+					// would put the attribute on the tag twice.
+					module_form::render_cell_attributes( array_diff_key(
+						$element['row_attributes'] ?? array(),
+						array( 'id' => 1, 'class' => 1, 'style' => 1 )
+					) );
 					?>>
 						<?php if ( ( isset( $element['message'] ) && $element['message'] ) || ( isset( $element['warning'] ) && isset( $element['warning'] ) ) ) { ?>
 							<th colspan="2" style="text-align:center">
 								<?php if ( isset( $element['message'] ) ) { ?>
 									<?php echo $element['message']; ?>
-								<?php } else if ( isset( $element['warning'] ) ) { ?>
+								<?php } elseif ( isset( $element['warning'] ) ) { ?>
 									<span class="error_text"><?php echo $element['warning']; ?></span>
 								<?php } ?>
 
 							</th>
 						<?php } else { ?>
-							<?php if ( isset( $element['title'] ) ) { ?>
+							<?php if ( isset( $element['title'] ) || isset( $element['title_fields'] ) ) { ?>
 								<th
-									class="<?php echo isset( $element['row_title_class'] ) ? $element['row_title_class'] : $options['row_title_class']; ?>">
-									<?php echo htmlspecialchars( _l( $element['title'] ) ); ?>
+									class="<?php echo isset( $element['row_title_class'] ) ? $element['row_title_class'] : $options['row_title_class']; ?>"<?php module_form::render_cell_attributes( $element['title_attributes'] ?? array() ); ?>>
+									<?php
+									if ( isset( $element['title'] ) ) {
+										echo htmlspecialchars( _l( $element['title'] ) );
+									}
+									if ( isset( $element['title_fields'] ) ) {
+										module_form::render_fields( $element['title_fields'] );
+									}
+									?>
 								</th>
 							<?php }
 							if ( isset( $element['fields'] ) ) { ?>
 								<td
-									class="<?php echo isset( $element['row_data_class'] ) ? $element['row_data_class'] : $options['row_data_class']; ?>">
-									<?php if ( is_array( $element['fields'] ) ) {
-										foreach ( $element['fields'] as $dataid => $field ) {
-											if ( is_array( $field ) ) {
-												// treat this as a call to the form generate option
-												module_form::generate_form_element( $field );
-												echo ' ';
-											} else if ( is_closure( $field ) ) {
-												$field();
-											} else {
-												echo $field . ' ';
-											}
-										}
-									} else {
-										echo $element['fields'];
-									}
-									?>
+									class="<?php echo isset( $element['row_data_class'] ) ? $element['row_data_class'] : $options['row_data_class']; ?>"<?php module_form::render_cell_attributes( $element['cell_attributes'] ?? array() ); ?>>
+									<?php module_form::render_fields( $element['fields'] ); ?>
 								</td>
 							<?php } ?>
 							</tr>
@@ -377,16 +413,28 @@ function metris_generate_fieldset( $callback, $options ) {
 						module_extra::display_extras( $options['extra_settings'] );
 					}
 					?>
+					<?php if ( ! $rows_only ) { ?>
 					</tbody>
+					<?php
+					// tbody_after is raw markup placed inside the table, after the fieldset's own
+					// tbody. It exists for a caller whose script replaces a block of rows: a table
+					// may carry several tbodies, so a second one can be swapped out without
+					// disturbing the rows this fieldset rendered.
+					echo $options['tbody_after'] ?? '';
+					?>
 				</table>
+				<?php } ?>
 				<?php
 			}
-			echo $options['elements_after']; ?>
+			if ( ! $rows_only ) {
+				echo $options['elements_after'];
+				?>
 		</div>
 		<!-- /.block -->
 	</div>
-
-
+			<?php
+			}
+			?>
 	<?php
 
 	return ob_get_clean();

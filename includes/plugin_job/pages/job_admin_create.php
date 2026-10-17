@@ -1,6 +1,6 @@
 <?php
 
-if ( ! $job_safe ) {
+if ( empty( $job_safe ) ) {
 	die( 'denied' );
 }
 
@@ -112,7 +112,7 @@ $job_tasks = module_job::get_tasks( $job_id );
             $(this).parent().find('.task_long_description').slideToggle();
             return false;
         });
-			<?php if(module_config::c( 'job_create_task_as_name', 0 )){ ?>
+			<?php if (module_config::c( 'job_create_task_as_name', 0 )) { ?>
         $('#job_name').keyup(setnewjobtask).change(setnewjobtask);
 			<?php } ?>
 
@@ -122,14 +122,17 @@ $job_tasks = module_job::get_tasks( $job_id );
     });
 </script>
 
-<form action="" method="post" id="job_form" class="job_form_new">
-	<input type="hidden" name="_process" value="save_job"/>
-	<input type="hidden" name="job_id" value="<?php echo $job_id; ?>"/>
-	<input type="hidden" name="customer_id" value="<?php echo (int) $job['customer_id']; ?>"/>
-	<input type="hidden" name="quote_id" value="<?php echo (int) $job['quote_id']; ?>"/>
-
-
-	<?php
+<?php
+module_form::print_form_open_tag( array(
+	'id'      => 'job_form',
+	'class'   => 'job_form_new',
+	'process' => 'save_job',
+	'hidden'  => array(
+		'job_id'      => $job_id,
+		'customer_id' => (int) $job['customer_id'],
+		'quote_id'    => (int) $job['quote_id'],
+	),
+) );
 
 	$fields = array(
 		'fields' => array(
@@ -478,7 +481,7 @@ $job_tasks = module_job::get_tasks( $job_id );
 					),
 				);
 			}
-		} else if ( ! class_exists( 'module_website', false ) && module_config::c( 'show_ucm_ads', 1 ) ) {
+		} elseif ( ! class_exists( 'module_website', false ) && module_config::c( 'show_ucm_ads', 1 ) ) {
 
 			$fieldset_data['elements'][] = array(
 				'title'  => module_config::c( 'project_name_single', 'Website' ),
@@ -548,7 +551,7 @@ $job_tasks = module_job::get_tasks( $job_id );
 
 								<?php
 								_h( 'A renewal is available for this job. Clicking this button will create a new job based on this job, and set the renewal reminder up again for the next date.' );
-							} else if ( isset( $job['renew_auto'] ) && $job['renew_auto'] ) {
+							} elseif ( isset( $job['renew_auto'] ) && $job['renew_auto'] ) {
 								_h( 'This job will be automatically renewed on this date.' );
 							} else {
 								_h( 'You will be reminded to renew this job on this date. You will be given the option to renew this job closer to the renewal date (a new button will appear).' );
@@ -719,9 +722,9 @@ $job_tasks = module_job::get_tasks( $job_id );
 				<th class="task_column task_width"><?php _e( 'Description' ); ?></th>
 				<th width="10" class="task_type_label">
 					<?php if ( $job['default_task_type'] == _TASK_TYPE_AMOUNT_ONLY ) {
-					} else if ( $job['default_task_type'] == _TASK_TYPE_QTY_AMOUNT ) {
+					} elseif ( $job['default_task_type'] == _TASK_TYPE_QTY_AMOUNT ) {
 						_e( module_config::c( 'task_qty_name', _l( 'Qty' ) ) );
-					} else if ( $job['default_task_type'] == _TASK_TYPE_HOURS_AMOUNT ) {
+					} elseif ( $job['default_task_type'] == _TASK_TYPE_HOURS_AMOUNT ) {
 						_e( module_config::c( 'task_hours_name', _l( 'Hours' ) ) );
 					} ?>
 				</th>
@@ -771,7 +774,7 @@ $job_tasks = module_job::get_tasks( $job_id );
 					<?php if ( module_config::c( 'job_allow_staff_assignment', 1 ) ) { ?>
 						<td valign="top">
 							<?php echo print_select_box( $staff_member_rel, 'job_task[new][user_id]',
-								isset( $staff_member_rel[ module_security::get_loggedin_id() ] ) ? module_security::get_loggedin_id() : false, 'job_task_staff_list', '' ); ?>
+								isset( $staff_member_rel[ module_security::get_loggedin_id() ] ) ? module_security::get_loggedin_id() : false, 'job_task_staff_list', true ); ?>
 						</td>
 					<?php } ?>
 					<td valign="top">
@@ -795,7 +798,7 @@ $job_tasks = module_job::get_tasks( $job_id );
 			$c           = 0;
 			$task_number = 0;
 			foreach ( $job_tasks as $task_id => $task_data ) {
-				$task_number ++;
+				$task_number++;
 				if ( module_security::is_page_editable() && module_job::can_i( 'edit', 'Job Tasks' ) ) { ?>
 					<tbody id="task_edit_<?php echo $task_id; ?>" style="display:none;" class="task_edit"></tbody>
 				<?php } else {
@@ -806,23 +809,23 @@ $job_tasks = module_job::get_tasks( $job_id );
 				) );
 				?>
 				<input type="hidden" name="job_task[new<?php echo $task_number; ?>][description]"
-				       value="<?php echo htmlspecialchars( $task_data['description'] ); ?>">
+				       value="<?php echo htmlspecialchars( (string) ( $task_data['description'] ?? '' ) ); ?>">
 				<input type="hidden" name="job_task[new<?php echo $task_number; ?>][long_description]"
-				       value="<?php echo htmlspecialchars( $task_data['long_description'] ); ?>">
+				       value="<?php echo htmlspecialchars( (string) ( $task_data['long_description'] ?? '' ) ); ?>">
 				<input type="hidden" name="job_task[new<?php echo $task_number; ?>][hours]"
-				       value="<?php echo htmlspecialchars( $task_data['hours'] ); ?>">
+				       value="<?php echo htmlspecialchars( (string) ( $task_data['hours'] ?? '' ) ); ?>">
 				<input type="hidden" name="job_task[new<?php echo $task_number; ?>][amount]"
-				       value="<?php echo htmlspecialchars( $task_data['amount'] ); ?>">
+				       value="<?php echo htmlspecialchars( (string) ( $task_data['amount'] ?? '' ) ); ?>">
 				<input type="hidden" name="job_task[new<?php echo $task_number; ?>][date_due]"
-				       value="<?php echo htmlspecialchars( $task_data['date_due'] ); ?>">
+				       value="<?php echo htmlspecialchars( (string) ( $task_data['date_due'] ?? '' ) ); ?>">
 				<input type="hidden" name="job_task[new<?php echo $task_number; ?>][manual_task_type]"
-				       value="<?php echo htmlspecialchars( $task_data['manual_task_type'] ); ?>">
+				       value="<?php echo htmlspecialchars( (string) ( $task_data['manual_task_type'] ?? '' ) ); ?>">
 				<input type="hidden" name="job_task[new<?php echo $task_number; ?>][billable_t]" value="1">
 				<input type="hidden" name="job_task[new<?php echo $task_number; ?>][taxable_t]" value="1">
 				<input type="hidden" name="job_task[new<?php echo $task_number; ?>][billable]"
-				       value="<?php echo htmlspecialchars( $task_data['billable'] ); ?>">
+				       value="<?php echo htmlspecialchars( (string) ( $task_data['billable'] ?? '' ) ); ?>">
 				<input type="hidden" name="job_task[new<?php echo $task_number; ?>][taxable]"
-				       value="<?php echo htmlspecialchars( $task_data['taxable'] ); ?>">
+				       value="<?php echo htmlspecialchars( (string) ( $task_data['taxable'] ?? '' ) ); ?>">
 				<input type="hidden" name="job_task[new<?php echo $task_number; ?>][user_id]"
 				       value="<?php echo (int) $task_data['user_id']; ?>">
 				<input type="hidden" name="job_task[new<?php echo $task_number; ?>][product_id]"
@@ -844,6 +847,4 @@ $job_tasks = module_job::get_tasks( $job_id );
 
 	hook_handle_callback( 'layout_column_half', 'end' );
 
-	?>
-
-</form>
+	module_form::print_form_close_tag();

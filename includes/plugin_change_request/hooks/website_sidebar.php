@@ -76,5 +76,3 @@ if ( isset( $change_request_website['enabled'] ) && $change_request_website['ena
 }
 
 echo module_form::generate_fieldset( $fieldset_data );
-
-?>

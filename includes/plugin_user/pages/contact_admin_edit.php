@@ -1,6 +1,6 @@
 <?php
 
-if ( ! $user_safe ) {
+if ( empty( $user_safe ) ) {
 	die( 'fail' );
 }
 
@@ -104,17 +104,18 @@ if ( isset( $user[ $use_master_key ] ) && $user[ $use_master_key ] ) {
 	die( 'Wrong file' );
 }
 
+module_form::print_form_open_tag( array(
+	'autocomplete' => 'off',
+	'process'      => 'save_user',
+	'hidden'       => array(
+		'user_id'       => $user_id,
+		$use_master_key => $user[ $use_master_key ],
+	),
+) );
 ?>
-
-
-<form action="" method="post" autocomplete="off">
-	<input type="hidden" name="_process" value="save_user"/>
 	<!-- <input type="hidden" name="_redirect" value="<?php echo $module->link( "", array( "saved"   => true,
 	                                                                                       "user_id" => ( (int) $user_id ) ? $user_id : ''
 	) ); ?>" /> -->
-	<input type="hidden" name="user_id" value="<?php echo $user_id; ?>"/>
-	<input type="hidden" name="<?php echo $use_master_key; ?>" value="<?php echo $user[ $use_master_key ]; ?>"/>
-
 
 	<?php
 
@@ -164,7 +165,7 @@ if ( isset( $user[ $use_master_key ] ) && $user[ $use_master_key ] ) {
 					<?php _e( 'Notice: This contact is primary and has access to the other linked customers: %s', implode( ', ', $c ) ); ?>
 				</div>
 				<?php
-			} else if ( $user['linked_parent_user_id'] ) {
+			} elseif ( $user['linked_parent_user_id'] ) {
 				?>
 				<div>
 					<?php _e( 'Notice: This contact has been linked to %s. Please go there to edit their details.', module_user::link_open_contact( $user['linked_parent_user_id'], true ) ); ?>
@@ -206,14 +207,14 @@ if ( isset( $user[ $use_master_key ] ) && $user[ $use_master_key ] ) {
 		// check if contact exists under other customer accounts.
 		$others = module_user::get_contacts( array(
 			'email'                     => $user['email'],
-			"${contact_module_name}_id" => 0,
+			"{$contact_module_name}_id" => 0,
 		) );
 		if ( count( $others ) > 1 ) {
 			foreach ( $others as $other_id => $other ) {
 				if ( $other['user_id'] == $user['user_id'] ) {
 					// this "other" person is from teh same customer as us.
 					unset( $others[ $other_id ] );
-				} else if ( count( $contact_links ) ) {
+				} elseif ( count( $contact_links ) ) {
 					// check if this one is already linked somewhere.
 					foreach ( $contact_links as $contact_link ) {
 						if ( $contact_link['user_id'] == $other['user_id'] ) {
@@ -224,38 +225,28 @@ if ( isset( $user[ $use_master_key ] ) && $user[ $use_master_key ] ) {
 				}
 			}
 			if ( count( $others ) ) {
-				ob_start();
-				?>
-				<table class="tableclass tableclass_form tableclass_full">
-					<tbody>
-					<?php foreach ( $others as $other ) { ?>
-						<tr>
-							<td>
-								<input type="hidden" name="link_user_ids[]" value="<?php echo $other['user_id']; ?>">
-								<!-- todo- checkbox -->
-								<?php echo _l( '%s under customer %s', module_user::link_open_contact( $other['user_id'], true, $other ), module_customer::link_open( $other['customer_id'], true ) ); ?>
-							</td>
-						</tr>
-					<?php } ?>
-					<tr>
-						<td align="center">
-							<input type="hidden" name="link_customers" id="link_customers" value="">
-							<input type="button" name="link"
-							       value="<?php _e( 'Link above contacts to this one, and make THIS one primary' ); ?>"
-							       onclick="$('#link_customers').val('yes'); this.form.submit();">
-						</td>
-					</tr>
-					</tbody>
-				</table>
-				<?php
+				$elements = array();
+				foreach ( $others as $other ) {
+					$elements[ 'link_' . $other['user_id'] ] = array(
+						'title'  => '',
+						'fields' => array(
+							'<input type="hidden" name="link_user_ids[]" value="' . (int) $other['user_id'] . '"> ' . _l( '%s under customer %s', module_user::link_open_contact( $other['user_id'], true, $other ), module_customer::link_open( $other['customer_id'], true ) ),
+						),
+						'row_title_class' => '',
+					);
+				}
+				$elements['link_button'] = array(
+					'message' => '<div align="center"><input type="hidden" name="link_customers" id="link_customers" value=""><input type="button" name="link" value="' . htmlspecialchars( _l( 'Link above contacts to this one, and make THIS one primary' ) ) . '" onclick="$(\'#link_customers\').val(\'yes\'); this.form.submit();" class="submit_button"></div>',
+				);
+
 				$fieldset_data = array(
-					'heading'         => array(
+					'heading'  => array(
 						'type'  => 'h3',
 						'title' => _l( 'Create Linked Contacts' ),
-						'help'  => 'This email address exists as a contact in another user account. By linking these accounts together, this user will be able to access all the linked customers from this single login. '
+						'help'  => 'This email address exists as a contact in another user account. By linking these accounts together, this user will be able to access all the linked customers from this single login. ',
 					),
-					'class'           => 'tableclass tableclass_form tableclass_full',
-					'elements_before' => ob_get_clean(),
+					'class'    => 'tableclass tableclass_form tableclass_full',
+					'elements' => $elements,
 				);
 				echo module_form::generate_fieldset( $fieldset_data );
 			}
@@ -328,6 +319,5 @@ if ( isset( $user[ $use_master_key ] ) && $user[ $use_master_key ] ) {
 		),
 	);
 	echo module_form::generate_form_actions( $form_actions );
-	?>
 
-</form>
+	module_form::print_form_close_tag();

@@ -3,9 +3,13 @@
 $labels = array();
 global $labels;
 
-class module_language extends module_base {
-
-	public $version = 2.181;
+class module_language extends module_base
+{
+	public function __construct() {
+		$this->module_name     = 'language';
+		$this->module_position = 60;
+		$this->version         = 2.181;
+	}
 	// 2.14 default system language in advanced settings.
 	// 2.15 - added a default german translation (needs work!)
 	// 2.16 - French translation added - thanks Amar Bou!
@@ -43,9 +47,7 @@ class module_language extends module_base {
 	}
 
 	function init() {
-
-		$this->module_name = "language";
-		$language_code     = basename( module_config::c( 'default_language' ) );
+		$language_code = basename( module_config::c( 'default_language' ) );
 
 		if ( module_security::is_logged_in() ) {
 			$user = module_user::get_user( module_security::get_loggedin_id(), false );
@@ -102,7 +104,7 @@ class module_language extends module_base {
 			set_message( 'Translation errors removed successfully' );
 			redirect_browser( $_SERVER['REQUEST_URI'] );
 
-		} else if ( 'language_duplicate_remove' == $_REQUEST['_process'] && $_REQUEST['really'] == 'yep' ) {
+		} elseif ( 'language_duplicate_remove' == $_REQUEST['_process'] && $_REQUEST['really'] == 'yep' ) {
 			if ( ! module_form::check_secure_key() ) {
 				return;
 			}
@@ -127,7 +129,7 @@ class module_language extends module_base {
 							foreach ( $duplicate_ids as $language_word_id ) {
 								if ( $first === false ) {
 									$first = $language_word_id;
-								} else if ( $first ) {
+								} elseif ( $first ) {
 									// remove this one and replace any translations with the first one.
 									$sql = "DELETE FROM `" . _DB_PREFIX . "language_word` WHERE language_word_id = '" . (int) $language_word_id . "' LIMIT 1";
 									query( $sql );
@@ -284,7 +286,7 @@ class module_language extends module_base {
 				$row['word'] = $db_words[ $row['language_word_id'] ];
 				if ( _DEMO_MODE && isset( $_SESSION['temp_translation'][ $language_id ][ $row['language_word_id'] ] ) ) {
 					$labels[ $row['word'] ] = $_SESSION['temp_translation'][ $language_id ][ $row['language_word_id'] ];
-				} else if ( strlen( $row['word'] ) > 0 ) {
+				} elseif ( strlen( $row['word'] ) > 0 ) {
 					if ( isset( $labels[ $row['word'] ] ) && ( ! $row['translation'] || $row['translation'] == $row['word'] ) ) {
 						// we already have a trasnaltion from the raw php file.
 						// do we use this? or a database translation?
@@ -315,7 +317,7 @@ class module_language extends module_base {
 	}
 
 	public static function missing_word( $text, $url = '', $translation = false ) {
-		if ( ! strlen( trim( $text ) ) || self::ignore_word( $text ) ) {
+		if ( ! strlen( trim( (string) $text ) ) || self::ignore_word( $text ) ) {
 			return;
 		}
 		// word not found in the current translation $labels
@@ -345,7 +347,7 @@ class module_language extends module_base {
 		}
 	}
 
-	public static function handle_import( $data, $group = false, $extra_options ) {
+	public static function handle_import( $data, $group = false, $extra_options = array() ) {
 
 		$imported = 0;
 		if ( ! _DEMO_MODE && isset( $extra_options['language_id'] ) && $extra_options['language_id'] > 0 && count( $data ) > 1 ) {
@@ -383,10 +385,10 @@ class module_language extends module_base {
 					query( $sql );
 
 					// add this translation to the file.
-					$imported ++;
+					$imported++;
 				}
 			}
-		} else if ( _DEMO_MODE ) {
+		} elseif ( _DEMO_MODE ) {
 			set_error( 'Import disabled in demo mode' );
 		}
 
@@ -464,10 +466,18 @@ class module_language extends module_base {
 		//return 'L';
 		global $labels;
 		$argv = func_get_args();
+		// A record field that has never been set arrives here as null - a new job built
+		// from a quote has no discount_description, for one. Every string function below
+		// deprecates null under PHP 8.4, so it becomes an empty label here instead, which
+		// is what the caller wanted anyway.
+		if ( $text === null ) {
+			$text    = '';
+			$argv[0] = '';
+		}
 		// see if the first one is a lang label
 		if ( isset( $labels[ $text ] ) && strlen( trim( $labels[ $text ] ) ) ) {
 			$argv[0] = $labels[ $text ];
-		} else if ( ! isset( $labels[ $text ] ) && ! isset( self::$label_replace[ $text ] ) ) {
+		} elseif ( ! isset( $labels[ $text ] ) && ! isset( self::$label_replace[ $text ] ) ) {
 			self::missing_word( $text, $_SERVER['REQUEST_URI'] );
 		}
 		if ( count( $argv ) == 1 ) {
@@ -530,7 +540,8 @@ class module_language extends module_base {
 if ( ! function_exists( '_e' ) ) {
 	function _e( $text ) {
 		$argv = func_get_args();
-		print call_user_func_array( '_l', $argv );;
+		print call_user_func_array( '_l', $argv );
+;
 	}
 }
 if ( ! function_exists( '_l' ) ) {

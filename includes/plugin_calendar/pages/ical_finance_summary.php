@@ -39,7 +39,7 @@ SUMMARY: '.$alert['item'].(isset($alert['name']) ? ' - '.$alert['name'] : '').'
 DESCRIPTION:<a href="'.$alert['link'].'">'._('Open Link').'</a>
 END:VEVENT
 ';
-    
+
 
 
 echo 'END:VCALENDAR';

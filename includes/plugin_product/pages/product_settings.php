@@ -28,4 +28,3 @@ $links = array(
 		'args'                => array( 'product_id' => false, 'product_category_id' => false ),
 	),
 );
-

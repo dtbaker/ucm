@@ -196,7 +196,7 @@ if ( $invoice['discount_type'] == _DISCOUNT_TYPE_BEFORE_TAX ) {
 		}
 	}
 
-} else if ( $invoice['discount_type'] == _DISCOUNT_TYPE_AFTER_TAX ) {
+} elseif ( $invoice['discount_type'] == _DISCOUNT_TYPE_AFTER_TAX ) {
 	$rows[] = array(
 		'label' => _l( 'Sub Total:' ),
 		'value' => '<span class="currency">' . dollar( $invoice['total_sub_amount'], true, $invoice['currency_id'] ) . '</span>'
@@ -338,7 +338,7 @@ $replace['multiple_jobs'] = count( $website_ids ) > 1 || count( $job_ids ) > 1;
 foreach ( $invoice_tasks as $invoice_item_id => $invoice_item_data ) {
 
 	$row_replace                     = $invoice_item_data;
-	$row_replace['item_odd_or_even'] = $item_count ++ % 2 ? 'odd' : 'even';
+	$row_replace['item_odd_or_even'] = $item_count++ % 2 ? 'odd' : 'even';
 	$row_replace['item_number']      = '';
 	$row_replace['item_description'] = '';
 	$row_replace['item_date']        = '';
@@ -362,14 +362,16 @@ foreach ( $invoice_tasks as $invoice_item_id => $invoice_item_data ) {
 
 	if ( isset( $invoice_item_data['custom_task_order'] ) && (int) $invoice_item_data['custom_task_order'] > 0 ) {
 		$row_replace['item_number'] = $invoice_item_data['custom_task_order'];
-	} else if ( isset( $invoice_item_data['task_order'] ) && $invoice_item_data['task_order'] > 0 ) {
+	} elseif ( isset( $invoice_item_data['task_order'] ) && $invoice_item_data['task_order'] > 0 ) {
 		$row_replace['item_number'] = $invoice_item_data['task_order'];
 	} else {
 		$row_replace['item_number'] = $item_count;
 	}
 	$row_replace['item_description'] .= $invoice_item_data['custom_description'] ? htmlspecialchars( $invoice_item_data['custom_description'] ) : htmlspecialchars( $invoice_item_data['description'] );
 	if ( module_config::c( 'invoice_show_long_desc', 1 ) ) {
-		$long_description = trim( $invoice_item_data['custom_long_description'] ? $invoice_item_data['custom_long_description'] : $invoice_item_data['long_description'] );
+		// Both of these are null on a line that has never had a long description, and
+		// trim() deprecates on null - on the invoice the customer is sent to pay.
+		$long_description = trim( (string) ( $invoice_item_data['custom_long_description'] ? $invoice_item_data['custom_long_description'] : $invoice_item_data['long_description'] ) );
 		if ( $long_description != '' ) {
 			// backwards compat for non-html code:
 			if ( ! is_text_html( $long_description ) ) {
@@ -425,9 +427,14 @@ foreach ( $invoice_tasks as $invoice_item_id => $invoice_item_data ) {
 		$this_taxes_amounts = array();
 		$this_taxes_rates   = array();
 		if ( ! count( $this_taxes ) ) {
+			// A list holding one zero rate. Not a bare amount and percent: the loop
+			// below reads every entry as a tax row, so a flat array made it read
+			// 0['amount'] twice and print a warning for each.
 			$this_taxes = array(
-				'amount'  => 0,
-				'percent' => 0,
+				array(
+					'amount'  => 0,
+					'percent' => 0,
+				),
 			);
 		}
 		foreach ( $this_taxes as $this_tax ) {

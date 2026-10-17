@@ -1,9 +1,7 @@
 <?php
 
-
-class module_paymethod_coinbase extends module_base {
-
-
+class module_paymethod_coinbase extends module_base
+{
 	public static function can_i( $actions, $name = false, $category = false, $module = false ) {
 		if ( ! $module ) {
 			$module = __CLASS__;
@@ -16,10 +14,13 @@ class module_paymethod_coinbase extends module_base {
 		return __CLASS__;
 	}
 
-	function init() {
+	public function __construct() {
+		$this->module_name     = 'paymethod_coinbase';
+		$this->module_position = 350;
 		$this->version         = 2.11;
-		$this->module_name     = "paymethod_coinbase";
-		$this->module_position = 8882;
+	}
+
+	function init() {
 		// 2.1 - 2013-06-24 - initial release
 		// 2.11 - 2015-03-14 - better default payment method options
 
@@ -27,7 +28,7 @@ class module_paymethod_coinbase extends module_base {
 
 	public function pre_menu() {
 
-		if ( module_config::can_i( 'view', 'Settings' ) ) {
+		if ( module_config::can_i( 'view', 'Settings' ) && self::show_settings_page() ) {
 			$this->links[] = array(
 				"name"                => "Coinbase (bitcoin)",
 				"p"                   => "coinbase_settings",
@@ -36,6 +37,24 @@ class module_paymethod_coinbase extends module_base {
 				'menu_include_parent' => 1,
 			);
 		}
+	}
+
+	/**
+	 * Whether this install should see the settings page at all.
+	 *
+	 * Retired, so it is hidden from a fresh install - but an install that is using it,
+	 * that was using it before an upgrade turned it off, or that has payment history
+	 * against it keeps the page, because that is where the explanation lives and where
+	 * the credentials can still be read.
+	 *
+	 * @return bool
+	 */
+	public static function show_settings_page() {
+		if ( self::is_enabled() || module_config::c( 'payment_method_coinbase_was_enabled', false ) ) {
+			return true;
+		}
+
+		return module_invoice::payment_method_has_history( self::get_payment_method_key(), array( 'Bitcoin', 'Coinbase', self::get_payment_method_name() ) );
 	}
 
 	public function handle_hook( $hook ) {
@@ -81,7 +100,7 @@ class module_paymethod_coinbase extends module_base {
 
 		if ( $dollar_limit == 'above' && $invoice_data['total_amount_due'] < $dollar_value ) {
 			return false;
-		} else if ( $dollar_limit == 'below' && $invoice_data['total_amount_due'] > $dollar_value ) {
+		} elseif ( $dollar_limit == 'below' && $invoice_data['total_amount_due'] > $dollar_value ) {
 			return false;
 		}
 		if ( strlen( $cur ) > 1 ) {
@@ -102,6 +121,26 @@ class module_paymethod_coinbase extends module_base {
 		query( $sql );
 	}
 
+
+	/**
+	 * The stable identifier for this payment method, never the admin-editable label.
+	 *
+	 * @return string
+	 */
+	public static function get_payment_method_key() {
+		return 'coinbase';
+	}
+
+	/**
+	 * Retired. The method still works everywhere it is already in use - it starts
+	 * payments, answers its notification endpoint, and its history renders unchanged -
+	 * but a fresh install never sees it.
+	 *
+	 * @return bool
+	 */
+	public function is_deprecated() {
+		return true;
+	}
 
 	public static function get_payment_method_name() {
 		return module_config::s( 'payment_method_coinbase_label', 'Bitcoin' );
@@ -235,15 +274,15 @@ class module_paymethod_coinbase extends module_base {
 					$is_subscription['days'] = $days;
 					if ( $days == 1 ) {
 						$is_subscription['coinbase_period'] = 'daily';
-					} else if ( $days == 7 || $days == 6 || $days == 8 ) {
+					} elseif ( $days == 7 || $days == 6 || $days == 8 ) {
 						$is_subscription['coinbase_period'] = 'weekly';
-					} else if ( $days == 14 || $days == 13 || $days == 15 ) {
+					} elseif ( $days == 14 || $days == 13 || $days == 15 ) {
 						$is_subscription['coinbase_period'] = 'every_two_weeks';
-					} else if ( $days == 29 || $days == 30 || $days == 31 ) {
+					} elseif ( $days == 29 || $days == 30 || $days == 31 ) {
 						$is_subscription['coinbase_period'] = 'monthly';
-					} else if ( $days >= 87 && $days <= 95 ) {
+					} elseif ( $days >= 87 && $days <= 95 ) {
 						$is_subscription['coinbase_period'] = 'quarterly';
-					} else if ( $days >= 363 && $days <= 370 ) {
+					} elseif ( $days >= 363 && $days <= 370 ) {
 						$is_subscription['coinbase_period'] = 'yearly';
 					} else {
 						send_error( 'Someone tried to pay with coinbase but coinbase does not support a recurring subscription period of ' . $days . ' days. Only:  daily, weekly, every_two_weeks, monthly, quarterly, and yearly ' );
@@ -297,7 +336,7 @@ class module_paymethod_coinbase extends module_base {
 						exit;
 
 
-					} else if ( isset( $_REQUEST['payment_single'] ) ) {
+					} elseif ( isset( $_REQUEST['payment_single'] ) ) {
 						// use is choosing to continue payment as a once off amount
 
 					} else {
@@ -352,14 +391,13 @@ class module_paymethod_coinbase extends module_base {
 	public function external_hook( $hook ) {
 		switch ( $hook ) {
 			case 'event_ipn':
-
 				$body       = @file_get_contents( 'php://input' );
 				$event_json = json_decode( $body );
 
 				ob_start();
-				echo "UCM coinbase DEBUG:<br><br>JSON: <br>\n";
-				print_r( $event_json );
-				echo "<br><br>\n";
+				// The body is attacker-controlled and this endpoint is public. It is
+				// already written to the payment's own log further down, where it belongs;
+				// it does not also need to go into the debug email.
 				$success = false;
 
 				$bits = explode( ':', isset( $event_json->order->custom ) ? $event_json->order->custom : '' );
@@ -614,5 +652,4 @@ class module_paymethod_coinbase extends module_base {
 
 		return $invoice_id . ':' . $invoice_payment_id . ':' . $invoice_payment_subscription_id . ':' . $hashbit;
 	}
-
 }

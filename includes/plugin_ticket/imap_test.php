@@ -1,6 +1,5 @@
 <?php
 
-
 $login    = 'your@gmail.com'; // your full gmail or google apps email address
 $password = 'password'; // your gmail or google apps password
 

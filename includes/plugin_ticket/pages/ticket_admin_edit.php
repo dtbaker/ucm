@@ -1,6 +1,6 @@
 <?php
 
-if ( ! $ticket_safe ) {
+if ( empty( $ticket_safe ) ) {
 	die( 'failed' );
 }
 
@@ -180,11 +180,15 @@ $action_buttons = module_form::generate_form_actions( $form_actions );
           ucm.ticket.init();
       });
 	</script>
-	<form action="" method="post" id="ticket_form" enctype="multipart/form-data">
-		<input type="hidden" name="_process" value="save_ticket"/>
-		<input type="hidden" name="ticket_id" value="<?php echo $ticket['ticket_id']; ?>"/>
-
-		<?php
+<?php
+	module_form::print_form_open_tag( array(
+		'id'      => 'ticket_form',
+		'enctype' => 'multipart/form-data',
+		'process' => 'save_ticket',
+		'hidden'  => array(
+			'ticket_id' => $ticket['ticket_id'],
+		),
+	) );
 
 		echo $action_buttons;
 
@@ -293,7 +297,7 @@ $action_buttons = module_form::generate_form_actions( $form_actions );
 						}
 					)
 				);
-			} else if ( ! empty( $ticket['due_timestamp'] ) ) {
+			} elseif ( ! empty( $ticket['due_timestamp'] ) ) {
 
 				$fieldset_data['elements'][] = array(
 					'title'  => _l( 'Due Date/Time' ),
@@ -487,55 +491,48 @@ $action_buttons = module_form::generate_form_actions( $form_actions );
 		if ( $ticket['user_id'] ) {
 			if ( module_config::c( 'ticket_other_list_by', 'user' ) == 'user' ) {
 				$other_tickets = module_ticket::get_tickets( array( 'user_id' => $ticket['user_id'] ) );
-			} else if ( module_config::c( 'ticket_other_list_by', 'user' ) == 'customer' && $ticket['customer_id'] ) {
+			} elseif ( module_config::c( 'ticket_other_list_by', 'user' ) == 'customer' && $ticket['customer_id'] ) {
 				$other_tickets = module_ticket::get_tickets( array( 'customer_id' => $ticket['customer_id'] ) );
 			} else {
 				$other_tickets = false;
 			}
 			if ( $other_tickets !== false && mysqli_num_rows( $other_tickets ) > 1 ) {
 				$other_status = array();
-				ob_start();
-				?>
-				<table border="0" cellspacing="0" cellpadding="2" class="tableclass tableclass_form tableclass_full tbl_fixed">
-					<tbody>
-					<?php while ( $other_ticket = mysqli_fetch_assoc( $other_tickets ) ) { ?>
-						<tr>
-							<td style="width:55px;">
-								<?php echo $other_ticket['ticket_id'] == $ticket_id ? '&raquo;' : ''; ?>
-								<?php echo module_ticket::link_open( $other_ticket['ticket_id'], true ); ?>
-							</td>
-							<td>
-								<?php if ( $other_ticket['priority'] == _TICKET_PRIORITY_STATUS_ID ) {
-									echo '$';
-								} ?>
-								<?php echo htmlspecialchars( $other_ticket['subject'] ); ?>
-							</td>
-							<td style="width:100px;">
-								<?php echo htmlspecialchars( module_ticket::$ticket_statuses[ $other_ticket['status_id'] ] );
-								if ( ! isset( $other_status[ module_ticket::$ticket_statuses[ $other_ticket['status_id'] ] ] ) ) {
-									$other_status[ module_ticket::$ticket_statuses[ $other_ticket['status_id'] ] ] = 0;
-								}
-								$other_status[ module_ticket::$ticket_statuses[ $other_ticket['status_id'] ] ] ++;
-								?>
-							</td>
-						</tr>
-					<?php } ?>
-					</tbody>
-				</table>
-				<?php
+				// One element per sibling ticket. These were rows in a hand-written table handed
+				// to the fieldset as elements_before.
+				$other_elements = array();
+				while ( $other_ticket = mysqli_fetch_assoc( $other_tickets ) ) {
+					$status_name = module_ticket::$ticket_statuses[ $other_ticket['status_id'] ];
+					if ( ! isset( $other_status[ $status_name ] ) ) {
+						$other_status[ $status_name ] = 0;
+					}
+					$other_status[ $status_name ]++;
+
+					$other_elements[ 'ticket_' . (int) $other_ticket['ticket_id'] ] = array(
+						'title'  => ( $other_ticket['ticket_id'] == $ticket_id ? '&raquo; ' : '' )
+						            . module_ticket::link_open( $other_ticket['ticket_id'], true ),
+						'fields' => array(
+							( $other_ticket['priority'] == _TICKET_PRIORITY_STATUS_ID ? '$' : '' )
+							. htmlspecialchars( $other_ticket['subject'] ),
+							'<span style="width:100px;">' . htmlspecialchars( $status_name ) . '</span>',
+						),
+					);
+				}
+
 				$responsive_summary = array();
 				foreach ( $other_status as $status => $count ) {
 					$responsive_summary[] = $count . ' ' . $status;
 				}
 				$fieldset_data = array(
-					'heading'         => array(
+					'heading'  => array(
 						'title'      => _l( '%s Other Support Tickets', mysqli_num_rows( $other_tickets ) ),
 						'type'       => 'h3',
 						'responsive' => array(
 							'summary' => htmlspecialchars( implode( ', ', $responsive_summary ) ),
 						)
 					),
-					'elements_before' => ob_get_clean(),
+					'class'    => 'tableclass tableclass_form tableclass_full tbl_fixed',
+					'elements' => $other_elements,
 				);
 				echo module_form::generate_fieldset( $fieldset_data );
 				unset( $fieldset_data );
@@ -726,11 +723,8 @@ $action_buttons = module_form::generate_form_actions( $form_actions );
 
 		hook_handle_callback( 'layout_column_half', 'end' );
 		echo $action_buttons;
-		?>
 
-	</form>
-
-<?php
+		module_form::print_form_close_tag();
 
 if ( ( $last_response_from == 'customer' || $last_response_from == 'autoreply' ) && $ticket['status_id'] != _TICKET_STATUS_RESOLVED_ID ) { // don't do this for resolved tickets
 	// only set the default field if the last respose was from the customer.

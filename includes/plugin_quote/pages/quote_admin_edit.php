@@ -1,6 +1,6 @@
 <?php
 
-if ( ! $quote_safe ) {
+if ( empty( $quote_safe ) ) {
 	die( 'denied' );
 }
 
@@ -92,7 +92,7 @@ if ( class_exists( 'module_import_export', false ) ) {
     $(function () {
         if (typeof ucm.quote != 'undefined') {
             ucm.quote.ajax_task_url = '<?php echo module_quote::link_ajax_task( $quote_id, false ); ?>';
-					<?php if(module_invoice::can_i( 'create', 'Invoices' )){ ?>
+					<?php if (module_invoice::can_i( 'create', 'Invoices' )) { ?>
             ucm.quote.create_invoice_popup_url = '<?php echo module_quote::link_create_quote_invoice( $quote_id, false ); ?>';
             ucm.quote.create_invoice_url = '<?php echo module_invoice::link_generate( 'new', array( 'arguments' => array( 'quote_id' => $quote_id, ) ) ); ?>';
 					<?php } ?>
@@ -197,7 +197,7 @@ if ( class_exists( 'module_import_export', false ) ) {
             existing_rows.remove();
             set_task_numbers();
 
-					<?php if(module_config::c( 'quote_tasks_allow_sort', 1 )){ ?>
+					<?php if (module_config::c( 'quote_tasks_allow_sort', 1 )) { ?>
             $('#quote_task_listing tbody.quote_task_wrapper').sortable('enable');
 					<?php } ?>
         } else {
@@ -217,7 +217,7 @@ if ( class_exists( 'module_import_export', false ) ) {
                     }
                     existing_rows.remove();
                     set_task_numbers();
-									<?php if(module_config::c( 'quote_tasks_allow_sort', 1 )){ ?>
+									<?php if (module_config::c( 'quote_tasks_allow_sort', 1 )) { ?>
                     $('#quote_task_listing tbody.quote_task_wrapper').sortable('enable');
 									<?php } ?>
                     // update the quote summary
@@ -236,7 +236,7 @@ if ( class_exists( 'module_import_export', false ) ) {
         }
         editing_quote_task_id = quote_task_id;
 
-			<?php if(module_config::c( 'quote_tasks_allow_sort', 1 )){ ?>
+			<?php if (module_config::c( 'quote_tasks_allow_sort', 1 )) { ?>
         $('#quote_task_listing tbody.quote_task_wrapper').sortable('disable');
 			<?php } ?>
 
@@ -259,9 +259,9 @@ if ( class_exists( 'module_import_export', false ) ) {
                 existing_rows.remove();
                 load_calendars();
                 if (r.hours > 0) {
-									<?php if(module_config::c( 'quote_task_log_all_hours', 1 )){
+									<?php if (module_config::c( 'quote_task_log_all_hours', 1 )) {
 									// dont want to set hours. just tick the box.
-								}else{ ?>
+								} else { ?>
                     $('#complete_' + r.quote_task_id).val(r.hours);
 									<?php } ?>
                     if (typeof $('#complete_t_' + r.quote_task_id)[0] != 'undefined') {
@@ -318,7 +318,7 @@ if ( class_exists( 'module_import_export', false ) ) {
                 $(this).addClass(odd_even++ % 2 ? 'odd' : 'even');
             }
             var current_order = parseInt($('.task_order', this).html());
-					<?php if($quote['auto_task_numbers'] == 0){ ?>
+					<?php if ($quote['auto_task_numbers'] == 0) { ?>
             // automatic task numbers.
             if (current_order != task_number) {
                 do_update = true;
@@ -326,7 +326,7 @@ if ( class_exists( 'module_import_export', false ) ) {
             }
             $('.task_order', this).html(task_number);
             task_number++;
-					<?php }else if($quote['auto_task_numbers'] == 1){ ?>
+					<?php } elseif ($quote['auto_task_numbers'] == 1) { ?>
             // manual task numbers.
             task_number = Math.max(current_order, task_number) + 1;
 					<?php } ?>
@@ -344,7 +344,7 @@ if ( class_exists( 'module_import_export', false ) ) {
         $('#next_task_number').val(task_number);
 
 
-			<?php if(module_config::c( 'quote_tasks_allow_sort', 1 )){ ?>
+			<?php if (module_config::c( 'quote_tasks_allow_sort', 1 )) { ?>
         $('#quote_task_listing tbody.quote_task_wrapper').sortable('refresh');
 			<?php } ?>
     }
@@ -355,7 +355,7 @@ if ( class_exists( 'module_import_export', false ) ) {
             edittask($(this).attr('rel'),-1);
             return false;
         });*/
-			<?php if(module_config::c( 'quote_tasks_allow_sort', 1 )){ ?>
+			<?php if (module_config::c( 'quote_tasks_allow_sort', 1 )) { ?>
         $("#quote_task_listing tbody.quote_task_wrapper").sortable({
             items: ".task_preview",
             handle: '.task_drag_handle',
@@ -409,12 +409,17 @@ if ( class_exists( 'module_import_export', false ) ) {
 
 <iframe id="ajax_task_save" name="ajax_task_save" src="about:blank" style="width:0;height:0;visibility: hidden;"
         frameborder="0"></iframe>
-<form action="" method="post" id="quote_form">
-	<input type="hidden" name="_process" value="save_quote"/>
+<?php
+module_form::print_form_open_tag( array(
+	'id'      => 'quote_form',
+	'process' => 'save_quote',
+	'hidden'  => array(
+		'quote_id'    => $quote_id,
+		'customer_id' => $quote['customer_id'],
+	),
+) );
+?>
 	<input type="hidden" name="_redirect" value="" id="form_redirect"/>
-	<input type="hidden" name="quote_id" value="<?php echo $quote_id; ?>"/>
-	<input type="hidden" name="customer_id" value="<?php echo $quote['customer_id']; ?>"/>
-
 
 	<?php
 	hook_handle_callback( 'layout_column_half', 1, '35' );
@@ -768,7 +773,7 @@ if ( class_exists( 'module_import_export', false ) ) {
 							if ( ! isset( $allocated_staff_members[ $quote_task['user_id'] ] ) ) {
 								$allocated_staff_members[ $quote_task['user_id'] ] = 0;
 							}
-							$allocated_staff_members[ $quote_task['user_id'] ] ++;
+							$allocated_staff_members[ $quote_task['user_id'] ]++;
 						}
 						foreach ( $allocated_staff_members as $staff_id => $count ) {
 							$staff = module_user::get_user( $staff_id );
@@ -810,7 +815,7 @@ if ( class_exists( 'module_import_export', false ) ) {
 					}
 				),
 			);
-		} else if ( (int) $quote_id > 0 && ! class_exists( 'module_import_export', false ) && module_config::c( 'show_ucm_ads', 1 ) ) {
+		} elseif ( (int) $quote_id > 0 && ! class_exists( 'module_import_export', false ) && module_config::c( 'show_ucm_ads', 1 ) ) {
 			$fieldset_data['elements'][] = array(
 				'title'  => 'Task CSV Data',
 				'fields' => array(
@@ -1104,10 +1109,10 @@ if ( class_exists( 'module_import_export', false ) ) {
 						<td valign="top" class="nowrap">
 							<?php if ( $quote['default_task_type'] == _TASK_TYPE_AMOUNT_ONLY ) {
 								// no hour input
-							} else if ( $quote['default_task_type'] == _TASK_TYPE_QTY_AMOUNT ) { ?>
+							} elseif ( $quote['default_task_type'] == _TASK_TYPE_QTY_AMOUNT ) { ?>
 								<input type="text" name="quote_task[new][hours]" value="" size="3" style="width:25px;"
 								       class="no_permissions" id="task_hours_new">
-							<?php } else if ( $quote['default_task_type'] == _TASK_TYPE_HOURS_AMOUNT ) {
+							<?php } elseif ( $quote['default_task_type'] == _TASK_TYPE_HOURS_AMOUNT ) {
 								?>
 								<input type="text" name="quote_task[new][hours]" value="" size="3" style="width:25px;"
 								       onchange="setamount(this.value,'new');" onkeyup="setamount(this.value,'new');"
@@ -1121,7 +1126,7 @@ if ( class_exists( 'module_import_export', false ) ) {
 						<?php if ( module_config::c( 'quote_allow_staff_assignment', 1 ) ) { ?>
 							<td valign="top">
 								<?php echo print_select_box( $staff_member_rel, 'quote_task[new][user_id]',
-									isset( $staff_member_rel[ module_security::get_loggedin_id() ] ) ? module_security::get_loggedin_id() : false, 'quote_task_staff_list no_permissions', '' ); ?>
+									isset( $staff_member_rel[ module_security::get_loggedin_id() ] ) ? module_security::get_loggedin_id() : false, 'quote_task_staff_list no_permissions', true ); ?>
 							</td>
 						<?php } ?>
 						<td align="center" valign="top">
@@ -1144,7 +1149,7 @@ if ( class_exists( 'module_import_export', false ) ) {
 				$task_number = 0;
 				foreach ( $quote_tasks as $quote_task_id => $task_data ) {
 
-					$task_number ++;
+					$task_number++;
 					//module_security::is_page_editable() &&
 					if ( module_quote::can_i( 'edit', 'Quote Tasks' ) && $quote['date_approved'] == '0000-00-00' ) {
 						$task_editable = true;
@@ -1177,5 +1182,6 @@ if ( class_exists( 'module_import_export', false ) ) {
 	hook_handle_callback( 'custom_data_hook_location', _CUSTOM_DATA_HOOK_LOCATION_QUOTE_FOOTER, 'quote', $quote_id, $quote );
 
 
-	hook_handle_callback( 'layout_column_half', 'end' ); ?>
-</form>
+	hook_handle_callback( 'layout_column_half', 'end' );
+
+	module_form::print_form_close_tag();

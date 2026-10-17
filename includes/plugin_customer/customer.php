@@ -1,6 +1,5 @@
 <?php
 
-
 define( '_CUSTOMER_ACCESS_ALL', 'All customers in system' ); // do not change string
 define( '_CUSTOMER_ACCESS_ALL_COMPANY', 'Only customers from companies I have access to' ); // do not change string
 define( '_CUSTOMER_ACCESS_CONTACTS', 'Only customer I am assigned to as a contact' ); // do not change string
@@ -18,8 +17,8 @@ define( '_CUSTOMER_BILLING_TYPE_NORMAL', 0 );
 define( '_CUSTOMER_BILLING_TYPE_SUPPLIER', 1 );
 
 
-class module_customer extends module_base {
-
+class module_customer extends module_base
+{
 	public $links;
 	public $customer_types;
 	public $customer_id;
@@ -36,13 +35,15 @@ class module_customer extends module_base {
 		return __CLASS__;
 	}
 
+	public function __construct() {
+		$this->module_name     = 'customer';
+		$this->module_position = 130;
+		$this->version         = 2.490;
+	}
 
 	public function init() {
-		$this->links           = array();
-		$this->customer_types  = array();
-		$this->module_name     = "customer";
-		$this->module_position = 5.1;
-		$this->version         = 2.490;
+		$this->links          = array();
+		$this->customer_types = array();
 		//2.490 - 2018-06-05 - fix for supplier groups
 		//2.489 - 2018-04-03 - fix saving customer.
 		//2.488 - 2018-04-01 - logging improvements.
@@ -267,7 +268,6 @@ Invoice: <strong>{INVOICE_LINK}</strong>
 		$response['customer'] = true;
 		switch ( $method ) {
 			case 'create':
-
 				$customer_data = isset( $_POST['customer_data'] ) && is_array( $_POST['customer_data'] ) ? $_POST['customer_data'] : array();
 
 				$response['customer_id'] = 0;
@@ -328,7 +328,6 @@ Invoice: <strong>{INVOICE_LINK}</strong>
 
 				break;
 			case 'search':
-
 				$search                = isset( $_REQUEST['search'] ) && is_array( $_REQUEST['search'] ) ? $_REQUEST['search'] : array();
 				$customers             = self::get_customers( $search );
 				$response['customers'] = array();
@@ -338,8 +337,6 @@ Invoice: <strong>{INVOICE_LINK}</strong>
 
 				break;
 			case 'add_to_group':
-
-
 				$group_owner = self::get_group_owner_slug();
 
 				$customer_id = ! empty( $_REQUEST['customer_id'] ) ? (int) $_REQUEST['customer_id'] : 0;
@@ -816,7 +813,6 @@ Invoice: <strong>{INVOICE_LINK}</strong>
 		}
 		switch ( $customer_access ) {
 			case _CUSTOMER_ACCESS_ALL:
-
 				break;
 			case _CUSTOMER_ACCESS_ALL_COMPANY:
 				if ( class_exists( 'module_company', false ) && module_company::is_enabled() ) {
@@ -942,7 +938,6 @@ Invoice: <strong>{INVOICE_LINK}</strong>
 
 				switch ( self::get_customer_data_access() ) {
 					case _CUSTOMER_ACCESS_ALL:
-
 						break;
 					case _CUSTOMER_ACCESS_ALL_COMPANY:
 					case _CUSTOMER_ACCESS_CONTACTS:
@@ -1066,10 +1061,15 @@ Invoice: <strong>{INVOICE_LINK}</strong>
 
 
 	public function process() {
+		// Every form that reaches here is posted from a UCM page, so it carries the
+		// form auth key. Refuse anything that does not - see module_form::check_secure_key().
+		if ( ! module_form::check_secure_key() ) {
+			module_form::reject_invalid_form_auth();
+		}
 		if ( isset( $_REQUEST['butt_del'] ) && $_REQUEST['butt_del'] && ! empty( $_REQUEST['customer_id'] ) && module_customer::can_i( 'delete', 'Customers' ) ) {
 			if ( module_form::check_secure_key() ) {
 				$data = self::get_customer( $_REQUEST['customer_id'] );
-				if ( $data['customer_id'] && $data['customer_id'] = $_REQUEST['customer_id'] ) {
+				if ( ! empty( $data['customer_id'] ) && $data['customer_id'] == $_REQUEST['customer_id'] ) {
 					if ( module_form::confirm_delete(
 						'customer_id',
 						_l( "Really delete customer: %s", $data['customer_name'] ),
@@ -1094,7 +1094,7 @@ Invoice: <strong>{INVOICE_LINK}</strong>
 					}
 				}
 			}
-		} else if ( isset( $_REQUEST['butt_del'] ) && $_REQUEST['butt_del'] && ! empty( $_REQUEST['customer_type_id'] ) ) {
+		} elseif ( isset( $_REQUEST['butt_del'] ) && $_REQUEST['butt_del'] && ! empty( $_REQUEST['customer_type_id'] ) ) {
 
 			if ( module_form::check_secure_key() ) {
 
@@ -1115,7 +1115,7 @@ Invoice: <strong>{INVOICE_LINK}</strong>
 					}
 				}
 			}
-		} else if ( "ajax_customer_list" == $_REQUEST['_process'] ) {
+		} elseif ( "ajax_customer_list" == $_REQUEST['_process'] ) {
 
 			header( "Content-type: text/javascript" );
 			if ( module_form::check_secure_key() && module_customer::can_i( 'view', 'Customers' ) ) {
@@ -1129,7 +1129,7 @@ Invoice: <strong>{INVOICE_LINK}</strong>
 			}
 			exit;
 
-		} else if ( "ajax_contact_list" == $_REQUEST['_process'] ) {
+		} elseif ( "ajax_contact_list" == $_REQUEST['_process'] ) {
 
 			header( "Content-type: text/javascript" );
 			if ( module_form::check_secure_key() && module_customer::can_i( 'view', 'Customers' ) ) {
@@ -1143,14 +1143,14 @@ Invoice: <strong>{INVOICE_LINK}</strong>
 			}
 			exit;
 
-		} else if ( "save_customer" == $_REQUEST['_process'] ) {
+		} elseif ( "save_customer" == $_REQUEST['_process'] ) {
 			$customer_id = $this->save_customer( $_REQUEST['customer_id'], $_POST );
 			hook_handle_callback( 'customer_save', $customer_id );
 			if ( isset( $_REQUEST['butt_send_statement_email'] ) ) {
 				redirect_browser( self::link_open( $customer_id ) . '&email=statement' );
-			} else if ( isset( $_REQUEST['butt_send_welcome_email'] ) ) {
+			} elseif ( isset( $_REQUEST['butt_send_welcome_email'] ) ) {
 				redirect_browser( self::link_open( $customer_id ) . '&email=welcome' );
-			} else if ( ! empty( $_REQUEST['butt_archive'] ) ) {
+			} elseif ( ! empty( $_REQUEST['butt_archive'] ) ) {
 				$UCMCustomer = new UCMCustomer( $customer_id );
 				if ( $UCMCustomer->is_archived() ) {
 					$UCMCustomer->unarchive();
@@ -1164,7 +1164,7 @@ Invoice: <strong>{INVOICE_LINK}</strong>
 				set_message( "Customer saved successfully" );
 				redirect_browser( isset( $_REQUEST['_redirect'] ) && ! empty( $_REQUEST['_redirect'] ) ? $_REQUEST['_redirect'] : self::link_open( $customer_id ) );
 			}
-		} else if ( "save_customer_type" == $_REQUEST['_process'] ) {
+		} elseif ( "save_customer_type" == $_REQUEST['_process'] ) {
 			$customer_type_id = $this->save_customer_type( $_REQUEST['customer_type_id'], $_POST );
 			hook_handle_callback( 'customer_save_type', $customer_type_id );
 			set_message( "Customer saved successfully" );
@@ -1282,7 +1282,7 @@ Invoice: <strong>{INVOICE_LINK}</strong>
 			if ( count( $invoices ) ) {
 				foreach ( $invoices as $invoice ) {
 					if ( ! $invoice['credit_note_id'] && $invoice['date_cancel'] == '0000-00-00' ) {
-						$total_invoices ++;
+						$total_invoices++;
 						//$invoice = module_invoice::get_invoice($invoice['invoice_id']);
 						$total_due  += $invoice['c_total_amount_due'];
 						$total_paid += ( $invoice['c_total_amount'] - $invoice['c_total_amount_due'] );
@@ -1297,9 +1297,9 @@ Invoice: <strong>{INVOICE_LINK}</strong>
 			}
 			if ( $total_overdue > 0 ) {
 				update_insert( 'customer_id', $customer_id, 'customer', array( 'customer_status' => _CUSTOMER_STATUS_OVERDUE ) );
-			} else if ( $total_due > 0 ) {
+			} elseif ( $total_due > 0 ) {
 				update_insert( 'customer_id', $customer_id, 'customer', array( 'customer_status' => _CUSTOMER_STATUS_OWING ) );
-			} else if ( $total_invoices > 0 ) {
+			} elseif ( $total_invoices > 0 ) {
 				update_insert( 'customer_id', $customer_id, 'customer', array( 'customer_status' => _CUSTOMER_STATUS_PAID ) );
 			} else {
 				update_insert( 'customer_id', $customer_id, 'customer', array( 'customer_status' => 0 ) );
@@ -1349,7 +1349,7 @@ Invoice: <strong>{INVOICE_LINK}</strong>
 			$sql .= " `user_id` = " . (int) $data['single_staff_id'];
 			$sql .= ", `customer_id` = " . (int) $customer_id;
 			query( $sql );
-		} else if ( isset( $data['staff_ids'] ) && is_array( $data['staff_ids'] ) && module_customer::can_i( 'edit', 'Customer Staff' ) ) {
+		} elseif ( isset( $data['staff_ids'] ) && is_array( $data['staff_ids'] ) && module_customer::can_i( 'edit', 'Customer Staff' ) ) {
 			$existing_staff = array();
 			if ( $temp_customer ) {
 				$existing_staff = $temp_customer['staff_ids'];
@@ -1636,6 +1636,9 @@ Invoice: <strong>{INVOICE_LINK}</strong>
 				// (this is so the above code works with its sql joins)
 				$sql = "DELETE FROM " . _DB_PREFIX . "customer WHERE customer_id = '" . $customer_id . "' LIMIT 1";
 				query( $sql );
+				// get_customer() and get_customers() both cache, so without this the
+				// customer's own screen keeps rendering the deleted record.
+				module_cache::clear( 'customer' );
 			}
 		}
 	}
@@ -1701,11 +1704,11 @@ Invoice: <strong>{INVOICE_LINK}</strong>
 					$staff_id    = false;
 					if ( isset( $staff_member_rel[ $staff_name ] ) ) {
 						$staff_id = $staff_member_rel[ $staff_name ];
-					} else if ( isset( $staff_member_rel[ $staff_name2 ] ) ) {
+					} elseif ( isset( $staff_member_rel[ $staff_name2 ] ) ) {
 						$staff_id = $staff_member_rel[ $staff_name2 ];
-					} else if ( isset( $staff_member_rel2[ $staff_name ] ) ) {
+					} elseif ( isset( $staff_member_rel2[ $staff_name ] ) ) {
 						$staff_id = $staff_member_rel2[ $staff_name ];
-					} else if ( isset( $staff_member_rel2[ $staff_name2 ] ) ) {
+					} elseif ( isset( $staff_member_rel2[ $staff_name2 ] ) ) {
 						$staff_id = $staff_member_rel2[ $staff_name2 ];
 					}
 					if ( $staff_id ) {
@@ -1769,7 +1772,7 @@ Invoice: <strong>{INVOICE_LINK}</strong>
 				$user_update['language'] = $row['primary_user_language'];
 			}
 			if ( isset( $row['password'] ) && strlen( $row['password'] ) ) {
-				$user_update['password'] = md5( trim( $row['password'] ) );
+				$user_update['password'] = ucm_password_hash( trim( $row['password'] ) );
 			}
 			$user_match = update_insert( "user_id", $user_match, "user", $user_update );
 			if ( $user_match && isset( $row['role'] ) && strlen( trim( $row['role'] ) ) ) {
@@ -1846,7 +1849,7 @@ Invoice: <strong>{INVOICE_LINK}</strong>
 						);
 						$extra_id = (int) $extra_id;
 						update_insert( 'extra_id', $extra_id, 'extra', $extra_db );
-					} else if ( $user_match && isset( $contact_fields[ $extra_key ] ) ) {
+					} elseif ( $user_match && isset( $contact_fields[ $extra_key ] ) ) {
 						// this is a primary contact extra field
 						$existing_extra = module_extra::get_extras( array(
 							'owner_table' => 'user',
@@ -1876,20 +1879,40 @@ Invoice: <strong>{INVOICE_LINK}</strong>
 
 	}
 
+	/**
+	 * The customer's credit balance, read from the row rather than the cache.
+	 *
+	 * Adding and removing credit is a read, a sum and a write. get_customer() caches, so
+	 * reading the balance through it meant a second adjustment within the cache lifetime
+	 * started from the balance as it was before the first one - and overwrote it. Two
+	 * overpayments assigned to the same customer lost the first.
+	 *
+	 * @param int $customer_id
+	 *
+	 * @return float
+	 */
+	private static function stored_credit( $customer_id ) {
+		$row = get_single( 'customer', 'customer_id', (int) $customer_id );
+
+		return ( $row && isset( $row['credit'] ) ) ? (float) $row['credit'] : 0.0;
+	}
+
 	public static function add_credit( $customer_id, $credit, $note = false ) {
-		$customer_data           = self::get_customer( $customer_id );
-		$customer_data['credit'] += $credit;
-		update_insert( 'customer_id', $customer_id, 'customer', array( 'credit' => $customer_data['credit'] ) );
+		$balance = self::stored_credit( $customer_id ) + $credit;
+		update_insert( 'customer_id', $customer_id, 'customer', array( 'credit' => $balance ) );
+		module_cache::clear( 'customer' );
 		if ( $note ) {
 			self::add_history( $customer_id, $note );
 		}
 	}
 
 	public static function remove_credit( $customer_id, $credit, $note = false ) {
-		$customer_data           = self::get_customer( $customer_id );
-		$customer_data['credit'] -= $credit;
-		update_insert( 'customer_id', $customer_id, 'customer', array( 'credit' => $customer_data['credit'] ) );
+		$balance = self::stored_credit( $customer_id ) - $credit;
+		update_insert( 'customer_id', $customer_id, 'customer', array( 'credit' => $balance ) );
 		module_cache::clear( 'customer' );
+		if ( $note ) {
+			self::add_history( $customer_id, $note );
+		}
 	}
 
 
@@ -1958,10 +1981,10 @@ Invoice: <strong>{INVOICE_LINK}</strong>
 
 			case 'public':
 				$customer_id = ( isset( $_REQUEST['i'] ) ) ? (int) $_REQUEST['i'] : false;
-				$hash        = ( isset( $_REQUEST['hash'] ) ) ? trim( $_REQUEST['hash'] ) : false;
+				$hash        = ucm_request_string( 'hash' );
 				if ( $customer_id && $hash ) {
 					$correct_hash = $this->link_public( $customer_id, true );
-					if ( $correct_hash == $hash ) {
+					if ( hash_equals( $correct_hash, $hash ) ) {
 						// all good to print a receipt for this payment.
 						$customer_data = $this->get_customer( $customer_id );
 
@@ -1995,13 +2018,6 @@ Invoice: <strong>{INVOICE_LINK}</strong>
 				exit;
 				break;
 			case 'public_signup':
-
-				// sign out if testing.
-				if ( module_security::is_logged_in() ) {
-					set_message( 'Logged out due to signup' );
-					module_security::logout();
-				}
-
 				$result = array(
 					'messages' => array(),
 				);
@@ -2015,10 +2031,18 @@ Invoice: <strong>{INVOICE_LINK}</strong>
 					exit;
 				}
 
+				// Checked before the sign out below, so that a link to this address cannot
+				// be used to sign somebody out of a system that does not offer signup.
 				if ( ! module_config::c( 'customer_signup_allowed', 0 ) ) {
 					$result['error']      = 1;
 					$result['messages'][] = 'Customer signup disabled';
 					customer_signup_complete( $result );
+				}
+
+				// sign out if testing.
+				if ( module_security::is_logged_in() ) {
+					set_message( 'Logged out due to signup' );
+					module_security::logout();
 				}
 
 				//recaptcha on signup form.
@@ -2089,7 +2113,7 @@ Invoice: <strong>{INVOICE_LINK}</strong>
 						if ( ! is_array( $contact[ $multi_value ] ) ) {
 							$contact[ $multi_value ] = array( $contact[ $multi_value ] );
 						}
-					} else if ( isset( $customer[ $multi_value ] ) ) {
+					} elseif ( isset( $customer[ $multi_value ] ) ) {
 						$contact[ $multi_value ] = array( $customer[ $multi_value ] );
 					} else {
 						$contact[ $multi_value ] = array();
@@ -2450,12 +2474,25 @@ Invoice: <strong>{INVOICE_LINK}</strong>
 				// save files against customer
 				$uploaded_files = array();
 				if ( isset( $_FILES['customerfiles'] ) && isset( $_FILES['customerfiles']['tmp_name'] ) ) {
+					// This runs for anonymous visitors - the hook logs the caller out above -
+					// so it is a public write to disk. Cap how many files one submission can
+					// leave behind, and check each one before it is moved into place.
+					$signup_file_limit = (int) module_config::c( 'customer_signup_max_files', 5 );
+					$signup_file_count = 0;
+
 					foreach ( $_FILES['customerfiles']['tmp_name'] as $file_id => $tmp_file ) {
+						if ( $signup_file_count >= $signup_file_limit ) {
+							break;
+						}
 						if ( is_uploaded_file( $tmp_file ) ) {
 							// save to file module for this customer
 							$file_name = basename( $_FILES['customerfiles']['name'][ $file_id ] );
+							if ( ucm_upload_error( $file_name, $tmp_file ) ) {
+								continue;
+							}
 							if ( strlen( $file_name ) ) {
-								$file_path = 'includes/plugin_file/upload/' . md5( time() . $file_name );
+								$signup_file_count++;
+								$file_path = 'includes/plugin_file/upload/' . ucm_upload_filename( $file_name );
 								if ( move_uploaded_file( $tmp_file, $file_path ) ) {
 									// success! write to db.
 									$file_data        = array(
@@ -2703,15 +2740,21 @@ Invoice: <strong>{INVOICE_LINK}</strong>
 			'customer_name'           => isset( $customer_data['customer_name'] ) ? htmlspecialchars( $customer_data['customer_name'] ) : _l( 'N/A' ),
 			'customer_address'        => htmlspecialchars( implode( ', ', $address_combined ) ),
 			'contact_name'            => ( $contact_data['name'] != $contact_data['email'] ) ? htmlspecialchars( $contact_data['name'] . ' ' . $contact_data['last_name'] ) : '',
-			'contact_first_name'      => $contact_data['name'],
-			'contact_last_name'       => $contact_data['last_name'],
+			// Escaped like every other value in this array. These four were not, and the name
+			// is one of the few fields an anonymous visitor can set: the public signup form
+			// and the public ticket form both write contact name and last name verbatim. The
+			// template key list on the data record screen prints these values as markup, so a
+			// name of "<script>..." ran in the browser of whichever staff member opened that
+			// customer next.
+			'contact_first_name'      => htmlspecialchars( (string) $contact_data['name'] ),
+			'contact_last_name'       => htmlspecialchars( (string) $contact_data['last_name'] ),
 			// these two may be overridden when sending an email and selecting a different contact from the drop down menu.
-			'first_name'              => $contact_data['name'],
-			'last_name'               => $contact_data['last_name'],
+			'first_name'              => htmlspecialchars( (string) $contact_data['name'] ),
+			'last_name'               => htmlspecialchars( (string) $contact_data['last_name'] ),
 			'contact_email'           => htmlspecialchars( $contact_data['email'] ),
 			'contact_phone'           => htmlspecialchars( $contact_data['phone'] ),
 			'contact_mobile'          => htmlspecialchars( $contact_data['mobile'] ),
-			'customer_invoice_prefix' => isset( $customer_data['default_invoice_prefix'] ) ? $customer_data['default_invoice_prefix'] : '',
+			'customer_invoice_prefix' => isset( $customer_data['default_invoice_prefix'] ) ? htmlspecialchars( (string) $customer_data['default_invoice_prefix'] ) : '',
 		);
 
 		$data = array_merge( $customer_data, $data );
@@ -2867,7 +2910,7 @@ Invoice: <strong>{INVOICE_LINK}</strong>
 	public static function get_group_owner_slug() {
 
 		$group_owner = 'customer';
-		if(module_config::c('groups_unique_per_customer_type',0)) {
+		if (module_config::c('groups_unique_per_customer_type',0)) {
 			$current_customer_type_id = module_customer::get_current_customer_type_id();
 			if ( $current_customer_type_id > 0 ) {
 				$customer_type = module_customer::get_customer_type( $current_customer_type_id );

@@ -22,7 +22,7 @@ switch ( $display_mode ) {
 			<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 			<title><?php echo $page_title; ?></title>
 
-			<?php $header_favicon = module_theme::get_config( 'theme_favicon', '' );
+			<?php $header_favicon = module_theme::favicon_url();
 			if ( $header_favicon ) { ?>
 				<link rel="icon" href="<?php echo htmlspecialchars( $header_favicon ); ?>">
 			<?php } ?>
@@ -69,36 +69,11 @@ switch ( $display_mode ) {
 
 		<div id="header">
 
-			<div>
-				<div style="position:absolute; z-index:1004; margin-left:367px;width:293px; display:none;"
-				     id="message_popdown">
-					<?php if ( print_header_message() ) {
-						?>
-						<script type="text/javascript">
-                $('#message_popdown').fadeIn('slow');
-								<?php if(module_config::c( 'header_messages_fade_out', 1 )){ ?>
-                $(function () {
-                    setTimeout(function () {
-                        $('#message_popdown').fadeOut();
-                    }, 4000);
-                });
-								<?php } ?>
-						</script>
-						<?php
-					} ?>
-				</div>
-			</div>
+			<?php print_header_message_popdown(); ?>
 
-			<?php if ( _DEMO_MODE && preg_match( '#/demo_lite/#', $_SERVER['REQUEST_URI'] ) ) { ?>
-				<div style="margin: 10px 0 0 296px;position:absolute;">
-					<a href="http://goo.gl/YYgVJ" title="Download Ultimate Client Manager"><img
-							src="http://ultimateclientmanager.com/webimages/like-what-you-see-here.png" border="0"
-							alt="Freelance Database - php client manager"></a>
-				</div>
-			<?php } ?>
 
 			<div id="header_logo">
-				<?php if ( $header_logo = module_theme::get_config( 'theme_logo', _BASE_HREF . 'images/logo.png' ) ) { ?>
+				<?php if ( $header_logo = module_theme::logo_url() ) { ?>
 					<a href="<?php echo _BASE_HREF; ?>"><img src="<?php echo htmlspecialchars( $header_logo ); ?>"
 					                                         border="0"
 					                                         title="<?php echo htmlspecialchars( module_config::s( 'header_title', 'UCM' ) ); ?>"></a>
@@ -117,7 +92,8 @@ switch ( $display_mode ) {
 					}
 					foreach ( $header_buttons as $header_button ) {
 						?>
-						<a href="#" id="<?php echo $header_button['id']; ?>">
+						<a<?php echo header_button_link_attributes( $header_button ); ?>
+							id="<?php echo $header_button['id']; ?>">
 							<i class="fa fa-<?php echo $header_button['fa-icon']; ?>"></i>
 							<?php echo $header_button['title']; ?>
 						</a>

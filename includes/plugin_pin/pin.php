@@ -1,8 +1,7 @@
 <?php
 
-
-class module_pin extends module_base {
-
+class module_pin extends module_base
+{
 	public static function can_i( $actions, $name = false, $category = false, $module = false ) {
 		if ( ! $module ) {
 			$module = __CLASS__;
@@ -15,14 +14,15 @@ class module_pin extends module_base {
 		return __CLASS__;
 	}
 
-	public function init() {
-		$this->module_name     = "pin";
-		$this->module_position = 0;
+	public function __construct() {
+		$this->module_name     = 'pin';
+		$this->module_position = 420;
+		$this->version         = 2.12;
+	}
 
+	public function init() {
 		module_config::register_css( 'pin', 'pin.css' );
 		module_config::register_js( 'pin', 'pin.js' );
-
-		$this->version = 2.12;
 		//2.12 - 2016-02-02 - pin theme overriding support
 		//2.11 css tweak
 

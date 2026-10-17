@@ -1,4 +1,4 @@
-<form id="dynamic_select_form">
+<?php module_form::print_form_open_tag( array( 'id' => 'dynamic_select_form' ) ); ?>
 	<?php
 	// we pull up a list of entries for this particular form
 	$table      = isset( $_POST['table'] ) ? $_POST['table'] : false;
@@ -14,7 +14,7 @@
 		$options['entry_count'] = (int) $options['entry_count'];
 	}
 	unset( $options['hash'] );
-	if ( $table && $column && $hash && md5( serialize( $options ) . _UCM_SECRET ) == $hash ) {
+	if ( $table && $column && $hash && is_string( $hash ) && hash_equals( md5( serialize( $options ) . _UCM_SECRET ), $hash ) ) {
 		// we can edit this table.
 
 		if ( $data_value ) {
@@ -55,7 +55,7 @@
 								$data_items[ $this_val ]['entry_count'] = 0;
 								$data_items[ $this_val ]['index_id']    = $index && ! empty( $val[ $index ] ) ? (int) $val[ $index ] : false;
 							}
-							$data_items[ $this_val ]['entry_count'] ++;
+							$data_items[ $this_val ]['entry_count']++;
 						}
 					}
 					// now we find out how many 'rel' entries are related to this item.
@@ -63,8 +63,9 @@
 						foreach ( $data_items as $entry_value => $entry_data ) {
 							if ( $entry_data['index'] && $entry_data['index_id'] ) {
 								foreach ( $_POST['rel'] as $other_table ) {
+									$other_table = db_identifier( $other_table );
 									if ( module_db::db_table_exists( $other_table ) ) {
-										$sql = "SELECT COUNT(*) AS `c` FROM `" . _DB_PREFIX . "$other_table` WHERE `" . db_escape( $entry_data['index'] ) . "` = '" . db_escape( $entry_data['index_id'] ) . "'";
+										$sql = "SELECT COUNT(*) AS `c` FROM `" . _DB_PREFIX . "$other_table` WHERE `" . db_identifier( $entry_data['index'] ) . "` = '" . db_escape( $entry_data['index_id'] ) . "'";
 										$qa  = qa1( $sql );
 										if ( ! empty( $qa['c'] ) ) {
 											$data_items[ $entry_value ]['entry_count'] += $qa['c'];
@@ -120,4 +121,4 @@
 		echo 'Invalid permission';
 	}
 	?>
-</form>
+<?php module_form::print_form_close_tag();

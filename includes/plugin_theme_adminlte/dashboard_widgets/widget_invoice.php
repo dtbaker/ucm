@@ -17,9 +17,9 @@ if ( class_exists( 'module_invoice', false ) && module_invoice::can_i( 'view', '
 			continue;
 		}
 		if ( $invoice['overdue'] ) {
-			$count_overdue ++;
+			$count_overdue++;
 		}
-		$count ++;
+		$count++;
 	}
 	ob_start();
 	// icons from http://ionicons.com/

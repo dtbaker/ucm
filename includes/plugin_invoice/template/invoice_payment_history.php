@@ -115,7 +115,7 @@ if ( module_config::c( 'invoice_show_payment_history', 1 ) ) {
 		foreach ( $payment_historyies as $invoice_payment_id => $invoice_payment_data ) {
 
 			$row_replace = array(
-				'ITEM_ODD_OR_EVEN'         => $item_count ++ % 2 ? 'odd' : 'even',
+				'ITEM_ODD_OR_EVEN'         => $item_count++ % 2 ? 'odd' : 'even',
 				'ITEM_PAYMENT_DATE'        => ( ! trim( $invoice_payment_data['date_paid'] ) || $invoice_payment_data['date_paid'] == '0000-00-00' ) ? _l( 'Pending on %s', print_date( $invoice_payment_data['date_created'] ) ) : print_date( $invoice_payment_data['date_paid'] ),
 				'ITEM_PAYMENT_METHOD'      => htmlspecialchars( $invoice_payment_data['method'] ),
 				'ITEM_PAYMENT_DETAILS'     => '',

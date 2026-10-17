@@ -1,95 +1,41 @@
 <?php
 
+/**
+ * Database abstraction layer.
+ * All functions delegate to module_db (MySQLi). The deprecated mysql_* extension is no longer supported.
+ * PHP 8.5+ requires MySQLi.
+ */
+
 $dbcnx = false;
 
 function db_connect() {
-	if ( class_exists( 'module_db', false ) && is_callable( 'module_db::db_connect' ) ) {
-		return module_db::db_connect();
-	}
-	global $dbcnx;
-	if ( ! $dbcnx ) {
-		$dbcnx = false; //@mysql_pconnect(_DB_SERVER,_DB_USER,_DB_PASS); // or die(mysql_error());
-		if ( ! $dbcnx ) {
-			$dbcnx = @mysql_connect( _DB_SERVER, _DB_USER, _DB_PASS ) or die( mysql_error() );
-		}
-		if ( ! $dbcnx || mysql_errno() ) {
-			set_error( mysql_error() );
-
-			return false;
-		}
-		mysql_select_db( _DB_NAME, $dbcnx );
-		query( "SET @@SESSION.sql_mode = ''" );
+	if ( ! class_exists( 'module_db', false ) || ! is_callable( 'module_db::db_connect' ) ) {
+		die( 'Database module not loaded. UCM requires PHP 8.5+ with MySQLi. Please ensure includes/plugin_db/ is present.' );
 	}
 
-	return $dbcnx;
+	return module_db::db_connect();
 }
 
 function db_close( $db ) {
-	mysql_close( $db );
+	if ( class_exists( 'module_db', false ) && method_exists( 'module_db', 'db_close' ) ) {
+		module_db::db_close( $db );
+	}
 }
 
 function query( $sql, $debug_message = '' ) {
-
-	if ( class_exists( 'module_db', false ) && is_callable( 'module_db::query' ) ) {
-		return module_db::query( $sql, $debug_message );
-	}
-	//echo ''.$sql.'<br>';
-	if ( _DEBUG_MODE && defined( '_DEBUG_SQL' ) && _DEBUG_SQL ) {
-		static $past_queries = array();
-		if ( ! isset( $past_queries[ $sql ] ) ) {
-			$past_queries[ $sql ] = 0;
-		} else {
-			$past_queries[ $sql ] ++;
-		}
-		$sql_debug = $sql;
-		if ( strlen( $sql_debug ) > 60 ) {
-			$sql_debug = htmlspecialchars( substr( $sql_debug, 0, 60 ) ) . '<a href="#" onclick="$(this).hide(); $(\'span\',$(this).parent()).show(); return false;">....</a><span style="display:none">' .
-			             htmlspecialchars( substr( $sql, 60 ) ) . '</span>';
-		} else {
-			$sql_debug = htmlspecialchars( $sql );
-		}
-		if ( class_exists( 'module_debug', false ) ) {
-			module_debug::log( array(
-				'title'     => 'SQL Query',
-				'file'      => 'includes/database.php',
-				'data'      => '(' . ( $past_queries[ $sql ] > 0 ? '<span style="color:#FF0000; font-weight:bold;">' . $past_queries[ $sql ] . '</span>' : $past_queries[ $sql ] ) . ') ' . $debug_message . $sql_debug,
-				'important' => $past_queries[ $sql ] > 0,
-			) );
-		}
+	if ( ! class_exists( 'module_db', false ) || ! is_callable( 'module_db::query' ) ) {
+		die( 'Database module not loaded. UCM requires PHP 8.5+ with MySQLi.' );
 	}
 
-	$res = mysql_query( $sql ); //or die(mysql_error() . $sql);
-	if ( mysql_errno() ) {
-		set_error( _l( 'SQL Error: %s', mysql_error() . ' ' . $sql ) );
-		set_error( _l( 'Try clicking the "Run Manual Upgrades" button to resolve SQL Errors.' ) );
-
-		return false;
-	}
-
-	return $res;
+	return module_db::query( $sql, $debug_message );
 }
 
-/*function db_clean_deep(&$value){
-    $value = is_array($value) ? array_map('db_clean_deep', $value) : stripslashes(htmlspecialchars($value));
-    return $value;
-}*/
 function query_to_array( $res ) {
-	if ( class_exists( 'module_db', false ) && is_callable( 'module_db::query_to_array' ) ) {
-		return module_db::query_to_array( $res );
-	}
-	$array = array();
-	if ( ! $res ) {
-		return $array;
-	}
-	while ( $row = mysql_fetch_assoc( $res ) ) {
-		if ( isset( $row['id'] ) && $row['id'] ) {
-			$array[ $row['id'] ] = $row;
-		} else {
-			$array[] = $row;
-		}
+	if ( ! class_exists( 'module_db', false ) || ! is_callable( 'module_db::query_to_array' ) ) {
+		die( 'Database module not loaded. UCM requires PHP 8.5+ with MySQLi.' );
 	}
 
-	return $array;
+	return module_db::query_to_array( $res );
 }
 
 function qa( $sql ) {
@@ -114,6 +60,7 @@ function get_fields( $table, $ignore = array(), $hidden = array(), $from_cache =
 	if ( is_array( $table ) || ! trim( $table ) ) {
 		return array();
 	}
+	$table = db_identifier( $table );
 	static $fieldscache = array();
 	if ( isset( $fieldscache[ $table ] ) ) {
 		return $fieldscache[ $table ];
@@ -147,26 +94,26 @@ function get_fields( $table, $ignore = array(), $hidden = array(), $from_cache =
 		if ( count( $hidden ) && in_array( $r['Field'], $hidden ) ) {
 			$type = "hidden";
 			// new field for file.
-		} else if ( preg_match( "/^file_/", $r['Field'] ) && preg_match( "/varchar\((\d+)\)/", $r['Type'], $matches ) ) {
+		} elseif ( preg_match( "/^file_/", $r['Field'] ) && preg_match( "/varchar\((\d+)\)/", $r['Type'], $matches ) ) {
 			$type      = "file";
 			$size      = 50;
 			$maxlength = 255;
-		} else if ( preg_match( "/varchar\((\d+)\)/", $r['Type'], $matches ) ) {
+		} elseif ( preg_match( "/varchar\((\d+)\)/", $r['Type'], $matches ) ) {
 			$type      = "text";
 			$size      = max( "10", min( "30", $matches[1] ) );
 			$maxlength = $matches[1];
-		} else if ( preg_match( "/int/i", $r['Type'] ) || preg_match( "/float/i", $r['Type'] ) ) {
+		} elseif ( preg_match( "/int/i", $r['Type'] ) || preg_match( "/float/i", $r['Type'] ) ) {
 			$format    = array( "/^\d+$/", "Integer" );
 			$type      = "number";
 			$maxlength = $size = 20;
-		} else if ( $r['Type'] == "text" ) {
+		} elseif ( $r['Type'] == "text" ) {
 			$type = "textarea";
 			$size = 0;
-		} else if ( $r['Type'] == "date" || $r['Type'] == "datetime" ) {
+		} elseif ( $r['Type'] == "date" || $r['Type'] == "datetime" ) {
 			$format    = array( "/^\d\d\d\d-\d\d-\d\d$/", "YYYY-MM-DD" );
 			$type      = "date";
 			$maxlength = $size = 20;
-		} else if ( preg_match( "/decimal/", $r['Type'] ) || preg_match( "/double/", $r['Type'] ) ) {
+		} elseif ( preg_match( "/decimal/", $r['Type'] ) || preg_match( "/double/", $r['Type'] ) ) {
 			$format    = array( "/^\d+\.?[\d+]?$/", "Decimal" );
 			$type      = "decimal";
 			$maxlength = $size = 20;
@@ -194,7 +141,9 @@ function delete_from_db( $table, $key, $val ) {
 	if ( class_exists( 'module_db', false ) && is_callable( 'module_db::delete_from_db' ) ) {
 		return module_db::delete_from_db( $table, $key, $val );
 	}
-	$table = db_escape( $table );
+	// A table name is an identifier, not a value - the value escaper would happily pass
+	// a backtick through.
+	$table = db_identifier( $table );
 	if ( ! is_array( $key ) ) {
 		$key = array( $key );
 	}
@@ -204,7 +153,7 @@ function delete_from_db( $table, $key, $val ) {
 
 	$sql = "DELETE FROM `" . _DB_PREFIX . "$table` WHERE ";
 	foreach ( $key as $kid => $k ) {
-		$sql .= "`" . db_escape( $k ) . "` = '" . db_escape( $val[ $kid ] ) . "' AND ";
+		$sql .= "`" . db_identifier( $k ) . "` = '" . db_escape( $val[ $kid ] ) . "' AND ";
 	}
 	$sql = rtrim( $sql, " AND " );
 	if ( isset( $fields['system_id'] ) && defined( '_SYSTEM_ID' ) ) {
@@ -222,7 +171,9 @@ function get_single( $table, $key, $val ) {
 	if ( class_exists( 'module_db', false ) && is_callable( 'module_db::get_single' ) ) {
 		return module_db::get_single( $table, $key, $val );
 	}
-	$table = db_escape( $table );
+	// A table name is an identifier, not a value - the value escaper would happily pass
+	// a backtick through.
+	$table = db_identifier( $table );
 	if ( ! is_array( $key ) ) {
 		$key = array( $key );
 	}
@@ -240,7 +191,7 @@ function get_single( $table, $key, $val ) {
 
 	$sql = "SELECT * FROM `" . _DB_PREFIX . "$table` WHERE ";
 	foreach ( $key as $kid => $k ) {
-		$sql .= "`" . db_escape( $k ) . "` = '" . db_escape( $val[ $kid ] ) . "' AND ";
+		$sql .= "`" . db_identifier( $k ) . "` = '" . db_escape( $val[ $kid ] ) . "' AND ";
 	}
 	$sql = rtrim( $sql, " AND " );
 	//if(isset($fields['system_id']) && defined('_SYSTEM_ID')){
@@ -286,6 +237,9 @@ function update_insert( $pkey, $pid, $table, $data = false, $do_replace = false 
 	if ( $data === false ) {
 		$data = $_REQUEST;
 	}
+	// Both of these end up inside backticks in the statements below.
+	$table  = db_identifier( $table );
+	$pkey   = db_identifier( $pkey );
 	$fields = get_fields( $table, array( "date_created", "date_updated" ), array(), true ); //
 	if ( isset( $fields['system_id'] ) && defined( '_SYSTEM_ID' ) ) {
 		$data['system_id'] = _SYSTEM_ID;
@@ -379,13 +333,13 @@ function update_insert( $pkey, $pid, $table, $data = false, $do_replace = false 
 		} else {
 			$val = $data[ $field['name'] ];
 		}
-		$sql .= " `" . $field['name'] . "` = '" . db_escape( $val ) . "', ";
+		$sql .= " `" . db_identifier( $field['name'] ) . "` = '" . db_escape( $val ) . "', ";
 	}
 	$sql = rtrim( $sql, ', ' );
 	$sql .= $where;
 	query( $sql );
 	if ( $pid == "new" ) {
-		$pid = mysql_insert_id();
+		$pid = class_exists( 'module_db', false ) ? module_db::db_insert_id() : 0;
 	}
 
 	return $pid;
@@ -404,13 +358,14 @@ function get_col_vals( $table, $key, $val = false, $order = false ) {
 	if ( preg_match_all( '/\{([^\}]+)\}/', $val, $matches ) ) {
 		$dbval = '';
 		foreach ( $matches[1] as $v ) {
-			$dbval .= ', `' . db_escape( $v ) . '`';
+			$dbval .= ', `' . db_identifier( $v ) . '`';
 		}
 	} else {
 		echo 'Fail on get_col_Vals';
 		exit;
 	}
-	$key    = db_escape( $key );
+	$key    = db_identifier( $key );
+	$table  = db_identifier( $table );
 	$sql    = "SELECT `$key` as k $dbval";
 	$sql    .= " FROM `" . _DB_PREFIX . "$table`";
 	$fields = get_fields( $table, array(), array(), true );
@@ -419,7 +374,10 @@ function get_col_vals( $table, $key, $val = false, $order = false ) {
 	}
 	$sql .= " GROUP BY k";
 	if ( $order ) {
-		$sql .= " ORDER BY " . db_escape( $order ) . "";
+		$order_by = db_order_by( $order, array_keys( $fields ) );
+		if ( $order_by ) {
+			$sql .= " ORDER BY " . $order_by;
+		}
 	}
 	$res    = qa( $sql );
 	$return = array();
@@ -437,10 +395,10 @@ function get_col_vals( $table, $key, $val = false, $order = false ) {
 
 function get_multiple( $table, $search = false, $id = false, $search_type = "exact", $order = false ) {
 
-
-	$sql = "SELECT *";
+	$table = db_identifier( $table );
+	$sql   = "SELECT *";
 	if ( $id ) {
-		$sql .= ",`$id` AS id";
+		$sql .= ",`" . db_identifier( $id ) . "` AS id";
 	}
 	$sql    .= " FROM `" . _DB_PREFIX . "$table`";
 	$fields = get_fields( $table, array(), array(), true );
@@ -486,12 +444,13 @@ function get_multiple( $table, $search = false, $id = false, $search_type = "exa
 				if ( ! isset( $fields[ $k ] ) ) {
 					continue;
 				}
+				$column = db_identifier( $k );
 				if ( $spesh ) {
-					$sql .= " `$k` $operator '" . db_escape( $val ) . "'";
-				} else if ( $this_search_type == "fuzzy" ) {
-					$sql .= " `$k` LIKE '%" . db_escape( $val ) . "%'";
-				} else if ( $this_search_type == "exact" ) {
-					$sql .= " `$k` = '" . db_escape( $val ) . "'";
+					$sql .= " `$column` $operator '" . db_escape( $val ) . "'";
+				} elseif ( $this_search_type == "fuzzy" ) {
+					$sql .= " `$column` LIKE '%" . db_escape( $val ) . "%'";
+				} elseif ( $this_search_type == "exact" ) {
+					$sql .= " `$column` = '" . db_escape( $val ) . "'";
 				}
 				$sql .= " OR ";
 			}
@@ -501,10 +460,12 @@ function get_multiple( $table, $search = false, $id = false, $search_type = "exa
 		}
 	}
 	if ( $order ) {
-		if ( strpos( $order, ' ' ) === false && strpos( $order, '`' ) === false ) {
-			$order = '`' . $order . '`';
+		// "id" is the alias this function adds above, so it is allowed alongside the
+		// table's own columns.
+		$order_by = db_order_by( $order, array_merge( array_keys( $fields ), array( 'id' ) ) );
+		if ( $order_by ) {
+			$sql .= " ORDER BY " . $order_by;
 		}
-		$sql .= " ORDER BY " . db_escape( $order ) . "";
 	}
 	$result = qa( $sql );
 
@@ -533,4 +494,3 @@ function get_multiple( $table, $search = false, $id = false, $search_type = "exa
 	}
 	return $result;
 }*/
-

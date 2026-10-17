@@ -37,11 +37,15 @@ if ( class_exists( 'module_security', false ) ) {
 
 <?php hook_handle_callback( 'layout_column_half', 1 ); ?>
 
-	<form action="" method="post" id="subscription_form">
-		<input type="hidden" name="_process" value="save_subscription"/>
-		<input type="hidden" name="subscription_id" value="<?php echo $subscription_id; ?>"/>
+<?php
+	module_form::print_form_open_tag( array(
+		'id'      => 'subscription_form',
+		'process' => 'save_subscription',
+		'hidden'  => array(
+			'subscription_id' => $subscription_id,
+		),
+	) );
 
-		<?php
 		module_form::set_required( array(
 				'fields' => array(
 					'name'   => 'Name',
@@ -63,7 +67,7 @@ if ( class_exists( 'module_security', false ) ) {
 		foreach ( module_template::get_templates() as $possible_template ) {
 			if ( strpos( $possible_template['template_key'], 'invoice_print' ) !== false ) {
 				$invoice_template_print[ $possible_template['template_key'] ] = $possible_template['template_key'];
-			} else if ( strpos( $possible_template['template_key'], 'invoice_email' ) !== false ) {
+			} elseif ( strpos( $possible_template['template_key'], 'invoice_email' ) !== false ) {
 				$key = preg_replace( '#\_(due|paid|overdue)$#', '', $possible_template['template_key'] );
 				if ( ! isset( $invoice_template_email[ $key ] ) ) {
 					$invoice_template_email[ $key ] = array();
@@ -209,7 +213,7 @@ if ( class_exists( 'module_security', false ) ) {
 										for="paymethodallowed<?php echo $x; ?>"><?php echo $payment_method->get_payment_method_name(); ?></label>
 									<br/>
 									<?php
-									$x ++;
+									$x++;
 								}
 							}
 						}
@@ -288,9 +292,8 @@ if ( class_exists( 'module_security', false ) ) {
 		);
 		echo module_form::generate_form_actions( $form_actions );
 
+		module_form::print_form_close_tag();
 		?>
-
-	</form>
 
 <?php hook_handle_callback( 'layout_column_half', 2 ); ?>
 

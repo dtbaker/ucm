@@ -1,6 +1,5 @@
 <?php
 
-
 require_once( "includes/config.php" );
 
 if ( _DEBUG_MODE && ! isset( $debug_info ) ) {
@@ -8,7 +7,16 @@ if ( _DEBUG_MODE && ! isset( $debug_info ) ) {
 }
 
 define( '_APPLICATION_ID', 47626 ); // not used any more.
-define( '_SCRIPT_VERSION', '3.555' );
+// The release version: the one number shown to people (the footer, Settings > Upgrade,
+// module_config::product_version()) and quoted in the changelog. Bump it at every release,
+// with a line below. It is also the cache key on every stylesheet and script, so a release
+// that changes CSS or JavaScript must bump it or browsers keep the old files.
+//
+// This file reaches an existing install as a core file, and core files are only sent along
+// with a plugin update. Bump the version of every plugin whose files changed too, or the
+// in-app updater will not offer the release at all. README.md, under "Releasing".
+define( '_SCRIPT_VERSION', '4.0.0' );
+// 4.0.0 - 2026-10-17 - relaunch: PHP 8 rewrite, security and payment fixes, update server in the app, new logo
 // 3.555 - 2022-12-27 - uasort boolean fix
 // 3.552 - 2021-04-07 - php 8 magic quotes fix
 // 3.551 - 2017-01-12 - fieldset settings
@@ -78,19 +86,21 @@ define( '_SCRIPT_VERSION', '3.555' );
 // 3.42 - invoice product adjustments
 
 if ( ! defined( '_UCM_SECRET' ) ) {
-	define( '_UCM_SECRET', _UCM_FOLDER );
+	// Unreachable in practice - includes/config.php is loaded above and always defines
+	// this. Kept in step with it so there is no second, weaker definition to find.
+	define( '_UCM_SECRET', ucm_env( 'UCM_SECRET', _UCM_FOLDER ) );
 }
 
 if ( ! isset( $_SERVER['REQUEST_URI'] ) ) {
 	//ISAPI_Rewrite 3.x
 	if ( isset( $_SERVER['HTTP_X_REWRITE_URL'] ) ) {
 		$_SERVER['REQUEST_URI'] = $_SERVER['HTTP_X_REWRITE_URL'];
-	} //ISAPI_Rewrite 2.x w/ HTTPD.INI configuration
-	else if ( isset( $_SERVER['HTTP_REQUEST_URI'] ) ) {
+	} elseif ( isset( $_SERVER['HTTP_REQUEST_URI'] ) ) {
+		//ISAPI_Rewrite 2.x w/ HTTPD.INI configuration
 		$_SERVER['REQUEST_URI'] = $_SERVER['HTTP_REQUEST_URI'];
 		//Good to go!
-	} //ISAPI_Rewrite isn't installed or not configured
-	else {
+	} else {
+		//ISAPI_Rewrite isn't installed or not configured
 		//Someone didn't follow the instructions!
 		if ( isset( $_SERVER['SCRIPT_NAME'] ) ) {
 			$_SERVER['HTTP_REQUEST_URI'] = $_SERVER['SCRIPT_NAME'];
@@ -126,6 +136,7 @@ if ( _DEBUG_MODE ) {
 }
 // include all our plugin files:
 require_once( "includes/plugin.php" );
+require_once( "includes/class.libraries.php" );
 global $plugins;
 
 $plugins_to_init = isset( $plugins_to_init ) && is_array( $plugins_to_init ) ? $plugins_to_init : array();
@@ -262,7 +273,7 @@ if ( ! session_id() && ( ! isset( $disable_sessions ) || ! $disable_sessions ) )
 			) );
 		}
 		new module_session();
-	} else if ( is_dir( _UCM_FILE_STORAGE_DIR . "temp/" ) && is_writable( _UCM_FILE_STORAGE_DIR . "temp/" ) ) {
+	} elseif ( is_dir( _UCM_FILE_STORAGE_DIR . "temp/" ) && is_writable( _UCM_FILE_STORAGE_DIR . "temp/" ) ) {
 		// file based sessions in the local /temp/ folder. bad! oh well.
 		if ( _DEBUG_MODE ) {
 			module_debug::log( array(
@@ -272,7 +283,14 @@ if ( ! session_id() && ( ! isset( $disable_sessions ) || ! $disable_sessions ) )
 		ini_set( "session.save_handler", "files" );
 		session_save_path( _UCM_FILE_STORAGE_DIR . "temp/" );
 	}
-	session_set_cookie_params( 0, _BASE_HREF );
+	session_set_cookie_params( array(
+		'lifetime' => 0,
+		'path'     => _BASE_HREF,
+		'domain'   => '',
+		'secure'   => ! empty( $_SERVER['HTTPS'] ) && $_SERVER['HTTPS'] !== 'off',
+		'httponly' => true,
+		'samesite' => 'Lax',
+	) );
 	session_start();
 	// if there are no session values
 }
@@ -298,9 +316,13 @@ if ( _REWRITE_LINKS ) {
 			}
 			$m = explode( ".", $part );
 			if ( count( $m ) == 2 ) {
+				if ( $module_number === 0 ) {
+					$_REQUEST['m'] = array();
+					$_REQUEST['p'] = array();
+				}
 				$_REQUEST['m'][ $module_number ] = $m[0];
 				$_REQUEST['p'][ $module_number ] = $m[1];
-				$module_number ++;
+				$module_number++;
 			}
 		}
 	}
@@ -316,7 +338,8 @@ if ( $plugins_to_init ) {
 	//$uninstalled_plugins = $upgradable_plugins = array();
 	foreach ( $plugins_to_init as $plugin_name ) {
 		if ( class_exists( 'module_' . $plugin_name, false ) ) {
-			eval( '$plugins[$plugin_name] = new module_' . $plugin_name . '();' );
+			$class_name = 'module_' . $plugin_name;
+			$plugins[ $plugin_name ] = new $class_name();
 			// this is a hack for php 5.2 to get the can_i() thing working
 			//eval('module_'.$plugin_name.'::$module_name_hack = module_'.$plugin_name.'::get_class();');
 			if ( _UCM_INSTALLED && $plugins[ $plugin_name ]->is_plugin_enabled() ) {
@@ -325,7 +348,7 @@ if ( $plugins_to_init ) {
 				//$uninstalled_plugins[$plugin_name] = &$plugins[$plugin_name];
 				//unset($plugins[$plugin_name]);
 				//}
-			} else if ( ! _UCM_INSTALLED && in_array( $plugin_name, array( 'theme' ) ) ) {
+			} elseif ( ! _UCM_INSTALLED && in_array( $plugin_name, array( 'theme' ) ) ) {
 				// we want to load some plugins before we've installed.
 				$plugins[ $plugin_name ]->init();
 			}
@@ -333,13 +356,9 @@ if ( $plugins_to_init ) {
 	}
 }
 
-hook_handle_callback( 'plugins_loaded' );
+ucm_libraries::collect();
 
-/*foreach($plugins as $plugin_name => &$p){
-    echo $plugin_name.'<br>';
-    eval('echo module_'.$plugin_name.'::$module_name_hack;');
-    echo '<br>';
-}*/
+hook_handle_callback( 'plugins_loaded' );
 
 if ( ! function_exists( 'sort_plugins' ) ) {
 	function sort_plugins( $a, $b ) {
@@ -347,7 +366,6 @@ if ( ! function_exists( 'sort_plugins' ) ) {
 	}
 }
 uasort( $plugins, 'sort_plugins' );
-
 
 if ( isset( $_REQUEST['auto_login'] ) ) {
 	// try to process an auto login.

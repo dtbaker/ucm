@@ -1,5 +1,5 @@
 <?php
-if ( ! $note_list_safe ) {
+if ( empty( $note_list_safe ) ) {
 	die( 'fail' );
 }
 //print_r($note_items);exit;
@@ -37,7 +37,7 @@ if ( isset( $options['title'] ) && $options['title'] ) {
 			),
 		);
 	}
-} else if ( $can_create ) {
+} elseif ( $can_create ) {
 	?>
 	<a href="<?php echo module_note::link_open( 'new', false, $link_options ); ?>"
 	   class="uibutton note_options_link note_add no_permissions"><?php _e( 'Add New Note' ); ?></a>
@@ -169,7 +169,7 @@ if ( $popup_links ) { ?>
 
       function note_popup_opened($modal) {
           edit_note_id = parseInt($modal.find('#note_id').val());
-				<?php if($rel_data){ ?>
+				<?php if ($rel_data) { ?>
           if (!edit_note_id) {
               $('#form_rel_data').val('<?php echo $rel_data;?>');
           }

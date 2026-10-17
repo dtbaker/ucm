@@ -1,17 +1,20 @@
 <?php
 
-
 define( '_USER_ACCESS_ALL', 'All Contact and User Accounts' ); // do not change string
 define( '_USER_ACCESS_ME', 'Only My Account' ); // do not change string
 define( '_USER_ACCESS_CONTACTS', 'Only Contact Accounts' ); // do not change string
 
 
-class module_user extends module_base {
-
+class module_user extends module_base
+{
 	public $links;
 	public $user_types;
 
-	public $version = 2.289;
+	public function __construct() {
+		$this->module_name     = 'user';
+		$this->module_position = 550;
+		$this->version         = 2.289;
+	}
 	// 2.289 - 2017-05-28 - api improvements
 	// 2.288 - 2017-02-27 - staff member first/last name flag for drop downs
 	// 2.287 - 2016-11-01 - ajax autocompletion
@@ -84,10 +87,8 @@ class module_user extends module_base {
 	}
 
 	public function init() {
-		$this->links           = array();
-		$this->user_types      = array();
-		$this->module_name     = "user";
-		$this->module_position = 15;
+		$this->links     = array();
+		$this->user_types = array();
 
 		hook_add( 'contact_list', 'module_user::hook_filter_var_contact_list' );
 		hook_add( 'staff_list', 'module_user::hook_filter_var_staff_list' );
@@ -208,10 +209,10 @@ class module_user extends module_base {
 		$use_master_key = self::get_contact_master_key();
 		if ( isset( $data[ $use_master_key ] ) && $data[ $use_master_key ] ) {
 			$options['type'] = 'contact';
-		} else if ( ( isset( $data['customer_id'] ) && $data['customer_id'] ) ) {
+		} elseif ( ( isset( $data['customer_id'] ) && $data['customer_id'] ) ) {
 			$use_master_key  = 'customer_id';
 			$options['type'] = 'contact';
-		} else if ( ( isset( $data['vendor_id'] ) && $data['vendor_id'] ) ) {
+		} elseif ( ( isset( $data['vendor_id'] ) && $data['vendor_id'] ) ) {
 			$use_master_key  = 'vendor_id';
 			$options['type'] = 'contact';
 		}
@@ -358,6 +359,11 @@ class module_user extends module_base {
 
 
 	public function process() {
+		// Every form that reaches here is posted from a UCM page, so it carries the
+		// form auth key. Refuse anything that does not - see module_form::check_secure_key().
+		if ( ! module_form::check_secure_key() ) {
+			module_form::reject_invalid_form_auth();
+		}
 		if ( _DEMO_MODE && isset( $_REQUEST['user_id'] ) && (int) $_REQUEST['user_id'] > 0 && (int) $_REQUEST['user_id'] <= 4 ) {
 			set_error( 'Sorry no changes to demo users. Please create a new user.' );
 			redirect_browser( $this->link_open( $_REQUEST['user_id'] ) );
@@ -370,14 +376,14 @@ class module_user extends module_base {
 				set_message( "Contact deleted successfully" );
 				redirect_browser( module_customer::link_open( $data['customer_id'] ) );
 			}
-		} else if ( isset( $_REQUEST['butt_del'] ) && $_REQUEST['butt_del'] && $_REQUEST['user_id'] && self::can_i( 'delete', 'Users', 'Config' ) ) {
+		} elseif ( isset( $_REQUEST['butt_del'] ) && $_REQUEST['butt_del'] && $_REQUEST['user_id'] && self::can_i( 'delete', 'Users', 'Config' ) ) {
 			$data = self::get_user( $_REQUEST['user_id'] );
 			if ( module_form::confirm_delete( 'user_id', "Really delete user: " . $data['name'], self::link_open( $_REQUEST['user_id'] ) ) ) {
 				$this->delete_user( $_REQUEST['user_id'] );
 				set_message( "User deleted successfully" );
 				redirect_browser( self::link_open( false ) );
 			}
-		} else if ( "save_user" == $_REQUEST['_process'] ) {
+		} elseif ( "save_user" == $_REQUEST['_process'] ) {
 			$user_id = (int) $_REQUEST['user_id'];
 			if ( $user_id == 1 && module_security::get_loggedin_id() != 1 ) {
 				set_error( 'Sorry, only the Administrator can access this page.' );
@@ -404,7 +410,7 @@ class module_user extends module_base {
 					set_error( 'No permissions to ' . $method . ' contacts' );
 					redirect_browser( module_customer::link_open( $_POST['customer_id'] ) );
 				}
-			} else if ( ! module_user::can_i( $method, 'Users', 'Config' ) ) {
+			} elseif ( ! module_user::can_i( $method, 'Users', 'Config' ) ) {
 				set_error( 'No permissions to ' . $method . ' users' );
 				redirect_browser( module_user::link_open( false ) );
 			}
@@ -588,7 +594,7 @@ class module_user extends module_base {
 				// searching all customers
 				$where .= " AND u.customer_id > 0 ";
 			}
-		} else if ( isset( $search['vendor_id'] ) ) { //$search['vendor_id']
+		} elseif ( isset( $search['vendor_id'] ) ) { //$search['vendor_id']
 			$sql  .= ", c.* ";
 			$sql  .= " , c.primary_user_id AS is_primary ";
 			$from .= " LEFT JOIN `" . _DB_PREFIX . "vendor` c ON u.vendor_id = c.vendor_id ";
@@ -686,14 +692,14 @@ class module_user extends module_base {
 				/*foreach($result as $key=>$val){
                     if($val['user_id']!=module_security::get_loggedin_id())unset($result[$key]);
                 }*/
-			} else if ( isset( $search['vendor_id'] ) && $search['vendor_id'] && ! module_user::can_i( 'view', 'All Vendor Contacts', 'Vendor', 'vendor' ) ) {
+			} elseif ( isset( $search['vendor_id'] ) && $search['vendor_id'] && ! module_user::can_i( 'view', 'All Vendor Contacts', 'Vendor', 'vendor' ) ) {
 				$where .= " AND u.user_id = " . (int) module_security::get_loggedin_id();
 			}
 		}
 		$group_order = ' GROUP BY u.user_id  ';
 		if ( isset( $search['customer_id'] ) && $search['customer_id'] ) {
 			$group_order .= 'ORDER BY c.customer_name, u.name'; // stop when multiple company sites have same region
-		} else if ( isset( $search['vendor_id'] ) && $search['vendor_id'] ) {
+		} elseif ( isset( $search['vendor_id'] ) && $search['vendor_id'] ) {
 			$group_order .= 'ORDER BY c.vendor_name, u.name'; // stop when multiple company sites have same region
 		}
 		$sql = $sql . $from . $where . $group_order;
@@ -714,7 +720,8 @@ class module_user extends module_base {
 		return 'user_' . $user_id . '_' . md5( module_security::get_loggedin_id() . '_' . serialize( $args ) );
 	}
 
-	public static function get_user( $user_id, $perms = true, $do_link = true, $basic_for_link = false ) { //,$basic=false
+	public static function get_user( $user_id, $perms = true, $do_link = true, $basic_for_link = false ) {
+ //,$basic=false
 
 		$cache_key_args = func_get_args();
 		$cache_key      = self::_user_cache_key( $user_id, $cache_key_args );
@@ -854,7 +861,8 @@ class module_user extends module_base {
 		return $user;
 	}
 
-	public function create_user( $user_data ) { // $user_type=false
+	public function create_user( $user_data ) {
+ // $user_type=false
 		// todo - check user data is correct.
 		$user_data['status_id'] = 1;
 		if ( isset( $user_data['password'] ) ) {
@@ -878,7 +886,7 @@ class module_user extends module_base {
 
 					return false;
 				}
-			} else if ( ! self::can_i( 'edit', 'Users', 'Config' ) ) {
+			} elseif ( ! self::can_i( 'edit', 'Users', 'Config' ) ) {
 				set_error( 'Unable to edit users.' );
 
 				return false;
@@ -900,12 +908,12 @@ class module_user extends module_base {
 
 					return false;
 				}
-			} else if ( ! self::can_i( 'create', 'Users', 'Config' ) ) {
+			} elseif ( ! self::can_i( 'create', 'Users', 'Config' ) ) {
 				set_error( 'Unable to create new users.' );
 
 				return false;
 			}
-		} else if ( $user_id == 1 && module_security::get_loggedin_id() != 1 ) {
+		} elseif ( $user_id == 1 && module_security::get_loggedin_id() != 1 ) {
 			set_error( 'Sorry only the administrator can modify this account' );
 		}
 		// check the customer id is valid assignment to someone who has these perms.
@@ -936,11 +944,11 @@ class module_user extends module_base {
 			} else {
 				set_error( 'Sorry, no permissions to set a new password.' );
 			}
-		} else if ( $user_id && isset( $data['password_new1'] ) && isset( $data['password_new2'] ) && strlen( $data['password_new1'] ) ) {
+		} elseif ( $user_id && isset( $data['password_new1'] ) && isset( $data['password_new2'] ) && strlen( $data['password_new1'] ) ) {
 			// the user is trying to change their password.
 			// only do this if the user has edit password permissions and their password matches.
 			if ( module_user::can_i( 'edit', 'Users Passwords', 'Config' ) || $user_id == module_security::get_loggedin_id() ) {
-				if ( isset( $data['password_old'] ) && ( md5( $data['password_old'] ) == $temp_user['password'] || $data['password_old'] == $temp_user['password'] ) ) {
+				if ( isset( $data['password_old'] ) && ucm_password_verify( $data['password_old'], $temp_user['password'], $user_id ) ) {
 					// correct old password
 					// verify new password.
 					if ( $data['password_new1'] == $data['password_new2'] ) {
@@ -955,11 +963,9 @@ class module_user extends module_base {
 				set_error( 'No permissions to change passwords' );
 			}
 		}
-		// and we finally hash our password
+		// and we finally hash our password (bcrypt, with legacy MD5 support for verification)
 		if ( isset( $data['password'] ) && strlen( $data['password'] ) > 0 ) {
-			$data['password'] = md5( $data['password'] );
-			// if you change md5 also change it in customer import.
-			// todo - salt? meh.
+			$data['password'] = ucm_password_hash( $data['password'] );
 		}
 		$user_id = update_insert( "user_id", $user_id, "user", $data );
 
@@ -1090,7 +1096,7 @@ class module_user extends module_base {
 					}
 					$sql = "REPLACE INTO `" . _DB_PREFIX . "user_perm` SET user_id = '" . (int) $user_id . "', security_permission_id = '" . (int) $security_permission_id . "' ";
 					foreach ( $actions as $permission => $tf ) {
-						$sql .= ", `" . db_escape( $permission ) . "` = 1";
+						$sql .= ", `" . db_identifier( $permission ) . "` = 1";
 					}
 					query( $sql );
 				}
@@ -1281,6 +1287,9 @@ class module_user extends module_base {
 		query( $sql );
 		$sql = "UPDATE " . _DB_PREFIX . "user SET linked_parent_user_id = 0 WHERE linked_parent_user_id = '" . $user_id . "'";
 		query( $sql );
+		// get_user() and get_contacts() both cache, so without this the deleted user
+		// keeps turning up on their own screen and in contact lists.
+		module_cache::clear( 'user' );
 	}
 
 	public function login_link( $user_id ) {
@@ -1310,7 +1319,7 @@ class module_user extends module_base {
     )
     */
 
-	static $users_by_perm_cache = array();
+	public static $users_by_perm_cache = array();
 
 	public static function get_users_by_permission( $access_requirements ) {
 
@@ -1737,10 +1746,10 @@ CREATE TABLE IF NOT EXISTS `<?php echo _DB_PREFIX; ?>user_type` (
 
 
 		INSERT INTO `<?php echo _DB_PREFIX; ?>user` VALUES (1, 0, 0, 0, 1, -1, 0, 0, 'admin@example.com', 'password', 'Administrator', '',  '+61 7 55 123 456', '+61 7 56 321 654', '+61419789789', 'en', NOW(), NOW());
-		INSERT INTO `<?php echo _DB_PREFIX; ?>user` VALUES (2, 0, 0, 0, 1, -1, 0, 0, 'user@example.com', 'password', 'User', '', '+61 7 55 123 456', '+61 7 56 321 654', '+61419789789', 'en', NOW(), NOW());
-		INSERT INTO `<?php echo _DB_PREFIX; ?>user` VALUES (3, 1, 0, 0, 1, -1, 0, 0, 'user1@example.com', 'password', 'Contact 1', '',  '+61 7 55 123 456', '+61 7 56 321 654', '+61419789789', 'en', NOW(), NOW());
-		INSERT INTO `<?php echo _DB_PREFIX; ?>user` VALUES (4, 2, 0, 0, 1, -1, 0, 0, 'user2@example.com', 'password', 'Contact 2', '', '+61 7 55 123 456', '+61 7 56 321 654', '+61419789789', 'en', NOW(), NOW());
-		INSERT INTO `<?php echo _DB_PREFIX; ?>user` VALUES (5, 0, 1, 0, 1, 1, 1, 50, 'staff@example.com', 'password', 'Staff Member', '', '+61 7 55 123 456', '+61 7 56 321 654', '+61419789789', 'en', NOW(), NOW());
+		INSERT INTO `<?php echo _DB_PREFIX; ?>user` VALUES (2, 0, 0, 0, 1, -1, 0, 0, 'user@example.com', '', 'User', '', '+61 7 55 123 456', '+61 7 56 321 654', '+61419789789', 'en', NOW(), NOW());
+		INSERT INTO `<?php echo _DB_PREFIX; ?>user` VALUES (3, 1, 0, 0, 1, -1, 0, 0, 'user1@example.com', '', 'Contact 1', '',  '+61 7 55 123 456', '+61 7 56 321 654', '+61419789789', 'en', NOW(), NOW());
+		INSERT INTO `<?php echo _DB_PREFIX; ?>user` VALUES (4, 2, 0, 0, 1, -1, 0, 0, 'user2@example.com', '', 'Contact 2', '', '+61 7 55 123 456', '+61 7 56 321 654', '+61419789789', 'en', NOW(), NOW());
+		INSERT INTO `<?php echo _DB_PREFIX; ?>user` VALUES (5, 0, 1, 0, 1, 1, 1, 50, 'staff@example.com', '', 'Staff Member', '', '+61 7 55 123 456', '+61 7 56 321 654', '+61419789789', 'en', NOW(), NOW());
 
 		CREATE TABLE IF NOT EXISTS `<?php echo _DB_PREFIX; ?>user_perm` (
 		`user_id` int(11) NOT NULL,
@@ -1790,6 +1799,4 @@ CREATE TABLE IF NOT EXISTS `<?php echo _DB_PREFIX; ?>user_type` (
 
 		return ob_get_clean();
 	}
-
-
 }

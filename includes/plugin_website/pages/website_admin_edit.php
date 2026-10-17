@@ -32,15 +32,12 @@ if ( $website_id > 0 && $website ) {
 }
 
 
-?>
-
-
-<form action="" method="post">
-	<input type="hidden" name="_process" value="save_website"/>
-	<input type="hidden" name="website_id" value="<?php echo $website_id; ?>"/>
-
-
-	<?php
+module_form::print_form_open_tag( array(
+	'process' => 'save_website',
+	'hidden'  => array(
+		'website_id' => $website_id,
+	),
+) );
 
 	$fields = array(
 		'fields' => array(
@@ -281,7 +278,7 @@ if ( $website_id > 0 && $website ) {
 							<?php foreach ( $quotes as $quote ) {
 								$quote = module_quote::get_quote( $quote['quote_id'] );
 								?>
-								<tr class="<?php echo ( $c ++ % 2 ) ? "odd" : "even"; ?>">
+								<tr class="<?php echo ( $c++ % 2 ) ? "odd" : "even"; ?>">
 									<td class="row_action">
 										<?php echo module_quote::link_open( $quote['quote_id'], true ); ?>
 									</td>
@@ -381,7 +378,7 @@ if ( $website_id > 0 && $website ) {
 							<?php foreach ( $jobs as $job ) {
 								$job = module_job::get_job( $job['job_id'] );
 								?>
-								<tr class="<?php echo ( $c ++ % 2 ) ? "odd" : "even"; ?>">
+								<tr class="<?php echo ( $c++ % 2 ) ? "odd" : "even"; ?>">
 									<td class="row_action">
 										<?php echo module_job::link_open( $job['job_id'], true ); ?>
 									</td>
@@ -489,7 +486,7 @@ if ( $website_id > 0 && $website ) {
 						foreach ( $website_invoices as $invoice ) {
 							$invoice = module_invoice::get_invoice( $invoice['invoice_id'] );
 							?>
-							<tr class="<?php echo ( $c ++ % 2 ) ? "odd" : "even"; ?>">
+							<tr class="<?php echo ( $c++ % 2 ) ? "odd" : "even"; ?>">
 								<td class="row_action">
 									<?php echo module_invoice::link_open( $invoice['invoice_id'], true, $invoice ); ?>
 								</td>
@@ -699,7 +696,4 @@ if ( $website_id > 0 && $website ) {
 	);
 	echo module_form::generate_form_actions( $form_actions );
 
-	?>
-
-
-</form>
+	module_form::print_form_close_tag();

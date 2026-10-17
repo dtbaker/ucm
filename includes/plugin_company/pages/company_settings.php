@@ -34,7 +34,7 @@ if ( isset( $_REQUEST['company_id'] ) ) {
 	?>
 
 
-	<form action="" method="post">
+	<?php module_form::print_form_open_tag( array( 'action' => '' ) ); ?>
 
 		<table class="tableclass tableclass_rows tableclass_full">
 			<thead>
@@ -46,7 +46,7 @@ if ( isset( $_REQUEST['company_id'] ) ) {
 			<?php
 			$c = 0;
 			foreach ( $companys as $company ) { ?>
-				<tr class="<?php echo ( $c ++ % 2 ) ? "odd" : "even"; ?>">
+				<tr class="<?php echo ( $c++ % 2 ) ? "odd" : "even"; ?>">
 					<td class="row_action">
 						<?php echo module_company::link_open( $company['company_id'], true ); ?>
 					</td>
@@ -54,5 +54,5 @@ if ( isset( $_REQUEST['company_id'] ) ) {
 			<?php } ?>
 			</tbody>
 		</table>
-	</form>
+	<?php module_form::print_form_close_tag(); ?>
 <?php } ?>

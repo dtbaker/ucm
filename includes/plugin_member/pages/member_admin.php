@@ -1,6 +1,5 @@
 <?php
 
-
 if ( isset( $_REQUEST['member_id'] ) ) {
 	$links = array();
 

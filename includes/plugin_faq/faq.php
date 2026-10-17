@@ -1,10 +1,14 @@
 <?php
 
-class module_faq extends module_base {
-
+class module_faq extends module_base
+{
 	public $links;
 
-	public $version = 2.150;
+	public function __construct() {
+		$this->module_name     = 'faq';
+		$this->module_position = 190;
+		$this->version         = 2.150;
+	}
 	// 2.150 - 2016-07-10 - big update to mysqli
 	// 2.149 - 2015-09-25 - product bug fix
 	// 2.148 - 2015-06-28 - started work on FAQ API
@@ -40,10 +44,7 @@ class module_faq extends module_base {
 	}
 
 	public function init() {
-		$this->links           = array();
-		$this->module_name     = "faq";
-		$this->module_position = 30;
-
+		$this->links = array();
 
 		hook_add( 'api_callback_faq', 'module_faq::api_filter_faq' );
 
@@ -73,7 +74,7 @@ class module_faq extends module_base {
 					'holder_module_page'  => 'config_admin',  // which page this link will be automatically added to.
 					'menu_include_parent' => 0,
 				);
-			} else if ( self::can_i( 'view', 'FAQ' ) ) {
+			} elseif ( self::can_i( 'view', 'FAQ' ) ) {
 				$this->links[] = array(
 					"name" => "FAQ",
 					"p"    => "faq_ticket",
@@ -151,7 +152,7 @@ class module_faq extends module_base {
 
 			// bubble back onto ourselves for the link.
 			return self::link_generate( $faq_id, $options, $link_options );
-		} else if ( $options['page'] == 'faq_questions' ) {
+		} elseif ( $options['page'] == 'faq_questions' ) {
 			if ( isset( $options['data'] ) && $options['data'] ) {
 				//$options['data'] = $options['data'];
 			} else {
@@ -240,6 +241,11 @@ class module_faq extends module_base {
 
 
 	public function process() {
+		// Every form that reaches here is posted from a UCM page, so it carries the
+		// form auth key. Refuse anything that does not - see module_form::check_secure_key().
+		if ( ! module_form::check_secure_key() ) {
+			module_form::reject_invalid_form_auth();
+		}
 		if ( 'save_faq_product' == $_REQUEST['_process'] ) {
 
 			if ( ! module_faq::can_i( 'edit', 'FAQ' ) ) {
@@ -266,7 +272,7 @@ class module_faq extends module_base {
 			redirect_browser( $this->link_open_faq_product( $faq_product_id ) );
 
 
-		} else if ( 'save_faq' == $_REQUEST['_process'] ) {
+		} elseif ( 'save_faq' == $_REQUEST['_process'] ) {
 
 			if ( ! module_faq::can_i( 'edit', 'FAQ' ) ) {
 				die( 'No perms to save faq.' );
@@ -369,10 +375,10 @@ class module_faq extends module_base {
 		switch ( $hook ) {
 			case 'public':
 				$faq_id = ( isset( $_REQUEST['i'] ) ) ? (int) $_REQUEST['i'] : false;
-				$hash   = ( isset( $_REQUEST['hash'] ) ) ? trim( $_REQUEST['hash'] ) : false;
+				$hash   = ucm_request_string( 'hash' );
 				if ( $faq_id && $hash ) {
 					$correct_hash = $this->link_open_public( $faq_id, true );
-					if ( $correct_hash == $hash ) {
+					if ( hash_equals( $correct_hash, $hash ) ) {
 						$faq = array();
 						if ( $faq_id > 0 ) {
 							$faq = $this->get_faq( $faq_id );
@@ -445,54 +451,69 @@ class module_faq extends module_base {
 					// find the faq items that match this product id.
 					if ( $product && $product['faq_product_id'] == $faq_product_id ) {
 						$faqs = $this->get_faqs( array( 'faq_product_id' => $faq_product_id ) );
-						ob_start();
 						$x    = 0;
 						$half = ceil( count( $faqs ) / 2 );
-						?>
-						<tr>
-							<th>
-								<?php _e( 'FAQ' ); ?>
-							</th>
-							<td>
-								<?php _e( 'Please read through the below FAQ to see if the question has already been answered' ); ?>
-						</tr>
-						<tr>
-							<td colspan="2">
-								<table width="100%" class="tableclass tableclass_full table_faq_class">
-									<tbody>
-									<tr>
-										<td width="50%" valign="top">
-											<ul><?php
-												for ( true; $x < $half; $x ++ ) {
-													$data = array_shift( $faqs );
-													$faq  = module_faq::get_faq( $data['faq_id'] );
-													?>
-													<li>
-														<a href="<?php echo module_faq::link_open_public( $data['faq_id'], false ); ?>"
-														   target="_blank"><?php echo htmlspecialchars( $faq['question'] ); ?></a>
-													</li>
-												<?php } ?>
-											</ul>
-										</td>
-										<td width="50%" valign="top">
-											<ul><?php
-												foreach ( $faqs as $data ) {
-													$faq = module_faq::get_faq( $data['faq_id'] );
-													?>
-													<li>
-														<a href="<?php echo module_faq::link_open_public( $data['faq_id'], false ); ?>"
-														   target="_blank"><?php echo htmlspecialchars( $faq['question'] ); ?></a>
-													</li>
-												<?php } ?>
-											</ul>
-										</td>
-									</tr>
-									</tbody>
-								</table>
 
-							</td>
-						</tr>
+						// The two column list of links. Not a form layout - a presentation grid -
+						// so it stays a plain table, and goes into a cell of the row below.
+						ob_start();
+						?>
+						<table width="100%" class="tableclass tableclass_full table_faq_class">
+							<tbody>
+							<tr>
+								<td width="50%" valign="top">
+									<ul><?php
+										for ( true; $x < $half; $x++ ) {
+											$data = array_shift( $faqs );
+											$faq  = module_faq::get_faq( $data['faq_id'] );
+											?>
+											<li>
+												<a href="<?php echo module_faq::link_open_public( $data['faq_id'], false ); ?>"
+												   target="_blank"><?php echo htmlspecialchars( $faq['question'] ); ?></a>
+											</li>
+										<?php } ?>
+									</ul>
+								</td>
+								<td width="50%" valign="top">
+									<ul><?php
+										foreach ( $faqs as $data ) {
+											$faq = module_faq::get_faq( $data['faq_id'] );
+											?>
+											<li>
+												<a href="<?php echo module_faq::link_open_public( $data['faq_id'], false ); ?>"
+												   target="_blank"><?php echo htmlspecialchars( $faq['question'] ); ?></a>
+											</li>
+										<?php } ?>
+									</ul>
+								</td>
+							</tr>
+							</tbody>
+						</table>
 						<?php
+						$faq_links = ob_get_clean();
+
+						// The rows themselves go through the form helper like every other form row
+						// in the system. 'rows' is the mode for a fragment: these drop into the
+						// second tbody of a table the ticket form has already rendered, so there is
+						// no table, heading or box to emit around them.
+						ob_start();
+						echo module_form::generate_fieldset( array(
+							'type'     => 'rows',
+							'elements' => array(
+								'faq'       => array(
+									'title'  => 'FAQ',
+									'fields' => array(
+										htmlspecialchars( _l( 'Please read through the below FAQ to see if the question has already been answered' ) ),
+									),
+								),
+								'faq_links' => array(
+									// No title, so no header cell; colspan puts the list across both
+									// columns, which is what the hand-written row did.
+									'cell_attributes' => array( 'colspan' => '2' ),
+									'fields'          => array( $faq_links ),
+								),
+							),
+						) );
 						$html = preg_replace( '#\s+#', ' ', ob_get_clean() );
 						?>
 						$('#faq_product_area').html('<?php echo addcslashes( $html, "'" ); ?>');
@@ -558,7 +579,8 @@ class module_faq extends module_base {
 					}
 				}
 				foreach ( $faq_products as $faq_product_id => $faq_product ) {
-					$faq_products[ $faq_product_id ]['default_type'] = isset( $types[ $faq_product['default_type_id'] ] ) ? $types[ $faq_product['default_type_id'] ] : false;;
+					$faq_products[ $faq_product_id ]['default_type'] = isset( $types[ $faq_product['default_type_id'] ] ) ? $types[ $faq_product['default_type_id'] ] : false;
+;
 					if ( class_exists( 'module_envato', false ) ) {
 						$linked_items = explode( '|', $faq_product['envato_item_ids'] );
 						foreach ( $linked_items as $id => $linked_item ) {
@@ -641,7 +663,6 @@ PRIMARY KEY (`faq_ticket_id`)
 ) ENGINE=InnoDB  DEFAULT CHARSET=utf8 ;
 */
 	}
-
 }
 
 

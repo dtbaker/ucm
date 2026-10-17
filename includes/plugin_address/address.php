@@ -1,13 +1,15 @@
 <?php
 
-
-class module_address extends module_base {
-
+class module_address extends module_base
+{
 	public $links;
 	public $address_types;
 
-
-	public $version = 2.226;
+	public function __construct() {
+		$this->module_name     = 'address';
+		$this->module_position = 70;
+		$this->version         = 2.226;
+	}
 	// 2.226 - 2022-12-27 - php8.1 fixes
 	// 2.225 - 2016-07-10 - big update to mysqli
 	// 2.224 - 2016-01-25 - remove address fields if empty title
@@ -30,11 +32,8 @@ class module_address extends module_base {
 	}
 
 	public function init() {
-		$this->links           = array();
-		$this->address_types   = array();
-		$this->module_name     = "address";
-		$this->module_position = 101;
-
+		$this->links               = array();
+		$this->address_types       = array();
 		$this->link_include_parents = true; // set defaullt
 
 	}
@@ -58,10 +57,16 @@ class module_address extends module_base {
 				// we have to use this 3 key to find an address because
 				// we could be saving a new record with no existing address_id
 				$address           = $this->get_address( $owner_id, $owner_table, $address_type );
-				$address_id        = $address['address_id'];
+				$address_id        = $address['address_id'] ?? 'new';
 				$address_post_data = isset( $_POST['address'][ $address_hash ] ) ? $_POST['address'][ $address_hash ] : array();
 				if ( $address_post_data ) {
-					$address_post_data['owner_id'] = $owner_id; // incase on new save.
+					// Who the address belongs to, and what kind it is, come from this
+					// hook's own arguments rather than from the hidden fields on the form.
+					// get_address() looks owner, table and type up together, so a submit
+					// that left those fields out wrote a row nothing could find again.
+					$address_post_data['owner_id']     = $owner_id; // incase on new save.
+					$address_post_data['owner_table']  = $owner_table;
+					$address_post_data['address_type'] = $address_type;
 					// we have post data to save, write it to the table!!
 					$this->save_address( $address_id, $address_post_data );
 				}
@@ -81,7 +86,7 @@ class module_address extends module_base {
 				// we have to use this 3 key to find an address because
 				// we could be saving a new record with no existing address_id
 				$address    = $this->get_address( $owner_id, $owner_table, $address_type );
-				$address_id = (int) $address['address_id'];
+				$address_id = (int) ( $address['address_id'] ?? 0 );
 				if ( $address_id ) {
 					$sql = "DELETE FROM `" . _DB_PREFIX . "address` WHERE address_id = '$address_id' LIMIT 1";
 					query( $sql );
@@ -129,6 +134,11 @@ class module_address extends module_base {
 	}
 
 	public function process() {
+		// Every form that reaches here is posted from a UCM page, so it carries the
+		// form auth key. Refuse anything that does not - see module_form::check_secure_key().
+		if ( ! module_form::check_secure_key() ) {
+			module_form::reject_invalid_form_auth();
+		}
 		$errors = array();
 		if ( "save_from_popup" == $_REQUEST['_process'] ) {
 			// dont use the normal hook to save, its gay way of saving.
@@ -342,5 +352,4 @@ class module_address extends module_base {
 		<?php
 		return ob_get_clean();
 	}
-
 }

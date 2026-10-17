@@ -48,6 +48,11 @@ $add_to_group = array();
 
 if ( isset( $_REQUEST['run_import'] ) && $_REQUEST['run_import'] == 'true' ) {
 
+	// Running an import writes rows straight into the database as whoever is logged in,
+	// so it needs the form token the same as any other write.
+	if ( ! module_form::check_secure_key() ) {
+		module_form::reject_invalid_form_auth();
+	}
 
 	if ( isset( $_REQUEST['add_to_group'] ) ) {
 		$add_to_group = json_decode( base64_decode( $_REQUEST['add_to_group'] ), true );
@@ -83,7 +88,7 @@ if ( isset( $_REQUEST['run_import'] ) && $_REQUEST['run_import'] == 'true' ) {
 		unset( $rows[ $rowid ] );
 	}
 
-	if ( $import_options['callback'] ) {
+	if ( isset( $import_options['callback'] ) && module_import_export::is_import_callback( $import_options['callback'] ) ) {
 		$extra_options = array();
 		if ( isset( $import_options['options'] ) && is_array( $import_options['options'] ) ) {
 			foreach ( $import_options['options'] as $option_id => $option_values ) {
@@ -92,6 +97,10 @@ if ( isset( $_REQUEST['run_import'] ) && $_REQUEST['run_import'] == 'true' ) {
 				}
 			}
 		}
+		// The callback does come out of the request, which is why the branch above only
+		// enters when module_import_export::is_import_callback() says it names a module
+		// import handler.
+		// nosemgrep: php.lang.security.injection.tainted-callable.tainted-callable
 		$result = call_user_func( $import_options['callback'], $data, $add_to_group, $extra_options );
 		if ( $result === 0 || (int) $result > 0 ) {
 			_e( 'Successfully imported %s records. Thanks!', $result );
@@ -107,7 +116,13 @@ if ( isset( $_REQUEST['run_import'] ) && $_REQUEST['run_import'] == 'true' ) {
 		       onclick="window.location.href='<?php echo htmlspecialchars( $import_options['return_url'] ); ?>';">
 	<?php }
 
-} else if ( isset( $_REQUEST['upload_import'] ) && $_REQUEST['upload_import'] == 'true' ) {
+} elseif ( isset( $_REQUEST['upload_import'] ) && $_REQUEST['upload_import'] == 'true' ) {
+
+	// The preview step only reads the file, but it is reached from a form on this page
+	// like the import step is, so it carries the token too.
+	if ( ! module_form::check_secure_key() ) {
+		module_form::reject_invalid_form_auth();
+	}
 
 	$csv_file = $_FILES['csv']['tmp_name'];
 	if ( ! $csv_file ) {
@@ -167,12 +182,21 @@ if ( isset( $_REQUEST['run_import'] ) && $_REQUEST['run_import'] == 'true' ) {
 		</div>
 	<?php } ?>
 
-	<form action="" method="post" enctype="multipart/form-data">
-		<input type="hidden" name="run_import" value="true">
-		<?php if ( ! isset( $_GET['import_options'] ) ) { ?> <input type="hidden" name="import_options"
-		                                                            value="<?php echo htmlspecialchars( $_REQUEST['import_options'] ); ?>"> <?php } ?>
-		<input type="hidden" name="add_to_group"
-		       value="<?php echo base64_encode( json_encode( isset( $_REQUEST['add_to_group'] ) ? $_REQUEST['add_to_group'] : array() ) ); ?>">
+	<?php
+	$run_import_hidden = array(
+		'run_import'   => 'true',
+		'add_to_group' => base64_encode( json_encode( isset( $_REQUEST['add_to_group'] ) ? $_REQUEST['add_to_group'] : array() ) ),
+	);
+	// The options already travelled in the query string on the way here, so the form only
+	// has to carry them when they did not.
+	if ( ! isset( $_GET['import_options'] ) ) {
+		$run_import_hidden['import_options'] = $_REQUEST['import_options'];
+	}
+	module_form::print_form_open_tag( array(
+		'enctype' => 'multipart/form-data',
+		'hidden'  => $run_import_hidden,
+	) );
+	?>
 		<?php if ( isset( $import_options['options'] ) && is_array( $import_options['options'] ) ) {
 			foreach ( $import_options['options'] as $option_id => $option_values ) {
 				?>
@@ -194,7 +218,7 @@ if ( isset( $_REQUEST['run_import'] ) && $_REQUEST['run_import'] == 'true' ) {
 					<?php
 					$column_matches = array();
 
-					for ( $column = 0; $column < $column_count; $column ++ ) {
+					for ( $column = 0; $column < $column_count; $column++ ) {
 						$display_key = isset( $provided_header[ $column ] ) ? $provided_header[ $column ] : '';
 						?>
 						<th><select name="c[<?php echo $column; ?>]">
@@ -226,7 +250,7 @@ if ( isset( $_REQUEST['run_import'] ) && $_REQUEST['run_import'] == 'true' ) {
 						</th>
 						<?php
 					}
-					if ( isset( $import_options['callback_preview'] ) && strlen( $import_options['callback_preview'] ) ) {
+					if ( isset( $import_options['callback_preview'] ) && module_import_export::is_import_callback( $import_options['callback_preview'] ) ) {
 						?>
 						<th><?php _e( 'Info' ); ?></th>
 						<?php
@@ -241,7 +265,7 @@ if ( isset( $_REQUEST['run_import'] ) && $_REQUEST['run_import'] == 'true' ) {
 				foreach ( $rows as $row ) { ?>
 					<tr class="<?php echo $rowid % 2 ? 'odd' : 'even'; ?>" rel="<?php echo $rowid; ?>">
 						<?php
-						for ( $column = 0; $column < $column_count; $column ++ ) { ?>
+						for ( $column = 0; $column < $column_count; $column++ ) { ?>
 							<td class="e">
 								<?php echo htmlspecialchars( $row[ $column ] ); ?>
 								<?php /*
@@ -253,7 +277,7 @@ if ( isset( $_REQUEST['run_import'] ) && $_REQUEST['run_import'] == 'true' ) {
 							</td>
 							<?php
 						}
-						if ( isset( $import_options['callback_preview'] ) && $import_options['callback_preview'] ) {
+						if ( isset( $import_options['callback_preview'] ) && module_import_export::is_import_callback( $import_options['callback_preview'] ) ) {
 							$extra_options = array();
 							if ( isset( $import_options['options'] ) && is_array( $import_options['options'] ) ) {
 								foreach ( $import_options['options'] as $option_id => $option_values ) {
@@ -279,7 +303,7 @@ if ( isset( $_REQUEST['run_import'] ) && $_REQUEST['run_import'] == 'true' ) {
 						</td>
 					</tr>
 					<?php
-					$rowid ++;
+					$rowid++;
 				} ?>
 				</tbody>
 			</table>
@@ -343,7 +367,7 @@ if ( isset( $_REQUEST['run_import'] ) && $_REQUEST['run_import'] == 'true' ) {
 			}
 			?>
 		</ul>
-	</form>
+	<?php module_form::print_form_close_tag(); ?>
 	<?php
 } else {
 	?>
@@ -353,10 +377,16 @@ if ( isset( $_REQUEST['run_import'] ) && $_REQUEST['run_import'] == 'true' ) {
           $('#sample_download')[0].submit();
       }
 	</script>
-	<form action="" method="post" id="sample_download">
-		<input type="hidden" name="download" value="true">
-		<input type="hidden" name="import_options" value="<?php echo htmlspecialchars( $_REQUEST['import_options'] ); ?>">
-	</form>
+	<?php
+	module_form::print_form_open_tag( array(
+		'id'     => 'sample_download',
+		'hidden' => array(
+			'download'       => 'true',
+			'import_options' => $_REQUEST['import_options'],
+		),
+	) );
+	module_form::print_form_close_tag();
+	?>
 
 	<p><?php _e( 'Please make sure your data is in the below format. The <strong>first line</strong> of your CSV file should be the column headers as below. You can <a href="%s">click here</a> to download a sample CSV template ready for import. Please use UTF8 file format. %s', 'javascript:do_sample();', _hr( 'Please try to save your import CSV file in UTF8 format for best results (search google for a howto). Once your import CSV file is ready to upload please use the form below. (Please ensure this is a CSV file, not an excel file.)<br> We recommend <a href="http://www.libreoffice.org/download/" target="_blank">LibreOffice</a> for best CSV file generation.' ) ); ?></p>
 
@@ -396,7 +426,7 @@ if ( isset( $_REQUEST['run_import'] ) && $_REQUEST['run_import'] == 'true' ) {
 			<tbody>
 			<?php
 			$extra_colspan = 0;
-			for ( $x = 1; $x < 3; $x ++ ) { ?>
+			for ( $x = 1; $x < 3; $x++ ) { ?>
 				<tr>
 					<?php foreach ( $import_options['fields'] as $key => $val ) { ?>
 						<td><?php _e( 'Record %s', $x ); ?></td>
@@ -421,73 +451,89 @@ if ( isset( $_REQUEST['run_import'] ) && $_REQUEST['run_import'] == 'true' ) {
 	</div>
 
 
-	<form action="" method="post" enctype="multipart/form-data">
-		<?php if ( ! isset( $_GET['import_options'] ) ) { ?> <input type="hidden" name="import_options"
-		                                                            value="<?php echo htmlspecialchars( $_REQUEST['import_options'] ); ?>"> <?php } ?>
-		<input type="hidden" name="upload_import" value="true">
+	<?php
+	$upload_import_hidden = array( 'upload_import' => 'true' );
+	if ( ! isset( $_GET['import_options'] ) ) {
+		$upload_import_hidden['import_options'] = $_REQUEST['import_options'];
+	}
+	module_form::print_form_open_tag( array(
+		'enctype' => 'multipart/form-data',
+		'hidden'  => $upload_import_hidden,
+	) );
+	?>
 		<h3><?php _e( 'Import' ); ?></h3>
-		<table class="tableclass tableclass_form tableclass_full">
-			<tbody>
-			<tr>
-				<th class="width2"><?php _e( 'Your CSV file (formatted to the above specification):' ); ?></th>
-				<td>
-					<input type="file" name="csv">
-				</td>
-			</tr>
-			<?php if ( isset( $import_options['options'] ) && is_array( $import_options['options'] ) ) {
-				foreach ( $import_options['options'] as $option_id => $option_values ) {
-					?>
-					<tr>
-						<th>
-							<?php echo $option_values['label']; ?>
-						</th>
-						<td>
-							<?php module_form::generate_form_element( $option_values['form_element'] ); ?>
-						</td>
-					</tr>
-				<?php }
-			} ?>
-			<?php if ( class_exists( 'module_group', false ) && isset( $import_options['group'] ) && $import_options['group'] ) {
-				// hack to support multiple groups (for members)
-				if ( ! is_array( $import_options['group'] ) ) {
-					$import_options['group'] = array( $import_options['group'] );
+		<?php
+		$elements = array(
+			'csv' => array(
+				'title' => _l( 'Your CSV file (formatted to the above specification):' ),
+				'field' => array(
+					'type' => 'file',
+					'name' => 'csv',
+				),
+			),
+		);
+
+		// Whatever the calling module asked for. These already arrive as form element
+		// definitions, which is exactly what a fieldset element takes.
+		if ( isset( $import_options['options'] ) && is_array( $import_options['options'] ) ) {
+			foreach ( $import_options['options'] as $option_id => $option_values ) {
+				$elements[ 'option_' . $option_id ] = array(
+					'title' => $option_values['label'],
+					'field' => $option_values['form_element'],
+				);
+			}
+		}
+
+		if ( class_exists( 'module_group', false ) && isset( $import_options['group'] ) && $import_options['group'] ) {
+			// hack to support multiple groups (for members)
+			if ( ! is_array( $import_options['group'] ) ) {
+				$import_options['group'] = array( $import_options['group'] );
+			}
+			foreach ( $import_options['group'] as $group_index => $group_option ) {
+				$groups = module_group::get_groups( $group_option );
+				$fields = array();
+				if ( ! count( $groups ) ) {
+					$fields[] = _l( 'Sorry, no groups exist. Please create a %s group first.', $group_option );
 				}
-				foreach ( $import_options['group'] as $group_option ) {
-					?>
-					<tr>
-						<th>
-							<?php _e( 'Add imported records to group:' ); ?>
-						</th>
-						<td>
-							<?php $groups = module_group::get_groups( $group_option );
-							if ( ! count( $groups ) ) {
-								_e( 'Sorry, no groups exist. Please create a %s group first.', $group_option );
-							}
-							foreach ( $groups as $group ) {
-								$group_id = $group['group_id'];
-								?>
-								<input type="checkbox" class="add_to_group" name="add_to_group[<?php echo $group['group_id']; ?>]"
-								       id="groupchk<?php echo $group_id; ?>" value="yes">
-								<label for="groupchk<?php echo $group_id; ?>"><?php echo htmlspecialchars( $group['name'] ); ?></label>
-								<br/>
-								<?php
-							} ?>
-						</td>
-					</tr>
-					<?php
+				foreach ( $groups as $group ) {
+					$group_id = (int) $group['group_id'];
+					$fields[] = '<input type="checkbox" class="add_to_group" name="add_to_group[' . $group_id . ']"'
+					            . ' id="groupchk' . $group_id . '" value="yes">'
+					            . '<label for="groupchk' . $group_id . '">'
+					            . htmlspecialchars( $group['name'] ) . '</label><br/>';
 				}
-			} ?>
-			<tr>
-				<th></th>
-				<td>
-					<input type="submit" name="go" value="<?php _e( 'Upload' ); ?>" class="submit_button save_button">
-					<?php if ( $import_options['return_url'] ) { ?>
-						<input type="button" name="cancel" value="<?php _e( 'Cancel' ); ?>" class="submit_button"
-						       onclick="window.location.href='<?php echo htmlspecialchars( $import_options['return_url'] ); ?>';">
-					<?php } ?>
-				</td>
-			</tr>
-			</tbody>
-		</table>
-	</form>
+				$elements[ 'group_' . $group_index ] = array(
+					'title'  => _l( 'Add imported records to group:' ),
+					'fields' => $fields,
+				);
+			}
+		}
+
+		$actions = array(
+			array(
+				'type'  => 'save_button',
+				'name'  => 'go',
+				'value' => _l( 'Upload' ),
+			),
+		);
+		if ( $import_options['return_url'] ) {
+			$actions[] = array(
+				'type'    => 'button',
+				'name'    => 'cancel',
+				'value'   => _l( 'Cancel' ),
+				'class'   => 'submit_button',
+				'onclick' => "window.location.href='" . htmlspecialchars( $import_options['return_url'] ) . "';",
+			);
+		}
+		$elements['actions'] = array(
+			'title'  => '',
+			'fields' => $actions,
+		);
+
+		echo module_form::generate_fieldset( array(
+			'class'    => 'tableclass tableclass_form tableclass_full',
+			'elements' => $elements,
+		) );
+		?>
+	<?php module_form::print_form_close_tag(); ?>
 <?php } ?>

@@ -9,7 +9,7 @@ if ( $task_decimal_places < 0 ) {
 }
 $task_decimal_places_trim = module_config::c( 'task_amount_decimal_places_trim', 0 );
 
-if ( module_job::job_task_has_split_hours( $job_id, $job, $task_id, $task_data ) ) {
+if ( module_job::job_task_has_split_hours( $job_id, $task_id, $task_data, $job ) ) {
 	if ( $task_data['staff_split'] ) {
 		// has saved this task - using database detauls
 
@@ -62,7 +62,7 @@ if ( module_job::job_task_has_split_hours( $job_id, $job, $task_id, $task_data )
 
 			if ( $task_data['hours'] == 0 && $task_data['manual_task_type'] == _TASK_TYPE_AMOUNT_ONLY ) {
 				// no hour input
-			} else if ( $task_data['manual_task_type'] == _TASK_TYPE_QTY_AMOUNT ) { ?>
+			} elseif ( $task_data['manual_task_type'] == _TASK_TYPE_QTY_AMOUNT ) { ?>
 				<input type="text" name="job_task[<?php echo $task_id; ?>][<?php echo $hours_prefix; ?>hours]"
 				       value="<?php echo $hours_value; ?>" size="3" style="width:30px;" tabindex="12">
 			<?php } else {
@@ -95,24 +95,24 @@ if ( module_job::job_task_has_split_hours( $job_id, $job, $task_id, $task_data )
 		</td>
 	<?php } ?>
 	<?php if ( module_config::c( 'job_show_due_date', 1 ) ) {
-		$colspan ++; ?>
+		$colspan++; ?>
 		<td>
 			<input type="text" name="job_task[<?php echo $task_id; ?>][date_due]"
 			       value="<?php echo print_date( $task_data['date_due'] ); ?>" class="date_field" tabindex="14">
 		</td>
 	<?php } ?>
 	<?php if ( module_config::c( 'job_show_done_date', 1 ) ) {
-		$colspan ++; ?>
+		$colspan++; ?>
 		<td>
 			<input type="text" name="job_task[<?php echo $task_id; ?>][date_done]"
 			       value="<?php echo print_date( $task_data['date_done'] ); ?>" class="date_field" tabindex="14">
 		</td>
 	<?php } ?>
 	<?php if ( module_config::c( 'job_allow_staff_assignment', 1 ) ) {
-		$colspan ++; ?>
+		$colspan++; ?>
 		<td>
 			<?php echo print_select_box( $staff_member_rel, 'job_task[' . $task_id . '][user_id]',
-				isset( $staff_member_rel[ $task_data['user_id'] ] ) ? $task_data['user_id'] : false, 'job_task_staff_list', '' ); ?>
+				isset( $staff_member_rel[ $task_data['user_id'] ] ) ? $task_data['user_id'] : false, 'job_task_staff_list', true ); ?>
 		</td>
 	<?php } ?>
 	<td colspan="2" class="percentage_edit">
@@ -156,7 +156,7 @@ if ( module_job::job_task_has_split_hours( $job_id, $job, $task_id, $task_data )
 
 				if ( $task_data['staff_hours'] == 0 && $task_data['manual_task_type'] == _TASK_TYPE_AMOUNT_ONLY ) {
 					// no hour input
-				} else if ( $task_data['manual_task_type'] == _TASK_TYPE_QTY_AMOUNT ) { ?>
+				} elseif ( $task_data['manual_task_type'] == _TASK_TYPE_QTY_AMOUNT ) { ?>
 					<input type="text" name="job_task[<?php echo $task_id; ?>][staff_hours]" value="<?php echo $hours_value; ?>"
 					       size="3" style="width:30px;" tabindex="14">
 				<?php } else {
@@ -277,7 +277,7 @@ if ( module_job::job_task_has_split_hours( $job_id, $job, $task_id, $task_data )
 					} else {
 						$hours_value = number_out( $task_log['hours'], true );
 					}
-					echo _l( '%s hrs <span class="text_shrink">%s</a> - <span class="text_shrink">%s</span>', $hours_value, print_date( $task_log['log_time'], true ), $staff_member_rel[ $task_log['create_user_id'] ] );
+					echo _l( '%s hrs <span class="text_shrink">%s</a> - <span class="text_shrink">%s</span>', $hours_value, print_date( $task_log['log_time'], true ), $staff_member_rel[ $task_log['create_user_id'] ] ?? '' );
 					?> <a href="#" class="error_text"
 					      onclick="return delete_task_hours(<?php echo $task_id; ?>,<?php echo $task_log['task_log_id']; ?>);">x</a> <?php
 					echo '<br/>';

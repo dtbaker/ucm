@@ -21,7 +21,7 @@ if ( $data_field_group_id && $data_field_group_id != 'new' ) {
 
 ?>
 
-	<form action="" method="post">
+	<?php module_form::print_form_open_tag( array( 'action' => '' ) ); ?>
 		<input type="hidden" name="_process" value="save_data_field_group"/>
 		<input type="hidden" name="_redirect" value=""/>
 		<input type="hidden" name="data_type_id" value="<?php echo $data_type_id; ?>"/>
@@ -130,7 +130,7 @@ if ( $data_field_group_id && $data_field_group_id != 'new' ) {
 
 		?>
 
-	</form>
+	<?php module_form::print_form_close_tag(); ?>
 
 	<p>&nbsp;</p>
 <?php
@@ -144,7 +144,7 @@ if ( $data_field_group_id && $data_field_group_id != 'new' ) {
 		foreach ( $data_fields as $data_field ) {
 			$next_order = max( $data_field['order'], $next_order );
 		}
-		$next_order ++;
+		$next_order++;
 
 		ob_start();
 
@@ -156,7 +156,7 @@ if ( $data_field_group_id && $data_field_group_id != 'new' ) {
 			<script type="text/javascript">
           $(function () {
 						<?php
-						switch($admin_edit_what){
+						switch ($admin_edit_what) {
 						case 'input':
 						?>
               $(".data_group_fields textarea").resizable({
@@ -165,7 +165,7 @@ if ( $data_field_group_id && $data_field_group_id != 'new' ) {
                   cancel: '.ui-state-disabled',
                   stop: function (event, ui) {
                       var data_field_id = ui.element.parents('<?php echo $data_field_group['layout'] == 'table' ? 'tr' : 'li'; ?>').first().attr('rel');
-                      $.post("<?php echo full_link( "?m=data&_process=save_ajax&type=input&data_field_id=" );?>" + data_field_id, ui.size);
+                      $.post("<?php echo full_link( "?m=data&_process=save_ajax&form_auth_key=" . module_form::get_secure_key() . "&type=input&data_field_id=" );?>" + data_field_id, ui.size);
                   }
               });
               $(".data_group_fields input:text").resizable({
@@ -173,7 +173,7 @@ if ( $data_field_group_id && $data_field_group_id != 'new' ) {
                   cancel: '.ui-state-disabled',
                   stop: function (event, ui) {
                       var data_field_id = ui.element.parents('<?php echo $data_field_group['layout'] == 'table' ? 'tr' : 'li'; ?>').first().attr('rel');
-                      $.post("<?php echo full_link( "?m=data&_process=save_ajax&type=input&data_field_id=" );?>" + data_field_id, ui.size);
+                      $.post("<?php echo full_link( "?m=data&_process=save_ajax&form_auth_key=" . module_form::get_secure_key() . "&type=input&data_field_id=" );?>" + data_field_id, ui.size);
                   }
               });
 
@@ -186,7 +186,7 @@ if ( $data_field_group_id && $data_field_group_id != 'new' ) {
                   }
               );
 						<?php
-						break;
+						    break;
 						case 'boundary':
 						?>
               $("ul.data_group_fields li").resizable({
@@ -195,11 +195,11 @@ if ( $data_field_group_id && $data_field_group_id != 'new' ) {
                   cancel: '.ui-state-disabled',
                   stop: function (event, ui) {
                       var data_field_id = ui.element.attr('rel');
-                      $.post("<?php echo full_link( "?m=data&_process=save_ajax&type=boundary&data_field_id=" );?>" + data_field_id, ui.size);
+                      $.post("<?php echo full_link( "?m=data&_process=save_ajax&form_auth_key=" . module_form::get_secure_key() . "&type=boundary&data_field_id=" );?>" + data_field_id, ui.size);
                   }
               });
 						<?php
-						break;
+						    break;
 						case 'position':
 						default:
 						?>
@@ -208,7 +208,7 @@ if ( $data_field_group_id && $data_field_group_id != 'new' ) {
                   update: function (event, ui) {
                       var holder = $(ui.item[0]).parent();
                       var order = holder.sortable('serialize');
-                      $.post("<?php echo full_link( "?m=data&_process=save_ajax&type=position&data_field_group_id=" . (int) $data_field_group['data_field_group_id'] );?>", order);
+                      $.post("<?php echo full_link( "?m=data&_process=save_ajax&form_auth_key=" . module_form::get_secure_key() . "&type=position&data_field_group_id=" . (int) $data_field_group['data_field_group_id'] );?>", order);
                   }
               }).disableSelection();
               $("table.data_group_fields tbody").each(function () {
@@ -227,14 +227,14 @@ if ( $data_field_group_id && $data_field_group_id != 'new' ) {
                           },
                           update: function (event, ui) {
                               var order = $srt.sortable('serialize');
-                              $.post("<?php echo full_link( "?m=data&_process=save_ajax&type=position&data_field_group_id=" . (int) $data_field_group['data_field_group_id'] );?>", order);
+                              $.post("<?php echo full_link( "?m=data&_process=save_ajax&form_auth_key=" . module_form::get_secure_key() . "&type=position&data_field_group_id=" . (int) $data_field_group['data_field_group_id'] );?>", order);
                           }
                       }).disableSelection();
                   })();
               });
 
 						<?php
-						break;
+						    break;
 						}
 						?>
 
@@ -245,7 +245,7 @@ if ( $data_field_group_id && $data_field_group_id != 'new' ) {
 					border: 1px dashed #CCC !important;
 				}
 			</style>
-			<form action="" method="post">
+			<?php module_form::print_form_open_tag( array( 'action' => '' ) ); ?>
 				<p>Choose what you would like to administer below:
 					<select name="admin_edit_what" onchange="this.form.submit();">
 						<option value="position"<?php echo ( $admin_edit_what == 'position' ) ? ' selected' : ''; ?>>Position of
@@ -262,7 +262,7 @@ if ( $data_field_group_id && $data_field_group_id != 'new' ) {
 					</select>
 					<!-- <input type="submit" name="go" value="Go" class="submit_button save_button"> -->
 				</p>
-			</form>
+			<?php module_form::print_form_close_tag(); ?>
 
 			<?php
 			include( 'render_group.php' );
@@ -288,7 +288,7 @@ if ( $data_field_group_id && $data_field_group_id != 'new' ) {
 				foreach ( $data_fields as $data ) {
 					$data_field = $module->get_data_field( $data['data_field_id'] );
 					?>
-					<tr class="<?php echo ( $c ++ % 2 ) ? "odd" : "even"; ?>">
+					<tr class="<?php echo ( $c++ % 2 ) ? "odd" : "even"; ?>">
 						<td><?php echo htmlspecialchars( $data_field['order'] ); ?></td>
 						<td class="row_action"><a href="<?php echo $module->link( '', array(
 								"data_type_id"        => $data_type['data_type_id'],

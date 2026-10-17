@@ -28,7 +28,7 @@ if ( $language['language_code'] ) {
 	$old_labels = isset( $labels ) ? $labels : false;
 	if ( is_file( 'includes/plugin_language/custom/' . basename( $language['language_code'] ) . '.php' ) ) {
 		include( 'includes/plugin_language/custom/' . basename( $language['language_code'] ) . '.php' );
-	} else if ( is_file( 'includes/plugin_language/labels/' . basename( $language['language_code'] ) . '.php' ) ) {
+	} elseif ( is_file( 'includes/plugin_language/labels/' . basename( $language['language_code'] ) . '.php' ) ) {
 		include( 'includes/plugin_language/labels/' . basename( $language['language_code'] ) . '.php' );
 	}
 	$file_system_labels = isset( $labels ) ? $labels : array();
@@ -70,12 +70,11 @@ if ( isset( $_REQUEST['check_duplicates'] ) ) {
 	?>
 
 
-	<form action="" method="post">
+	<?php module_form::print_form_open_tag( array( 'action' => '' ) ); ?>
 
 		<input type="hidden" name="_process" value="remove_duplicates">
 
 		<?php
-		module_form::print_form_auth();
 		?>
 
 		<style type="text/css">
@@ -166,7 +165,7 @@ if ( isset( $_REQUEST['check_duplicates'] ) ) {
 		);
 		echo module_form::generate_form_actions( $form_actions );
 		?>
-	</form>
+	<?php module_form::print_form_close_tag(); ?>
 	<?php
 
 } else {
@@ -227,12 +226,11 @@ if ( isset( $_REQUEST['check_duplicates'] ) ) {
 	?>
 
 
-	<form action="" method="post">
+	<?php module_form::print_form_open_tag( array( 'action' => '' ) ); ?>
 
 		<input type="hidden" name="_process" value="save_language_translation">
 
 		<?php
-		module_form::print_form_auth();
 		module_form::prevent_exit( array(
 				'valid_exits' => array(
 					// selectors for the valid ways to exit this form.
@@ -354,7 +352,7 @@ if ( isset( $_REQUEST['check_duplicates'] ) ) {
 		);
 		echo module_form::generate_form_actions( $form_actions );
 		?>
-	</form>
+	<?php module_form::print_form_close_tag(); ?>
 
 	<script type="text/javascript">
       $(function () {

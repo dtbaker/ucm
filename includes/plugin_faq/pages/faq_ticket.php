@@ -32,7 +32,7 @@ if ( ! isset( $_REQUEST['iframe'] ) ) {
 	?>
 
 
-	<form action="" method="POST">
+	<?php module_form::print_form_open_tag( array( 'action' => '' ) ); ?>
 
 	<input type="hidden" name="customer_id"
 	       value="<?php echo isset( $_REQUEST['customer_id'] ) ? (int) $_REQUEST['customer_id'] : ''; ?>">
@@ -70,10 +70,10 @@ if ( ! isset( $_REQUEST['iframe'] ) ) {
 		<tr class="title">
 			<th><?php echo _l( 'Question' ); ?></th>
 			<th><?php echo _l( 'Linked FAQ Products' ); ?></th>
-			<?php //if(module_faq::can_i('edit','FAQ')){ 
+			<?php //if(module_faq::can_i('edit','FAQ')){
 			?>
 			<th><?php echo _l( 'Action' ); ?></th>
-			<?php //} 
+			<?php //}
 			?>
 		</tr>
 		</thead>
@@ -84,7 +84,7 @@ if ( ! isset( $_REQUEST['iframe'] ) ) {
 		foreach ( $faqs as $faq_id => $data ) {
 			$faq = module_faq::get_faq( $faq_id );
 			?>
-			<tr class="<?php echo ( $c ++ % 2 ) ? "odd" : "even"; ?>">
+			<tr class="<?php echo ( $c++ % 2 ) ? "odd" : "even"; ?>">
 				<td nowrap="">
 					<?php if ( module_faq::can_i( 'edit', 'FAQ' ) ) {
 						echo module_faq::link_open( $faq_id, true );
@@ -100,7 +100,7 @@ if ( ! isset( $_REQUEST['iframe'] ) ) {
 						echo module_faq::link_open_faq_product( $faq_product_id, true ) . " ";
 					} ?>
 				</td>
-				<?php //if(module_faq::can_i('edit','FAQ')){ 
+				<?php //if(module_faq::can_i('edit','FAQ')){
 				?>
 				<td>
 					<a
@@ -108,11 +108,13 @@ if ( ! isset( $_REQUEST['iframe'] ) ) {
 						target="_blank"
 						onclick="window.parent.jQuery('#new_ticket_message').val(window.parent.jQuery('#new_ticket_message').val() + $(this).attr('href')); window.parent.jQuery('.ui-dialog-content').dialog('close'); return false;"><?php _e( 'Insert Link' ); ?></a>
 				</td>
-				<?php //} 
+				<?php //}
 				?>
 			</tr>
 		<?php } ?>
 		</tbody>
 	</table>
+
+<?php module_form::print_form_close_tag(); ?>
 
 <?php } ?>

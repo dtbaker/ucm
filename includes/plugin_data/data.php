@@ -9,10 +9,25 @@ define( '_CUSTOM_DATA_MENU_LOCATION_NONE', 3 );
 define( '_MIN_INPUT_HEIGHT', 18 );
 
 
-class module_data extends module_base {
+class module_data extends module_base
+{
+	public $links;
+	public $user_types;
 
-	var $links;
+	/**
+	 * Set while a form element is being rendered. Declared because PHP 8.2 deprecates
+	 * creating a property on the fly, and this one was assigned in get_form_element()
+	 * without ever being declared - a deprecation on every custom data screen.
+	 *
+	 * @var bool
+	 */
+	public $ajax_edit = false;
 
+	public function __construct() {
+		$this->module_name     = 'data';
+		$this->module_position = 150;
+		$this->version         = 2.185;
+	}
 
 	public static function can_i( $actions, $name = false, $category = false, $module = false ) {
 		if ( ! $module ) {
@@ -27,11 +42,8 @@ class module_data extends module_base {
 	}
 
 	public function init() {
-		$this->links           = array();
-		$this->user_types      = array();
-		$this->module_name     = "data";
-		$this->module_position = 18;
-		$this->version         = 2.185;
+		$this->links     = array();
+		$this->user_types = array();
 		//2.185 - 2017-05-02 - file path configuration
 		//2.184 - 2017-02-20 - custom data extra field improvement
 		//2.183 - 2016-12-10 - ajax lookup from extra fields
@@ -357,6 +369,11 @@ class module_data extends module_base {
 	}
 
 	function process() {
+		// Every form that reaches here is posted from a UCM page, so it carries the
+		// form auth key. Refuse anything that does not - see module_form::check_secure_key().
+		if ( ! module_form::check_secure_key() ) {
+			module_form::reject_invalid_form_auth();
+		}
 		$errors = array();
 		if ( $_REQUEST['_process'] == 'admin_leave' ) {
 			$_SESSION['admin_mode'] = false;
@@ -396,7 +413,7 @@ class module_data extends module_base {
 			} else {
 				set_error( _l( "Sorry invalid hash" ) );
 			}
-		} else if ( "save_ajax" == $_REQUEST['_process'] ) {
+		} elseif ( "save_ajax" == $_REQUEST['_process'] ) {
 			switch ( $_REQUEST['type'] ) {
 				case 'input':
 					$data_field_id = (int) $_REQUEST['data_field_id'];
@@ -410,7 +427,7 @@ class module_data extends module_base {
 						if ( $width && preg_match( '/^width=/', $line ) ) {
 							$line  = 'width=' . $width;
 							$width = false;
-						} else if ( $height && preg_match( '/^height=/', $line ) ) {
+						} elseif ( $height && preg_match( '/^height=/', $line ) ) {
 							$line   = 'height=' . $height;
 							$height = false;
 						}
@@ -445,15 +462,15 @@ class module_data extends module_base {
 						foreach ( $data_field_positions as $data_field_id ) {
 							echo "Update item $data_field_id with $position \n";
 							update_insert( "data_field_id", $data_field_id, "data_field", array( 'order' => $position ) );
-							$position ++;
+							$position++;
 						}
 					}
 					break;
 			}
 			echo 'done';
 			exit;
-		} else if ( "save_data_type" == $_REQUEST['_process'] ) {
-			if ( isset( $_REQUEST['butt_del'] ) ) {
+		} elseif ( "save_data_type" == $_REQUEST['_process'] ) {
+			if ( isset( $_REQUEST['butt_del'] ) && self::can_i( 'delete', _MODULE_DATA_NAME ) ) {
 				$data_type_id = (int) $_REQUEST['data_type_id'];
 				if ( module_form::confirm_delete( 'data_type_id', 'Really delete this entire custom data group? All it\'s records and revisions as well?', $this->link( '', array( "data_type_id" => $data_type_id ) ) ) ) {
 					$this->delete_data_type( $data_type_id );
@@ -508,7 +525,7 @@ class module_data extends module_base {
 				$_REQUEST['_redirect'] = $this->link( '', array( "data_type_id" => $data_type_id ) );
 				set_message( _l( "Data saved successfully" ) );
 			}
-		} else if ( "save_data_field_group" == $_REQUEST['_process'] ) {
+		} elseif ( "save_data_field_group" == $_REQUEST['_process'] ) {
 			$data_type_id = (int) $_REQUEST['data_type_id'];
 			if ( isset( $_REQUEST['butt_del'] ) ) {
 				$data_field_group_id = (int) $_REQUEST['data_field_group_id'];
@@ -528,7 +545,7 @@ class module_data extends module_base {
 				) );
 				set_message( _l( "Data fieldset saved successfully" ) );
 			}
-		} else if ( "save_data_field" == $_REQUEST['_process'] ) {
+		} elseif ( "save_data_field" == $_REQUEST['_process'] ) {
 			$data_type_id        = (int) $_REQUEST['data_type_id'];
 			$data_field_id       = (int) $_REQUEST['data_field_id'];
 			$data_field_group_id = (int) $_REQUEST['data_field_group_id'];
@@ -650,15 +667,15 @@ class module_data extends module_base {
 			set_error( 'No permissions to create data' );
 
 			return false;
-		} else if ( (int) $data_record_id > 0 && ! $this->can_i( 'edit', $data_type['data_type_name'] ) ) {
+		} elseif ( (int) $data_record_id > 0 && ! $this->can_i( 'edit', $data_type['data_type_name'] ) ) {
 			set_error( 'No permissions to edit data' );
 
 			return false;
-		} else if ( (int) $data_record_id > 0 && ! $this->can_i( 'delete', $data_type['data_type_name'] ) && isset( $_POST['butt_del'] ) ) {
+		} elseif ( (int) $data_record_id > 0 && ! $this->can_i( 'delete', $data_type['data_type_name'] ) && isset( $_POST['butt_del'] ) ) {
 			set_error( 'No permissions to delete data' );
 
 			return false;
-		} else if ( (int) $data_record_id > 0 && $this->can_i( 'delete', $data_type['data_type_name'] ) && isset( $_POST['butt_del'] ) ) {
+		} elseif ( (int) $data_record_id > 0 && $this->can_i( 'delete', $data_type['data_type_name'] ) && isset( $_POST['butt_del'] ) ) {
 			if ( module_form::confirm_delete(
 				'data_record_id',
 				"Really delete this entire data record?",
@@ -708,7 +725,7 @@ class module_data extends module_base {
 				foreach ( $data_fields as $data_field ) {
 					$data_field_id = $data_field['data_field_id'];
 					if ( $data_field['required'] ) {
-						// depending on the type of field, there are different ways to 
+						// depending on the type of field, there are different ways to
 						// check if the required field has been inserted.
 						switch ( $data_field['field_type'] ) {
 							case 'radio':
@@ -716,12 +733,11 @@ class module_data extends module_base {
 								if ( isset( $data['data_field'][ $data_field_id ] ) && strtolower( $data['data_field'][ $data_field_id ] ) == 'other' && ( ! isset( $data['other_data_field'][ $data_field_id ] ) || ! $data['other_data_field'][ $data_field_id ] ) ) {
 									$missing_required_fields[ $data_field_id ]       = 'other';
 									$missing_required_fields_names[ $data_field_id ] = $data_field['title'];
-								} else if ( ! isset( $data['data_field'][ $data_field_id ] ) || ! $data['data_field'][ $data_field_id ] ) {
+								} elseif ( ! isset( $data['data_field'][ $data_field_id ] ) || ! $data['data_field'][ $data_field_id ] ) {
 									$missing_required_fields[ $data_field_id ] = true;
 								}
 								break;
 							case 'file':
-
 								if ( ! is_array( $_FILES['data_field']['tmp_name'][ $data_field_id ] ) && ! is_array( $_FILES['data_field']['name'][ $data_field_id ] ) ) {
 									$_FILES['data_field']['tmp_name'][ $data_field_id ] = array( $_FILES['data_field']['tmp_name'][ $data_field_id ] );
 									$_FILES['data_field']['name'][ $data_field_id ]     = array( $_FILES['data_field']['name'][ $data_field_id ] );
@@ -1051,7 +1067,7 @@ class module_data extends module_base {
 		return $data;
 	}
 
-	function get_data_field_group( & $data_field_group_id ) {
+	function get_data_field_group( &$data_field_group_id ) {
 		$data = get_single( "data_field_group", "data_field_group_id", $data_field_group_id );
 		if ( $data ) {
 			// optional processing here later on.
@@ -1220,7 +1236,10 @@ class module_data extends module_base {
 			case 'checkbox_list':
 			case 'radio':
 				$element['attributes'] = array();
-				foreach ( explode( "\n", trim( $element['field_data'] ) ) as $line ) {
+				// field_data is null for a field that has never had type data set, and PHP 8
+		// deprecates passing that to trim(). The cast changes nothing: explode() on an
+		// empty string already yields one empty line, which the loop below ignores.
+		foreach ( explode( "\n", trim( (string) ( $element['field_data'] ?? '' ) ) ) as $line ) {
 					$line = trim( $line );
 					if ( preg_match( '/^attributes=/', $line ) ) {
 						$line                  = preg_replace( '/^attributes=/', '', $line );
@@ -1271,7 +1290,8 @@ class module_data extends module_base {
 		}
 		// we have to apply some custom width/height styles if they exist.
 		$width = $height = false;
-		foreach ( explode( "\n", trim( $element['field_data'] ) ) as $line ) {
+		// Same null as above: a field with no type data set.
+		foreach ( explode( "\n", trim( (string) ( $element['field_data'] ?? '' ) ) ) as $line ) {
 			$line = trim( $line );
 			if ( preg_match( '/^width=/', $line ) ) {
 				$line  = preg_replace( '/^width=/', '', $line );
@@ -1375,7 +1395,9 @@ class module_data extends module_base {
 		);
 
 		foreach ( $element as $key => $val ) {
-			if ( ! is_array( $val ) && ! trim( $val ) ) {
+			// A null column value reads as empty here, which is what the skip wants - but
+			// PHP 8 deprecates handing it to trim(), so it is cast rather than relied on.
+			if ( ! is_array( $val ) && ! trim( (string) $val ) ) {
 				continue;
 			}
 			if ( in_array( strtolower( $key ), $attribute_keys ) ) {
@@ -1482,6 +1504,7 @@ class module_data extends module_base {
 												<?php
 												break;
 											}
+											// no break
 										default:
 											echo '<a href="' . $download_link . '" target="_blank">' . htmlspecialchars( $file_data['name'] ) . '</a>';
 									}
@@ -1650,7 +1673,7 @@ class module_data extends module_base {
 						} else {
 							if ( $value && ! is_array( $value ) ) {
 								$value_temp = unserialize( $value );
-							} else if ( is_array( $value ) ) {
+							} elseif ( is_array( $value ) ) {
 								$value_temp = $value;
 							} else {
 								$value_temp = false;
@@ -1781,9 +1804,9 @@ class module_data extends module_base {
 				$data_field_group_id = isset( $_REQUEST['dfgi'] ) ? (int) $_REQUEST['dfgi'] : false;
 				$data_field_id       = isset( $_REQUEST['dfi'] ) ? (int) $_REQUEST['dfi'] : false;
 				$value_key           = isset( $_REQUEST['dfv'] ) ? (int) $_REQUEST['dfv'] : false;
-				$hash                = isset( $_REQUEST['hash'] ) ? $_REQUEST['hash'] : false;
+				$hash                = ucm_request_string( 'hash' );
 				$real_hash           = self::link_public_file_download( $data_record_id, $data_type_id, $data_field_group_id, $data_field_id, $value_key, true );
-				if ( $real_hash == $hash ) {
+				if ( hash_equals( $real_hash, $hash ) ) {
 					$data = self::get_data_items( $data_record_id );
 					if ( $data && isset( $data[ $data_field_id ] ) ) {
 						$file_data = @unserialize( $data[ $data_field_id ]['data_text'] );
@@ -1883,7 +1906,7 @@ class module_data extends module_base {
 										break;
 									}
 								}
-							} else if ( stripos( $data_item['data_text'], $search_options['search'] ) !== false ) {
+							} elseif ( stripos( $data_item['data_text'], $search_options['search'] ) !== false ) {
 								// otherweise we search all fields in this data record.
 								$this_match = $data_item;
 								break;
@@ -2150,6 +2173,4 @@ class module_data extends module_base {
 
 		return $sql;
 	}
-
-
 }

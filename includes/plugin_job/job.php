@@ -25,8 +25,8 @@ define( '_CUSTOM_DATA_HOOK_LOCATION_JOB_FOOTER', 5 );
 //define('_TASK_TYPE_DEPOSIT',1);
 
 
-class module_job extends module_base {
-
+class module_job extends module_base
+{
 	public $links;
 	public $job_types;
 
@@ -245,11 +245,14 @@ class module_job extends module_base {
 		);
 	}
 
+	public function __construct() {
+		$this->module_name     = 'job';
+		$this->module_position = 260;
+	}
+
 	public function init() {
-		$this->links           = array();
-		$this->job_types       = array();
-		$this->module_name     = "job";
-		$this->module_position = 17;
+		$this->links     = array();
+		$this->job_types = array();
 
 		module_config::register_css( 'job', 'tasks.css' );
 		module_config::register_js( 'job', 'tasks.js' );
@@ -358,7 +361,6 @@ Thank you,<br><br>
 				// see finance for example of widget usage.
 				break;
 			case "home_alerts":
-
 				$cache_timeout = module_config::c( 'cache_objects', 60 );
 				$cache_key     = 'home_alerts_' . module_security::get_loggedin_id();
 
@@ -1188,13 +1190,22 @@ Thank you,<br><br>
 	}
 
 	public static function link_ajax_task( $job_id, $full = false ) {
-		return self::link_generate( $job_id, array( 'full' => $full, 'arguments' => array( '_process' => 'ajax_task' ) ) );
+		return self::link_generate( $job_id, array(
+			'full'      => $full,
+			'arguments' => array(
+				'_process'      => 'ajax_task',
+				'form_auth_key' => module_form::get_secure_key(),
+			)
+		) );
 	}
 
 	public static function link_create_job_invoice( $job_id, $full = false ) {
 		return self::link_generate( $job_id, array(
 			'full'      => $full,
-			'arguments' => array( '_process' => 'ajax_create_invoice' )
+			'arguments' => array(
+				'_process'      => 'ajax_create_invoice',
+				'form_auth_key' => module_form::get_secure_key(),
+			)
 		) );
 	}
 
@@ -1207,7 +1218,7 @@ Thank you,<br><br>
 		return full_link( _EXTERNAL_TUNNEL_REWRITE . 'm.job/h.public/i.' . $job_id . '/hash.' . self::link_public( $job_id, true ) );
 	}
 
-	public static function job_task_has_split_hours( $job_id, $job_data = array(), $task_id, $task_data ) {
+	public static function job_task_has_split_hours( $job_id, $task_id, $task_data, $job_data = array() ) {
 		if ( ! $job_data ) {
 			$job_data = self::get_job( $job_id );
 		}
@@ -1229,7 +1240,7 @@ Thank you,<br><br>
 	}
 
 	// this works out if the current user is a staff member and if they should only see their set split pricing.
-	public static function job_task_only_show_split_hours( $job_id, $job_data = array(), $task_id, $task_data ) {
+	public static function job_task_only_show_split_hours( $job_id, $task_id, $task_data, $job_data = array() ) {
 		if ( ! $job_data ) {
 			$job_data = self::get_job( $job_id );
 		}
@@ -1329,10 +1340,10 @@ Thank you,<br><br>
 		switch ( $hook ) {
 			case 'public':
 				$job_id = ( isset( $_REQUEST['i'] ) ) ? (int) $_REQUEST['i'] : false;
-				$hash   = ( isset( $_REQUEST['hash'] ) ) ? trim( $_REQUEST['hash'] ) : false;
+				$hash   = ucm_request_string( 'hash' );
 				if ( $job_id && $hash ) {
 					$correct_hash = $this->link_public( $job_id, true );
-					if ( $correct_hash == $hash ) {
+					if ( hash_equals( $correct_hash, $hash ) ) {
 						// all good to print a receipt for this payment.
 						$job_data = $this->get_job( $job_id );
 
@@ -1468,6 +1479,11 @@ Job Name: <strong>{JOB_NAME}</strong> <br/>
 
 
 	public function process() {
+		// Every form that reaches here is posted from a UCM page, so it carries the
+		// form auth key. Refuse anything that does not - see module_form::check_secure_key().
+		if ( ! module_form::check_secure_key() ) {
+			module_form::reject_invalid_form_auth();
+		}
 		$errors = array();
 
 		if ( 'save_job_task' === $_REQUEST['_process'] ) {
@@ -1475,7 +1491,7 @@ Job Name: <strong>{JOB_NAME}</strong> <br/>
 			$jobtask = new UCMJobTask();
 			$jobtask->handle_submit();
 
-		} else if ( isset( $_REQUEST['butt_del'] ) && $_REQUEST['butt_del'] && $_REQUEST['job_id'] ) {
+		} elseif ( isset( $_REQUEST['butt_del'] ) && $_REQUEST['butt_del'] && $_REQUEST['job_id'] ) {
 			$data = self::get_job( $_REQUEST['job_id'] );
 			if ( module_form::confirm_delete( 'job_id', _l( "Really delete job: %s", $data['name'] ), self::link_open( $_REQUEST['job_id'] ) ) ) {
 				$this->delete_job( $_REQUEST['job_id'] );
@@ -1483,7 +1499,7 @@ Job Name: <strong>{JOB_NAME}</strong> <br/>
 				redirect_browser( $this->link_open( false ) );
 			}
 
-		} else if ( "ajax_job_list" == $_REQUEST['_process'] ) {
+		} elseif ( "ajax_job_list" == $_REQUEST['_process'] ) {
 
 			$customer_id = isset( $_REQUEST['customer_id'] ) ? (int) $_REQUEST['customer_id'] : 0;
 			$res         = module_job::get_jobs( array( 'customer_id' => $customer_id ) );
@@ -1494,7 +1510,7 @@ Job Name: <strong>{JOB_NAME}</strong> <br/>
 			echo json_encode( $options );
 			exit;
 
-		} else if ( "ajax_create_invoice" == $_REQUEST['_process'] ) {
+		} elseif ( "ajax_create_invoice" == $_REQUEST['_process'] ) {
 
 			$job_id    = (int) $_REQUEST['job_id'];
 			$job       = self::get_job( $job_id, true );
@@ -1536,7 +1552,7 @@ Job Name: <strong>{JOB_NAME}</strong> <br/>
 			exit;
 
 
-		} else if ( "ajax_task" == $_REQUEST['_process'] ) {
+		} elseif ( "ajax_task" == $_REQUEST['_process'] ) {
 
 			// we are requesting editing a task.
 			$job_id    = (int) $_REQUEST['job_id'];
@@ -1578,7 +1594,7 @@ Job Name: <strong>{JOB_NAME}</strong> <br/>
 				echo json_encode( $result );
 				exit;
 
-			} else if ( isset( $_REQUEST['delete_task_log_id'] ) && (int) $_REQUEST['delete_task_log_id'] > 0 ) {
+			} elseif ( isset( $_REQUEST['delete_task_log_id'] ) && (int) $_REQUEST['delete_task_log_id'] > 0 ) {
 
 				$task_id     = (int) $_REQUEST['task_id'];
 				$task_log_id = (int) $_REQUEST['delete_task_log_id'];
@@ -1587,7 +1603,7 @@ Job Name: <strong>{JOB_NAME}</strong> <br/>
 				echo 'done';
 
 
-			} else if ( isset( $_REQUEST['update_task_order'] ) ) {
+			} elseif ( isset( $_REQUEST['update_task_order'] ) ) {
 
 				// updating the task orders for this task..
 				$task_order = (array) $_REQUEST['task_order'];
@@ -1677,7 +1693,7 @@ Job Name: <strong>{JOB_NAME}</strong> <br/>
 			}
 
 			exit;
-		} else if ( "save_job_tasks_ajax" == $_REQUEST['_process'] ) {
+		} elseif ( "save_job_tasks_ajax" == $_REQUEST['_process'] ) {
 
 			// do everything via ajax. trickery!
 			// dont bother saving the job. it's already created.
@@ -1716,14 +1732,14 @@ Job Name: <strong>{JOB_NAME}</strong> <br/>
 
 									?>');
                 parent.ucm.display_messages(true);
-								<?php if($job_data['status'] != $new_status){ ?>parent.jQuery('#status').val('<?php echo $new_status;?>').change();<?php } ?>
-								<?php if($new_job_data['date_completed'] != $job_data['date_completed']){ ?>parent.jQuery('#date_completed').val('<?php echo print_date( $new_job_data['date_completed'] );?>').change();<?php } ?>
+								<?php if ($job_data['status'] != $new_status) { ?>parent.jQuery('#status').val('<?php echo $new_status;?>').change();<?php } ?>
+								<?php if ($new_job_data['date_completed'] != $job_data['date_completed']) { ?>parent.jQuery('#date_completed').val('<?php echo print_date( $new_job_data['date_completed'] );?>').change();<?php } ?>
 						</script>
 					<?php } else {
 						set_error( 'New task creation failed.' );
 						?>
 						<script type="text/javascript">
-                top.location.href = '<?php echo $this->link_open( $_REQUEST['job_id'] );?>&added=true';
+                top.location.href = '<?php echo $this->link_open( $job_id );?>&added=true';
 						</script>
 						<?php
 					}
@@ -1733,8 +1749,8 @@ Job Name: <strong>{JOB_NAME}</strong> <br/>
 					set_message( 'Task removed successfully' );
 					?>
 					<script type="text/javascript">
-              top.location.href = '<?php echo $this->link_open( $_REQUEST['job_id'] );?>';
-							<?php if($job_data['status'] != $new_status){ ?>parent.jQuery('#status').val('<?php echo $new_status;?>').change();<?php } ?>
+              top.location.href = '<?php echo $this->link_open( $job_id );?>';
+							<?php if ($job_data['status'] != $new_status) { ?>parent.jQuery('#status').val('<?php echo $new_status;?>').change();<?php } ?>
 					</script>
 					<?php
 					break;
@@ -1743,7 +1759,7 @@ Job Name: <strong>{JOB_NAME}</strong> <br/>
 					// something happened, refresh the parent browser frame
 					?>
 					<script type="text/javascript">
-              top.location.href = '<?php echo $this->link_open( $_REQUEST['job_id'] );?>';
+              top.location.href = '<?php echo $this->link_open( $job_id );?>';
 					</script>
 					<?php
 					break;
@@ -1760,8 +1776,8 @@ Job Name: <strong>{JOB_NAME}</strong> <br/>
 									echo is_array( $email_status ) && isset( $email_status['message'] ) ? $email_status['message'] : ( $email_status ? _l( ' and email sent to customer' ) : '' );
 									?>');
                 parent.ucm.display_messages(true);
-								<?php if($job_data['status'] != $new_status){ ?>parent.jQuery('#status').val('<?php echo $new_status;?>').change();<?php } ?>
-								<?php if($new_job_data['date_completed'] != $job_data['date_completed']){ ?>parent.jQuery('#date_completed').val('<?php echo print_date( $new_job_data['date_completed'] );?>').change();<?php } ?>
+								<?php if ($job_data['status'] != $new_status) { ?>parent.jQuery('#status').val('<?php echo $new_status;?>').change();<?php } ?>
+								<?php if ($new_job_data['date_completed'] != $job_data['date_completed']) { ?>parent.jQuery('#date_completed').val('<?php echo print_date( $new_job_data['date_completed'] );?>').change();<?php } ?>
 						</script>
 						<?php
 					} else {
@@ -1770,7 +1786,7 @@ Job Name: <strong>{JOB_NAME}</strong> <br/>
                 parent.canceledittask();
                 parent.ucm.add_error('<?php _e( 'Unable to save task' );?>');
                 parent.ucm.display_messages(true);
-								<?php if($job_data['status'] != $new_status){ ?>parent.jQuery('#status').val('<?php echo $new_status;?>').change();<?php } ?>
+								<?php if ($job_data['status'] != $new_status) { ?>parent.jQuery('#status').val('<?php echo $new_status;?>').change();<?php } ?>
 						</script>
 						<?php
 					}
@@ -1786,7 +1802,7 @@ Job Name: <strong>{JOB_NAME}</strong> <br/>
 			}
 
 			exit;
-		} else if ( "save_job" == $_REQUEST['_process'] ) {
+		} elseif ( "save_job" == $_REQUEST['_process'] ) {
 
 
 			$job_id = (int) $_REQUEST['job_id'];
@@ -1806,7 +1822,7 @@ Job Name: <strong>{JOB_NAME}</strong> <br/>
 				// user not allowed to create jobs.
 				set_error( 'Unable to create new Jobs' );
 				redirect_browser( self::link_open( false ) );
-			} else if ( $job_id && ! self::can_i( 'edit', 'Jobs' ) ) {
+			} elseif ( $job_id && ! self::can_i( 'edit', 'Jobs' ) ) {
 				// user not allowed to create jobs.
 				set_error( 'Unable to edit Jobs' );
 				redirect_browser( self::link_open( false ) );
@@ -1967,7 +1983,7 @@ Job Name: <strong>{JOB_NAME}</strong> <br/>
 							'key' => $extra_field['extra_key'],
 							'val' => $extra_field['extra'],
 						);
-						$x ++;
+						$x++;
 					}
 				}
 
@@ -2181,7 +2197,6 @@ Job Name: <strong>{JOB_NAME}</strong> <br/>
 
 		switch ( self::get_job_access_permissions() ) {
 			case _JOB_ACCESS_ALL:
-
 				break;
 			case _JOB_ACCESS_ASSIGNED:
 				// only assigned jobs!
@@ -2299,7 +2314,7 @@ Job Name: <strong>{JOB_NAME}</strong> <br/>
 		// permission hack to
 		foreach ( $res as $rid => $r ) {
 			$job_data = array( 'user_id' => $r['job_user_id'] );
-			if ( $r['staff_split'] && module_job::job_task_only_show_split_hours( $job_id, $job_data, $r['task_id'], $r ) ) {
+			if ( $r['staff_split'] && module_job::job_task_only_show_split_hours( $job_id, $r['task_id'], $r, $job_data ) ) {
 				//                $res[$rid]['hours'] = $r['staff_hours'];
 				//                $res[$rid]['amount'] = $r['staff_amount'];
 				// others here
@@ -2369,17 +2384,17 @@ Job Name: <strong>{JOB_NAME}</strong> <br/>
 					$res[ $rid ]['hours']           = 0;
 					$res[ $rid ]['amount']          = 0;
 					$res[ $rid ]['fully_completed'] = 1;
-				} else if ( $r['hours'] <= 0 && $r['amount'] <= 0 && ! $r['fully_completed'] ) {
+				} elseif ( $r['hours'] <= 0 && $r['amount'] <= 0 && ! $r['fully_completed'] ) {
 					// no hours, no amount, and not fully completed. skip this one.
 					unset( $res[ $rid ] );
-				} else if ( $r['hours'] <= 0 && $r['amount'] > 0 && ! $r['fully_completed'] ) {
+				} elseif ( $r['hours'] <= 0 && $r['amount'] > 0 && ! $r['fully_completed'] ) {
 					// no hours set. but we have an amount. and we are not completed.
 					// skip.
 					unset( $res[ $rid ] );
-				} else if ( $r['hours'] <= 0 && $r['fully_completed'] ) {
+				} elseif ( $r['hours'] <= 0 && $r['fully_completed'] ) {
 					// no hours, but we are fully completed.
 					// keep this one
-				} else if ( $r['hours'] > 0 && ( $r['completed'] <= 0 || $r['completed'] < $r['hours'] ) ) {
+				} elseif ( $r['hours'] > 0 && ( $r['completed'] <= 0 || $r['completed'] < $r['hours'] ) ) {
 					// we haven't yet completed this task based on the hours.
 					unset( $res[ $rid ] );
 				}
@@ -2485,7 +2500,6 @@ Job Name: <strong>{JOB_NAME}</strong> <br/>
 		if ( $job && isset( $job['job_id'] ) && $job['job_id'] == $job_id ) {
 			switch ( self::get_job_access_permissions() ) {
 				case _JOB_ACCESS_ALL:
-
 					break;
 				case _JOB_ACCESS_ASSIGNED:
 					// only assigned jobs!
@@ -2700,13 +2714,13 @@ Job Name: <strong>{JOB_NAME}</strong> <br/>
 					if ( module_config::c( 'job_task_log_all_hours', 1 ) ) {
 						// jobs have to be marked fully_completd.
 						if ( ! $task['fully_completed'] ) {
-							$job['total_tasks_remain'] ++;
+							$job['total_tasks_remain']++;
 						}
 					} else {
 						if ( $task['amount'] != 0 && $task['completed'] <= 0 ) {
-							$job['total_tasks_remain'] ++;
-						} else if ( $task['hours'] > 0 && $task['completed'] < $task['hours'] ) {
-							$job['total_tasks_remain'] ++;
+							$job['total_tasks_remain']++;
+						} elseif ( $task['hours'] > 0 && $task['completed'] < $task['hours'] ) {
+							$job['total_tasks_remain']++;
 						}
 					}
 					$tasks[ $task_id ]['sum_amount'] = 0;
@@ -2732,7 +2746,7 @@ Job Name: <strong>{JOB_NAME}</strong> <br/>
 						$job['total_hours_completed'] += $task_completed_hours;
 						if ( $task['completed'] > $task['hours'] ) {
 							$job['total_hours_overworked'] += ( $task['completed'] - $task['hours'] );
-						} else if ( $task['completed'] > 0 ) {
+						} elseif ( $task['completed'] > 0 ) {
 							// underworked hours
 							$job['total_hours_overworked'] += ( $task['completed'] - $task['hours'] );
 						}
@@ -2742,9 +2756,9 @@ Job Name: <strong>{JOB_NAME}</strong> <br/>
 					} else {
 						// it's a non-hourly task.
 						// work out if it's completed or not.
-						$non_hourly_job_count ++;
+						$non_hourly_job_count++;
 						if ( $task['fully_completed'] ) {
-							$non_hourly_job_completed ++;
+							$non_hourly_job_completed++;
 						}
 					}
 					if ( ! $task['invoiced'] && $task['billable'] ) {
@@ -2811,7 +2825,7 @@ Job Name: <strong>{JOB_NAME}</strong> <br/>
 
 					// new staff expenses calculations
 
-					if ( self::job_task_has_split_hours( $job_id, $job, $task_id, $task ) ) {
+					if ( self::job_task_has_split_hours( $job_id, $task_id, $task, $job ) ) {
 						$tasks[ $task_id ]['staff_sum_amount'] = 0;
 						switch ( $task['manual_task_type'] ) {
 							case _TASK_TYPE_QTY_AMOUNT:
@@ -2847,7 +2861,7 @@ Job Name: <strong>{JOB_NAME}</strong> <br/>
 						// after tax discount ::::::::::
 						// handled below.
 						//$job['final_modification'] = -$job['discount_amount'];
-					} else if ( $job['discount_type'] == _DISCOUNT_TYPE_BEFORE_TAX ) {
+					} elseif ( $job['discount_type'] == _DISCOUNT_TYPE_BEFORE_TAX ) {
 						// before tax discount:::::
 						//$job['final_modification'] = -$job['discount_amount'];
 						// problem : this 'discount_amount_on_tax' calculation may not match the correct final discount calculation as per below
@@ -3076,7 +3090,7 @@ Job Name: <strong>{JOB_NAME}</strong> <br/>
 						set_message( 'Changed this Job to match the Website customer' );
 					}
 					$data['customer_id'] = $website['customer_id'];
-				} else if ( isset( $data['customer_id'] ) && $data['customer_id'] > 0 ) {
+				} elseif ( isset( $data['customer_id'] ) && $data['customer_id'] > 0 ) {
 					// set the website customer id to this as well.
 					update_insert( 'website_id', $website['website_id'], 'website', array( 'customer_id' => $data['customer_id'] ) );
 				}
@@ -3093,10 +3107,13 @@ Job Name: <strong>{JOB_NAME}</strong> <br/>
 			$job_id            = false;
 		}
 
-		// fix for default hourly rate.
-		if(empty($data['hourly_rate'])){
-			$customer_hourly_rate = module_customer::c( 'hourly_rate', 60, (int) $data['customer_id'] );
-			if($customer_hourly_rate > 0){
+		// Fill in a blank hourly rate from the customer's default - but only when the
+		// save actually carries the field. A partial save (the job task import calls
+		// save_job() with nothing but the tasks) used to land here, warn on the missing
+		// customer_id, and write the global default over the job's real hourly rate.
+		if ( array_key_exists( 'hourly_rate', $data ) && empty( $data['hourly_rate'] ) ) {
+			$customer_hourly_rate = module_customer::c( 'hourly_rate', 60, isset( $data['customer_id'] ) ? (int) $data['customer_id'] : 0 );
+			if ( $customer_hourly_rate > 0 ) {
 				$data['hourly_rate'] = $customer_hourly_rate;
 			}
 		}
@@ -3124,7 +3141,7 @@ Job Name: <strong>{JOB_NAME}</strong> <br/>
 						'percent'   => isset( $data['tax_percents'][ $key ] ) ? $data['tax_percents'][ $key ] : 0,
 						'amount'    => 0, // calculate this where? nfi? maybe on final job get or something.
 						'name'      => isset( $data['tax_names'][ $key ] ) ? $data['tax_names'][ $key ] : 'TAX',
-						'order'     => $order ++,
+						'order'     => $order++,
 						'increment' => isset( $data['tax_increment_checkbox'] ) && $data['tax_increment_checkbox'] ? 1 : 0,
 					);
 					$job_tax_id   = update_insert( 'job_tax_id', $job_tax_id, 'job_tax', $job_tax_data );
@@ -3193,7 +3210,7 @@ Job Name: <strong>{JOB_NAME}</strong> <br/>
 						if ( ! $task['date_due'] || $task['date_due'] == '0000-00-00' ) {
 							// no previously set task date. set it
 							update_insert( 'task_id', $task['task_id'], 'task', array( 'date_due' => $data['date_due'] ) );
-						} else if ( $task['date_due'] == $original_job_data['date_due'] ) {
+						} elseif ( $task['date_due'] == $original_job_data['date_due'] ) {
 							// the date was the old date. do we change it?
 							// only change it on incompleted tasks.
 							$percentage = self::get_percentage( $task );
@@ -3280,7 +3297,7 @@ Job Name: <strong>{JOB_NAME}</strong> <br/>
 						$job_data['job_tasks'] .= _l( 'Completed Hours:' ) . ' ' . $job_task['completed'] . '<br/>';
 					}
 					$job_data['job_tasks'] .= '</li>';
-					$job_data['task_count'] ++;
+					$job_data['task_count']++;
 					//}
 					$job_data['job_tasks'] .= '</ul>';
 
@@ -3420,7 +3437,7 @@ Job Name: <strong>{JOB_NAME}</strong> <br/>
 						$job_data['job_task'] .= _l( 'Completed Hours:' ) . ' ' . ( isset( $job_task['completed'] ) ? $job_task['completed'] : '' ) . '<br/>';
 					}
 					$job_data['job_task'] .= '</li>';
-					$job_data['task_count'] ++;
+					$job_data['task_count']++;
 					//}
 					$job_data['job_task'] .= '</ul>';
 
@@ -3517,7 +3534,7 @@ Job Name: <strong>{JOB_NAME}</strong> <br/>
 				}
 				// add / save this task.
 				$task_data['job_id'] = $job_id;
-				if ( module_job::job_task_only_show_split_hours( $job_id, $job_data, $task_id, $task_data ) ) {
+				if ( module_job::job_task_only_show_split_hours( $job_id, $task_id, $task_data, $job_data ) ) {
 					if ( isset( $task_data['hours'] ) && ! isset( $task_data['staff_hours'] ) ) {
 						$task_data['staff_hours']  = $task_data['hours'];
 						$task_data['staff_amount'] = $task_data['amount'];
@@ -3552,7 +3569,7 @@ Job Name: <strong>{JOB_NAME}</strong> <br/>
 					if ( ! isset( $task_data['fully_completed'] ) || ! $task_data['fully_completed'] ) {
 						// we have unchecked that tickbox
 						$task_data['fully_completed'] = 0;
-					} else if ( isset( $tasks[ $task_id ] ) && ! $tasks[ $task_id ]['fully_completed'] ) {
+					} elseif ( isset( $tasks[ $task_id ] ) && ! $tasks[ $task_id ]['fully_completed'] ) {
 						// we completed a preveiously incomplete task.
 
 						// chekc if this task has a custom percentage filled in, we remove this custom percentage.
@@ -3767,7 +3784,7 @@ Job Name: <strong>{JOB_NAME}</strong> <br/>
 		if ( ! module_security::is_logged_in() ) {
 			//todo - option to allow guests to create tasks with approval? or not to create tasks at all.
 			return _JOB_TASK_CREATION_REQUIRES_APPROVAL;
-		} else if ( class_exists( 'module_security', false ) ) {
+		} elseif ( class_exists( 'module_security', false ) ) {
 			return module_security::can_user_with_options( module_security::get_loggedin_id(), 'Job Task Creation', array(
 				_JOB_TASK_CREATION_WITHOUT_APPROVAL,
 				_JOB_TASK_CREATION_REQUIRES_APPROVAL,
@@ -3867,7 +3884,7 @@ Job Name: <strong>{JOB_NAME}</strong> <br/>
 		if ( isset( $extra_options['duplicates'] ) && $extra_options['duplicates'] == 'ignore' && $row['customer_id'] > 0 ) {
 			// don't update customer record with new one.
 
-		} else if ( ( isset( $row['customer_name'] ) && strlen( trim( $row['customer_name'] ) ) > 0 ) || $row['customer_id'] > 0 ) {
+		} elseif ( ( isset( $row['customer_name'] ) && strlen( trim( $row['customer_name'] ) ) > 0 ) || $row['customer_id'] > 0 ) {
 			// update customer record with new one.
 			$row['customer_id'] = update_insert( 'customer_id', $row['customer_id'], 'customer', $row );
 
@@ -3933,7 +3950,7 @@ Job Name: <strong>{JOB_NAME}</strong> <br/>
 		// first we find any matching existing jobs. skipping duplicates if option is set.
 		foreach ( $data as $rowid => $row ) {
 			if ( self::handle_import_row( $row, false, $add_to_group, $extra_options ) ) {
-				$count ++;
+				$count++;
 			}
 		}
 
@@ -4004,13 +4021,13 @@ Job Name: <strong>{JOB_NAME}</strong> <br/>
 				if ( $row['task_id'] == 0 ) {
 					// we are logging hours against a new task
 					$row['log_hours'] = $row['completed'];
-				} else if ( $row['task_id'] > 0 ) {
+				} elseif ( $row['task_id'] > 0 ) {
 					// we are adjusting hours on an existing task.
 					$existing_completed_hours = $existing_tasks[ $row['task_id'] ]['completed'];
 					if ( $row['completed'] > $existing_completed_hours ) {
 						// we are logging additional hours against the job.
 						$row['log_hours'] = $row['completed'] - $existing_completed_hours;
-					} else if ( $row['completed'] < $existing_completed_hours ) {
+					} elseif ( $row['completed'] < $existing_completed_hours ) {
 						// we are removing hours on this task!
 						// tricky!!
 						$sql = "DELETE FROM `" . _DB_PREFIX . "task_log` WHERE task_id = " . (int) $row['task_id'];
@@ -4024,7 +4041,7 @@ Job Name: <strong>{JOB_NAME}</strong> <br/>
 				$task_id = $row['task_id'];
 			} else {
 				$task_id = 'new' . $c . 'new';
-				$c ++;
+				$c++;
 			}
 
 			$task_data[ $task_id ] = $row;
@@ -4207,7 +4224,7 @@ Job Name: <strong>{JOB_NAME}</strong> <br/>
 		} else {
 			if ( $task_data['hours'] <= 0 && $task_data['fully_completed'] ) {
 				$percentage = 1;
-			} else if ( $task_data['completed'] > 0 ) {
+			} elseif ( $task_data['completed'] > 0 ) {
 				if ( $task_data['hours'] > 0 ) {
 					$percentage = round( $task_data['completed'] / $task_data['hours'], 2 );
 					$percentage = min( 1, $percentage );
@@ -4868,7 +4885,6 @@ Job Name: <strong>{JOB_NAME}</strong> <br/>
 
 		return ob_get_clean();
 	}
-
 }
 
 include_once 'class.job.php';

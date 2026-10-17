@@ -90,7 +90,7 @@ if ( isset( $_REQUEST['show'] ) ) {
 
 						$parts[ $part_id ] = $content;
 
-						$page_index ++;
+						$page_index++;
 					}
 				}
 			}

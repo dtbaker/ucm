@@ -5,7 +5,7 @@ if ( ! defined( '_UCM_VERSION' ) ) {
 	die( 'Nothing to see here' );
 }
 
-if ( ! $invoice_safe ) {
+if ( empty( $invoice_safe ) ) {
 	die( 'failed' );
 }
 
@@ -68,7 +68,7 @@ if ( $invoice['customer_id'] ) {
 $show_task_dates = module_config::c( 'invoice_task_list_show_date', 1 );
 $colspan         = 2;
 if ( $show_task_dates ) {
-	$colspan ++;
+	$colspan++;
 }
 
 
@@ -86,14 +86,21 @@ $x = 1;
 </script>
 
 
-<form action="" method="post" id="invoice_form">
+<?php
+module_form::print_form_open_tag( array(
+	'id' => 'invoice_form',
+) );
+?>
+	<!-- _process stays as markup: the no_permissions class keeps check_page() from
+	     stripping it on a view-only user's page, and the helper's hidden fields
+	     cannot carry a class. -->
 	<input type="hidden" name="_process" value="save_invoice" class="no_permissions"/>
 	<input type="hidden" name="invoice_id" value="<?php echo $invoice_id; ?>"/>
 	<?php if ( $invoice['customer_id'] && ! isset( $_REQUEST['change_customer'] ) ) { ?>
 		<input type="hidden" name="customer_id" value="<?php echo $invoice['customer_id']; ?>"/>
 	<?php } ?>
 	<input type="hidden" name="job_id" value="<?php echo isset( $invoice['job_id'] ) ? (int) $invoice['job_id'] : 0; ?>"/>
-	<input type="hidden" name="hourly_rate" value="<?php echo htmlspecialchars( $invoice['hourly_rate'] ); ?>"/>
+	<input type="hidden" name="hourly_rate" value="<?php echo htmlspecialchars( $invoice['hourly_rate'] ?? '' ); ?>"/>
 
 	<input type="hidden" name="_redirect" value="" id="form_redirect"/>
 
@@ -314,7 +321,7 @@ $x = 1;
 				)
 			),
 		);
-	} else if ( $invoice['customer_id'] && module_customer::can_i( 'view', 'Customers' ) ) {
+	} elseif ( $invoice['customer_id'] && module_customer::can_i( 'view', 'Customers' ) ) {
 		$fieldset_data['elements'][] = array(
 			'title'  => 'Customer',
 			'fields' => array(
@@ -454,7 +461,7 @@ $x = 1;
 					}
 				),
 			);
-		} else if ( ! class_exists( 'module_website', false ) && module_config::c( 'show_ucm_ads', 1 ) ) {
+		} elseif ( ! class_exists( 'module_website', false ) && module_config::c( 'show_ucm_ads', 1 ) ) {
 
 			$fieldset_data['elements'][] = array(
 				'title'  => module_config::c( 'project_name_single', 'Website' ),
@@ -473,7 +480,9 @@ $x = 1;
 				'value'   => $invoice['tax_type'],
 			),
 		);
-		if ( $discounts_allowed ) {
+		// This page keeps its own copy of the Advanced fieldset, so it asks the document
+		// class the same question generate_advanced_fieldset() does.
+		if ( $ucminvoice->discounts_allowed() ) {
 			$fieldset_data['elements'][] = array(
 				'title'  => 'Discount Amount',
 				'fields' => array(
@@ -625,7 +634,7 @@ $x = 1;
 						align="center"><?php _e( 'A Credit Note has been generated against this cancelled invoice: %s', module_invoice::link_open( $other_i['invoice_id'], true, $other_i ) ); ?></p>
 					<?php
 				}
-			} else if ( module_invoice::can_i( 'create', 'Invoices' ) ) {
+			} elseif ( module_invoice::can_i( 'create', 'Invoices' ) ) {
 				?>
 				<p style="text-align: center">
 					<input type="submit" name="butt_generate_credit" value="<?php _e( 'Generate Credit Note' ); ?>"
@@ -648,7 +657,7 @@ $x = 1;
 		echo module_form::generate_fieldset( $fieldset_data );
 		unset( $fieldset_data );
 
-	} else if ( $invoice['overdue'] ) {
+	} elseif ( $invoice['overdue'] ) {
 
 		/***** INVOICE OVERDUE ****/
 		ob_start();
@@ -766,8 +775,7 @@ $x = 1;
 	</script>
 
 	<?php
-
-	/***** INVOICE ITEMS! *****/
+	/* INVOICE ITEMS! */
 	ob_start();
 	?>
 	<div class="content_box_wheader">
@@ -841,7 +849,7 @@ $x = 1;
 							?>
 							-
 							<?php
-						} else if ( $invoice['default_task_type'] == _TASK_TYPE_QTY_AMOUNT || $invoice['default_task_type'] == _TASK_TYPE_HOURS_AMOUNT ) {
+						} elseif ( $invoice['default_task_type'] == _TASK_TYPE_QTY_AMOUNT || $invoice['default_task_type'] == _TASK_TYPE_HOURS_AMOUNT ) {
 							?>
 							<input type="text" name="invoice_invoice_item[new][hours]" value="" id="newinvoice_itemqty" size="3"
 							       style="width:30px;" onchange="setamount(this.value,'new');" onkeyup="setamount(this.value,'new');">
@@ -931,7 +939,7 @@ $x = 1;
 								<input type="text" name="invoice_invoice_item[<?php echo $invoice_item_id; ?>][task_order]" value="<?php
 								if ( isset( $invoice_item_data['custom_task_order'] ) && (int) $invoice_item_data['custom_task_order'] > 0 ) {
 									echo $invoice_item_data['custom_task_order'];
-								} else if ( isset( $invoice_item_data['task_order'] ) && $invoice_item_data['task_order'] > 0 ) {
+								} elseif ( isset( $invoice_item_data['task_order'] ) && $invoice_item_data['task_order'] > 0 ) {
 									echo $invoice_item_data['task_order'];
 								}
 								?>" size="3" class="edit_task_order">
@@ -939,9 +947,9 @@ $x = 1;
 						<?php } ?>
 						<td>
 							<input type="hidden" name="invoice_invoice_item[<?php echo $invoice_item_id; ?>][task_id]"
-							       value="<?php echo htmlspecialchars( $invoice_item_data['task_id'] ); ?>">
+							       value="<?php echo htmlspecialchars( $invoice_item_data['task_id'] ?? '' ); ?>">
 							<input type="hidden" name="invoice_invoice_item[<?php echo $invoice_item_id; ?>][timer_id]"
-							       value="<?php echo htmlspecialchars( $invoice_item_data['timer_id'] ); ?>">
+							       value="<?php echo htmlspecialchars( $invoice_item_data['timer_id'] ?? '' ); ?>">
 
 							<input type="text" name="invoice_invoice_item[<?php echo $invoice_item_id; ?>][description]"
 							       value="<?php echo htmlspecialchars( $invoice_item_data['custom_description'] ? $invoice_item_data['custom_description'] : $invoice_item_data['description'] ); ?>"
@@ -1060,13 +1068,13 @@ $x = 1;
 					</tbody>
 				<?php } ?>
 				<tbody id="invoice_item_preview_<?php echo $invoice_item_id; ?>">
-				<tr class="<?php echo $c ++ % 2 ? 'odd' : 'even'; ?>">
+				<tr class="<?php echo $c++ % 2 ? 'odd' : 'even'; ?>">
 					<?php if ( module_config::c( 'invoice_task_numbers', 1 ) ) { ?>
 						<td>
 							<?php
 							if ( isset( $invoice_item_data['custom_task_order'] ) && (int) $invoice_item_data['custom_task_order'] > 0 ) {
 								echo $invoice_item_data['custom_task_order'];
-							} else if ( isset( $invoice_item_data['task_order'] ) && $invoice_item_data['task_order'] > 0 ) {
+							} elseif ( isset( $invoice_item_data['task_order'] ) && $invoice_item_data['task_order'] > 0 ) {
 								echo $invoice_item_data['task_order'];
 							}
 							?>
@@ -1183,7 +1191,7 @@ $x = 1;
 					}
 				}
 
-			} else if ( $invoice['discount_type'] == _DISCOUNT_TYPE_AFTER_TAX ) {
+			} elseif ( $invoice['discount_type'] == _DISCOUNT_TYPE_AFTER_TAX ) {
 				$rows[] = array(
 					'label' => _l( 'Sub:' ),
 					'value' => '<span class="currency">' . dollar( $invoice['total_sub_amount'], true, $invoice['currency_id'] ) . '</span>'
@@ -1292,7 +1300,7 @@ $x = 1;
 				<tr>
 					<td colspan="<?php echo $colspan; ?>" align="center">
 						<a
-							href="<?php echo module_invoice::link_open( $invoice_id ); ?>&_process=assign_credit_to_customer"><?php _e( 'This customer has overpaid this invoice. Click here to assign this as credit to their account for a future invoice.' ); ?></a>
+							href="<?php echo module_invoice::link_open( $invoice_id ); ?>&_process=assign_credit_to_customer&form_auth_key=<?php echo module_form::get_secure_key(); ?>"><?php _e( 'This customer has overpaid this invoice. Click here to assign this as credit to their account for a future invoice.' ); ?></a>
 					</td>
 					<td>
 						<?php _e( 'Credit:' ); ?>
@@ -1334,8 +1342,7 @@ $x = 1;
 		</script>
 
 	<?php
-
-	/*** PAYMENT HISTORY ****/
+	/* PAYMENT HISTORY */
 	ob_start();
 	?>
 
@@ -1429,7 +1436,7 @@ $x = 1;
 							<?php }
 							if ( $invoice_payment_data['date_paid'] == '0000-00-00' ) {
 								?> (<a
-									href="<?php echo htmlspecialchars( $_SERVER['REQUEST_URI'] ) . '&_process=make_payment&invoice_payment_id=' . $invoice_payment_id; ?>"><?php _e( 'complete' ); ?></a>) <?php
+									href="<?php echo htmlspecialchars( $_SERVER['REQUEST_URI'] ) . '&_process=make_payment&invoice_payment_id=' . $invoice_payment_id . '&form_auth_key=' . urlencode( module_form::get_secure_key() ); ?>"><?php _e( 'complete' ); ?></a>) <?php
 							}
 							?>
 						</td>
@@ -1602,8 +1609,4 @@ $x = 1;
 	);
 	echo module_form::generate_form_actions( $form_actions );
 
-
-	?>
-
-
-</form>
+	module_form::print_form_close_tag();

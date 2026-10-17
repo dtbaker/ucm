@@ -1,0 +1,8 @@
+{
+	"slug": "using/websites",
+	"title": "Websites and projects",
+	"summary": "A grouping under a customer, for when one customer has several ongoing things.",
+	"html": "<p>A website — or project, which is the same record under a different name — sits under a\ncustomer and groups quotes, jobs and invoices together.</p>\n<p>It earns its place when one customer has several separate streams of work. A design agency\nwith a client who has three sites wants the invoices for each kept apart; without this\nlayer they all land in one undifferentiated list under the customer.</p>\n<h2>Creating one</h2>\n<p>Open the customer and add a website. The useful fields are the name, the address, and\nanything you need to remember about where it is hosted and when things expire.</p>\n<h2>Attaching work to it</h2>\n<p>When creating a quote, job or invoice for that customer, pick the website. From then on\nthe website&#39;s own screen shows everything belonging to it, with its own totals.</p>\n<h2>If you do not need it</h2>\n<p>Plenty of businesses have one relationship per customer and no use for this layer. The\nplugin can be switched off in <em>Settings → Plugins</em>, which removes the menu and the field\nfrom the forms. See <a href=\"https://ultimateclientmanager.com/docs/developers/plugins/\">The plugin system</a>.</p>",
+	"video": "",
+	"updated": ""
+}

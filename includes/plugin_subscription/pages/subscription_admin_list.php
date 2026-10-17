@@ -27,7 +27,7 @@ print_heading( $heading );
 ?>
 
 
-	<form action="" method="post">
+	<?php module_form::print_form_open_tag( array( 'action' => '' ) ); ?>
 
 		<?php echo $pagination['summary']; ?>
 		<table width="100%" border="0" cellspacing="0" cellpadding="2" class="tableclass tableclass_rows">
@@ -47,7 +47,7 @@ print_heading( $heading );
 			<?php
 			$c = 0;
 			foreach ( $pagination['rows'] as $subscription ) { ?>
-				<tr class="<?php echo ( $c ++ % 2 ) ? "odd" : "even"; ?>">
+				<tr class="<?php echo ( $c++ % 2 ) ? "odd" : "even"; ?>">
 					<td class="row_action">
 						<?php echo module_subscription::link_open( $subscription['subscription_id'], true, $subscription ); ?>
 					</td>
@@ -85,7 +85,7 @@ print_heading( $heading );
 			</tbody>
 		</table>
 		<?php echo $pagination['links']; ?>
-	</form>
+	<?php module_form::print_form_close_tag(); ?>
 
 <?php
 

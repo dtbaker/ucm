@@ -52,13 +52,36 @@ if ( isset( $_REQUEST['export_json'] ) ) {
 ?>
 
 
-	<form action="" method="post">
+	<?php module_form::print_form_open_tag( array( 'action' => '' ) ); ?>
 		<input type="hidden" name="_process" value="save_security_role"/>
-		<input type="hidden" name="security_role_id" value="<?php echo $security_role_id; ?>"/>
+		<input type="hidden" name="security_role_id" value="<?php echo htmlspecialchars( (string) $security_role_id, ENT_QUOTES, 'UTF-8' ); ?>"/>
 
 		<?php
-		/** ROLE DETAILS */
+		// The permission controls below carry no name of their own. They are collected
+		// into the single `permission_data` field printed at the end of this form.
+		//
+		// One field per permission per action does not fit in a post. The grid has a
+		// control for every row in `security_permission`, and
+		// module_security::has_feature_access() adds a row the first time any screen asks
+		// for a permission that is not there yet, so the grid grows as the install is
+		// used - past 2300 controls on a database of 1300 permissions. PHP stops parsing
+		// a post at max_input_vars, 1000 by default, and sets nothing the application can
+		// read: the far side of the grid was simply dropped and the role saved with
+		// whatever fitted. Raising the limit only moves the point at which that happens.
+		//
+		// So this form posts a fixed handful of fields whatever the table holds, and
+		// $permission_bundle below is filled in as the controls are printed. That is also
+		// what a browser with no JavaScript posts back: the state as it stands, unchanged,
+		// rather than an empty grid that would wipe the role.
+		$permission_bundle = array(
+			'permission'           => array(),
+			'permission_drop_down' => array(),
+			'group_access'         => array(),
+		);
+		?>
 
+		<?php
+		/* ROLE DETAILS */
 		$fieldset_data                     = array(
 			'heading'  => array(
 				'type'  => 'h3',
@@ -154,7 +177,7 @@ if ( isset( $_REQUEST['export_json'] ) ) {
 				}
 				$available_perms = @unserialize( $available_permission['available_perms'] );
 				if ( ! $last_category || $last_category != $available_permission['category'] ) {
-					$x ++;
+					$x++;
 				}
 				?>
 				<tr class="<?php echo $x % 2 ? 'odd' : 'even'; ?>">
@@ -180,10 +203,12 @@ if ( isset( $_REQUEST['export_json'] ) ) {
 						<td align="center">
 							<?php if ( isset( $available_perms[ $permission ] ) ) { ?>
 								<input type="checkbox"
-								       name="permission[<?php echo $available_permission['security_permission_id']; ?>][<?php echo $permission; ?>]"
+								       data-permission="<?php echo (int) $available_permission['security_permission_id']; ?>"
+								       data-permission-action="<?php echo htmlspecialchars( $permission, ENT_QUOTES, 'UTF-8' ); ?>"
 								       value="1"<?php
 								if ( isset( $security_role['permissions'] ) && isset( $security_role['permissions'][ $available_permission['security_permission_id'] ] ) && $security_role['permissions'][ $available_permission['security_permission_id'] ][ $permission ] ) {
 									echo ' checked';
+									$permission_bundle['permission'][ (int) $available_permission['security_permission_id'] ][ $permission ] = 1;
 									if ( isset( $_REQUEST['export_json'] ) ) {
 										$export_json[ $available_permission['category'] . '|' . $available_permission['module'] . '|' . $available_permission['name'] . '|' . $available_permission['description'] ][] = $permission;
 									}
@@ -233,20 +258,28 @@ if ( isset( $_REQUEST['export_json'] ) ) {
 			$permission = 'view';
 			foreach ( $drop_down_permissions_grouped as $category_name => $available_permissions ) {
 				?>
-				<tr class="<?php echo $x ++ % 2 ? 'odd' : 'even'; ?>">
+				<tr class="<?php echo $x++ % 2 ? 'odd' : 'even'; ?>">
 					<td>
 						<?php echo $category_name; ?>
 						&nbsp;
 					</td>
 					<td>
-						<select name="permission_drop_down[<?php foreach ( $available_permissions as $available_permission ) {
-							echo $available_permission['security_permission_id'] . '|';
-						} ?>]">
+						<?php
+						// The handler clears every permission the drop down covers before
+						// writing the one that was chosen, so the control names them all.
+						$drop_down_key = '';
+						foreach ( $available_permissions as $available_permission ) {
+							$drop_down_key .= (int) $available_permission['security_permission_id'] . '|';
+						}
+						$permission_bundle['permission_drop_down'][ $drop_down_key ] = '';
+						?>
+						<select data-permission-drop-down="<?php echo htmlspecialchars( $drop_down_key, ENT_QUOTES, 'UTF-8' ); ?>">
 							<option value=""><?php _e( 'N/A' ); ?></option>
 							<?php foreach ( $available_permissions as $available_permission ) { ?>
-								<option value="<?php echo $available_permission['security_permission_id']; ?>"<?php
+								<option value="<?php echo (int) $available_permission['security_permission_id']; ?>"<?php
 								if ( isset( $security_role['permissions'] ) && isset( $security_role['permissions'][ $available_permission['security_permission_id'] ] ) && $security_role['permissions'][ $available_permission['security_permission_id'] ][ $permission ] ) {
 									echo ' selected';
+									$permission_bundle['permission_drop_down'][ $drop_down_key ] = (string) (int) $available_permission['security_permission_id'];
 									if ( isset( $_REQUEST['export_json'] ) ) {
 										$export_json[ $available_permission['category'] . '|' . $available_permission['module'] . '|' . $available_permission['name'] . '|' . $available_permission['description'] ][] = $permission;
 									}
@@ -263,17 +296,19 @@ if ( isset( $_REQUEST['export_json'] ) ) {
 			foreach ( $checkbox_permissions as $available_permission ) {
 				$available_perms = @unserialize( $available_permission['available_perms'] );
 				?>
-				<tr class="<?php echo $x ++ % 2 ? 'odd' : 'even'; ?>">
+				<tr class="<?php echo $x++ % 2 ? 'odd' : 'even'; ?>">
 					<td>
 						<?php echo $available_permission['name']; ?>
 					</td>
 					<td>
 						<?php if ( isset( $available_perms[ $permission ] ) ) { ?>
 							<input type="checkbox"
-							       name="permission[<?php echo $available_permission['security_permission_id']; ?>][<?php echo $permission; ?>]"
+							       data-permission="<?php echo (int) $available_permission['security_permission_id']; ?>"
+							       data-permission-action="<?php echo htmlspecialchars( $permission, ENT_QUOTES, 'UTF-8' ); ?>"
 							       value="1"<?php
 							if ( isset( $security_role['permissions'] ) && isset( $security_role['permissions'][ $available_permission['security_permission_id'] ] ) && $security_role['permissions'][ $available_permission['security_permission_id'] ][ $permission ] ) {
 								echo ' checked';
+								$permission_bundle['permission'][ (int) $available_permission['security_permission_id'] ][ $permission ] = 1;
 								if ( isset( $_REQUEST['export_json'] ) ) {
 									$export_json[ $available_permission['category'] . '|' . $available_permission['module'] . '|' . $available_permission['name'] . '|' . $available_permission['description'] ][] = $permission;
 								}
@@ -314,8 +349,13 @@ if ( isset( $_REQUEST['export_json'] ) ) {
 						$these_groups = module_group::get_groups( $group );
 						foreach ( $these_groups as $this_group ) {
 							?>
-							<input type="checkbox" id="group_<?php echo $this_group['group_id']; ?>"
-							       name="group_access[<?php echo $this_group['group_id']; ?>]"
+							<?php
+							if ( isset( $enabled_groups[ $this_group['group_id'] ] ) ) {
+								$permission_bundle['group_access'][ (int) $this_group['group_id'] ] = 1;
+							}
+							?>
+							<input type="checkbox" id="group_<?php echo (int) $this_group['group_id']; ?>"
+							       data-group-access="<?php echo (int) $this_group['group_id']; ?>"
 							       value="1"<?php echo isset( $enabled_groups[ $this_group['group_id'] ] ) ? ' checked' : ''; ?>>
 							<label
 								for="group_<?php echo $this_group['group_id']; ?>"><?php echo htmlspecialchars( $this_group['name'] ); ?></label>
@@ -373,8 +413,18 @@ if ( isset( $_REQUEST['export_json'] ) ) {
 		echo module_form::generate_form_actions( $form_actions );
 		?>
 
+		<input type="hidden" name="permission_data"
+		       value="<?php echo htmlspecialchars( (string) json_encode( $permission_bundle ), ENT_QUOTES, 'UTF-8' ); ?>"/>
+		<noscript>
+			<p><em><?php _e( 'Permissions on this form need JavaScript to save. The role name can still be changed without it; the permissions will be left as they are.' ); ?></em></p>
+		</noscript>
+		<script type="text/javascript">
+			jQuery( function () {
+				ucm.permission_bundle( jQuery( 'input[name="permission_data"]' ).closest( 'form' ) );
+			} );
+		</script>
 
-	</form>
+	<?php module_form::print_form_close_tag(); ?>
 
 <?php
 if ( isset( $_REQUEST['export_json'] ) ) {
