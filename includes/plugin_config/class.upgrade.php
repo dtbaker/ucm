@@ -418,7 +418,7 @@ class ucm_upgrade_manager
 			$result['message'] .= ob_get_clean() . '<br/>';
 			$result['message'] .= '<br/>';
 			if ( $fail ) {
-				$result['message'] .= _( 'Some things failed. Please go back and try again.' );
+				$result['message'] .= _l( 'Some things failed. Please go back and try again.' );
 			} else {
 				$result['message'] .= '<strong>' . _l( 'Success! Everything worked.' ) . '</strong>';
 				module_config::set_system_version( $new_system_version );
