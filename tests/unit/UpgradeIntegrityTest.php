@@ -334,6 +334,71 @@ class UpgradeIntegrityTest extends TestCase
 		$this->assertFalse( ucm_upgrade_manager::write_file( $this->destination . 'nope/here/x.php', 'x' ) );
 	}
 
+	/**
+	 * The updater writes a plugin in one request and runs its database step in the next.
+	 * With opcache checking timestamps only every few seconds, the second request used to
+	 * load the old class, so the upgrade SQL never ran. A written file must be recompiled
+	 * on its very next include.
+	 *
+	 * Opcache is off for the CLI, so this runs a child PHP with it on and a revalidate
+	 * frequency long enough that only an explicit invalidation can pick the change up.
+	 */
+	public function test_a_written_file_is_not_served_from_opcache_afterwards() {
+		if ( ! extension_loaded( 'Zend OPcache' ) ) {
+			$this->markTestSkipped( 'This PHP has no opcache to test against.' );
+		}
+		$child = $this->workspace . 'child.php';
+		$this->write( $this->workspace, 'child.php', <<<'PHP'
+<?php
+define( '_UCM_FOLDER', $argv[1] );
+require $argv[2];
+$file = $argv[3];
+file_put_contents( $file, "<?php return 'old';" );
+touch( $file, time() - 60 );
+$seen = array( include $file );
+// A plain replace, the way the updater wrote before: opcache keeps the old copy.
+file_put_contents( $file . '.tmp', "<?php return 'replaced';" );
+rename( $file . '.tmp', $file );
+$seen[] = include $file;
+// The updater's own write.
+ucm_upgrade_manager::write_file( $file, "<?php return 'updated';" );
+$seen[] = include $file;
+echo json_encode( $seen );
+PHP
+		);
+		$command = implode( ' ', array(
+			escapeshellarg( PHP_BINARY ),
+			'-d opcache.enable=1 -d opcache.enable_cli=1 -d opcache.validate_timestamps=1',
+			'-d opcache.revalidate_freq=600 -d opcache.file_update_protection=0',
+			escapeshellarg( $child ),
+			escapeshellarg( $this->destination ),
+			escapeshellarg( _UCM_FOLDER . 'includes/plugin_config/class.upgrade.php' ),
+			escapeshellarg( $this->destination . 'plugin.php' ),
+		) );
+		$seen = json_decode( (string) shell_exec( $command . ' 2>&1' ), true );
+
+		$this->assertIsArray( $seen, 'the child PHP did not run' );
+		if ( 'old' !== $seen[1] ) {
+			$this->markTestSkipped( 'Opcache would not cache in the child PHP, so there is nothing to prove.' );
+		}
+		$this->assertSame( array( 'old', 'old', 'updated' ), $seen );
+	}
+
+	public function test_the_database_step_notices_it_is_running_the_old_plugin() {
+		// Files for 2.16 written while 2.15 was loaded; the next request still has 2.15.
+		$this->assertTrue( ucm_upgrade_manager::is_running_old_code( 2.15, 2.16, 2.15 ) );
+		$this->assertTrue( ucm_upgrade_manager::is_running_old_code( '2.15', '2.16', '2.15' ) );
+		// The new class loaded: carry on.
+		$this->assertFalse( ucm_upgrade_manager::is_running_old_code( 2.15, 2.16, 2.16 ) );
+		// The files said more than the server did. Still new code.
+		$this->assertFalse( ucm_upgrade_manager::is_running_old_code( 2.15, 2.16, 2.17 ) );
+		// Reinstalling the same version proves nothing either way, so it is not refused.
+		$this->assertFalse( ucm_upgrade_manager::is_running_old_code( 2.16, 2.16, 2.16 ) );
+		// Nothing usable to compare, as for the base files the server labels 'N/A'.
+		$this->assertFalse( ucm_upgrade_manager::is_running_old_code( 2.15, 'N/A', 2.15 ) );
+		$this->assertFalse( ucm_upgrade_manager::is_running_old_code( null, 2.16, 2.15 ) );
+	}
+
 	public function test_the_version_on_offer_comes_from_the_files() {
 		// The point of the change: the files are what gets served, so the version in the
 		// files is the version advertised. No manual step on the demo site in between.

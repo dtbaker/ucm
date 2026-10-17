@@ -154,7 +154,12 @@ class ucm_upgrade_manager
 		$temporary = @tempnam( $directory, '.ucmup' );
 		if ( ! $temporary ) {
 			// Nowhere to stage it; the plain write is still better than nothing.
-			return false !== @file_put_contents( $absolute_path, $contents );
+			if ( false === @file_put_contents( $absolute_path, $contents ) ) {
+				return false;
+			}
+			self::forget_compiled_copy( $absolute_path );
+
+			return true;
 		}
 		if ( false === @file_put_contents( $temporary, $contents ) ) {
 			@unlink( $temporary );
@@ -169,8 +174,56 @@ class ucm_upgrade_manager
 
 			return false;
 		}
+		self::forget_compiled_copy( $absolute_path );
 
 		return true;
+	}
+
+	/**
+	 * Tell PHP's opcache that a file it may have compiled has just been replaced.
+	 *
+	 * Opcache only looks at a file's timestamp every opcache.revalidate_freq seconds (2 by
+	 * default, often more on shared hosting, and never with validate_timestamps off). The
+	 * updater writes a plugin's files in one request and runs its database step in the
+	 * next, so without this the database step usually ran the old class: it saw no version
+	 * change, skipped the plugin's upgrade SQL and still reported success.
+	 *
+	 * @param string $absolute_path The file just written.
+	 *
+	 * @return bool True if opcache was told; false if it is missing, off or restricted.
+	 */
+	public static function forget_compiled_copy( $absolute_path ) {
+		if ( ! function_exists( 'opcache_invalidate' ) || ! filter_var( ini_get( 'opcache.enable' ), FILTER_VALIDATE_BOOLEAN ) ) {
+			return false;
+		}
+
+		// opcache.restrict_api turns this into a warning. If it is refused, the version
+		// check in complete_plugin_installation() is what stops a false "success".
+		return @opcache_invalidate( $absolute_path, true );
+	}
+
+	/**
+	 * Is the database step about to run the plugin code from before the update?
+	 *
+	 * The file step remembers the version that was loaded when it started and the version
+	 * the server offered. If the server offered something newer and the database step still
+	 * has the version from before, PHP is running a stale compiled copy, and running
+	 * install_upgrade() would record nothing, skip the upgrade SQL and call it a success.
+	 *
+	 * Compared as numbers, the way plugin::install_upgrade() and the update server do.
+	 *
+	 * @param mixed $version_before  What was loaded when the files were written.
+	 * @param mixed $version_offered What the update server said it was sending.
+	 * @param mixed $version_loaded  What the database step has loaded now.
+	 *
+	 * @return bool
+	 */
+	public static function is_running_old_code( $version_before, $version_offered, $version_loaded ) {
+		if ( ! is_numeric( $version_before ) || ! is_numeric( $version_offered ) || ! is_numeric( $version_loaded ) ) {
+			return false;
+		}
+
+		return (float) $version_offered > (float) $version_before && (float) $version_loaded <= (float) $version_before;
 	}
 
 	/**
@@ -196,6 +249,7 @@ class ucm_upgrade_manager
 	}
 
 	public function install_plugin_update_files( $plugin_name ) {
+		global $plugins;
 		$result = array(
 			'message'     => '',
 			'plugin_name' => $plugin_name,
@@ -244,6 +298,7 @@ class ucm_upgrade_manager
 
 							$checksums = isset( $available_update['file_checksums'] ) && is_array( $available_update['file_checksums'] )
 								? $available_update['file_checksums'] : array();
+							$errors_before = count( $errors );
 
 							foreach ( $available_update['folders'] as $file ) {
 								// Folder names come off the network too, and mkdir() with
@@ -298,6 +353,15 @@ class ucm_upgrade_manager
 								}
 								$result['message'] .= "</span><br/>";
 							}
+							// Hand the database step, which runs in the next request, what it
+							// should expect to find loaded. Only when every file went in: after
+							// a failed write the old version is the honest answer.
+							if ( count( $errors ) === $errors_before && isset( $plugins[ $available_update['key'] ], $available_update['available_version'] ) ) {
+								$_SESSION['_ucm_upgrade_pending'][ $available_update['key'] ] = array(
+									'before'  => $plugins[ $available_update['key'] ]->get_plugin_version(),
+									'offered' => $available_update['available_version'],
+								);
+							}
 						}
 						//exit;
 					} else {
@@ -330,10 +394,18 @@ class ucm_upgrade_manager
 		);
 		$new_system_version = module_config::current_version();
 		$fail               = false;
+		$pending = isset( $_SESSION['_ucm_upgrade_pending'][ $plugin_name ] ) ? $_SESSION['_ucm_upgrade_pending'][ $plugin_name ] : null;
+		unset( $_SESSION['_ucm_upgrade_pending'][ $plugin_name ] );
 		if ( isset( $plugins[ $plugin_name ] ) ) {
-			$result['message'] .= "Processing update: <span style='text-decoration:underline;'>" . $plugin_name . "</span> - Current Version: " . $plugins[ $plugin_name ]->get_plugin_version() . ".... ";
+			$loaded_version     = $plugins[ $plugin_name ]->get_plugin_version();
+			$result['message'] .= "Processing update: <span style='text-decoration:underline;'>" . $plugin_name . "</span> - Current Version: " . $loaded_version . ".... ";
 			ob_start();
-			if ( $version = $plugins[ $plugin_name ]->install_upgrade() ) {
+			if ( $pending && self::is_running_old_code( $pending['before'], $pending['offered'], $loaded_version ) ) {
+				// Running install_upgrade() now would record the old version and skip the
+				// new upgrade SQL. Leave the database alone and say so.
+				$fail               = true;
+				$result['message'] .= '<span class="error_text">' . htmlspecialchars( _l( 'not finished: version %s was installed, but PHP is still running the old copy of this plugin. Nothing was changed in the database. Wait a few seconds, then click "Run Manual Upgrades" on this page to finish.', (string) $pending['offered'] ) ) . '</span> ';
+			} elseif ( $version = $plugins[ $plugin_name ]->install_upgrade() ) {
 				$result['message']  .= '<span class="success_text">all good</span>';
 				$new_system_version = max( $version, $new_system_version );
 				$plugins[ $plugin_name ]->init();
@@ -346,7 +418,7 @@ class ucm_upgrade_manager
 			$result['message'] .= ob_get_clean() . '<br/>';
 			$result['message'] .= '<br/>';
 			if ( $fail ) {
-				$result['message'] .= _( 'Some things failed. Please go back and try again.' );
+				$result['message'] .= _l( 'Some things failed. Please go back and try again.' );
 			} else {
 				$result['message'] .= '<strong>' . _l( 'Success! Everything worked.' ) . '</strong>';
 				module_config::set_system_version( $new_system_version );
