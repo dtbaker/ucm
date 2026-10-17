@@ -9,11 +9,9 @@
         "stripe/stripe-php": "^17.0"
     },
     "require-dev": {
-        "pheromone/phpcs-security-audit": "^2.0",
         "phpstan/extension-installer": "^1.4",
         "phpstan/phpstan": "^2.0",
         "phpunit/phpunit": "^11.0",
-        "rector/rector": "^2.3",
         "squizlabs/php_codesniffer": "^3.13",
         "phpcompatibility/php-compatibility": "^9.3",
         "dealerdirect/phpcodesniffer-composer-installer": "^1.2"
@@ -32,12 +30,7 @@
         "test:e2e": "npm run test:e2e",
         "phpstan": "phpstan analyse --memory-limit=2G",
         "phpstan:baseline": "phpstan analyse --memory-limit=2G --generate-baseline=phpstan-baseline.neon --allow-empty-baseline",
-        "rector": "rector process --dry-run",
-        "rector:fix": "rector process",
         "phpcs": "phpcs -d memory_limit=2G",
-        "phpcs:fix": "phpcbf -d memory_limit=2G",
-        "phpcs:prompt": "./vendor/bin/phpcs --report=json -q -d memory_limit=2G 2>/dev/null | python3 scripts/phpcs-errors-to-prompt.py",
-        "phpcs:prompt:summary": "./vendor/bin/phpcs --report=json -q -d memory_limit=2G 2>/dev/null | python3 scripts/phpcs-errors-to-prompt.py --summary",
-        "security": "phpcs --standard=./vendor/pheromone/phpcs-security-audit/example_base_ruleset.xml --extensions=php includes/"
+        "phpcs:fix": "phpcbf -d memory_limit=2G"
     }
 }

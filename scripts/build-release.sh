@@ -189,7 +189,7 @@ for file in \
 	'Main Files/package.json' 'Main Files/package-lock.json' \
 	'Main Files/playwright.config.ts' 'Main Files/phpcs.xml.dist' \
 	'Main Files/phpstan.neon' 'Main Files/phpstan-baseline.neon' \
-	'Main Files/phpunit.xml' 'Main Files/rector.php' \
+	'Main Files/phpunit.xml' \
 	'Main Files/Dockerfile' 'Main Files/docker-compose.yml' 'Main Files/.dockerignore' \
 	'Main Files/.gitignore' 'Main Files/.gitattributes' \
 	'Main Files/includes/config.local.php' 'Main Files/README.md' 'Main Files/TESTING.md' \
