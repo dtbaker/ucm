@@ -63,7 +63,9 @@ jobs:
           ACTION: ${{ inputs.action || 'restore' }}
         run: |
           case "$ACTION" in restore|repair|snapshot) ;; *) echo "Unknown action: $ACTION"; exit 1;; esac
-          ssh demo "cd '$DEMO_DEPLOY_PATH' && php=/usr/local/php82/bin/php && { [ -x \$php ] || php=php; } && \$php custom/demo/reset.php $ACTION"
+          # -q because the server's PHP is the CGI build, which otherwise prints HTTP headers
+          # first. UCM_DEMO_ACTION because that build may not set $argv.
+          ssh demo "cd '$DEMO_DEPLOY_PATH' && php=/usr/local/php82/bin/php && { [ -x \$php ] || php=php; } && UCM_DEMO_ACTION=$ACTION \$php -q custom/demo/reset.php $ACTION"
       - name: Every demo login signs in
         env:
           DEMO_URL: ${{ secrets.DEMO_URL }}
