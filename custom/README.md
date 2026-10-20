@@ -57,11 +57,21 @@ for the customer and staff, have a role that grants "Can User Login". Any of tho
 missing is created, so the first deploy after this change repairs the demo and takes its
 first snapshot, with all three logins in it.
 
-**What a repaired login can see.** If a customer or staff account has no role that lets it
-sign in, repair gives it "Demo Customer" or "Demo Staff", which grants sign-in and nothing
-else, so those accounts open a nearly empty app. To give them more, edit those roles in the
-demo (Settings > Security Roles), then run **Reset demo** with `snapshot`. Repair leaves a
-role that already works alone.
+**What the logins can see.** `demo/roles.php` lists, by the app's own permission names, what
+the "Demo Staff" role may view: customers, vendors, jobs, quotes, invoices, tickets, timers,
+the calendar, websites, files and contracts, the dashboard, and the staff member's own
+profile. It is an allowlist of view permissions. Nothing under Settings, Security, Backups,
+Finance, Newsletters or reports is in it, and `DemoRolesTest` fails if one is added. "Demo
+Customer" can sign in and nothing more, until it has a customer to be linked to and data to
+see through it. Repair only ever adds to a role, so a permission added by hand in the demo
+stays, and it adds them again after every restore. A permission the database does not have
+yet is skipped and listed in the log; the app registers a permission the first time a page
+checks it.
+
+**The staff account is a staff member.** The installer's sample row makes `staff@example.com`
+a contact of vendor 1, which the demo does not have. Its "Welcome" and "Edit Profile" links
+then opened that vendor's contact page, which was refused, and it was missing from Settings >
+Users. Repair clears the vendor link, so it is an ordinary staff user.
 
 **The snapshot** is `demo-snapshot/ucm-demo.sql.gz`, beside the site's web root rather than
 in it, so a deploy never deletes it and it is never served. A restore loads it into

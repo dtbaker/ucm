@@ -76,9 +76,14 @@ const UCM_DEMO_ACCOUNTS = array(
 		'row'   => array( 'name' => 'User', 'customer_id' => 0, 'vendor_id' => 0, 'is_staff' => -1, 'split_hours' => 0, 'hourly_rate' => 0 ),
 	),
 	'staff@example.com' => array(
-		'label' => 'Staff',
-		'role'  => 'Demo Staff',
-		'row'   => array( 'name' => 'Staff Member', 'customer_id' => 0, 'vendor_id' => 1, 'is_staff' => 1, 'split_hours' => 1, 'hourly_rate' => 50 ),
+		'label'   => 'Staff',
+		'role'    => 'Demo Staff',
+		'row'     => array( 'name' => 'Staff Member', 'customer_id' => 0, 'vendor_id' => 0, 'linked_parent_user_id' => 0, 'is_staff' => 1, 'split_hours' => 1, 'hourly_rate' => 50 ),
+		// The installer's sample row makes this account a contact of vendor 1, which the demo
+		// does not have. Its "Welcome" and "Edit Profile" links then open that vendor's contact
+		// page, which is denied, and it is missing from Settings > Users. A staff member is a
+		// user with no customer or vendor.
+		'enforce' => array( 'is_staff' => 1, 'customer_id' => 0, 'vendor_id' => 0, 'linked_parent_user_id' => 0 ),
 	),
 );
 const UCM_DEMO_PASSWORD = 'password';
@@ -406,6 +411,74 @@ function ucm_demo_grant_login( mysqli $db, $user_id, $role_name, array $permissi
 	}
 }
 
+/** What each demo role may see: custom/demo/roles.php. */
+function ucm_demo_role_spec() {
+	return require __DIR__ . '/roles.php';
+}
+
+/**
+ * Make a role carry every permission its definition lists, as view access.
+ *
+ * Only adds: nothing is taken away, so a permission added to the role by hand stays. Each
+ * name is matched on its category as well, and every matching row is granted, because the
+ * table can hold more than one row for a name and the app uses whichever it finds.
+ *
+ * @param bool $write false only counts what is missing
+ *
+ * @return array pending: how many grants were missing; missing: names with no row yet
+ */
+function ucm_demo_sync_role( mysqli $db, $role_id, array $spec, $write ) {
+	$p       = _DB_PREFIX;
+	$pending = 0;
+	$missing = array();
+	foreach ( $spec as $category => $names ) {
+		foreach ( $names as $name ) {
+			$ids  = array();
+			$find = $db->prepare( "SELECT security_permission_id FROM `{$p}security_permission` WHERE category = ? AND name = ?" );
+			$find->bind_param( 'ss', $category, $name );
+			$find->execute();
+			foreach ( $find->get_result()->fetch_all() as $row ) {
+				$ids[] = (int) $row[0];
+			}
+			if ( ! $ids ) {
+				$missing[] = $category . ': ' . $name;
+				continue;
+			}
+			foreach ( $ids as $permission_id ) {
+				$view = ucm_demo_value( $db, "SELECT view FROM `{$p}security_role_perm` WHERE security_role_id = ? AND security_permission_id = ? LIMIT 1", 'ii', array( $role_id, $permission_id ) );
+				if ( $view !== null && (int) $view === 1 ) {
+					continue;
+				}
+				$pending++;
+				if ( ! $write ) {
+					continue;
+				}
+				if ( $view === null ) {
+					ucm_demo_insert( $db, 'security_role_perm', array( 'security_role_id' => $role_id, 'security_permission_id' => $permission_id, 'view' => 1, 'create_user_id' => 1 ) );
+				} else {
+					$update = $db->prepare( "UPDATE `{$p}security_role_perm` SET view = 1 WHERE security_role_id = ? AND security_permission_id = ?" );
+					$update->bind_param( 'ii', $role_id, $permission_id );
+					$update->execute();
+				}
+			}
+		}
+	}
+
+	return array( 'pending' => $pending, 'missing' => $missing );
+}
+
+/** The id of the role of this name that this user has, or 0. */
+function ucm_demo_user_role( mysqli $db, $user_id, $role_name ) {
+	$p = _DB_PREFIX;
+
+	return (int) ucm_demo_value(
+		$db,
+		"SELECT r.security_role_id FROM `{$p}user_role` ur JOIN `{$p}security_role` r ON r.security_role_id = ur.security_role_id WHERE ur.user_id = ? AND r.name = ? LIMIT 1",
+		'is',
+		array( $user_id, $role_name )
+	);
+}
+
 /** Is this stored value a password hash, rather than plain text or an unsalted MD5? */
 function ucm_demo_is_hash( $stored ) {
 	return (bool) preg_match( '/^\$(2[aby]|argon2(id|i)?)\$/', (string) $stored );
@@ -427,7 +500,7 @@ function ucm_demo_repair( mysqli $db, $write ) {
 	foreach ( UCM_DEMO_ACCOUNTS as $email => $account ) {
 		$label = $account['label'] . ' (' . $email . ')';
 		$user  = null;
-		$find  = $db->prepare( "SELECT user_id, password FROM `{$p}user` WHERE email = ? ORDER BY user_id LIMIT 1" );
+		$find  = $db->prepare( "SELECT * FROM `{$p}user` WHERE email = ? ORDER BY user_id LIMIT 1" );
 		$find->bind_param( 's', $email );
 		$find->execute();
 		$user = $find->get_result()->fetch_assoc();
@@ -443,7 +516,7 @@ function ucm_demo_repair( mysqli $db, $write ) {
 			$row['status_id']   = 1;
 			$row['date_created'] = date( 'Y-m-d' );
 			$user_id            = ucm_demo_insert( $db, 'user', $row );
-			$user               = array( 'user_id' => $user_id, 'password' => '' );
+			$user               = array_merge( $row, array( 'user_id' => $user_id, 'password' => '' ) );
 			$changed            = true;
 			echo "  $label: created.\n";
 		}
@@ -466,22 +539,64 @@ function ucm_demo_repair( mysqli $db, $write ) {
 			}
 		}
 
-		// The administrator is user 1, which is never asked for "Can User Login".
-		if ( $user_id === 1 || ucm_demo_can_login( $db, $user_id, $permission ) ) {
+		// What kind of user it is. Only the staff account has any: see UCM_DEMO_ACCOUNTS.
+		foreach ( isset( $account['enforce'] ) ? $account['enforce'] : array() as $column => $value ) {
+			if ( isset( $user[ $column ] ) && (int) $user[ $column ] === (int) $value ) {
+				continue;
+			}
+			if ( $write ) {
+				$update = $db->prepare( "UPDATE `{$p}user` SET `" . $column . '` = ? WHERE user_id = ?' );
+				$update->bind_param( 'ii', $value, $user_id );
+				$update->execute();
+				$changed = true;
+				echo "  $label: $column set to $value.\n";
+			} else {
+				$problems[] = "$label: $column should be $value.";
+			}
+		}
+
+		// The administrator is user 1, which is never asked for "Can User Login" and has every permission.
+		if ( $user_id === 1 ) {
 			continue;
 		}
-		if ( $write ) {
+		$role_name = $account['role'];
+		$role_id   = ucm_demo_user_role( $db, $user_id, $role_name );
+		$can_login = ucm_demo_can_login( $db, $user_id, $permission );
+		if ( ! $role_id && $can_login ) {
+			// A role somebody gave this account by hand, in the demo. Theirs to shape.
+			continue;
+		}
+		if ( ! $can_login ) {
+			if ( ! $write ) {
+				$problems[] = "$label: no role that grants \"Can User Login\".";
+				continue;
+			}
 			if ( ! $permission ) {
 				$permission = ucm_demo_login_permissions( $db, true );
 			}
-			ucm_demo_grant_login( $db, $user_id, $account['role'], $permission );
+			ucm_demo_grant_login( $db, $user_id, $role_name, $permission );
 			$changed = true;
-			echo "  $label: given the role \"" . $account['role'] . "\", which can sign in.\n";
+			echo "  $label: given the role \"$role_name\", which can sign in.\n";
+			$role_id = ucm_demo_user_role( $db, $user_id, $role_name );
 			if ( ! ucm_demo_can_login( $db, $user_id, $permission ) ) {
 				$problems[] = "$label: still has no role that grants \"Can User Login\" after giving it one.";
 			}
-		} else {
-			$problems[] = "$label: no role that grants \"Can User Login\".";
+		}
+
+		// Our own role: make sure it can see what the demo is for.
+		$spec = ucm_demo_role_spec();
+		if ( $role_id && isset( $spec[ $role_name ] ) ) {
+			$synced = ucm_demo_sync_role( $db, $role_id, $spec[ $role_name ], $write );
+			if ( $synced['pending'] && $write ) {
+				$changed = true;
+				echo "  $label: role \"$role_name\" given " . $synced['pending'] . " view permissions.\n";
+			} elseif ( $synced['pending'] ) {
+				$problems[] = "$label: role \"$role_name\" lacks " . $synced['pending'] . ' of the view permissions it should have.';
+			}
+			if ( $synced['missing'] ) {
+				echo "  $label: " . count( $synced['missing'] ) . ' permissions are not in this database yet, so were skipped: '
+					. implode( ', ', array_slice( $synced['missing'], 0, 6 ) ) . ( count( $synced['missing'] ) > 6 ? ', ...' : '' ) . ".\n";
+			}
 		}
 	}
 	if ( $changed ) {
@@ -571,7 +686,7 @@ try {
 }
 
 if ( $problems ) {
-	fwrite( STDERR, "These demo logins will not work:\n  " . implode( "\n  ", $problems ) . "\n" );
+	fwrite( STDERR, "The demo needs attention:\n  " . implode( "\n  ", $problems ) . "\n" );
 	exit( 2 );
 }
 echo "Every demo login can sign in.\n";
