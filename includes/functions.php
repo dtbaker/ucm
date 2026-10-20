@@ -1,18 +1,101 @@
 <?php
 
 /**
- * Hash a password using bcrypt (PHP password_hash).
- * Replaces legacy MD5 hashing.
+ * Hash a password for storing: bcrypt, at the cost PHP itself defaults to.
+ *
+ * Every hash is salted. password_hash() draws a fresh random salt for each one and stores
+ * it inside the result, so there is no separate salt column to keep, and two users with the
+ * same password do not share a hash.
+ *
+ * Bcrypt is named rather than left to PASSWORD_DEFAULT, which PHP is allowed to change. A
+ * hash from a newer algorithm cannot be checked by a PHP built without it, and this
+ * database moves between hosts: a backup restored somewhere with a different build must
+ * still be able to sign people in. Bcrypt works everywhere.
+ *
+ * The cost is PHP's default as well (PASSWORD_BCRYPT_DEFAULT_COST: 10 before PHP 8.4, 12
+ * from it) rather than a number of ours. Anyone can post to the login form, so every guess
+ * costs the server what a real login does, and on a small shared host a higher cost makes
+ * that noticeably dearer. A host that moves to PHP 8.4 gets the higher default by itself,
+ * and ucm_password_needs_rehash() brings existing hashes up to it as their owners sign in.
+ *
+ * @param string $password what was typed
+ *
+ * @return string
  */
 function ucm_password_hash( $password ) {
-	return password_hash( $password, PASSWORD_DEFAULT );
+	return password_hash( $password, PASSWORD_BCRYPT );
+}
+
+/**
+ * Does this look like a hash written by password_hash()?
+ *
+ * Anchored: the pattern used to be "$2, $a or $y at the start, or $argon2 anywhere", which
+ * accepted a value that merely contained that text.
+ *
+ * @param mixed $hash
+ *
+ * @return bool
+ */
+function ucm_password_is_native_hash( $hash ) {
+	return is_string( $hash ) && (bool) preg_match( '/^\$(2[aby]|argon2(id|i))\$/', $hash );
+}
+
+/**
+ * Is this an old unsalted MD5, the only way passwords were stored before 3.x moved to bcrypt?
+ *
+ * @param mixed $hash
+ *
+ * @return bool
+ */
+function ucm_password_is_legacy_md5( $hash ) {
+	return is_string( $hash ) && strlen( $hash ) === 32 && ctype_xdigit( $hash );
+}
+
+/** The marker in front of an old MD5 that has been wrapped in a real hash. */
+const UCM_PASSWORD_WRAPPED_MD5 = 'md5+';
+
+/**
+ * Is this an old MD5 that has been wrapped in a real hash?
+ *
+ * @param mixed $hash
+ *
+ * @return bool
+ */
+function ucm_password_is_wrapped_md5( $hash ) {
+	return is_string( $hash )
+		&& strncmp( $hash, UCM_PASSWORD_WRAPPED_MD5, strlen( UCM_PASSWORD_WRAPPED_MD5 ) ) === 0
+		&& ucm_password_is_native_hash( substr( $hash, strlen( UCM_PASSWORD_WRAPPED_MD5 ) ) );
+}
+
+/**
+ * Wrap an old unsalted MD5 in a salted bcrypt hash, without knowing the password.
+ *
+ * An unsalted MD5 can be cracked in bulk, by lookup table or by brute force at billions of
+ * guesses a second, and until now it stayed in the table until its owner next signed in. An
+ * account nobody signs in to would keep it for good. This hashes the MD5 itself, which needs
+ * only what is already stored, so the whole table can be fixed at once. Checking a password
+ * then means hashing it with MD5 first, and the hash is replaced with a plain one the next
+ * time that password is typed correctly.
+ *
+ * It does not make a weak password strong, but the attacker now pays for bcrypt on every
+ * guess, with a per-user salt.
+ *
+ * @param string $md5 the 32 character MD5 as stored
+ *
+ * @return string the value to store in its place
+ */
+function ucm_password_wrap_legacy( $md5 ) {
+	return UCM_PASSWORD_WRAPPED_MD5 . ucm_password_hash( strtolower( $md5 ) );
 }
 
 /**
  * Verify a password against a stored hash.
  *
- * Supports both password_hash (bcrypt/argon2) and legacy MD5 for backwards compatibility.
- * Returns true if password matches. When MD5 matches, consider rehashing on next save.
+ * Understands bcrypt and Argon2 hashes, which carry their own salt and settings (Argon2
+ * is checked if a database has any, but nothing here writes it); old
+ * unsalted MD5 hashes, and those same hashes once wrapped (see ucm_password_wrap_legacy());
+ * and the shipped default password, for the administrator only. Returns true if the password
+ * matches. See ucm_password_needs_rehash() for when to store it again.
  *
  * $user_id is needed for the shipped default password, which is only honoured for the
  * administrator - see the branch at the end. A caller that cannot say which account it is
@@ -28,16 +111,18 @@ function ucm_password_verify( $password, $hash, $user_id = null ) {
 	if ( empty( $hash ) ) {
 		return false;
 	}
-	// password_hash format: $2y$... or $argon2...
-	if ( preg_match( '/^\$[2ay]|\$argon2/', $hash ) ) {
+	if ( ucm_password_is_native_hash( $hash ) ) {
 		return password_verify( $password, $hash );
 	}
-	// Legacy MD5 (32 hex chars)
-	if ( strlen( $hash ) === 32 && ctype_xdigit( $hash ) ) {
-		// NOTE: do not re-add a `$password === $hash` branch here. It allowed the stored
-		// MD5 to be replayed as the password itself, turning any database read into an
-		// account takeover (pass-the-hash).
-		return hash_equals( $hash, md5( $password ) );
+	// NOTE: do not add a `$password === $hash` branch to either of the next two. It would
+	// allow the stored value to be replayed as the password itself, turning any database
+	// read into an account takeover (pass-the-hash). The password is hashed first, so the
+	// stored value is never what is compared.
+	if ( ucm_password_is_wrapped_md5( $hash ) ) {
+		return password_verify( md5( $password ), substr( $hash, strlen( UCM_PASSWORD_WRAPPED_MD5 ) ) );
+	}
+	if ( ucm_password_is_legacy_md5( $hash ) ) {
+		return hash_equals( strtolower( $hash ), md5( $password ) );
 	}
 
 	// The shipped install data stores the literal string 'password' rather than a hash,
@@ -169,14 +254,35 @@ function ucm_upload_filename( $file_name ) {
 }
 
 /**
- * Check if a hash is legacy MD5 (should be rehashed).
+ * Should this stored value be replaced by a fresh hash of the same password?
+ *
+ * Call it after a password has been verified, while the plain text is to hand. True for:
+ *  - an old unsalted MD5, or one that was wrapped (see ucm_password_wrap_legacy());
+ *  - a bcrypt hash made at a lower cost than PHP defaults to now. PHP before 8.4 made cost
+ *    10, and a host that moves to 8.4 raises that to 12, which is how existing hashes keep
+ *    up as their owners sign in.
+ *
+ * False for a bcrypt hash at the same cost or a higher one: it is never replaced with a
+ * weaker one, which a database restored from a faster host would otherwise suffer. False for
+ * the shipped literal default, deliberately left as it is because it is the record that
+ * nobody has set a password yet (see ucm_password_is_default()), and for Argon2 hashes.
+ *
+ * @param string $hash what is stored
+ *
+ * @return bool
  */
 function ucm_password_needs_rehash( $hash ) {
 	if ( empty( $hash ) ) {
 		return false;
 	}
+	if ( ucm_password_is_legacy_md5( $hash ) || ucm_password_is_wrapped_md5( $hash ) ) {
+		return true;
+	}
+	if ( is_string( $hash ) && preg_match( '/^\$2[aby]\$(\d\d)\$/', $hash, $match ) ) {
+		return (int) $match[1] < PASSWORD_BCRYPT_DEFAULT_COST;
+	}
 
-	return strlen( $hash ) === 32 && ctype_xdigit( $hash );
+	return false;
 }
 
 /**
