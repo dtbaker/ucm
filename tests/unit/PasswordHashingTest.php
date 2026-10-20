@@ -3,15 +3,18 @@
 use PHPUnit\Framework\TestCase;
 
 /**
- * How passwords are stored: the algorithm, the salt, when a hash is replaced, and what
- * happens to the old unsalted MD5 passwords.
+ * How passwords are stored: bcrypt, the salt, when a hash is replaced, and what happens to
+ * the old unsalted MD5 passwords.
  *
  * PasswordVerifyTest covers who may sign in. This covers the hashes themselves.
  */
 class PasswordHashingTest extends TestCase {
 
-	private function argon2id_is_available() {
-		return in_array( 'argon2id', password_algos(), true );
+	/** The cost of a bcrypt hash, read from the hash itself. */
+	private function cost_of( $hash ) {
+		preg_match( '/^\$2[aby]\$(\d\d)\$/', $hash, $match );
+
+		return (int) $match[1];
 	}
 
 	public function test_every_hash_is_salted() {
@@ -23,38 +26,15 @@ class PasswordHashingTest extends TestCase {
 		$this->assertTrue( ucm_password_verify( 'correct horse battery staple', $second ) );
 	}
 
-	public function test_new_hashes_are_argon2id_where_php_has_it_and_bcrypt_where_not() {
+	public function test_new_hashes_are_bcrypt_at_phps_own_cost_whatever_else_php_offers() {
+		// Argon2 is available on most builds, and PHP may one day change PASSWORD_DEFAULT. Neither
+		// may leak into what is stored: a hash from an algorithm this host lacks cannot be checked
+		// after the database moves, and the cost is left to PHP so a login is no dearer than it
+		// has always been on a small shared host.
 		$hash = ucm_password_hash( 'a password' );
 
-		if ( $this->argon2id_is_available() ) {
-			$this->assertStringStartsWith( '$argon2id$', $hash );
-			$info = password_get_info( $hash );
-			$this->assertSame( 47104, $info['options']['memory_cost'], 'OWASP: 46 MiB' );
-			$this->assertSame( 1, $info['options']['time_cost'] );
-		} else {
-			$this->assertStringStartsWith( '$2y$12$', $hash );
-		}
-	}
-
-	public function test_bcrypt_can_be_kept_for_a_host_that_may_move_its_database() {
-		// The constant is read on every call, so it cannot be defined here without leaking
-		// into other tests. Check the algorithm list the fallback depends on instead.
-		$this->assertContains( ucm_password_algorithm(), array( 'argon2id', '2y' ) );
-		$this->assertSame( array( 'cost' => 12 ), ucm_password_options( '2y' ) );
-	}
-
-	public function test_a_password_longer_than_bcrypt_can_use_is_checked_to_the_end() {
-		if ( ! $this->argon2id_is_available() ) {
-			$this->markTestSkipped( 'this PHP has no Argon2id, so new hashes are bcrypt, which stops at 72 bytes' );
-		}
-		$long = str_repeat( 'a', 80 );
-		$hash = ucm_password_hash( $long );
-
-		$this->assertTrue( ucm_password_verify( $long, $hash ) );
-		$this->assertFalse(
-			ucm_password_verify( str_repeat( 'a', 72 ) . 'something else entirely', $hash ),
-			'bcrypt ignores everything after byte 72, so this would have verified before'
-		);
+		$this->assertStringStartsWith( '$2y$', $hash );
+		$this->assertSame( PASSWORD_BCRYPT_DEFAULT_COST, $this->cost_of( $hash ) );
 	}
 
 	public function test_the_hash_is_not_accepted_as_the_password() {
@@ -69,26 +49,38 @@ class PasswordHashingTest extends TestCase {
 		$this->assertFalse( ucm_password_needs_rehash( ucm_password_hash( 'x' ) ) );
 	}
 
-	public function test_a_weaker_bcrypt_hash_is_replaced() {
-		$old = password_hash( 'x', '2y', array( 'cost' => 10 ) );
+	public function test_a_bcrypt_hash_at_a_lower_cost_is_replaced() {
+		// What a host on PHP before 8.4 made, once it moves to 8.4.
+		$old = password_hash( 'x', PASSWORD_BCRYPT, array( 'cost' => PASSWORD_BCRYPT_DEFAULT_COST - 1 ) );
 
-		$this->assertTrue( ucm_password_needs_rehash( $old ), 'PHP before 8.4 made cost 10 hashes' );
-		$this->assertTrue( ucm_password_verify( 'x', $old ), 'and they must still sign in until then' );
+		$this->assertTrue( ucm_password_needs_rehash( $old ) );
+		$this->assertTrue( ucm_password_verify( 'x', $old ), 'and it must still sign in until then' );
 	}
 
-	public function test_a_bcrypt_hash_moves_to_argon2id_where_available() {
-		$bcrypt = password_hash( 'x', '2y', array( 'cost' => 12 ) );
+	public function test_a_bcrypt_hash_is_never_replaced_by_a_weaker_one() {
+		// A database restored from a host with a faster CPU holds higher costs than this one's
+		// default. Rehashing those at sign in would lower them.
+		$strong = password_hash( 'x', PASSWORD_BCRYPT, array( 'cost' => PASSWORD_BCRYPT_DEFAULT_COST + 1 ) );
 
-		$this->assertSame( $this->argon2id_is_available(), ucm_password_needs_rehash( $bcrypt ) );
+		$this->assertFalse( ucm_password_needs_rehash( $strong ) );
 	}
 
-	public function test_an_argon2id_hash_with_weaker_settings_is_replaced() {
-		if ( ! $this->argon2id_is_available() ) {
+	public function test_a_bcrypt_hash_from_another_tool_is_judged_by_its_cost_too() {
+		// $2a$ and $2b$ are the same algorithm under other names.
+		$cost = str_pad( (string) ( PASSWORD_BCRYPT_DEFAULT_COST - 1 ), 2, '0', STR_PAD_LEFT );
+		$this->assertTrue( ucm_password_needs_rehash( '$2b$' . $cost . '$' . str_repeat( 'a', 53 ) ) );
+		$this->assertFalse( ucm_password_needs_rehash( '$2b$' . PASSWORD_BCRYPT_DEFAULT_COST . '$' . str_repeat( 'a', 53 ) ) );
+	}
+
+	public function test_an_argon2_hash_is_left_alone() {
+		if ( ! in_array( 'argon2id', password_algos(), true ) ) {
 			$this->markTestSkipped( 'no Argon2id in this PHP' );
 		}
-		$weak = password_hash( 'x', 'argon2id', array( 'memory_cost' => 1024, 'time_cost' => 1, 'threads' => 1 ) );
+		// Nothing here writes one, but a database may hold one, and it must not be swapped for bcrypt.
+		$argon = password_hash( 'x', 'argon2id' );
 
-		$this->assertTrue( ucm_password_needs_rehash( $weak ) );
+		$this->assertFalse( ucm_password_needs_rehash( $argon ) );
+		$this->assertTrue( ucm_password_verify( 'x', $argon ) );
 	}
 
 	public function test_the_shipped_default_is_never_rewritten() {
@@ -121,11 +113,12 @@ class PasswordHashingTest extends TestCase {
 		$this->assertFalse( ucm_password_verify( 'wrong password', $wrapped ) );
 	}
 
-	public function test_a_wrapped_md5_is_salted_and_no_longer_an_md5() {
+	public function test_a_wrapped_md5_is_bcrypt_salted_and_no_longer_an_md5() {
 		$md5 = md5( 'old password' );
 		$one = ucm_password_wrap_legacy( $md5 );
 		$two = ucm_password_wrap_legacy( $md5 );
 
+		$this->assertStringStartsWith( 'md5+$2y$', $one );
 		$this->assertNotSame( $one, $two, 'two users with the same old password must not share a hash' );
 		$this->assertFalse( ucm_password_is_legacy_md5( $one ) );
 		$this->assertStringNotContainsString( $md5, $one, 'the MD5 must not be recoverable by reading the value' );
@@ -150,11 +143,11 @@ class PasswordHashingTest extends TestCase {
 		$this->assertFalse( ucm_password_verify( 'md5+not a hash', 'md5+not a hash' ) );
 	}
 
-	public function test_a_hash_that_only_contains_the_algorithm_name_is_not_one() {
+	public function test_a_value_that_only_mentions_a_hash_algorithm_is_not_a_hash() {
 		// The old check accepted '$argon2' anywhere in the value.
 		$this->assertFalse( ucm_password_is_native_hash( 'x$argon2id$y' ) );
 		$this->assertFalse( ucm_password_verify( 'anything', 'x$argon2id$y' ) );
-		$this->assertTrue( ucm_password_is_native_hash( password_hash( 'x', '2y' ) ) );
+		$this->assertTrue( ucm_password_is_native_hash( password_hash( 'x', PASSWORD_BCRYPT ) ) );
 	}
 
 	public function test_uppercase_hex_is_still_an_md5() {

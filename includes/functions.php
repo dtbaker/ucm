@@ -1,77 +1,29 @@
 <?php
 
 /**
- * Which algorithm new password hashes use: argon2id where this PHP has it, bcrypt where not.
+ * Hash a password for storing: bcrypt, at the cost PHP itself defaults to.
  *
- * Argon2id is the algorithm OWASP lists first for storing passwords. It is memory-hard, so
- * a stolen table is expensive to attack with GPUs, and unlike bcrypt it has no 72 byte limit
- * on the password. Not every PHP is built with it, so bcrypt stays as the fallback.
+ * Every hash is salted. password_hash() draws a fresh random salt for each one and stores
+ * it inside the result, so there is no separate salt column to keep, and two users with the
+ * same password do not share a hash.
  *
- * A host that may later move the database to a PHP without Argon2 can stay on bcrypt by
- * putting define( '_UCM_PASSWORD_ALGO', 'bcrypt' ); in includes/config.local.php. A hash
- * written by Argon2id cannot be checked on a PHP that lacks it, and that would lock every
- * user out.
+ * Bcrypt is named rather than left to PASSWORD_DEFAULT, which PHP is allowed to change. A
+ * hash from a newer algorithm cannot be checked by a PHP built without it, and this
+ * database moves between hosts: a backup restored somewhere with a different build must
+ * still be able to sign people in. Bcrypt works everywhere.
  *
- * Every hash is salted, whichever algorithm: password_hash() draws a fresh random salt for
- * each one and stores it inside the result. There is no separate salt column to keep, and
- * two users with the same password do not share a hash.
- *
- * @return string 'argon2id' or PASSWORD_BCRYPT, the names password_hash() takes
- */
-function ucm_password_algorithm() {
-	if ( defined( '_UCM_PASSWORD_ALGO' ) && _UCM_PASSWORD_ALGO === 'bcrypt' ) {
-		return PASSWORD_BCRYPT;
-	}
-	// The name rather than PASSWORD_ARGON2ID, which does not exist in a PHP built without it.
-	return in_array( 'argon2id', password_algos(), true ) ? 'argon2id' : PASSWORD_BCRYPT;
-}
-
-/**
- * The cost settings for an algorithm.
- *
- * Argon2id uses OWASP's first recommended combination, 46 MiB of memory with one pass. PHP's
- * own default is 64 MiB with four, which costs several times as much per attempt. Anyone
- * can post to the login form, so every attempt a guesser makes costs the server what a real
- * login does, and on shared hosting that is the number to keep down. Bcrypt uses cost 12,
- * where PHP before 8.4 defaults to 10.
- *
- * @param string $algorithm from ucm_password_algorithm()
- *
- * @return array
- */
-function ucm_password_options( $algorithm ) {
-	if ( $algorithm === 'argon2id' ) {
-		return array(
-			'memory_cost' => 47104,
-			'time_cost'   => 1,
-			'threads'     => 1,
-		);
-	}
-
-	return array( 'cost' => 12 );
-}
-
-/**
- * Hash a password for storing.
+ * The cost is PHP's default as well (PASSWORD_BCRYPT_DEFAULT_COST: 10 before PHP 8.4, 12
+ * from it) rather than a number of ours. Anyone can post to the login form, so every guess
+ * costs the server what a real login does, and on a small shared host a higher cost makes
+ * that noticeably dearer. A host that moves to PHP 8.4 gets the higher default by itself,
+ * and ucm_password_needs_rehash() brings existing hashes up to it as their owners sign in.
  *
  * @param string $password what was typed
  *
  * @return string
  */
 function ucm_password_hash( $password ) {
-	$algorithm = ucm_password_algorithm();
-	try {
-		$hash = password_hash( $password, $algorithm, ucm_password_options( $algorithm ) );
-	} catch ( Throwable $e ) {
-		$hash = false;
-	}
-	if ( ! is_string( $hash ) || $hash === '' ) {
-		// Argon2id can fail on a host with very little memory to spare. A bcrypt hash is
-		// better than a password that cannot be saved, and the next login upgrades it.
-		$hash = password_hash( $password, PASSWORD_BCRYPT, ucm_password_options( PASSWORD_BCRYPT ) );
-	}
-
-	return $hash;
+	return password_hash( $password, PASSWORD_BCRYPT );
 }
 
 /**
@@ -116,7 +68,7 @@ function ucm_password_is_wrapped_md5( $hash ) {
 }
 
 /**
- * Wrap an old unsalted MD5 in a salted, memory-hard hash, without knowing the password.
+ * Wrap an old unsalted MD5 in a salted bcrypt hash, without knowing the password.
  *
  * An unsalted MD5 can be cracked in bulk, by lookup table or by brute force at billions of
  * guesses a second, and until now it stayed in the table until its owner next signed in. An
@@ -125,7 +77,7 @@ function ucm_password_is_wrapped_md5( $hash ) {
  * then means hashing it with MD5 first, and the hash is replaced with a plain one the next
  * time that password is typed correctly.
  *
- * It does not make a weak password strong, but the attacker now pays for Argon2id on every
+ * It does not make a weak password strong, but the attacker now pays for bcrypt on every
  * guess, with a per-user salt.
  *
  * @param string $md5 the 32 character MD5 as stored
@@ -139,7 +91,8 @@ function ucm_password_wrap_legacy( $md5 ) {
 /**
  * Verify a password against a stored hash.
  *
- * Understands bcrypt and Argon2 hashes, which carry their own salt and settings; old
+ * Understands bcrypt and Argon2 hashes, which carry their own salt and settings (Argon2
+ * is checked if a database has any, but nothing here writes it); old
  * unsalted MD5 hashes, and those same hashes once wrapped (see ucm_password_wrap_legacy());
  * and the shipped default password, for the administrator only. Returns true if the password
  * matches. See ucm_password_needs_rehash() for when to store it again.
@@ -305,12 +258,14 @@ function ucm_upload_filename( $file_name ) {
  *
  * Call it after a password has been verified, while the plain text is to hand. True for:
  *  - an old unsalted MD5, or one that was wrapped (see ucm_password_wrap_legacy());
- *  - a bcrypt or Argon2 hash made with weaker settings than ucm_password_options() asks for
- *    now, or by a different algorithm, which is how a hash moves from bcrypt to Argon2id and
- *    how it keeps up when the cost is raised.
+ *  - a bcrypt hash made at a lower cost than PHP defaults to now. PHP before 8.4 made cost
+ *    10, and a host that moves to 8.4 raises that to 12, which is how existing hashes keep
+ *    up as their owners sign in.
  *
- * False for the shipped literal default, which is deliberately left as it is: it is the
- * record that nobody has set a password yet (see ucm_password_is_default()).
+ * False for a bcrypt hash at the same cost or a higher one: it is never replaced with a
+ * weaker one, which a database restored from a faster host would otherwise suffer. False for
+ * the shipped literal default, deliberately left as it is because it is the record that
+ * nobody has set a password yet (see ucm_password_is_default()), and for Argon2 hashes.
  *
  * @param string $hash what is stored
  *
@@ -323,10 +278,8 @@ function ucm_password_needs_rehash( $hash ) {
 	if ( ucm_password_is_legacy_md5( $hash ) || ucm_password_is_wrapped_md5( $hash ) ) {
 		return true;
 	}
-	if ( ucm_password_is_native_hash( $hash ) ) {
-		$algorithm = ucm_password_algorithm();
-
-		return password_needs_rehash( $hash, $algorithm, ucm_password_options( $algorithm ) );
+	if ( is_string( $hash ) && preg_match( '/^\$2[aby]\$(\d\d)\$/', $hash, $match ) ) {
+		return (int) $match[1] < PASSWORD_BCRYPT_DEFAULT_COST;
 	}
 
 	return false;

@@ -15,7 +15,7 @@ class module_user extends module_base
 		$this->module_position = 550;
 		$this->version         = 2.291;
 	}
-	// 2.291 - 2026-10-20 - passwords: Argon2id for new hashes, and old unsalted MD5 passwords wrapped in a salted hash at upgrade instead of waiting for the next sign in
+	// 2.291 - 2026-10-20 - passwords: old unsalted MD5 passwords wrapped in a salted bcrypt hash at upgrade instead of waiting for the next sign in, and bcrypt hashes brought up to PHP's current cost at sign in
 	// 2.290 - 2026-10-17 - 4.0.0 relaunch: security token on saves, sample logins with a known password closed, escaped output
 	// 2.289 - 2017-05-28 - api improvements
 	// 2.288 - 2017-02-27 - staff member first/last name flag for drop downs
