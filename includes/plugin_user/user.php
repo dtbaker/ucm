@@ -13,8 +13,9 @@ class module_user extends module_base
 	public function __construct() {
 		$this->module_name     = 'user';
 		$this->module_position = 550;
-		$this->version         = 2.290;
+		$this->version         = 2.291;
 	}
+	// 2.291 - 2026-10-20 - passwords: Argon2id for new hashes, and old unsalted MD5 passwords wrapped in a salted hash at upgrade instead of waiting for the next sign in
 	// 2.290 - 2026-10-17 - 4.0.0 relaunch: security token on saves, sample logins with a known password closed, escaped output
 	// 2.289 - 2017-05-28 - api improvements
 	// 2.288 - 2017-02-27 - staff member first/last name flag for drop downs
@@ -1706,7 +1707,38 @@ class module_user extends module_base
 			}
 		}
 
+		self::wrap_legacy_passwords();
+
 		return $sql;
+	}
+
+	/**
+	 * Replace every old unsalted MD5 password with a salted hash of it.
+	 *
+	 * Before 3.x passwords were plain MD5, and the sign in code upgraded each one only when
+	 * its owner next signed in, so an account nobody uses still holds a hash that can be
+	 * looked up or brute forced in bulk. This closes that for the whole table at once, with no
+	 * password needed. See ucm_password_wrap_legacy().
+	 *
+	 * Run directly rather than returned as SQL: the result is a hash, and the upgrade splits
+	 * what it is given on semicolons. Safe to run again, since only 32 character hex values
+	 * are touched. A user who signs in between the read and the write ends up with a wrapped
+	 * hash of the same password, and the next sign in replaces it.
+	 *
+	 * Skipped when the new functions have not been loaded yet - a core file that arrives with
+	 * this update can still be the old copy in memory. The sign in code does the same job one
+	 * account at a time, and the next upgrade run does it for the rest.
+	 */
+	private static function wrap_legacy_passwords() {
+		if ( ! function_exists( 'ucm_password_wrap_legacy' ) ) {
+			return;
+		}
+		foreach ( get_multiple( 'user', array(), 'user_id' ) as $row ) {
+			if ( ! ucm_password_is_legacy_md5( $row['password'] ) ) {
+				continue;
+			}
+			update_insert( 'user_id', $row['user_id'], 'user', array( 'password' => ucm_password_wrap_legacy( $row['password'] ) ) );
+		}
 	}
 
 

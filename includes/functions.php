@@ -1,18 +1,148 @@
 <?php
 
 /**
- * Hash a password using bcrypt (PHP password_hash).
- * Replaces legacy MD5 hashing.
+ * Which algorithm new password hashes use: argon2id where this PHP has it, bcrypt where not.
+ *
+ * Argon2id is the algorithm OWASP lists first for storing passwords. It is memory-hard, so
+ * a stolen table is expensive to attack with GPUs, and unlike bcrypt it has no 72 byte limit
+ * on the password. Not every PHP is built with it, so bcrypt stays as the fallback.
+ *
+ * A host that may later move the database to a PHP without Argon2 can stay on bcrypt by
+ * putting define( '_UCM_PASSWORD_ALGO', 'bcrypt' ); in includes/config.local.php. A hash
+ * written by Argon2id cannot be checked on a PHP that lacks it, and that would lock every
+ * user out.
+ *
+ * Every hash is salted, whichever algorithm: password_hash() draws a fresh random salt for
+ * each one and stores it inside the result. There is no separate salt column to keep, and
+ * two users with the same password do not share a hash.
+ *
+ * @return string 'argon2id' or PASSWORD_BCRYPT, the names password_hash() takes
+ */
+function ucm_password_algorithm() {
+	if ( defined( '_UCM_PASSWORD_ALGO' ) && _UCM_PASSWORD_ALGO === 'bcrypt' ) {
+		return PASSWORD_BCRYPT;
+	}
+	// The name rather than PASSWORD_ARGON2ID, which does not exist in a PHP built without it.
+	return in_array( 'argon2id', password_algos(), true ) ? 'argon2id' : PASSWORD_BCRYPT;
+}
+
+/**
+ * The cost settings for an algorithm.
+ *
+ * Argon2id uses OWASP's first recommended combination, 46 MiB of memory with one pass. PHP's
+ * own default is 64 MiB with four, which costs several times as much per attempt. Anyone
+ * can post to the login form, so every attempt a guesser makes costs the server what a real
+ * login does, and on shared hosting that is the number to keep down. Bcrypt uses cost 12,
+ * where PHP before 8.4 defaults to 10.
+ *
+ * @param string $algorithm from ucm_password_algorithm()
+ *
+ * @return array
+ */
+function ucm_password_options( $algorithm ) {
+	if ( $algorithm === 'argon2id' ) {
+		return array(
+			'memory_cost' => 47104,
+			'time_cost'   => 1,
+			'threads'     => 1,
+		);
+	}
+
+	return array( 'cost' => 12 );
+}
+
+/**
+ * Hash a password for storing.
+ *
+ * @param string $password what was typed
+ *
+ * @return string
  */
 function ucm_password_hash( $password ) {
-	return password_hash( $password, PASSWORD_DEFAULT );
+	$algorithm = ucm_password_algorithm();
+	try {
+		$hash = password_hash( $password, $algorithm, ucm_password_options( $algorithm ) );
+	} catch ( Throwable $e ) {
+		$hash = false;
+	}
+	if ( ! is_string( $hash ) || $hash === '' ) {
+		// Argon2id can fail on a host with very little memory to spare. A bcrypt hash is
+		// better than a password that cannot be saved, and the next login upgrades it.
+		$hash = password_hash( $password, PASSWORD_BCRYPT, ucm_password_options( PASSWORD_BCRYPT ) );
+	}
+
+	return $hash;
+}
+
+/**
+ * Does this look like a hash written by password_hash()?
+ *
+ * Anchored: the pattern used to be "$2, $a or $y at the start, or $argon2 anywhere", which
+ * accepted a value that merely contained that text.
+ *
+ * @param mixed $hash
+ *
+ * @return bool
+ */
+function ucm_password_is_native_hash( $hash ) {
+	return is_string( $hash ) && (bool) preg_match( '/^\$(2[aby]|argon2(id|i))\$/', $hash );
+}
+
+/**
+ * Is this an old unsalted MD5, the only way passwords were stored before 3.x moved to bcrypt?
+ *
+ * @param mixed $hash
+ *
+ * @return bool
+ */
+function ucm_password_is_legacy_md5( $hash ) {
+	return is_string( $hash ) && strlen( $hash ) === 32 && ctype_xdigit( $hash );
+}
+
+/** The marker in front of an old MD5 that has been wrapped in a real hash. */
+const UCM_PASSWORD_WRAPPED_MD5 = 'md5+';
+
+/**
+ * Is this an old MD5 that has been wrapped in a real hash?
+ *
+ * @param mixed $hash
+ *
+ * @return bool
+ */
+function ucm_password_is_wrapped_md5( $hash ) {
+	return is_string( $hash )
+		&& strncmp( $hash, UCM_PASSWORD_WRAPPED_MD5, strlen( UCM_PASSWORD_WRAPPED_MD5 ) ) === 0
+		&& ucm_password_is_native_hash( substr( $hash, strlen( UCM_PASSWORD_WRAPPED_MD5 ) ) );
+}
+
+/**
+ * Wrap an old unsalted MD5 in a salted, memory-hard hash, without knowing the password.
+ *
+ * An unsalted MD5 can be cracked in bulk, by lookup table or by brute force at billions of
+ * guesses a second, and until now it stayed in the table until its owner next signed in. An
+ * account nobody signs in to would keep it for good. This hashes the MD5 itself, which needs
+ * only what is already stored, so the whole table can be fixed at once. Checking a password
+ * then means hashing it with MD5 first, and the hash is replaced with a plain one the next
+ * time that password is typed correctly.
+ *
+ * It does not make a weak password strong, but the attacker now pays for Argon2id on every
+ * guess, with a per-user salt.
+ *
+ * @param string $md5 the 32 character MD5 as stored
+ *
+ * @return string the value to store in its place
+ */
+function ucm_password_wrap_legacy( $md5 ) {
+	return UCM_PASSWORD_WRAPPED_MD5 . ucm_password_hash( strtolower( $md5 ) );
 }
 
 /**
  * Verify a password against a stored hash.
  *
- * Supports both password_hash (bcrypt/argon2) and legacy MD5 for backwards compatibility.
- * Returns true if password matches. When MD5 matches, consider rehashing on next save.
+ * Understands bcrypt and Argon2 hashes, which carry their own salt and settings; old
+ * unsalted MD5 hashes, and those same hashes once wrapped (see ucm_password_wrap_legacy());
+ * and the shipped default password, for the administrator only. Returns true if the password
+ * matches. See ucm_password_needs_rehash() for when to store it again.
  *
  * $user_id is needed for the shipped default password, which is only honoured for the
  * administrator - see the branch at the end. A caller that cannot say which account it is
@@ -28,16 +158,18 @@ function ucm_password_verify( $password, $hash, $user_id = null ) {
 	if ( empty( $hash ) ) {
 		return false;
 	}
-	// password_hash format: $2y$... or $argon2...
-	if ( preg_match( '/^\$[2ay]|\$argon2/', $hash ) ) {
+	if ( ucm_password_is_native_hash( $hash ) ) {
 		return password_verify( $password, $hash );
 	}
-	// Legacy MD5 (32 hex chars)
-	if ( strlen( $hash ) === 32 && ctype_xdigit( $hash ) ) {
-		// NOTE: do not re-add a `$password === $hash` branch here. It allowed the stored
-		// MD5 to be replayed as the password itself, turning any database read into an
-		// account takeover (pass-the-hash).
-		return hash_equals( $hash, md5( $password ) );
+	// NOTE: do not add a `$password === $hash` branch to either of the next two. It would
+	// allow the stored value to be replayed as the password itself, turning any database
+	// read into an account takeover (pass-the-hash). The password is hashed first, so the
+	// stored value is never what is compared.
+	if ( ucm_password_is_wrapped_md5( $hash ) ) {
+		return password_verify( md5( $password ), substr( $hash, strlen( UCM_PASSWORD_WRAPPED_MD5 ) ) );
+	}
+	if ( ucm_password_is_legacy_md5( $hash ) ) {
+		return hash_equals( strtolower( $hash ), md5( $password ) );
 	}
 
 	// The shipped install data stores the literal string 'password' rather than a hash,
@@ -169,14 +301,35 @@ function ucm_upload_filename( $file_name ) {
 }
 
 /**
- * Check if a hash is legacy MD5 (should be rehashed).
+ * Should this stored value be replaced by a fresh hash of the same password?
+ *
+ * Call it after a password has been verified, while the plain text is to hand. True for:
+ *  - an old unsalted MD5, or one that was wrapped (see ucm_password_wrap_legacy());
+ *  - a bcrypt or Argon2 hash made with weaker settings than ucm_password_options() asks for
+ *    now, or by a different algorithm, which is how a hash moves from bcrypt to Argon2id and
+ *    how it keeps up when the cost is raised.
+ *
+ * False for the shipped literal default, which is deliberately left as it is: it is the
+ * record that nobody has set a password yet (see ucm_password_is_default()).
+ *
+ * @param string $hash what is stored
+ *
+ * @return bool
  */
 function ucm_password_needs_rehash( $hash ) {
 	if ( empty( $hash ) ) {
 		return false;
 	}
+	if ( ucm_password_is_legacy_md5( $hash ) || ucm_password_is_wrapped_md5( $hash ) ) {
+		return true;
+	}
+	if ( ucm_password_is_native_hash( $hash ) ) {
+		$algorithm = ucm_password_algorithm();
 
-	return strlen( $hash ) === 32 && ctype_xdigit( $hash );
+		return password_needs_rehash( $hash, $algorithm, ucm_password_options( $algorithm ) );
+	}
+
+	return false;
 }
 
 /**
