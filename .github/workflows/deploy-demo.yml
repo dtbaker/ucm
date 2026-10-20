@@ -123,12 +123,18 @@ jobs:
         env:
           DEMO_DEPLOY_PATH: ${{ secrets.DEMO_DEPLOY_PATH }}
         run: ssh demo "find '$DEMO_DEPLOY_PATH/temp' -maxdepth 1 -name 'cache-*' -delete"
-      - name: Repair the demo logins
-        # The sample customer and staff logins need their password stored as a hash, which
-        # the install data does not do. See custom/demo/reset.php.
+      - name: Repair the demo logins, and take the first snapshot if there is none
+        # The sample admin, customer and staff logins need to exist, with their password
+        # stored as a hash, which the install data does not do. The snapshot is what the
+        # daily reset returns to, and is saved with those logins in it. See
+        # custom/demo/reset.php.
+        #
+        # -q because the server's PHP is the CGI build, which otherwise prints HTTP headers
+        # first. UCM_DEMO_ACTION because that build may not set $argv. A non-zero exit
+        # stops the deploy here, with the script's own message above it.
         env:
           DEMO_DEPLOY_PATH: ${{ secrets.DEMO_DEPLOY_PATH }}
-        run: ssh demo "cd '$DEMO_DEPLOY_PATH' && php=/usr/local/php82/bin/php && { [ -x \$php ] || php=php; } && \$php custom/demo/reset.php repair"
+        run: ssh demo "cd '$DEMO_DEPLOY_PATH' && php=/usr/local/php82/bin/php && { [ -x \$php ] || php=php; } && UCM_DEMO_ACTION=ensure \$php -q custom/demo/reset.php ensure"
       - name: Smoke test
         env:
           DEMO_URL: ${{ secrets.DEMO_URL }}
