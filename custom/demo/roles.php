@@ -30,10 +30,10 @@ return array(
 		// With "Only My Account" that is the only account they are shown.
 		'Config'                => array( 'Users' ),
 		'User Account Access'   => array( 'Only My Account' ),
-		'Job'                   => array( 'Jobs', 'Job Notes', 'Job Groups' ),
+		'Job'                   => array( 'Jobs', 'Job Tasks', 'Job Notes', 'Job Groups' ),
 		'Job Data Access'       => array( 'All jobs in system' ),
 		'Job Task Data Access'  => array( 'All tasks within a job' ),
-		'Quote'                 => array( 'Quotes', 'Quote Notes' ),
+		'Quote'                 => array( 'Quotes', 'Quote Tasks', 'Quote Notes' ),
 		'Quote Data Access'     => array( 'All quotes in system' ),
 		'Quote Task Data Access' => array( 'All tasks within a quote' ),
 		'Invoice'               => array( 'Invoices', 'Invoice Notes' ),
@@ -52,9 +52,27 @@ return array(
 		'User Specific'         => array( 'Can User Login', 'Show Dashboard Alerts', 'Show Dashboard Widgets', 'Show Dashboard Todo List', 'Show Quick Search' ),
 	),
 
-	// Sign in only, for now: the customer login needs a customer to be linked to, and demo
-	// data worth seeing through it.
+	// A contact of the one customer it is linked to, who looks at that customer's own work:
+	// invoices, jobs, quotes, tickets and files. Every Data Access category is the option
+	// that is scoped to the customer, never "All ...", so the other customers' records are not
+	// there to be seen, and it is view access like the rest. Nothing internal is listed: no
+	// notes, no timers, no calendar, no vendors, suppliers or leads.
 	'Demo Customer' => array(
-		'User Specific' => array( 'Can User Login' ),
+		'Customer'             => array( 'Customers', 'Contacts' ),
+		'Customer Data Access' => array( 'Only customer I am assigned to as a contact' ),
+		'Invoice'              => array( 'Invoices' ),
+		'Invoice Data Access'  => array( 'Invoices from customers I have access to' ),
+		'Job'                  => array( 'Jobs', 'Job Tasks' ),
+		'Job Data Access'      => array( 'Jobs from customers I have access to' ),
+		'Job Task Data Access' => array( 'All tasks within a job' ),
+		'Quote'                => array( 'Quotes', 'Quote Tasks' ),
+		'Quote Data Access'    => array( 'Quotes from customers I have access to' ),
+		'Quote Task Data Access' => array( 'All tasks within a quote' ),
+		'Ticket'               => array( 'Tickets' ),
+		'Ticket Access'        => array( 'Only tickets from my customer account' ),
+		'File'                 => array( 'Files' ),
+		'File Data Access'     => array( 'Only files from customers I have access to' ),
+		'Website'              => array( 'Websites' ),
+		'User Specific'        => array( 'Can User Login' ),
 	),
 );

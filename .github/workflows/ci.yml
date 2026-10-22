@@ -107,6 +107,11 @@ jobs:
           coverage: none
       - uses: ramsey/composer-install@65e4f84970763564f46a70b8a54b90d033b3bdda # v3
       - run: ./vendor/bin/phpunit
+      - name: The demo's sample data holds together
+        # Node is already on the runner. The data refers to itself by name, and a typo in it
+        # would otherwise show up as a missing record on the live demo.
+        if: matrix.php == '8.5'
+        run: node --test scripts/demo-seed/data.test.mjs
 
   dependencies:
     # Two separate questions. What we ship has to be clean, so that part blocks. Build

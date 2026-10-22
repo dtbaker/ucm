@@ -67,16 +67,72 @@ class DemoRolesTest extends TestCase {
 		}
 	}
 
-	public function test_a_demo_role_sees_only_the_all_option_of_each_data_access_category() {
+	public function test_the_staff_role_sees_only_the_all_option_of_each_data_access_category() {
 		// The "Data Access" categories are choices, and the app takes the first one it finds.
 		// Granting a narrower one next to "All" would make which applies a matter of order.
-		foreach ( $this->roles() as $role => $categories ) {
-			foreach ( $categories as $category => $names ) {
-				if ( substr( $category, -11 ) === 'Data Access' || $category === 'Ticket Access' ) {
-					$this->assertCount( 1, $names, "$role / $category grants more than one option" );
-					$this->assertMatchesRegularExpression( '/^All /', $names[0], "$role / $category is not the 'All' option" );
-				}
+		foreach ( $this->roles()['Demo Staff'] as $category => $names ) {
+			if ( $this->is_data_access( $category ) ) {
+				$this->assertCount( 1, $names, "Demo Staff / $category grants more than one option" );
+				$this->assertMatchesRegularExpression( '/^All /', $names[0], "Demo Staff / $category is not the 'All' option" );
 			}
 		}
+	}
+
+	public function test_the_customer_role_sees_only_what_is_scoped_to_its_own_customer() {
+		// The customer login is open to anyone, and is a contact of one made-up customer. Every
+		// data access it has must be an option the app narrows to that customer, one option each,
+		// and never "All ...", or it would see every other customer's invoices, jobs and tickets.
+		$scoped = array(
+			'Customer Data Access' => 'Only customer I am assigned to as a contact',
+			'Invoice Data Access'  => 'Invoices from customers I have access to',
+			'Job Data Access'      => 'Jobs from customers I have access to',
+			'Quote Data Access'    => 'Quotes from customers I have access to',
+			'Ticket Access'        => 'Only tickets from my customer account',
+			'File Data Access'     => 'Only files from customers I have access to',
+			// A task is only reached through a job or quote, which are already narrowed.
+			'Job Task Data Access'   => 'All tasks within a job',
+			'Quote Task Data Access' => 'All tasks within a quote',
+		);
+		$role   = $this->roles()['Demo Customer'];
+
+		foreach ( $role as $category => $names ) {
+			if ( ! $this->is_data_access( $category ) ) {
+				continue;
+			}
+			$this->assertArrayHasKey( $category, $scoped, "Demo Customer has a data access category, $category, this test does not know is scoped to the customer" );
+			$this->assertSame( array( $scoped[ $category ] ), $names, "Demo Customer / $category is not the option scoped to the customer" );
+		}
+		// Each record type it can open is narrowed: no list without its data access.
+		foreach ( array( 'Customer', 'Invoice', 'Job', 'Quote', 'Ticket', 'File' ) as $module ) {
+			$this->assertArrayHasKey( $module, $role, "Demo Customer should be able to view its $module records" );
+			$access = 'Ticket' === $module ? 'Ticket Access' : $module . ' Data Access';
+			$this->assertArrayHasKey( $access, $role, "Demo Customer can open $module records with nothing narrowing them to its own" );
+		}
+	}
+
+	public function test_the_customer_role_is_limited_to_what_a_portal_contact_looks_at() {
+		// Allowlist of categories. Anything internal to the agency (notes, timers, the calendar,
+		// vendors, suppliers, leads, finance) is a category this does not list, so adding one
+		// to the role fails here and has to be looked at.
+		$allowed = array(
+			'Customer', 'Customer Data Access', 'Invoice', 'Invoice Data Access', 'Job', 'Job Data Access',
+			'Job Task Data Access', 'Quote', 'Quote Data Access', 'Quote Task Data Access', 'Ticket',
+			'Ticket Access', 'File', 'File Data Access', 'Website', 'User Specific',
+		);
+		$role    = $this->roles()['Demo Customer'];
+
+		$this->assertSame( array(), array_values( array_diff( array_keys( $role ), $allowed ) ), 'Demo Customer is given a category a portal contact does not need' );
+		$this->assertSame( array( 'Can User Login' ), $role['User Specific'], 'Demo Customer is given more than signing in under User Specific' );
+		// Notes on a customer, an invoice, a job or a ticket are the agency's own.
+		foreach ( $role as $category => $names ) {
+			foreach ( $names as $name ) {
+				$this->assertDoesNotMatchRegularExpression( '/Notes|Groups|Advanced|Timers|Leads|Suppliers|^All Customer Contacts$/', $name, "Demo Customer / $name is internal to the agency" );
+			}
+		}
+		$this->assertSame( array( 'Customers', 'Contacts' ), $role['Customer'], 'Demo Customer is given more than its customer and its contacts' );
+	}
+
+	private function is_data_access( $category ) {
+		return substr( $category, -11 ) === 'Data Access' || 'Ticket Access' === $category;
 	}
 }

@@ -66,6 +66,24 @@ jobs:
           # -q because the server's PHP is the CGI build, which otherwise prints HTTP headers
           # first. UCM_DEMO_ACTION because that build may not set $argv.
           ssh demo "cd '$DEMO_DEPLOY_PATH' && php=/usr/local/php82/bin/php && { [ -x \$php ] || php=php; } && UCM_DEMO_ACTION=$ACTION \$php -q custom/demo/reset.php $ACTION"
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        if: github.event_name == 'schedule' || inputs.action == 'restore'
+        with:
+          node-version: '20'
+      - name: Give the demo its sample data, if the snapshot has none
+        # The snapshot holds it once the deploy has made it. This is only for a snapshot taken
+        # before there was any, and does nothing when the data is there. See
+        # scripts/demo-seed.mjs.
+        id: seed
+        if: github.event_name == 'schedule' || inputs.action == 'restore'
+        env:
+          DEMO_URL: ${{ secrets.DEMO_URL }}
+        run: node scripts/demo-seed.mjs "$DEMO_URL"
+      - name: Save the sample data in the snapshot
+        if: steps.seed.outputs.seeded == 'true'
+        env:
+          DEMO_DEPLOY_PATH: ${{ secrets.DEMO_DEPLOY_PATH }}
+        run: ssh demo "cd '$DEMO_DEPLOY_PATH' && php=/usr/local/php82/bin/php && { [ -x \$php ] || php=php; } && UCM_DEMO_ACTION=seeded \$php -q custom/demo/reset.php seeded"
       - name: Every demo login signs in
         env:
           DEMO_URL: ${{ secrets.DEMO_URL }}

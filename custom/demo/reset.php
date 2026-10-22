@@ -9,6 +9,7 @@
  *   php -q custom/demo/reset.php restore    put that copy back, then repair
  *   php -q custom/demo/reset.php repair     make the sample logins work
  *   php -q custom/demo/reset.php ensure     repair, then take the first snapshot if there is none
+ *   php -q custom/demo/reset.php seeded     the sample data was just made: date it, repair, snapshot
  *   php -q custom/demo/reset.php check      report what repair would change, changing nothing
  *
  * The "Reset demo" GitHub workflow runs restore on a schedule, and "Deploy to demo" runs
@@ -28,6 +29,10 @@
  *
  * snapshot repairs first and refuses to save anything that is still broken, so a snapshot
  * always holds all three working logins.
+ *
+ * The sample data (scripts/demo-seed.mjs) is dated from the day it was made. Whenever the demo
+ * is restored, or a snapshot is taken, every date in it is moved forward by the days since,
+ * so the demo never looks as if nobody has used it for a month. See custom/demo/dates.php.
  *
  * Exit codes: 0 fine, 1 failed, 2 a login still cannot work, 64 unknown command.
  */
@@ -607,6 +612,118 @@ function ucm_demo_repair( mysqli $db, $write ) {
 	return $problems;
 }
 
+/** The config row that remembers which day the sample data's dates are measured from. */
+const UCM_DEMO_ANCHOR_KEY = 'demo_data_date';
+
+/** What each table's date columns are called: custom/demo/dates.php. */
+function ucm_demo_date_columns() {
+	return require __DIR__ . '/dates.php';
+}
+
+/** The day the sample data's dates are measured from, or null if there is no sample data. */
+function ucm_demo_anchor( mysqli $db ) {
+	$value = ucm_demo_value( $db, 'SELECT val FROM `' . _DB_PREFIX . 'config` WHERE `key` = ?', 's', array( UCM_DEMO_ANCHOR_KEY ) );
+
+	return ( is_string( $value ) && preg_match( '/^\d{4}-\d{2}-\d{2}$/', $value ) ) ? $value : null;
+}
+
+function ucm_demo_set_anchor( mysqli $db, $day ) {
+	$key = UCM_DEMO_ANCHOR_KEY;
+	$set = $db->prepare( 'INSERT INTO `' . _DB_PREFIX . 'config` (`key`, `val`) VALUES (?, ?) ON DUPLICATE KEY UPDATE `val` = VALUES(`val`)' );
+	$set->bind_param( 'ss', $key, $day );
+	$set->execute();
+}
+
+/** Whole days from one YYYY-MM-DD to another; negative when $to is the earlier. */
+function ucm_demo_days_between( $from, $to ) {
+	$diff = ( new DateTime( $from, new DateTimeZone( 'UTC' ) ) )->diff( new DateTime( $to, new DateTimeZone( 'UTC' ) ) );
+
+	return $diff->invert ? -$diff->days : $diff->days;
+}
+
+/**
+ * Move every date in the sample data forward by the days since it was last dated.
+ *
+ * The data is made once, with dates measured back from that day (scripts/demo-seed/data.mjs),
+ * and a snapshot keeps them exactly as they were. This runs after every restore, so what a
+ * visitor sees is always measured from today: the invoice that was due in a week is due in a
+ * week, and the one that was overdue is overdue by as long as it was. Totals, statuses and
+ * relationships do not depend on the date, so nothing else needs touching.
+ *
+ * Does nothing when there is no sample data (no recorded day), or it is already today's.
+ *
+ * @param string|null $today YYYY-MM-DD, for the tests
+ *
+ * @return int the days moved
+ */
+function ucm_demo_rebase( mysqli $db, $today = null ) {
+	$anchor = ucm_demo_anchor( $db );
+	$today  = $today ?: date( 'Y-m-d' );
+	if ( $anchor === null ) {
+		return 0;
+	}
+	$days = ucm_demo_days_between( $anchor, $today );
+	if ( $days <= 0 ) {
+		return 0;
+	}
+	$tables = ucm_demo_tables( $db );
+	foreach ( ucm_demo_date_columns() as $table => $columns ) {
+		if ( ! in_array( _DB_PREFIX . $table, $tables, true ) ) {
+			continue;
+		}
+		$have = array();
+		foreach ( $db->query( 'SHOW COLUMNS FROM `' . _DB_PREFIX . $table . '`' )->fetch_all( MYSQLI_ASSOC ) as $column ) {
+			$have[ $column['Field'] ] = true;
+		}
+		foreach ( $columns as $column => $kind ) {
+			if ( ! isset( $have[ $column ] ) ) {
+				continue;
+			}
+			if ( $kind === 'date' ) {
+				$sql = 'UPDATE `' . _DB_PREFIX . $table . '` SET `' . $column . '` = DATE_ADD(`' . $column . "`, INTERVAL $days DAY) WHERE `" . $column . "` > '0000-00-00'";
+			} else {
+				$sql = 'UPDATE `' . _DB_PREFIX . $table . '` SET `' . $column . '` = `' . $column . '` + ' . ( $days * 86400 ) . ' WHERE `' . $column . '` > 0';
+			}
+			$db->query( $sql );
+		}
+	}
+	ucm_demo_set_anchor( $db, $today );
+	ucm_demo_clear_caches( $db, dirname( __DIR__, 2 ) );
+	echo "  Sample data dates moved forward $days days.\n";
+
+	return $days;
+}
+
+/**
+ * Give the hours logged against job tasks the days they were worked.
+ *
+ * The app stamps a logged hour with the moment it was logged and has no field to say
+ * otherwise, so everything the seed script logged in one minute would read as 129 hours
+ * worked today. A task that is done is dated when it was done; one still going is spread
+ * over the last few days. This is the only date the seed cannot set through the forms.
+ *
+ * @return int the log entries dated
+ */
+function ucm_demo_date_time_logs( mysqli $db, $today = null ) {
+	$p      = _DB_PREFIX;
+	$today  = $today ?: date( 'Y-m-d' );
+	$noon   = function ( $day ) {
+		return (int) ( new DateTime( $day . ' 12:00:00', new DateTimeZone( 'UTC' ) ) )->format( 'U' );
+	};
+	$logs   = $db->query( "SELECT l.task_log_id, l.task_id, t.date_done FROM `{$p}task_log` l LEFT JOIN `{$p}task` t ON t.task_id = l.task_id ORDER BY l.task_log_id" )->fetch_all( MYSQLI_ASSOC );
+	$update = $db->prepare( "UPDATE `{$p}task_log` SET log_time = ? WHERE task_log_id = ?" );
+	foreach ( $logs as $log ) {
+		$done = $log['date_done'];
+		$day  = ( $done && $done !== '0000-00-00' ) ? $done : date( 'Y-m-d', strtotime( $today . ' -' . ( 1 + (int) $log['task_id'] % 6 ) . ' days' ) );
+		$time = $noon( $day );
+		$id   = (int) $log['task_log_id'];
+		$update->bind_param( 'ii', $time, $id );
+		$update->execute();
+	}
+
+	return count( $logs );
+}
+
 /**
  * Repair, then save the snapshot, unless a login still cannot work: a snapshot that cannot
  * sign in would hand the next reset broken logins.
@@ -614,6 +731,8 @@ function ucm_demo_repair( mysqli $db, $write ) {
  * @return string[] problems; empty when the snapshot was saved
  */
 function ucm_demo_take_snapshot( mysqli $db, $file ) {
+	// Saved already dated from today, so the next restore has the fewest days to move.
+	ucm_demo_rebase( $db );
 	echo "Repairing the demo logins:\n";
 	$problems = ucm_demo_repair( $db, true );
 	if ( $problems ) {
@@ -652,6 +771,7 @@ try {
 			$statements = ucm_demo_restore( $db, $snapshot );
 			echo "Restored $statements statements from $snapshot\n";
 			ucm_demo_clear_caches( $db, $root );
+			ucm_demo_rebase( $db );
 			// The snapshot may predate a password change.
 			echo "Repairing the demo logins:\n";
 			$problems = ucm_demo_repair( $db, true );
@@ -667,9 +787,18 @@ try {
 				echo "No snapshot yet, so the demo is saved as it is now.\n";
 				$problems = ucm_demo_take_snapshot( $db, $snapshot );
 			} else {
+				ucm_demo_rebase( $db );
 				echo "Repairing the demo logins:\n";
 				$problems = ucm_demo_repair( $db, true );
 			}
+			break;
+
+		case 'seeded':
+			// scripts/demo-seed.mjs has just made the sample data, and made it today.
+			echo 'Dated ' . ucm_demo_date_time_logs( $db ) . " logged hours.\n";
+			ucm_demo_set_anchor( $db, date( 'Y-m-d' ) );
+			// Repair now has every page's permissions to hand: the seed opened them all.
+			$problems = ucm_demo_take_snapshot( $db, $snapshot );
 			break;
 
 		case 'check':
@@ -677,7 +806,7 @@ try {
 			break;
 
 		default:
-			fwrite( STDERR, "Usage: php -q custom/demo/reset.php snapshot|restore|repair|ensure|check\n" );
+			fwrite( STDERR, "Usage: php -q custom/demo/reset.php snapshot|restore|repair|ensure|seeded|check\n" );
 			exit( 64 );
 	}
 } catch ( Throwable $e ) {
