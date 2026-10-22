@@ -135,6 +135,25 @@ jobs:
         env:
           DEMO_DEPLOY_PATH: ${{ secrets.DEMO_DEPLOY_PATH }}
         run: ssh demo "cd '$DEMO_DEPLOY_PATH' && php=/usr/local/php82/bin/php && { [ -x \$php ] || php=php; } && UCM_DEMO_ACTION=ensure \$php -q custom/demo/reset.php ensure"
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: '20'
+      - name: Give the demo its sample data, if it has none
+        # A small made-up agency's customers, jobs, invoices and tickets, made by posting the
+        # app's own forms as the public administrator login, so the totals and statuses are
+        # the app's. It does nothing when the data is already there, so every deploy after
+        # the first leaves it alone. See scripts/demo-seed.mjs.
+        id: seed
+        env:
+          DEMO_URL: ${{ secrets.DEMO_URL }}
+        run: node scripts/demo-seed.mjs "$DEMO_URL"
+      - name: Save the sample data in the snapshot
+        # Otherwise the next daily reset would put the empty demo back. Only when the data
+        # was just made; "seeded" dates it, repairs the logins and takes the snapshot.
+        if: steps.seed.outputs.seeded == 'true'
+        env:
+          DEMO_DEPLOY_PATH: ${{ secrets.DEMO_DEPLOY_PATH }}
+        run: ssh demo "cd '$DEMO_DEPLOY_PATH' && php=/usr/local/php82/bin/php && { [ -x \$php ] || php=php; } && UCM_DEMO_ACTION=seeded \$php -q custom/demo/reset.php seeded"
       - name: Smoke test
         env:
           DEMO_URL: ${{ secrets.DEMO_URL }}

@@ -9,6 +9,7 @@
  *   php -q custom/demo/reset.php restore    put that copy back, then repair
  *   php -q custom/demo/reset.php repair     make the sample logins work
  *   php -q custom/demo/reset.php ensure     repair, then take the first snapshot if there is none
+ *   php -q custom/demo/reset.php seeded     the sample data was just made: date it, repair, snapshot
  *   php -q custom/demo/reset.php check      report what repair would change, changing nothing
  *
  * The "Reset demo" GitHub workflow runs restore on a schedule, and "Deploy to demo" runs
@@ -28,6 +29,10 @@
  *
  * snapshot repairs first and refuses to save anything that is still broken, so a snapshot
  * always holds all three working logins.
+ *
+ * The sample data (scripts/demo-seed.mjs) is dated from the day it was made. Whenever the demo
+ * is restored, or a snapshot is taken, every date in it is moved forward by the days since,
+ * so the demo never looks as if nobody has used it for a month. See custom/demo/dates.php.
  *
  * Exit codes: 0 fine, 1 failed, 2 a login still cannot work, 64 unknown command.
  */
@@ -76,9 +81,14 @@ const UCM_DEMO_ACCOUNTS = array(
 		'row'   => array( 'name' => 'User', 'customer_id' => 0, 'vendor_id' => 0, 'is_staff' => -1, 'split_hours' => 0, 'hourly_rate' => 0 ),
 	),
 	'staff@example.com' => array(
-		'label' => 'Staff',
-		'role'  => 'Demo Staff',
-		'row'   => array( 'name' => 'Staff Member', 'customer_id' => 0, 'vendor_id' => 1, 'is_staff' => 1, 'split_hours' => 1, 'hourly_rate' => 50 ),
+		'label'   => 'Staff',
+		'role'    => 'Demo Staff',
+		'row'     => array( 'name' => 'Staff Member', 'customer_id' => 0, 'vendor_id' => 0, 'linked_parent_user_id' => 0, 'is_staff' => 1, 'split_hours' => 1, 'hourly_rate' => 50 ),
+		// The installer's sample row makes this account a contact of vendor 1, which the demo
+		// does not have. Its "Welcome" and "Edit Profile" links then open that vendor's contact
+		// page, which is denied, and it is missing from Settings > Users. A staff member is a
+		// user with no customer or vendor.
+		'enforce' => array( 'is_staff' => 1, 'customer_id' => 0, 'vendor_id' => 0, 'linked_parent_user_id' => 0 ),
 	),
 );
 const UCM_DEMO_PASSWORD = 'password';
@@ -406,6 +416,74 @@ function ucm_demo_grant_login( mysqli $db, $user_id, $role_name, array $permissi
 	}
 }
 
+/** What each demo role may see: custom/demo/roles.php. */
+function ucm_demo_role_spec() {
+	return require __DIR__ . '/roles.php';
+}
+
+/**
+ * Make a role carry every permission its definition lists, as view access.
+ *
+ * Only adds: nothing is taken away, so a permission added to the role by hand stays. Each
+ * name is matched on its category as well, and every matching row is granted, because the
+ * table can hold more than one row for a name and the app uses whichever it finds.
+ *
+ * @param bool $write false only counts what is missing
+ *
+ * @return array pending: how many grants were missing; missing: names with no row yet
+ */
+function ucm_demo_sync_role( mysqli $db, $role_id, array $spec, $write ) {
+	$p       = _DB_PREFIX;
+	$pending = 0;
+	$missing = array();
+	foreach ( $spec as $category => $names ) {
+		foreach ( $names as $name ) {
+			$ids  = array();
+			$find = $db->prepare( "SELECT security_permission_id FROM `{$p}security_permission` WHERE category = ? AND name = ?" );
+			$find->bind_param( 'ss', $category, $name );
+			$find->execute();
+			foreach ( $find->get_result()->fetch_all() as $row ) {
+				$ids[] = (int) $row[0];
+			}
+			if ( ! $ids ) {
+				$missing[] = $category . ': ' . $name;
+				continue;
+			}
+			foreach ( $ids as $permission_id ) {
+				$view = ucm_demo_value( $db, "SELECT view FROM `{$p}security_role_perm` WHERE security_role_id = ? AND security_permission_id = ? LIMIT 1", 'ii', array( $role_id, $permission_id ) );
+				if ( $view !== null && (int) $view === 1 ) {
+					continue;
+				}
+				$pending++;
+				if ( ! $write ) {
+					continue;
+				}
+				if ( $view === null ) {
+					ucm_demo_insert( $db, 'security_role_perm', array( 'security_role_id' => $role_id, 'security_permission_id' => $permission_id, 'view' => 1, 'create_user_id' => 1 ) );
+				} else {
+					$update = $db->prepare( "UPDATE `{$p}security_role_perm` SET view = 1 WHERE security_role_id = ? AND security_permission_id = ?" );
+					$update->bind_param( 'ii', $role_id, $permission_id );
+					$update->execute();
+				}
+			}
+		}
+	}
+
+	return array( 'pending' => $pending, 'missing' => $missing );
+}
+
+/** The id of the role of this name that this user has, or 0. */
+function ucm_demo_user_role( mysqli $db, $user_id, $role_name ) {
+	$p = _DB_PREFIX;
+
+	return (int) ucm_demo_value(
+		$db,
+		"SELECT r.security_role_id FROM `{$p}user_role` ur JOIN `{$p}security_role` r ON r.security_role_id = ur.security_role_id WHERE ur.user_id = ? AND r.name = ? LIMIT 1",
+		'is',
+		array( $user_id, $role_name )
+	);
+}
+
 /** Is this stored value a password hash, rather than plain text or an unsalted MD5? */
 function ucm_demo_is_hash( $stored ) {
 	return (bool) preg_match( '/^\$(2[aby]|argon2(id|i)?)\$/', (string) $stored );
@@ -427,7 +505,7 @@ function ucm_demo_repair( mysqli $db, $write ) {
 	foreach ( UCM_DEMO_ACCOUNTS as $email => $account ) {
 		$label = $account['label'] . ' (' . $email . ')';
 		$user  = null;
-		$find  = $db->prepare( "SELECT user_id, password FROM `{$p}user` WHERE email = ? ORDER BY user_id LIMIT 1" );
+		$find  = $db->prepare( "SELECT * FROM `{$p}user` WHERE email = ? ORDER BY user_id LIMIT 1" );
 		$find->bind_param( 's', $email );
 		$find->execute();
 		$user = $find->get_result()->fetch_assoc();
@@ -443,7 +521,7 @@ function ucm_demo_repair( mysqli $db, $write ) {
 			$row['status_id']   = 1;
 			$row['date_created'] = date( 'Y-m-d' );
 			$user_id            = ucm_demo_insert( $db, 'user', $row );
-			$user               = array( 'user_id' => $user_id, 'password' => '' );
+			$user               = array_merge( $row, array( 'user_id' => $user_id, 'password' => '' ) );
 			$changed            = true;
 			echo "  $label: created.\n";
 		}
@@ -466,22 +544,64 @@ function ucm_demo_repair( mysqli $db, $write ) {
 			}
 		}
 
-		// The administrator is user 1, which is never asked for "Can User Login".
-		if ( $user_id === 1 || ucm_demo_can_login( $db, $user_id, $permission ) ) {
+		// What kind of user it is. Only the staff account has any: see UCM_DEMO_ACCOUNTS.
+		foreach ( isset( $account['enforce'] ) ? $account['enforce'] : array() as $column => $value ) {
+			if ( isset( $user[ $column ] ) && (int) $user[ $column ] === (int) $value ) {
+				continue;
+			}
+			if ( $write ) {
+				$update = $db->prepare( "UPDATE `{$p}user` SET `" . $column . '` = ? WHERE user_id = ?' );
+				$update->bind_param( 'ii', $value, $user_id );
+				$update->execute();
+				$changed = true;
+				echo "  $label: $column set to $value.\n";
+			} else {
+				$problems[] = "$label: $column should be $value.";
+			}
+		}
+
+		// The administrator is user 1, which is never asked for "Can User Login" and has every permission.
+		if ( $user_id === 1 ) {
 			continue;
 		}
-		if ( $write ) {
+		$role_name = $account['role'];
+		$role_id   = ucm_demo_user_role( $db, $user_id, $role_name );
+		$can_login = ucm_demo_can_login( $db, $user_id, $permission );
+		if ( ! $role_id && $can_login ) {
+			// A role somebody gave this account by hand, in the demo. Theirs to shape.
+			continue;
+		}
+		if ( ! $can_login ) {
+			if ( ! $write ) {
+				$problems[] = "$label: no role that grants \"Can User Login\".";
+				continue;
+			}
 			if ( ! $permission ) {
 				$permission = ucm_demo_login_permissions( $db, true );
 			}
-			ucm_demo_grant_login( $db, $user_id, $account['role'], $permission );
+			ucm_demo_grant_login( $db, $user_id, $role_name, $permission );
 			$changed = true;
-			echo "  $label: given the role \"" . $account['role'] . "\", which can sign in.\n";
+			echo "  $label: given the role \"$role_name\", which can sign in.\n";
+			$role_id = ucm_demo_user_role( $db, $user_id, $role_name );
 			if ( ! ucm_demo_can_login( $db, $user_id, $permission ) ) {
 				$problems[] = "$label: still has no role that grants \"Can User Login\" after giving it one.";
 			}
-		} else {
-			$problems[] = "$label: no role that grants \"Can User Login\".";
+		}
+
+		// Our own role: make sure it can see what the demo is for.
+		$spec = ucm_demo_role_spec();
+		if ( $role_id && isset( $spec[ $role_name ] ) ) {
+			$synced = ucm_demo_sync_role( $db, $role_id, $spec[ $role_name ], $write );
+			if ( $synced['pending'] && $write ) {
+				$changed = true;
+				echo "  $label: role \"$role_name\" given " . $synced['pending'] . " view permissions.\n";
+			} elseif ( $synced['pending'] ) {
+				$problems[] = "$label: role \"$role_name\" lacks " . $synced['pending'] . ' of the view permissions it should have.';
+			}
+			if ( $synced['missing'] ) {
+				echo "  $label: " . count( $synced['missing'] ) . ' permissions are not in this database yet, so were skipped: '
+					. implode( ', ', array_slice( $synced['missing'], 0, 6 ) ) . ( count( $synced['missing'] ) > 6 ? ', ...' : '' ) . ".\n";
+			}
 		}
 	}
 	if ( $changed ) {
@@ -492,6 +612,118 @@ function ucm_demo_repair( mysqli $db, $write ) {
 	return $problems;
 }
 
+/** The config row that remembers which day the sample data's dates are measured from. */
+const UCM_DEMO_ANCHOR_KEY = 'demo_data_date';
+
+/** What each table's date columns are called: custom/demo/dates.php. */
+function ucm_demo_date_columns() {
+	return require __DIR__ . '/dates.php';
+}
+
+/** The day the sample data's dates are measured from, or null if there is no sample data. */
+function ucm_demo_anchor( mysqli $db ) {
+	$value = ucm_demo_value( $db, 'SELECT val FROM `' . _DB_PREFIX . 'config` WHERE `key` = ?', 's', array( UCM_DEMO_ANCHOR_KEY ) );
+
+	return ( is_string( $value ) && preg_match( '/^\d{4}-\d{2}-\d{2}$/', $value ) ) ? $value : null;
+}
+
+function ucm_demo_set_anchor( mysqli $db, $day ) {
+	$key = UCM_DEMO_ANCHOR_KEY;
+	$set = $db->prepare( 'INSERT INTO `' . _DB_PREFIX . 'config` (`key`, `val`) VALUES (?, ?) ON DUPLICATE KEY UPDATE `val` = VALUES(`val`)' );
+	$set->bind_param( 'ss', $key, $day );
+	$set->execute();
+}
+
+/** Whole days from one YYYY-MM-DD to another; negative when $to is the earlier. */
+function ucm_demo_days_between( $from, $to ) {
+	$diff = ( new DateTime( $from, new DateTimeZone( 'UTC' ) ) )->diff( new DateTime( $to, new DateTimeZone( 'UTC' ) ) );
+
+	return $diff->invert ? -$diff->days : $diff->days;
+}
+
+/**
+ * Move every date in the sample data forward by the days since it was last dated.
+ *
+ * The data is made once, with dates measured back from that day (scripts/demo-seed/data.mjs),
+ * and a snapshot keeps them exactly as they were. This runs after every restore, so what a
+ * visitor sees is always measured from today: the invoice that was due in a week is due in a
+ * week, and the one that was overdue is overdue by as long as it was. Totals, statuses and
+ * relationships do not depend on the date, so nothing else needs touching.
+ *
+ * Does nothing when there is no sample data (no recorded day), or it is already today's.
+ *
+ * @param string|null $today YYYY-MM-DD, for the tests
+ *
+ * @return int the days moved
+ */
+function ucm_demo_rebase( mysqli $db, $today = null ) {
+	$anchor = ucm_demo_anchor( $db );
+	$today  = $today ?: date( 'Y-m-d' );
+	if ( $anchor === null ) {
+		return 0;
+	}
+	$days = ucm_demo_days_between( $anchor, $today );
+	if ( $days <= 0 ) {
+		return 0;
+	}
+	$tables = ucm_demo_tables( $db );
+	foreach ( ucm_demo_date_columns() as $table => $columns ) {
+		if ( ! in_array( _DB_PREFIX . $table, $tables, true ) ) {
+			continue;
+		}
+		$have = array();
+		foreach ( $db->query( 'SHOW COLUMNS FROM `' . _DB_PREFIX . $table . '`' )->fetch_all( MYSQLI_ASSOC ) as $column ) {
+			$have[ $column['Field'] ] = true;
+		}
+		foreach ( $columns as $column => $kind ) {
+			if ( ! isset( $have[ $column ] ) ) {
+				continue;
+			}
+			if ( $kind === 'date' ) {
+				$sql = 'UPDATE `' . _DB_PREFIX . $table . '` SET `' . $column . '` = DATE_ADD(`' . $column . "`, INTERVAL $days DAY) WHERE `" . $column . "` > '0000-00-00'";
+			} else {
+				$sql = 'UPDATE `' . _DB_PREFIX . $table . '` SET `' . $column . '` = `' . $column . '` + ' . ( $days * 86400 ) . ' WHERE `' . $column . '` > 0';
+			}
+			$db->query( $sql );
+		}
+	}
+	ucm_demo_set_anchor( $db, $today );
+	ucm_demo_clear_caches( $db, dirname( __DIR__, 2 ) );
+	echo "  Sample data dates moved forward $days days.\n";
+
+	return $days;
+}
+
+/**
+ * Give the hours logged against job tasks the days they were worked.
+ *
+ * The app stamps a logged hour with the moment it was logged and has no field to say
+ * otherwise, so everything the seed script logged in one minute would read as 129 hours
+ * worked today. A task that is done is dated when it was done; one still going is spread
+ * over the last few days. This is the only date the seed cannot set through the forms.
+ *
+ * @return int the log entries dated
+ */
+function ucm_demo_date_time_logs( mysqli $db, $today = null ) {
+	$p      = _DB_PREFIX;
+	$today  = $today ?: date( 'Y-m-d' );
+	$noon   = function ( $day ) {
+		return (int) ( new DateTime( $day . ' 12:00:00', new DateTimeZone( 'UTC' ) ) )->format( 'U' );
+	};
+	$logs   = $db->query( "SELECT l.task_log_id, l.task_id, t.date_done FROM `{$p}task_log` l LEFT JOIN `{$p}task` t ON t.task_id = l.task_id ORDER BY l.task_log_id" )->fetch_all( MYSQLI_ASSOC );
+	$update = $db->prepare( "UPDATE `{$p}task_log` SET log_time = ? WHERE task_log_id = ?" );
+	foreach ( $logs as $log ) {
+		$done = $log['date_done'];
+		$day  = ( $done && $done !== '0000-00-00' ) ? $done : date( 'Y-m-d', strtotime( $today . ' -' . ( 1 + (int) $log['task_id'] % 6 ) . ' days' ) );
+		$time = $noon( $day );
+		$id   = (int) $log['task_log_id'];
+		$update->bind_param( 'ii', $time, $id );
+		$update->execute();
+	}
+
+	return count( $logs );
+}
+
 /**
  * Repair, then save the snapshot, unless a login still cannot work: a snapshot that cannot
  * sign in would hand the next reset broken logins.
@@ -499,6 +731,8 @@ function ucm_demo_repair( mysqli $db, $write ) {
  * @return string[] problems; empty when the snapshot was saved
  */
 function ucm_demo_take_snapshot( mysqli $db, $file ) {
+	// Saved already dated from today, so the next restore has the fewest days to move.
+	ucm_demo_rebase( $db );
 	echo "Repairing the demo logins:\n";
 	$problems = ucm_demo_repair( $db, true );
 	if ( $problems ) {
@@ -537,6 +771,7 @@ try {
 			$statements = ucm_demo_restore( $db, $snapshot );
 			echo "Restored $statements statements from $snapshot\n";
 			ucm_demo_clear_caches( $db, $root );
+			ucm_demo_rebase( $db );
 			// The snapshot may predate a password change.
 			echo "Repairing the demo logins:\n";
 			$problems = ucm_demo_repair( $db, true );
@@ -552,9 +787,18 @@ try {
 				echo "No snapshot yet, so the demo is saved as it is now.\n";
 				$problems = ucm_demo_take_snapshot( $db, $snapshot );
 			} else {
+				ucm_demo_rebase( $db );
 				echo "Repairing the demo logins:\n";
 				$problems = ucm_demo_repair( $db, true );
 			}
+			break;
+
+		case 'seeded':
+			// scripts/demo-seed.mjs has just made the sample data, and made it today.
+			echo 'Dated ' . ucm_demo_date_time_logs( $db ) . " logged hours.\n";
+			ucm_demo_set_anchor( $db, date( 'Y-m-d' ) );
+			// Repair now has every page's permissions to hand: the seed opened them all.
+			$problems = ucm_demo_take_snapshot( $db, $snapshot );
 			break;
 
 		case 'check':
@@ -562,7 +806,7 @@ try {
 			break;
 
 		default:
-			fwrite( STDERR, "Usage: php -q custom/demo/reset.php snapshot|restore|repair|ensure|check\n" );
+			fwrite( STDERR, "Usage: php -q custom/demo/reset.php snapshot|restore|repair|ensure|seeded|check\n" );
 			exit( 64 );
 	}
 } catch ( Throwable $e ) {
@@ -571,7 +815,7 @@ try {
 }
 
 if ( $problems ) {
-	fwrite( STDERR, "These demo logins will not work:\n  " . implode( "\n  ", $problems ) . "\n" );
+	fwrite( STDERR, "The demo needs attention:\n  " . implode( "\n  ", $problems ) . "\n" );
 	exit( 2 );
 }
 echo "Every demo login can sign in.\n";

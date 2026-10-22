@@ -212,6 +212,57 @@ test.describe( 'The public demo @demo', () => {
     }
   } );
 
+  test( 'the customer login sees its own customer, and nothing of the others', async ( { page } ) => {
+    // user@example.com is a contact of one sample customer, and the demo's "Demo Customer" role
+    // narrows every list to that customer. A list that forgot to would show the visitor every
+    // other customer's invoices, which on a demo anyone can open is the thing to get right.
+    await page.goto( '/' );
+    await page.locator( 'input[name="email"]' ).fill( 'user@example.com' );
+    await page.locator( 'input[name="password"]' ).fill( 'password' );
+    await page.locator( 'form:has(input[name="_process_login"])' ).locator( 'input[type="submit"], button[type="submit"]' ).first().click();
+    await page.waitForURL( ( url ) => ! url.href.includes( 'login' ) || url.href.includes( 'home' ) );
+
+    // The customers the login can see: its own, or none if this demo has no sample data.
+    const rowsOf = async ( url: string, key: string ): Promise<string[]> => {
+      const body = await ( await page.request.get( url, { failOnStatusCode: false } ) ).text();
+
+      return [ ...new Set( [ ...body.matchAll( new RegExp( `[?&](?:amp;)?${ key }=([1-9]\\d*)`, 'g' ) ) ].map( ( m ) => m[ 1 ] ) ) ];
+    };
+    const customers = await rowsOf( '/?m[]=customer&p[]=customer_admin', 'customer_id' );
+    test.skip( customers.length === 0, 'user@example.com is not linked to a customer on this demo' );
+    expect( customers, 'the customer list should hold only the customer this login belongs to' ).toHaveLength( 1 );
+    const own = customers[ 0 ];
+
+    for ( const [ url, key ] of [
+      [ '/?m[]=invoice&p[]=invoice_admin', 'invoice_id' ],
+      [ '/?m[]=job&p[]=job_admin', 'job_id' ],
+      [ '/?m[]=quote&p[]=quote_admin', 'quote_id' ],
+      [ '/?m[]=ticket&p[]=ticket_admin_list', 'ticket_id' ],
+      [ '/?m[]=file&p[]=file_admin', 'file_id' ],
+      [ '/?m[]=website&p[]=website_admin', 'website_id' ],
+    ] ) {
+      // Every link to a customer on these lists is to this one. A list with records but no
+      // link to a customer is not interesting, and one with someone else's is the leak.
+      const linked = await rowsOf( url, 'customer_id' );
+      expect( linked.filter( ( id ) => id !== own ), `${ key } list ${ url } links to another customer` ).toEqual( [] );
+    }
+
+    // Nor will it open another customer's page by asking for it.
+    for ( let id = 1; id <= 12; id++ ) {
+      if ( String( id ) === own ) {
+        continue;
+      }
+      const body = await ( await page.request.get( `/?m[]=customer&p[]=customer_admin_edit&customer_id=${ id }`, { failOnStatusCode: false } ) ).text();
+      expect( body.match( /<title>([^<]*)/ )?.[ 1 ] ?? '', `customer ${ id }'s page opened` ).not.toMatch( /^Customer: (?!New)/ );
+    }
+
+    // And the menu offers records to look at, not the agency's settings.
+    const home = await ( await page.request.get( '/' ) ).text();
+    for ( const hidden of [ 'config_settings', 'security_role', 'backup_settings', 'finance_admin' ] ) {
+      expect( home, `the customer's menu links to ${ hidden }` ).not.toContain( hidden );
+    }
+  } );
+
   test( 'the whitelabel theme login keeps its controls', async ( { page } ) => {
     // That theme's login page only renders when the theme is active, which demo mode is
     // what makes reachable - picking it stores the choice in this session.
