@@ -8,7 +8,7 @@ class module_language extends module_base
 	public function __construct() {
 		$this->module_name     = 'language';
 		$this->module_position = 60;
-		$this->version         = 2.182;
+		$this->version         = 2.183;
 	}
 	// 2.14 default system language in advanced settings.
 	// 2.15 - added a default german translation (needs work!)
@@ -48,6 +48,7 @@ class module_language extends module_base
 	}
 
 	function init() {
+		// 2.183 - 2026-10-22 - resetting or cleaning up translations checks the permission to edit them
 		$language_code = basename( module_config::c( 'default_language' ) );
 
 		if ( module_security::is_logged_in() ) {
@@ -78,11 +79,23 @@ class module_language extends module_base
 		}
 	}
 
+	/**
+	 * The three permissions the language screens ask before they offer anything: the same
+	 * ones saving a translation has always asked.
+	 */
+	private static function require_can_edit_language() {
+		if ( ! module_config::can_i( 'edit', 'Settings' ) ) {
+			self::refuse_write( 'Sorry, you do not have permission to edit Settings.', _BASE_HREF );
+		}
+		self::require_can( 'edit', 'Language', false, _BASE_HREF );
+	}
+
 	public function process() {
 		if ( 'language_reset' == $_REQUEST['_process'] && $_REQUEST['really'] == 'yes' ) {
 			if ( ! module_form::check_secure_key() ) {
 				return;
 			}
+			self::require_can_edit_language();
 
 			// delete all language words and translations
 			$sql = "DELETE FROM `" . _DB_PREFIX . "language_word` WHERE 1";
@@ -96,6 +109,7 @@ class module_language extends module_base
 			if ( ! module_form::check_secure_key() ) {
 				return;
 			}
+			self::require_can_edit_language();
 
 			$duplicate_ids = json_decode( $_REQUEST['duplicate_ids'], true );
 			foreach ( $duplicate_ids as $duplicate_id ) {
@@ -109,6 +123,7 @@ class module_language extends module_base
 			if ( ! module_form::check_secure_key() ) {
 				return;
 			}
+			self::require_can_edit_language();
 
 			// delete all language words and translations
 			$sql = "SELECT `word`, COUNT(*) as cc FROM `" . _DB_PREFIX . "language_word`  GROUP BY `word` HAVING cc > 1";

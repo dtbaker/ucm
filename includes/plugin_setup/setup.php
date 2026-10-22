@@ -5,7 +5,7 @@ class module_setup extends module_base
 	public function __construct() {
 		$this->module_name     = 'setup';
 		$this->module_position = 20;
-		$this->version         = 2.325;
+		$this->version         = 2.326;
 	}
 
 	public static function can_i( $actions, $name = false, $category = false, $module = false ) {
@@ -21,6 +21,7 @@ class module_setup extends module_base
 	}
 
 	public function init() {
+		// 2.326 - 2026-10-22 - the setup wizard on an installed site needs the permission to edit settings
 		// 2.3 - 2014-07-07 - initial setup improvements
 		// 2.31 - 2014-07-25 - initial setup improvements
 		// 2.32 - 2014-09-18 - sql mode fix

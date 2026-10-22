@@ -125,3 +125,51 @@ export async function countTables( tables: string[] ): Promise<Record<string, nu
 function mysqlQuote( value: string ): string {
   return `'${ value }'`;
 }
+
+/**
+ * CHECKSUM TABLE for each table, keyed by the name given (without the prefix).
+ *
+ * A spec that posts to a save as a login that should be refused wants to know the
+ * database did not move, whatever the post would have touched: a new row, an edit to an
+ * existing one, a delete. Counting rows only sees the first.
+ */
+export async function checksumTables( tables: string[] ): Promise<Record<string, string>> {
+  for ( const table of tables ) {
+    if ( ! /^[a-z_][a-z0-9_]*$/.test( table ) ) {
+      throw new Error( `not a table name: ${ table }` );
+    }
+  }
+  if ( ! tables.length ) {
+    return {};
+  }
+
+  return withConnection( async connection => {
+    const [ rows ] = await connection.query(
+      `CHECKSUM TABLE ${ tables.map( t => `\`${ PREFIX }${ t }\`` ).join( ', ' ) }`,
+    );
+    const sums: Record<string, string> = {};
+    for ( const row of rows as { Table: string; Checksum: number | string | null }[] ) {
+      sums[ row.Table.slice( row.Table.lastIndexOf( '.' ) + 1 + PREFIX.length ) ] = String( row.Checksum );
+    }
+
+    return sums;
+  } );
+}
+
+/**
+ * The rows of one table where a column has a value, for a spec that has to look at what
+ * a particular row says rather than whether anything changed. SELECT only, like the rest.
+ */
+export async function rowsWhere( table: string, column: string, value: string ): Promise<Record<string, unknown>[]> {
+  for ( const identifier of [ table, column ] ) {
+    if ( ! /^[a-z_][a-z0-9_]*$/.test( identifier ) ) {
+      throw new Error( `not a table or column name: ${ identifier }` );
+    }
+  }
+
+  return withConnection( async connection => {
+    const [ rows ] = await connection.query( `SELECT * FROM \`${ PREFIX }${ table }\` WHERE \`${ column }\` = ?`, [ value ] );
+
+    return rows as Record<string, unknown>[];
+  } );
+}

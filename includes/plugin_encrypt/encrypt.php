@@ -17,7 +17,7 @@ class module_encrypt extends module_base
 	public function __construct() {
 		$this->module_name     = 'encrypt';
 		$this->module_position = 170;
-		$this->version         = 2.271;
+		$this->version         = 2.272;
 	}
 
 	public static function can_i( $actions, $name = false, $category = false, $module = false ) {
@@ -33,6 +33,7 @@ class module_encrypt extends module_base
 	}
 
 	public function init() {
+		// 2.272 - 2026-10-22 - saves check the permission the encrypted field pages ask for
 		// 2.2 - initial release
 		// 2.21 - better support for new 'extra' fields
 		// 2.22 - permissions.
@@ -68,6 +69,8 @@ class module_encrypt extends module_base
 		}
 		switch ( $_REQUEST['_process'] ) {
 			case 'save_encrypt':
+				// What the encrypt pages ask: "create" for a new value, "edit" for one that exists.
+				self::require_can_save( isset( $_REQUEST['encrypt_id'] ) ? $_REQUEST['encrypt_id'] : 0, 'Encrypts' );
 				$data = $_REQUEST;
 				if ( isset( $data['encrypt_key_id'] ) && ! $data['encrypt_key_id'] ) {
 					unset( $data['encrypt_key_id'] );
@@ -82,6 +85,7 @@ class module_encrypt extends module_base
 
 				break;
 			case 'save_encrypt_key':
+				self::require_can_save( isset( $_REQUEST['encrypt_key_id'] ) ? $_REQUEST['encrypt_key_id'] : 0, 'Encrypts' );
 				$encrypt_key_id = update_insert( 'encrypt_key_id', (int) $_REQUEST['encrypt_key_id'], 'encrypt_key', $_REQUEST );
 				// update the field info to say we are using this key.
 				if ( isset( $_REQUEST['encrypt_field_id'] ) && (int) $_REQUEST['encrypt_field_id'] > 0 ) {
@@ -93,6 +97,7 @@ class module_encrypt extends module_base
 
 				break;
 			case 'encrypt_successful':
+				self::require_can( 'view', 'Encrypts' );
 				$encrypt_field_id = isset( $_REQUEST['encrypt_field_id'] ) ? (int) $_REQUEST['encrypt_field_id'] : 0;
 				$encrypt_id       = isset( $_REQUEST['encrypt_id'] ) ? (int) $_REQUEST['encrypt_id'] : 0;
 				if ( $encrypt_id && $encrypt_field_id ) {

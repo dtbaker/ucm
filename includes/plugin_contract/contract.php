@@ -15,7 +15,7 @@ class module_contract extends module_base
 	public function __construct() {
 		$this->module_name     = 'contract';
 		$this->module_position = 120;
-		$this->version         = 2.111;
+		$this->version         = 2.112;
 	}
 	//2.111 - 2026-10-17 - 4.0.0 relaunch: contract delete fixed, security token on saves, broken print logo removed, PHP 8.4
 	//2.11 - 2017-07-28 - terminate date
@@ -35,6 +35,7 @@ class module_contract extends module_base
 	}
 
 	public function init() {
+		//2.112 - 2026-10-22 - saves check the permission the contract page asks for
 		$this->links          = array();
 		$this->contract_types = array();
 
@@ -770,6 +771,7 @@ Thank you,<br><br>
 		}
 		$errors = array();
 		if ( isset( $_REQUEST['butt_del'] ) && $_REQUEST['butt_del'] && $_REQUEST['contract_id'] ) {
+			self::require_can( 'delete', 'Contracts', false, self::link_open( false ) );
 			$data = self::get_contract( $_REQUEST['contract_id'] );
 			if ( module_form::confirm_delete( 'contract_id', "Really delete contract: " . $data['name'], self::link_open( $_REQUEST['contract_id'] ) ) ) {
 				$this->delete_contract( $_REQUEST['contract_id'] );
@@ -778,7 +780,13 @@ Thank you,<br><br>
 			}
 		} elseif ( "save_contract" == $_REQUEST['_process'] ) {
 
+			// "Create" for a new one and "Edit" for an existing one, as the contract page asks.
+			self::require_can_save( isset( $_REQUEST['contract_id'] ) ? $_REQUEST['contract_id'] : 0, 'Contracts', false, self::link_open( false ), function ( $id ) {
+				$found = self::get_contract( $id, false );
 
+				return isset( $found['contract_id'] ) && $found['contract_id'] == $id;
+			} );
+			module_customer::require_customer_access( isset( $_POST['customer_id'] ) ? $_POST['customer_id'] : 0, self::link_open( false ) );
 			$contract_id = $this->save_contract( $_REQUEST['contract_id'], $_POST );
 			if ( ! $contract_id ) {
 				set_error( 'Failed to save contract' );

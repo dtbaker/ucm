@@ -9,7 +9,8 @@ if ( _UCM_INSTALLED && ! module_security::is_logged_in() && ! module_config::c( 
 	}
 }
 
-if ( _UCM_INSTALLED && ! module_security::is_logged_in() ) {
+// On an installed site the wizard is for whoever may change the settings, not for any login.
+if ( _UCM_INSTALLED && ( ! module_security::is_logged_in() || ! module_config::can_i( 'edit', 'Settings' ) ) ) {
 	ob_end_clean();
 	echo 'Something went wrong. Please login and go to Settings > Upgrade. <a href="' . _BASE_HREF . '">Click here to login</a>.';
 	exit;

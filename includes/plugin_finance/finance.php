@@ -17,7 +17,7 @@ class module_finance extends module_base
 	public function __construct() {
 		$this->module_name     = 'finance';
 		$this->module_position = 210;
-		$this->version         = 2.312;
+		$this->version         = 2.313;
 	}
 	// 2.312 - 2026-10-17 - 4.0.0 relaunch: transactions carry a sub total for the tax report, security token, escaped columns
 	// 2.311 - 2017-06-14 - tax report fixes
@@ -98,6 +98,7 @@ class module_finance extends module_base
 	// 2.264 - 2013-08-12 - better searching in upcoming payments
 
 	function init() {
+		// 2.313 - 2026-10-22 - saves check the permission the finance page asks for
 		$this->links = array();
 
 		module_config::register_css( 'finance', 'finance.css' );
@@ -238,6 +239,17 @@ class module_finance extends module_base
 		// form auth key. Refuse anything that does not - see module_form::check_secure_key().
 		if ( ! module_form::check_secure_key() ) {
 			module_form::reject_invalid_form_auth();
+		}
+		if ( in_array( $_REQUEST['_process'], array( 'quick_save_finance', 'save_finance', 'save_recurring' ), true ) ) {
+			// Finance has one permission, "Finance", and its page asks for "Create" on a new
+			// transaction and "Edit" on an existing one. Deleting, unlinking and linking
+			// transactions together change existing ones.
+			$finance_key = 'save_recurring' == $_REQUEST['_process'] ? 'finance_recurring_id' : 'finance_id';
+			if ( isset( $_REQUEST['butt_del'] ) || isset( $_REQUEST['butt_unlink'] ) || ( isset( $_REQUEST['link_go'] ) && $_REQUEST['link_go'] == 'go' ) ) {
+				self::require_can( 'edit', 'Finance', false, self::link_open( false ) );
+			} else {
+				self::require_can_save( isset( $_REQUEST[ $finance_key ] ) ? $_REQUEST[ $finance_key ] : 0, 'Finance', false, self::link_open( false ) );
+			}
 		}
 		switch ( $_REQUEST['_process'] ) {
 			case 'quick_save_finance':

@@ -36,7 +36,7 @@ class module_security extends module_base
 	public function __construct() {
 		$this->module_name     = 'security';
 		$this->module_position = 50;
-		$this->version         = 2.528;
+		$this->version         = 2.529;
 	}
 
 	/**
@@ -56,6 +56,7 @@ class module_security extends module_base
 	}
 
 	public function init() {
+		// 2.529 - 2026-10-22 - ending a session checks the permission to edit settings
 		$this->links          = array();
 		$this->security_types = array();
 		// 2.528 - 2026-10-17 - 4.0.0 relaunch: shipped default passwords must be changed, auto-login links fixed, role saves fixed

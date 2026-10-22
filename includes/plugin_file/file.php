@@ -23,7 +23,7 @@ class module_file extends module_base
 	public function __construct() {
 		$this->module_name     = 'file';
 		$this->module_position = 200;
-		$this->version         = 2.575;
+		$this->version         = 2.576;
 	}
 
 	public static function can_i( $actions, $name = false, $category = false, $module = false ) {
@@ -39,6 +39,7 @@ class module_file extends module_base
 	}
 
 	function init() {
+		// 2.576 - 2026-10-22 - saves check the permission the file page asks for, and comments only go on files the user can see
 		$this->links = array();
 		// 2.575 - 2026-10-17 - 4.0.0 relaunch: permission checks on save and delete, upload folders blocked, no untrusted unserialise
 		// 2.574 - 2017-07-26 - fixes for php error messages
@@ -845,8 +846,9 @@ Comment: {COMMENT}
 
 				$files_to_save = array(); // pump data in to here for multiple file uploads.
 
-				// todo: stop people changing the "file_id" to another file they don't own.
-				if ( self::can_i( 'edit', 'Files' ) || self::can_i( 'create', 'Files' ) ) {
+				// A new file needs "create" and a change to an existing one needs "edit". Which
+				// file is posted is checked below, against what this user can see.
+				if ( self::can_i( $file_id > 0 ? 'edit' : 'create', 'Files' ) ) {
 					// have we uploaded anything
 					$file_changed = false;
 
@@ -1050,12 +1052,19 @@ Comment: {COMMENT}
 
 				}
 
-				if ( module_file::can_i( 'create', 'File Comments' ) ) {
+				// Comments belong to a file this user can see, whatever the file_id they posted.
+				$file_reachable = true;
+				if ( $file_id > 0 ) {
+					$comment_file   = new ucm_file( $file_id );
+					$file_reachable = $comment_file->can_i_access();
+				}
+
+				if ( $file_reachable && module_file::can_i( 'create', 'File Comments' ) ) {
 					$this->save_file_comments( $file_id );
 				}
 
 
-				if ( isset( $_REQUEST['delete_file_comment_id'] ) && $_REQUEST['delete_file_comment_id'] ) {
+				if ( $file_reachable && isset( $_REQUEST['delete_file_comment_id'] ) && $_REQUEST['delete_file_comment_id'] ) {
 					$file_comment_id = (int) $_REQUEST['delete_file_comment_id'];
 					$comment         = get_single( 'file_comment', 'file_comment_id', $file_comment_id );
 					if ( $comment['create_user_id'] == module_security::get_loggedin_id() || module_file::can_i( 'delete', 'File Comments' ) ) {

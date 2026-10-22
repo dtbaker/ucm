@@ -21,10 +21,11 @@ class module_member extends module_base
 	public function __construct() {
 		$this->module_name     = 'member';
 		$this->module_position = 300;
-		$this->version         = 2.186;
+		$this->version         = 2.187;
 	}
 
 	public function init() {
+		// 2.187 - 2026-10-22 - saves check the permission the member page asks for
 		$this->links        = array();
 		$this->member_types = array();
 		// 2.186 - 2026-10-17 - 4.0.0 relaunch: delete permission checked, security token on saves, deleted members clear from cache
@@ -328,6 +329,12 @@ class module_member extends module_base
 				redirect_browser( self::link_open( false ) );
 			}
 		} elseif ( "save_member" == $_REQUEST['_process'] ) {
+			// "Create" for a new member and "Edit" for an existing one, as the member page asks.
+			self::require_can_save( isset( $_REQUEST['member_id'] ) ? $_REQUEST['member_id'] : 0, 'Members', false, self::link_open( false ), function ( $id ) {
+				$found = self::get_member( $id );
+
+				return isset( $found['member_id'] ) && $found['member_id'] == $id;
+			} );
 			$member_id = $this->save_member( $_REQUEST['member_id'], $_POST );
 			hook_handle_callback( 'member_save', $member_id );
 			set_message( "Member saved successfully" );
@@ -696,6 +703,7 @@ class module_member extends module_base
 	}
 
 	public static function handle_bulk_delete( $rows ) {
+		self::require_can( 'delete', 'Members', false, self::link_open( false ) );
 		if ( module_form::confirm_delete( 'bulk_member_array', "Really delete all " . count( $rows ) . " selected members?", $_SERVER['REQUEST_URI'] ) ) {
 			foreach ( $rows as $member_to_delete ) {
 				self::delete_member( $member_to_delete['member_id'] );
@@ -706,6 +714,7 @@ class module_member extends module_base
 	}
 
 	public static function handle_bulk_delete_double_optin( $rows ) {
+		self::require_can( 'delete', 'Members', false, self::link_open( false ) );
 		$delete = array();
 		foreach ( $rows as $member_to_delete ) {
 			$newsletter_member_id = module_newsletter::member_from_email( $member_to_delete, false );

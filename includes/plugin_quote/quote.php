@@ -19,7 +19,7 @@ class module_quote extends module_base
 	public function __construct() {
 		$this->module_name     = 'quote';
 		$this->module_position = 440;
-		$this->version         = 2.180;
+		$this->version         = 2.181;
 	}
 	//2.180 - 2026-10-17 - 4.0.0 relaunch: security token on saves, broken print logo removed, PHP notices fixed
 	//2.179 - 2017-05-18 - quote email fix
@@ -102,6 +102,7 @@ class module_quote extends module_base
 	}
 
 	public function init() {
+		//2.181 - 2026-10-22 - saves check the permission the quote page asks for
 		$this->links      = array();
 		$this->quote_types = array();
 
@@ -892,6 +893,7 @@ Thank you,<br><br>
 		}
 		$errors = array();
 		if ( isset( $_REQUEST['butt_del'] ) && $_REQUEST['butt_del'] && $_REQUEST['quote_id'] ) {
+			self::require_can( 'delete', 'Quotes', false, self::link_open( false ) );
 			$data = self::get_quote( $_REQUEST['quote_id'] );
 			if ( module_form::confirm_delete( 'quote_id', "Really delete quote: " . $data['name'], self::link_open( $_REQUEST['quote_id'] ) ) ) {
 				$this->delete_quote( $_REQUEST['quote_id'] );
@@ -1069,6 +1071,17 @@ Thank you,<br><br>
 
 		} elseif ( "save_quote" == $_REQUEST['_process'] ) {
 
+			// A new quote needs "create" and an existing one "edit". Only the first was ever
+			// asked, inside save_quote(), which also serves the internal callers.
+			$posted_quote_id = isset( $_REQUEST['quote_id'] ) ? (int) $_REQUEST['quote_id'] : 0;
+			if ( $posted_quote_id > 0 ) {
+				$posted_quote = self::get_quote( $posted_quote_id, false );
+				if ( ! $posted_quote || $posted_quote['quote_id'] != $posted_quote_id ) {
+					self::refuse_write( 'Sorry, that quote could not be found.', self::link_open( false ) );
+				}
+			}
+			self::require_can( $posted_quote_id > 0 ? 'edit' : 'create', 'Quotes', false, self::link_open( false ) );
+			module_customer::require_customer_access( isset( $_POST['customer_id'] ) ? $_POST['customer_id'] : 0, self::link_open( false ) );
 
 			$save_status = $this->save_quote( $_REQUEST['quote_id'], $_POST );
 			$quote_id    = isset( $save_status['quote_id'] ) ? $save_status['quote_id'] : false;

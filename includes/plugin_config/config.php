@@ -11,7 +11,7 @@ class module_config extends module_base
 	public function __construct() {
 		$this->module_name     = 'config';
 		$this->module_position = 40;
-		$this->version         = 2.436;
+		$this->version         = 2.437;
 	}
 
 	public static function can_i( $actions, $name = false, $category = false, $module = false ) {
@@ -27,6 +27,7 @@ class module_config extends module_base
 	}
 
 	public function init() {
+		//2.437 - 2026-10-22 - saving the menu order checks the permission to edit settings
 		//2.436 - 2026-10-17 - release version on the upgrade page
 		//2.435 - 2022-12-27 - uasort boolean error fix
 		//2.434 - 2022-10-22 - default to https update url

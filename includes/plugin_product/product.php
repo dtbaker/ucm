@@ -21,10 +21,11 @@ class module_product extends module_base
 	public function __construct() {
 		$this->module_name     = 'product';
 		$this->module_position = 430;
-		$this->version         = 2.169;
+		$this->version         = 2.170;
 	}
 
 	public function init() {
+		// 2.170 - 2026-10-22 - saves check the permission the product page asks for
 		$this->links         = array();
 		$this->product_types = array();
 		// 2.169 - 2026-10-17 - 4.0.0 relaunch: stock returned when an invoice is deleted, security token on category saves
@@ -507,15 +508,24 @@ Current Inventory Level: {PRODUCT_QUANTITY} <br/><br/>
 		}
 		if ( "save_product" == $_REQUEST['_process'] ) {
 
+			// "Create" for a new product and "Edit" for an existing one, as the product page asks.
+			self::require_can_save( isset( $_REQUEST['product_id'] ) ? $_REQUEST['product_id'] : 0, 'Products', false, self::link_open( false ), function ( $id ) {
+				$found = self::get_product( $id );
+
+				return isset( $found['product_id'] ) && $found['product_id'] == $id;
+			} );
 			$product = new UCMProduct();
 			$product->handle_submit();
 
 		} elseif ( "save_product_supplier" == $_REQUEST['_process'] ) {
 
+			// Suppliers are a part of the product's own page.
+			self::require_can( 'edit', 'Products', false, self::link_open( false ) );
 			$product_supplier = new UCMProductSupplier();
 			$product_supplier->handle_submit();
 
 		} elseif ( "save_product_category" == $_REQUEST['_process'] ) {
+			self::require_can( ( isset( $_REQUEST['butt_del'] ) && $_REQUEST['butt_del'] ) ? 'delete' : ( (int) $_REQUEST['product_category_id'] > 0 ? 'edit' : 'create' ), 'Products', false, self::link_open_category( false ) );
 			if ( isset( $_REQUEST['butt_del'] ) && $_REQUEST['butt_del'] && $_REQUEST['product_category_id'] ) {
 				$data = self::get_product_category( $_REQUEST['product_category_id'] );
 				if ( module_form::confirm_delete( 'product_category_id', _l( "Really delete product category: %s", $data['product_category_name'] ), self::link_open_category( $_REQUEST['product_category_id'] ) ) ) {
@@ -558,6 +568,8 @@ Current Inventory Level: {PRODUCT_QUANTITY} <br/><br/>
 
 	public static function bulk_handle_delete() {
 		if ( isset( $_REQUEST['bulk_action'] ) && isset( $_REQUEST['bulk_action']['delete'] ) && $_REQUEST['bulk_action']['delete'] == 'yes' ) {
+			// The product page offers its delete button on this permission.
+			self::require_can( 'delete', 'Products', false, self::link_open( false ) );
 			// confirm deletion of these tickets:
 			$product_ids = isset( $_REQUEST['bulk_operation'] ) && is_array( $_REQUEST['bulk_operation'] ) ? $_REQUEST['bulk_operation'] : array();
 			foreach ( $product_ids as $product_id => $k ) {

@@ -89,6 +89,7 @@ if ( isset( $_REQUEST['run_import'] ) && $_REQUEST['run_import'] == 'true' ) {
 	}
 
 	if ( isset( $import_options['callback'] ) && module_import_export::is_import_callback( $import_options['callback'] ) ) {
+		module_import_export::require_can_import( $import_options['callback'], $import_options );
 		$extra_options = array();
 		if ( isset( $import_options['options'] ) && is_array( $import_options['options'] ) ) {
 			foreach ( $import_options['options'] as $option_id => $option_values ) {

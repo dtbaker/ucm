@@ -32,10 +32,11 @@ class module_vendor extends module_base
 	public function __construct() {
 		$this->module_name     = 'vendor';
 		$this->module_position = 560;
-		$this->version         = 2.123;
+		$this->version         = 2.124;
 	}
 
 	public function init() {
+		// 2.124 - 2026-10-22 - saves check the permission the vendor page asks for
 		$this->links        = array();
 		$this->vendor_types = array();
 		// 2.123 - 2026-10-17 - 4.0.0 relaunch: security token on vendor saves, deleted vendors clear from cache
@@ -542,6 +543,16 @@ class module_vendor extends module_base
 			exit;
 
 		} elseif ( "save_vendor" == $_REQUEST['_process'] ) {
+			// "Create" for a new vendor and "Edit" for an existing one, as the vendor page asks.
+			// An existing vendor the user cannot see is refused, not quietly replaced by a new one.
+			$posted_vendor_id = isset( $_REQUEST['vendor_id'] ) ? (int) $_REQUEST['vendor_id'] : 0;
+			if ( $posted_vendor_id > 0 ) {
+				$posted_vendor = self::get_vendor( $posted_vendor_id );
+				if ( ! $posted_vendor || $posted_vendor['vendor_id'] != $posted_vendor_id ) {
+					self::refuse_write( 'Sorry, that vendor could not be found.', self::link_open( false ) );
+				}
+			}
+			self::require_can( $posted_vendor_id > 0 ? 'edit' : 'create', 'Vendors', false, self::link_open( false ) );
 			$vendor_id = $this->save_vendor( $_REQUEST['vendor_id'], $_POST );
 			hook_handle_callback( 'vendor_save', $vendor_id );
 			set_message( "Vendor saved successfully" );

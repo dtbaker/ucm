@@ -13,7 +13,7 @@ class module_user extends module_base
 	public function __construct() {
 		$this->module_name     = 'user';
 		$this->module_position = 550;
-		$this->version         = 2.291;
+		$this->version         = 2.292;
 	}
 	// 2.291 - 2026-10-20 - passwords: old unsalted MD5 passwords wrapped in a salted bcrypt hash at upgrade instead of waiting for the next sign in, and bcrypt hashes brought up to PHP's current cost at sign in
 	// 2.290 - 2026-10-17 - 4.0.0 relaunch: security token on saves, sample logins with a known password closed, escaped output
@@ -89,6 +89,7 @@ class module_user extends module_base
 	}
 
 	public function init() {
+		// 2.292 - 2026-10-22 - choosing a role needs the permission to edit user permissions
 		$this->links     = array();
 		$this->user_types = array();
 
@@ -1048,8 +1049,14 @@ class module_user extends module_base
 			$previous_user_roles = $user_data['roles'];
 			$re_save_role_perms  = false;
 
+			// The role is only offered on the form to someone who may edit "Users Permissions"
+			// (user_admin_edit_login.php), and never for the administrator's own account. Without
+			// that, a login that may edit users or contacts could give itself any role.
+			$may_set_role = $user_id != 1 && module_user::can_i( 'edit', 'Users Permissions', 'Config' );
+			if ( ! $may_set_role ) {
+				unset( $_REQUEST['role_id'], $_REQUEST['role'] );
+			}
 			// hack to support only 1 role (we may support multi-role in the future)
-			// TODO: check we have permissions to set this role id, otherwise anyone can set their own role.
 			if ( isset( $_REQUEST['role_id'] ) ) {
 				$sql = "DELETE FROM `" . _DB_PREFIX . "user_role` WHERE user_id = '" . (int) $user_id . "'";
 				query( $sql );

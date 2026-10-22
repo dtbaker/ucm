@@ -4,9 +4,10 @@
 // This one did not, and index.php lets the setup module through without a login, so
 // anyone could ask an installed site for ?m=setup&step=2 and have it run every plugin's
 // install and upgrade SQL again.
-if ( _UCM_INSTALLED && ! module_security::is_logged_in() ) {
+// On an installed site the wizard is for whoever may change the settings, not for any login.
+if ( _UCM_INSTALLED && ( ! module_security::is_logged_in() || ! module_config::can_i( 'edit', 'Settings' ) ) ) {
 	ob_end_clean();
-	echo 'Sorry the system is already installed. You need to be logged in to run the setup again.';
+	echo 'Sorry the system is already installed. You need to be logged in as someone who can change the settings to run the setup again.';
 	exit;
 }
 

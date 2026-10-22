@@ -74,7 +74,8 @@ hook_handle_callback( 'layout_column_half', 2 ); ?>
 		<?php
 
 		// bad hack, oh well, in a hurry
-		if ( isset( $_REQUEST['end'] ) && strlen( $_REQUEST['end'] ) ) {
+		// Ending someone else's session changes the system, which "view" does not cover.
+		if ( isset( $_REQUEST['end'] ) && strlen( $_REQUEST['end'] ) && module_config::can_i( 'edit', 'Settings' ) ) {
 			$sql = "UPDATE `" . _DB_PREFIX . "session` SET logged_in = 0, `session_data` = '' WHERE session_id = '" . db_escape( $_REQUEST['end'] ) . "'";
 			query( $sql );
 		}

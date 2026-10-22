@@ -4,6 +4,10 @@
 if ( ! module_config::can_i( 'view', 'Settings' ) ) {
 	redirect_browser( _BASE_HREF );
 }
+// This page changes and answers tickets in bulk, so viewing the settings is not enough.
+if ( ! module_config::can_i( 'edit', 'Settings' ) || ! module_ticket::can_edit_tickets() ) {
+	redirect_browser( _BASE_HREF );
+}
 
 
 if ( isset( $_POST['bulk_remove_priority'] ) && $_POST['bulk_remove_priority'] == 'go' ) {

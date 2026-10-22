@@ -5,7 +5,7 @@ if ( ! module_config::can_i( 'view', 'Settings' ) ) {
 }
 print_heading( 'Menu Configuration' );
 
-if ( isset( $_REQUEST['save_menu_config'] ) && is_array( $_REQUEST['save_menu_config'] ) && module_form::check_secure_key() ) {
+if ( isset( $_REQUEST['save_menu_config'] ) && is_array( $_REQUEST['save_menu_config'] ) && module_form::check_secure_key() && module_config::can_i( 'edit', 'Settings' ) ) {
 	foreach ( $_REQUEST['save_menu_config'] as $menu_id => $menu_data ) {
 		if ( is_array( $menu_data ) ) {
 			$current_data = @json_decode( module_config::c( '_menu_config_' . $menu_id ), true );

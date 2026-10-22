@@ -8,7 +8,7 @@ class module_address extends module_base
 	public function __construct() {
 		$this->module_name     = 'address';
 		$this->module_position = 70;
-		$this->version         = 2.227;
+		$this->version         = 2.228;
 	}
 	// 2.227 - 2026-10-17 - 4.0.0 relaunch: security token on address saves, owner taken from the record, PHP 8.4 fixes
 	// 2.226 - 2022-12-27 - php8.1 fixes
@@ -33,6 +33,7 @@ class module_address extends module_base
 	}
 
 	public function init() {
+		// 2.228 - 2026-10-22 - saving an address checks the permission the record it belongs to asks for
 		$this->links               = array();
 		$this->address_types       = array();
 		$this->link_include_parents = true; // set defaullt
@@ -147,7 +148,10 @@ class module_address extends module_base
 			if ( isset( $_POST['address'] ) && is_array( $_POST['address'] ) ) {
 				foreach ( $_POST['address'] as $address_hash => $address_data ) {
 					if ( isset( $address_data['address_id'] ) && (int) $address_data['address_id'] ) {
-						$this->save_address( $address_data['address_id'], $address_data );
+						// Whose address this is comes from the stored row, never from the post.
+						$stored = self::require_can_edit_address_owner( (int) $address_data['address_id'] );
+						unset( $address_data['owner_id'], $address_data['owner_table'], $address_data['address_type'] );
+						$this->save_address( $stored['address_id'], $address_data );
 					}
 				}
 			}
@@ -157,6 +161,62 @@ class module_address extends module_base
 			exit;
 		}
 		print_error( $errors, true );
+	}
+
+	/**
+	 * Refuses a change to an address the signed-in user may not change, and returns it.
+	 *
+	 * An address belongs to a customer, a vendor or a user, and the popup that edits one
+	 * lives on that record's own page. So this asks for what that page asks for - "edit"
+	 * on the customer (under its kind's name), the vendor, the contact or the user - and
+	 * that the owner is one the user's data access lets them open.
+	 *
+	 * @param int $address_id the address row being saved
+	 *
+	 * @return array the stored address row
+	 */
+	private static function require_can_edit_address_owner( $address_id ) {
+		$address = self::get_address_by_id( $address_id );
+		if ( ! $address || ! isset( $address['address_id'] ) || $address['address_id'] != $address_id ) {
+			self::refuse_write( 'Sorry, that address could not be found.' );
+		}
+		$owner_id = (int) $address['owner_id'];
+		switch ( $address['owner_table'] ) {
+			case 'customer':
+				$owner = module_customer::get_customer( $owner_id );
+				if ( ! $owner || $owner['customer_id'] != $owner_id ) {
+					self::refuse_write( 'Sorry, that address could not be found.' );
+				}
+				$allowed = module_customer::can_i( 'edit', module_customer::permission_name( $owner['customer_type_id'] ) );
+				break;
+			case 'vendor':
+				$owner = class_exists( 'module_vendor', false ) ? module_vendor::get_vendor( $owner_id ) : false;
+				if ( ! $owner || $owner['vendor_id'] != $owner_id ) {
+					self::refuse_write( 'Sorry, that address could not be found.' );
+				}
+				$allowed = module_vendor::can_i( 'edit', 'Vendors' );
+				break;
+			case 'user':
+				$owner = module_user::get_user( $owner_id );
+				if ( ! $owner || $owner['user_id'] != $owner_id ) {
+					self::refuse_write( 'Sorry, that address could not be found.' );
+				}
+				if ( ! empty( $owner['customer_id'] ) ) {
+					$allowed = module_user::can_i( 'edit', 'Contacts', 'Customer' );
+				} elseif ( ! empty( $owner['vendor_id'] ) ) {
+					$allowed = module_user::can_i( 'edit', 'Contacts', 'Vendor' );
+				} else {
+					$allowed = module_user::can_i( 'edit', 'Users', 'Config' );
+				}
+				break;
+			default:
+				$allowed = false;
+		}
+		if ( ! $allowed ) {
+			self::refuse_write( 'Sorry, you do not have permission to edit this address.' );
+		}
+
+		return $address;
 	}
 
 	public static function save_address( $address_id, $data ) {

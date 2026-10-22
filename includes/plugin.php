@@ -76,6 +76,82 @@ class module_base
 		return module_security::has_feature_access( $perms );
 	}
 
+	/**
+	 * Stops a save the signed-in user's role does not allow.
+	 *
+	 * The pages hide their forms from a role without the permission, but a form is only a
+	 * form: the handler it posts to has to ask the same question, with the same name and
+	 * category, or the permission is cosmetic. A save needs "create" for a record that
+	 * does not exist yet and "edit" for one that does.
+	 *
+	 * Refuses the way the delete branches do: an error message, then back to the list.
+	 * Returns true when the user may go on, so a caller can write
+	 * `module_job::require_can( 'edit', 'Jobs', false, $list_url );` and carry on.
+	 *
+	 * @param string       $action   create, edit or delete
+	 * @param string|false $name     the permission's name, as the page passes it to can_i()
+	 * @param string|false $category the permission's category, as the page passes it
+	 * @param string|false $redirect where to send a refused user, the home page by default
+	 *
+	 * @return true
+	 */
+	public static function require_can( $action, $name = false, $category = false, $redirect = false ) {
+		if ( static::can_i( $action, $name, $category ) ) {
+			return true;
+		}
+		self::refuse_write( 'Sorry, you do not have permission to ' . $action . ' ' . ( $name ? $name : 'this' ) . '.', $redirect );
+
+		return true; // not reached: refuse_write() always ends the request.
+	}
+
+	/**
+	 * Refuses a save the role does not allow, for a record that may or may not exist yet.
+	 *
+	 * "Create" when no id was posted and "edit" when one was, the same pair of permissions
+	 * the module's edit page asks for. `$find` looks the posted id up with the module's own
+	 * getter, which applies the data access rules the lists use; an id it will not return
+	 * is refused rather than treated as a new record, as most save_*() methods would.
+	 *
+	 * @param mixed         $record_id the id the form posted
+	 * @param string|false  $name      the permission's name, as the edit page passes it
+	 * @param string|false  $category  the permission's category, as the edit page passes it
+	 * @param string|false  $redirect  where to send a refused user
+	 * @param callable|null $find      called with the (int) id; returns the record or false
+	 *
+	 * @return bool true when the id is an existing record, false when it is a new one
+	 */
+	public static function require_can_save( $record_id, $name = false, $category = false, $redirect = false, $find = null ) {
+		$record_id = (int) $record_id;
+		if ( $record_id > 0 && $find ) {
+			if ( ! call_user_func( $find, $record_id ) ) {
+				self::refuse_write( 'Sorry, that record could not be found.', $redirect );
+			}
+		}
+		static::require_can( $record_id > 0 ? 'edit' : 'create', $name, $category, $redirect );
+
+		return $record_id > 0;
+	}
+
+	/**
+	 * Ends a write the signed-in user is not allowed to make, with an error message.
+	 *
+	 * A form post goes back to $redirect. A background request - the scripts and XHR the
+	 * pages make - has nowhere to be redirected to, so it gets a plain 403 instead.
+	 *
+	 * @param string       $message  what to tell the user
+	 * @param string|false $redirect where to send them, the home page by default
+	 */
+	public static function refuse_write( $message, $redirect = false ) {
+		if ( function_exists( 'ucm_is_background_request' ) && ucm_is_background_request() ) {
+			header( 'HTTP/1.1 403 Forbidden' );
+			header( 'Content-Type: text/plain; charset=UTF-8' );
+			echo $message;
+			exit;
+		}
+		set_error( $message );
+		redirect_browser( $redirect ? $redirect : _BASE_HREF );
+	}
+
 	public static function is_plugin_enabled() {
 		if ( ! _UCM_INSTALLED ) {
 			return false;

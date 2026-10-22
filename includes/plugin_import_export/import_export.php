@@ -7,7 +7,7 @@ class module_import_export extends module_base
 	public function __construct() {
 		$this->module_name     = 'import_export';
 		$this->module_position = 240;
-		$this->version         = 2.243;
+		$this->version         = 2.244;
 	}
 
 	public static function can_i( $actions, $name = false, $category = false, $module = false ) {
@@ -23,6 +23,7 @@ class module_import_export extends module_base
 	}
 
 	function init() {
+		// 2.244 - 2026-10-22 - running an import checks the permission to create and edit what it imports
 		$this->links = array();
 		// 2.2 - exporting groups to CSV (started with customer export)
 		// 2.21 - clear 'eys' value from form after generation - support for a non parent() form submission (eg: from finance list)
@@ -243,6 +244,75 @@ class module_import_export extends module_base
 		return is_string( $callback )
 		       && preg_match( '#^module_[a-z0-9_]+::[a-z0-9_]+$#i', $callback )
 		       && is_callable( $callback );
+	}
+
+	/**
+	 * Refuses an import the signed-in user's role does not allow.
+	 *
+	 * An import creates records and overwrites the ones that match, as whoever is signed
+	 * in, so it needs both "create" and "edit" on what it imports - the permissions of the
+	 * screens it writes for. The list pages only offer the import link to a role that may
+	 * view "Import <things>", but the link is a form posting an `options` field that comes
+	 * back from the browser, so the callback it names is checked here against the imports
+	 * this application ships, rather than trusted.
+	 *
+	 * @param string $callback       the import handler the post names
+	 * @param array  $import_options the import's decoded options
+	 */
+	public static function require_can_import( $callback, $import_options ) {
+		$checks = array(
+			'module_vendor::handle_import'        => array( 'module_vendor', 'Vendors' ),
+			'module_job::handle_import'           => array( 'module_job', 'Jobs' ),
+			'module_job::handle_import_tasks'     => array( 'module_job', 'Job Tasks' ),
+			'module_quote::handle_import'         => array( 'module_quote', 'Quotes' ),
+			'module_quote::handle_import_tasks'   => array( 'module_quote', 'Quote Tasks' ),
+			'module_website::handle_import'       => array( 'module_website', 'Websites' ),
+			'module_product::handle_import'       => array( 'module_product', 'Products' ),
+			'module_member::handle_import'        => array( 'module_member', 'Members' ),
+			'module_contract::handle_import'      => array( 'module_contract', 'Contracts' ),
+		);
+		$denied = 'Sorry, you do not have permission to import this.';
+		if ( 'module_customer::handle_import' === $callback ) {
+			// Customers and each kind of lead are held under their own name.
+			$name  = isset( $import_options['name'] ) && is_string( $import_options['name'] ) ? $import_options['name'] : 'Customers';
+			$known = false;
+			foreach ( module_customer::get_customer_types() as $customer_type ) {
+				if ( $customer_type['type_name_plural'] === $name ) {
+					$known = true;
+				}
+			}
+			if ( ! $known || ! module_customer::can_i( 'create', $name ) || ! module_customer::can_i( 'edit', $name ) ) {
+				self::refuse_write( $denied, _BASE_HREF );
+			}
+
+			return;
+		}
+		if ( 'module_language::handle_import' === $callback ) {
+			if ( ! module_config::can_i( 'edit', 'Settings' ) || ! module_language::can_i( 'edit', 'Language' ) ) {
+				self::refuse_write( $denied, _BASE_HREF );
+			}
+
+			return;
+		}
+		if ( ! isset( $checks[ $callback ] ) ) {
+			self::refuse_write( $denied, _BASE_HREF );
+		}
+		list( $class, $name ) = $checks[ $callback ];
+		if ( ! class_exists( $class, false ) || ! $class::can_i( 'create', $name ) || ! $class::can_i( 'edit', $name ) ) {
+			self::refuse_write( $denied, _BASE_HREF );
+		}
+		// Tasks are imported into one job or quote, which has to be one the user can open.
+		if ( 'module_job::handle_import_tasks' === $callback ) {
+			$job = module_job::get_job( isset( $import_options['job_id'] ) ? (int) $import_options['job_id'] : 0 );
+			if ( ! $job || ! isset( $job['job_id'] ) || $job['job_id'] != (int) $import_options['job_id'] ) {
+				self::refuse_write( $denied, _BASE_HREF );
+			}
+		} elseif ( 'module_quote::handle_import_tasks' === $callback ) {
+			$quote = module_quote::get_quote( isset( $import_options['quote_id'] ) ? (int) $import_options['quote_id'] : 0 );
+			if ( ! $quote || ! isset( $quote['quote_id'] ) || $quote['quote_id'] != (int) $import_options['quote_id'] ) {
+				self::refuse_write( $denied, _BASE_HREF );
+			}
+		}
 	}
 
 	public static function import_link( $options = array() ) {

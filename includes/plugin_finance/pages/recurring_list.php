@@ -14,7 +14,9 @@ if ( ! isset( $search['date_to'] ) ) {
 	$search['date_to'] = print_date( strtotime( '+' . (int) module_config::c( 'finance_recurring_months', 6 ) . ' months' ) );
 }
 $balance = isset( $_REQUEST['balance'] ) ? (float) $_REQUEST['balance'] : module_config::c( 'finance_recurring_start_balance', 0 );
-module_config::save_config( 'finance_recurring_start_balance', $balance );
+if ( isset( $_REQUEST['balance'] ) && module_finance::can_i( 'create', 'Finance Upcoming' ) ) {
+	module_config::save_config( 'finance_recurring_start_balance', $balance );
+}
 
 $_SESSION['_finance_recurring_ids'] = array();
 module_debug::log( array(

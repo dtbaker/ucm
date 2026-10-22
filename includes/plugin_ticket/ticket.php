@@ -187,10 +187,11 @@ class module_ticket extends module_base
 	public function __construct() {
 		$this->module_name     = 'ticket';
 		$this->module_position = 530;
-		$this->version         = 2.505;
+		$this->version         = 2.506;
 	}
 
 	public function init() {
+		// 2.506 - 2026-10-22 - saves and the bulk actions check the permission the ticket pages ask for
 		$this->links       = array();
 		$this->ticket_types = array();
 
@@ -1394,6 +1395,10 @@ Thanks,
 		$errors = array();
 		if ( 'save_saved_response' == $_REQUEST['_process'] ) {
 
+			// Canned replies are only offered to someone who answers tickets.
+			if ( ! self::can_edit_tickets() ) {
+				self::refuse_write( 'Sorry, you do not have permission to edit Tickets.' );
+			}
 			$data              = array(
 				'value' => $_REQUEST['value'],
 			);
@@ -1493,7 +1498,11 @@ Thanks,
 			redirect_browser( $this->link_open_account( $ticket_account_id ) );
 
 		} elseif ( isset( $_REQUEST['butt_del'] ) && $_REQUEST['butt_del'] && $_REQUEST['ticket_id'] ) {
+			self::require_can( 'delete', 'Tickets', false, self::link_open( false ) );
 			$data = self::get_ticket( $_REQUEST['ticket_id'] );
+			if ( ! $data || $data['ticket_id'] != (int) $_REQUEST['ticket_id'] ) {
+				self::refuse_write( 'Sorry, that ticket could not be found.', self::link_open( false ) );
+			}
 			if ( module_form::confirm_delete( 'ticket_id', "Really delete ticket: " . $this->ticket_number( $data['ticket_id'] ), self::link_open( $_REQUEST['ticket_id'] ) ) ) {
 				$this->delete_ticket( $_REQUEST['ticket_id'] );
 				set_message( "Ticket deleted successfully" );
@@ -4043,7 +4052,22 @@ Thanks,
 		if ( $ticket_id > 0 ) {
 			$test = self::get_ticket( $ticket_id );
 			if ( ! $test || $test['ticket_id'] != $ticket_id ) {
-				$ticket_id = 0;
+				// Not there, or not one this user may see. Saving would otherwise make a new
+				// ticket in its place.
+				self::refuse_write( 'Sorry, that ticket could not be found.', self::link_open( false ) );
+			}
+			// The ticket page lets in anyone who may edit or create tickets: a customer
+			// replying on their own ticket holds "create" and not "edit".
+			if ( ! self::can_i( 'edit', 'Tickets' ) ) {
+				self::require_can( 'create', 'Tickets', false, self::link_open( false ) );
+			}
+		} else {
+			self::require_can( 'create', 'Tickets', false, self::link_open( false ) );
+		}
+		// and not under a customer the user cannot see.
+		foreach ( array( 'customer_id', 'change_customer_id' ) as $customer_field ) {
+			if ( isset( $ticket_data[ $customer_field ] ) ) {
+				module_customer::require_customer_access( $ticket_data[ $customer_field ], self::link_open( false ) );
 			}
 		}
 		// handle some security before passing if off to the save
@@ -4330,6 +4354,12 @@ Thanks,
 					$ticket_ids[ $ticket_id ] = '#' . self::ticket_number( $ticket_id );
 				}
 			}
+			foreach ( $ticket_ids as $ticket_id => $ticket_number ) {
+				$ticket = self::get_ticket( $ticket_id );
+				if ( ! $ticket || ! isset( $ticket['ticket_id'] ) || $ticket['ticket_id'] != (int) $ticket_id ) {
+					unset( $ticket_ids[ $ticket_id ] ); // not one this user can open.
+				}
+			}
 			if ( count( $ticket_ids ) > 0 ) {
 				if ( module_form::confirm_delete( 'ticket_id', "Really delete tickets: " . implode( ', ', $ticket_ids ), self::link_open( false ) ) ) {
 					foreach ( $ticket_ids as $ticket_id => $ticket_number ) {
@@ -4343,6 +4373,32 @@ Thanks,
 		}
 	}
 
+	/**
+	 * The tickets a bulk action may touch, and a refusal for anyone who may not touch any.
+	 *
+	 * The ticket ids come back from the list page's checkboxes, so they are only a request.
+	 * Marking tickets read, resolved or reassigned is what answering them is: it asks for
+	 * "edit" on tickets, as the ticket page does, and each ticket has to be one the user's
+	 * ticket access lets them open.
+	 *
+	 * @param array $ticket_ids ticket_id => '#number' for the ticket ids that were ticked
+	 *
+	 * @return array the same, without the tickets the user cannot see
+	 */
+	private static function bulk_editable_tickets( $ticket_ids ) {
+		if ( ! self::can_edit_tickets() ) {
+			self::refuse_write( 'Sorry, you do not have permission to edit Tickets.', self::link_open( false ) );
+		}
+		foreach ( $ticket_ids as $ticket_id => $ticket_number ) {
+			$ticket = self::get_ticket( $ticket_id );
+			if ( ! $ticket || ! isset( $ticket['ticket_id'] ) || $ticket['ticket_id'] != (int) $ticket_id ) {
+				unset( $ticket_ids[ $ticket_id ] );
+			}
+		}
+
+		return $ticket_ids;
+	}
+
 	public static function bulk_handle_unread() {
 		if ( isset( $_REQUEST['bulk_action'] ) && isset( $_REQUEST['bulk_action']['unread'] ) && $_REQUEST['bulk_action']['unread'] == 'yes' ) {
 			// confirm deletion of these tickets:
@@ -4354,6 +4410,7 @@ Thanks,
 					$ticket_ids[ $ticket_id ] = '#' . self::ticket_number( $ticket_id );
 				}
 			}
+			$ticket_ids = self::bulk_editable_tickets( $ticket_ids );
 			if ( count( $ticket_ids ) > 0 ) {
 				foreach ( $ticket_ids as $ticket_id => $ticket_number ) {
 					self::mark_as_unread( $ticket_id );
@@ -4376,6 +4433,7 @@ Thanks,
 					$ticket_ids[ $ticket_id ] = '#' . self::ticket_number( $ticket_id );
 				}
 			}
+			$ticket_ids = self::bulk_editable_tickets( $ticket_ids );
 			if ( count( $ticket_ids ) > 0 ) {
 				$staff_id = (int) $_REQUEST['bulk_change_staff_id'];
 				foreach ( $ticket_ids as $ticket_id => $ticket_number ) {
@@ -4399,6 +4457,7 @@ Thanks,
 					$ticket_ids[ $ticket_id ] = '#' . self::ticket_number( $ticket_id );
 				}
 			}
+			$ticket_ids = self::bulk_editable_tickets( $ticket_ids );
 			if ( count( $ticket_ids ) > 0 ) {
 				foreach ( $ticket_ids as $ticket_id => $ticket_number ) {
 					self::mark_as_read( $ticket_id );
@@ -4421,6 +4480,7 @@ Thanks,
 					$ticket_ids[ $ticket_id ] = '#' . self::ticket_number( $ticket_id );
 				}
 			}
+			$ticket_ids = self::bulk_editable_tickets( $ticket_ids );
 			if ( count( $ticket_ids ) > 0 ) {
 				foreach ( $ticket_ids as $ticket_id => $ticket_number ) {
 					update_insert( 'ticket_id', $ticket_id, 'ticket', array( 'status_id' => $_REQUEST['bulk_change_status_id'] ) );
