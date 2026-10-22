@@ -38,10 +38,11 @@ class module_customer extends module_base
 	public function __construct() {
 		$this->module_name     = 'customer';
 		$this->module_position = 130;
-		$this->version         = 2.493;
+		$this->version         = 2.494;
 	}
 
 	public function init() {
+		//2.494 - 2026-10-22 - saves check the permission the customer page asks for, including for the customer types
 		$this->links          = array();
 		$this->customer_types = array();
 		//2.493 - 2026-10-17 - customer portal transactions listed in date order again
@@ -1099,6 +1100,8 @@ Invoice: <strong>{INVOICE_LINK}</strong>
 			}
 		} elseif ( isset( $_REQUEST['butt_del'] ) && $_REQUEST['butt_del'] && ! empty( $_REQUEST['customer_type_id'] ) ) {
 
+			// The page that lists customer types asks for this before it shows anything.
+			self::require_can( 'edit', 'Customer Settings', 'Config', self::link_open( false ) );
 			if ( module_form::check_secure_key() ) {
 
 				$data = self::get_customer_type( $_REQUEST['customer_type_id'] );
@@ -1147,6 +1150,11 @@ Invoice: <strong>{INVOICE_LINK}</strong>
 			exit;
 
 		} elseif ( "save_customer" == $_REQUEST['_process'] ) {
+			self::require_can_save_customer( $_REQUEST['customer_id'] );
+			if ( ! module_customer::can_i( 'edit', 'Customer Credit' ) ) {
+				// The form only offers the credit box to a role that may edit it.
+				unset( $_POST['credit'], $_REQUEST['credit'] );
+			}
 			$customer_id = $this->save_customer( $_REQUEST['customer_id'], $_POST );
 			hook_handle_callback( 'customer_save', $customer_id );
 			if ( isset( $_REQUEST['butt_send_statement_email'] ) ) {
@@ -1168,11 +1176,87 @@ Invoice: <strong>{INVOICE_LINK}</strong>
 				redirect_browser( isset( $_REQUEST['_redirect'] ) && ! empty( $_REQUEST['_redirect'] ) ? $_REQUEST['_redirect'] : self::link_open( $customer_id ) );
 			}
 		} elseif ( "save_customer_type" == $_REQUEST['_process'] ) {
+			// The same permission customer_settings_types.php asks for before it draws the form.
+			self::require_can( 'edit', 'Customer Settings', 'Config', self::link_open( false ) );
 			$customer_type_id = $this->save_customer_type( $_REQUEST['customer_type_id'], $_POST );
 			hook_handle_callback( 'customer_save_type', $customer_type_id );
 			set_message( "Customer saved successfully" );
 			redirect_browser( isset( $_REQUEST['_redirect'] ) && ! empty( $_REQUEST['_redirect'] ) ? $_REQUEST['_redirect'] : self::link_open_customer_type( $customer_type_id ) );
 		}
+	}
+
+	/**
+	 * Refuses a write that names a customer the signed-in user may not see.
+	 *
+	 * The forms only offer the customers the user's data access lets them see, so a
+	 * customer_id that get_customer() will not return was not picked from one. Anything
+	 * that files a new record under a customer - an invoice, a job, a ticket - asks this
+	 * first, or a user could hang records on a customer they cannot open.
+	 *
+	 * @param mixed        $customer_id the customer_id the form posted; empty means none
+	 * @param string|false $redirect    where to send a refused user
+	 */
+	public static function require_customer_access( $customer_id, $redirect = false ) {
+		$customer_id = (int) $customer_id;
+		if ( $customer_id <= 0 ) {
+			return;
+		}
+		$customer = self::get_customer( $customer_id );
+		if ( ! $customer || $customer['customer_id'] != $customer_id ) {
+			self::refuse_write( 'Sorry, that customer could not be found.', $redirect );
+		}
+	}
+
+	/**
+	 * Refuses a customer save the signed-in user's role does not allow.
+	 *
+	 * The edit page asks for "Create" on a new customer and "Edit" on an existing one, under
+	 * the name of the kind of customer it is - "Customers", or the plural of a lead type
+	 * such as "Leads". The record that gets saved is the one that decides the kind, not the
+	 * address the form was posted to, so this reads it from the stored customer, and from
+	 * the posted type as well when the post moves the customer to another kind.
+	 *
+	 * An existing customer the user cannot see is refused outright: save_customer() would
+	 * otherwise quietly make a new one in its place.
+	 *
+	 * @param mixed $customer_id the customer_id the form posted
+	 */
+	private static function require_can_save_customer( $customer_id ) {
+		$customer_id = (int) $customer_id;
+		$stored_type = 0;
+		if ( $customer_id > 0 ) {
+			$existing = self::get_customer( $customer_id );
+			if ( ! $existing || $existing['customer_id'] != $customer_id ) {
+				self::refuse_write( 'Sorry, that customer could not be found.', self::link_open( false ) );
+			}
+			$stored_type = (int) $existing['customer_type_id'];
+		}
+		$type_ids = array( $stored_type );
+		if ( isset( $_POST['customer_type_id'] ) && (int) $_POST['customer_type_id'] !== $stored_type ) {
+			$type_ids[] = (int) $_POST['customer_type_id'];
+		}
+		foreach ( $type_ids as $type_id ) {
+			self::require_can( $customer_id > 0 ? 'edit' : 'create', self::permission_name( $type_id ), false, self::link_open( false ) );
+		}
+	}
+
+	/**
+	 * The name customers of this kind are held under in the permission grid: "Customers",
+	 * or the plural of a lead type such as "Leads". What the edit page passes to can_i().
+	 *
+	 * @param int $customer_type_id 0 for an ordinary customer
+	 *
+	 * @return string
+	 */
+	public static function permission_name( $customer_type_id ) {
+		if ( (int) $customer_type_id > 0 ) {
+			$customer_type = self::get_customer_type( (int) $customer_type_id );
+			if ( $customer_type && ! empty( $customer_type['type_name_plural'] ) ) {
+				return $customer_type['type_name_plural'];
+			}
+		}
+
+		return 'Customers';
 	}
 
 	public function load( $customer_id ) {

@@ -11,7 +11,7 @@ class module_group extends module_base
 	public function __construct() {
 		$this->module_name     = 'group';
 		$this->module_position = 220;
-		$this->version         = 2.199;
+		$this->version         = 2.200;
 	}
 	// 2.199 - 2026-10-17 - 4.0.0 relaunch: security token on bulk actions and CSV export, group picker converted
 	// 2.198 - 2016-11-01 - layout improvement
@@ -51,6 +51,7 @@ class module_group extends module_base
 	}
 
 	function init() {
+		// 2.200 - 2026-10-22 - saves and adding records to a group check the permission the group pages ask for
 		$this->links = array();
 
 		if ( self::can_i( 'edit', 'Groups' ) ) {
@@ -167,6 +168,8 @@ class module_group extends module_base
 			module_form::reject_invalid_form_auth();
 		}
 		if ( isset( $_REQUEST['butt_del'] ) && $_REQUEST['butt_del'] && $_REQUEST['group_id'] ) {
+			// The group page asks for "edit" and offers its delete button on the same terms.
+			self::require_can( 'edit', 'Groups', false, self::link_open( false ) );
 			$data = self::get_group( $_REQUEST['group_id'] );
 			if ( module_form::confirm_delete( 'group_id', "Really delete group: " . $data['name'], self::link_open( $_REQUEST['group_id'] ) ) ) {
 				$this->delete_group( $_REQUEST['group_id'] );
@@ -174,6 +177,7 @@ class module_group extends module_base
 				redirect_browser( $this->link_open( false ) );
 			}
 		} elseif ( 'save_group' == $_REQUEST['_process'] ) {
+			self::require_can( 'edit', 'Groups', false, self::link_open( false ) );
 			$group_id = update_insert( 'group_id', $_REQUEST['group_id'], 'group', $_POST );
 			set_message( 'Group saved successfully' );
 			redirect_browser( $this->link_open( $group_id ) );
@@ -716,6 +720,15 @@ class module_group extends module_base
 			}
 		}
 		if ( isset( $_REQUEST['add_group_go'] ) && $_REQUEST['add_group_go'] == 'yes' ) {
+			// Putting records into a group is an edit to the group's own permission - "Customer
+			// Groups", "Job Groups" - which the list page's title names. The list only draws
+			// the box for a role that may view them, and says nothing of who may add.
+			global $plugins;
+			$group_owner_table = isset( self::$pagination_options['fields']['owner_table'] ) ? (string) self::$pagination_options['fields']['owner_table'] : '';
+			$group_title       = isset( self::$pagination_options['fields']['title'] ) ? (string) self::$pagination_options['fields']['title'] : '';
+			if ( ! $group_owner_table || ! $group_title || ! isset( $plugins[ $group_owner_table ] ) || ! $plugins[ $group_owner_table ]->can_i( 'edit', $group_title ) ) {
+				self::refuse_write( 'Sorry, you do not have permission to add records to groups.', _BASE_HREF );
+			}
 			// we are posting back tot his script with a go!
 			if ( $rows instanceof mysqli_result ) {
 				$new_rows = array();

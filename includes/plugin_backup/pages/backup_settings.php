@@ -26,7 +26,10 @@ if ( isset( $_REQUEST['backup_id'] ) && $_REQUEST['backup_id'] ) {
 			redirect_browser( _BASE_HREF );
 		}
 		if ( ! $backup['backup_file'] ) {
-			// start the ajax backup magic.
+			// start the ajax backup magic. Making a backup is "edit" on Backups, as saving one is.
+			if ( ! module_backup::can_i( 'edit', 'Backups' ) ) {
+				redirect_browser( _BASE_HREF );
+			}
 
 			$backup_file_base = 'backup_' . date( 'Y-m-d' ) . '_' . md5( _UCM_SECRET . time() ) . '';
 			update_insert( 'backup_id', $backup_id, 'backup', array(

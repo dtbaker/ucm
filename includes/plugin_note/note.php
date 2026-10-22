@@ -19,7 +19,7 @@ class module_note extends module_base
 	public function __construct() {
 		$this->module_name     = 'note';
 		$this->module_position = 310;
-		$this->version         = 2.279;
+		$this->version         = 2.280;
 	}
 	// 2.279 - 2026-10-17 - 4.0.0 relaunch: security token on note saves, no untrusted unserialise, PHP notices fixed
 	// 2.278 - 2016-11-16 - fontawesome icon fixes
@@ -77,6 +77,7 @@ class module_note extends module_base
 	}
 
 	function init() {
+		// 2.280 - 2026-10-22 - saving a note checks the permission of the notes box it belongs to
 		$this->links     = array();
 		$this->user_types = array();
 		module_config::register_css( 'note', 'notes.css' );
@@ -578,6 +579,7 @@ class module_note extends module_base
 			if ( ! $options ) {
 				return;
 			}
+			self::require_can_write_note( $note_id, $options );
 			if ( ! $note_id || $note_id == 'new' ) {
 				$note_data = array(
 					'note_id'     => $note_id,
@@ -613,6 +615,48 @@ class module_note extends module_base
 			}
 			echo $this->print_note( $note_id, false, ( isset( $options['display_summary'] ) && $options['display_summary'] ), false, false, $options );
 			exit;
+		}
+	}
+
+	/**
+	 * Refuses a note save the signed-in user's role does not allow.
+	 *
+	 * Notes hang off a record of any kind, and the form says which in an `options` field
+	 * the browser sends back, so nothing in it can be taken on trust. The page that draws a
+	 * notes box asks the owning plugin for the box's own permission - "Job Notes",
+	 * "All Customer Notes" - and this asks the same, for "create" on a new note and "edit"
+	 * on an existing one. An existing note is judged by the record it is stored against,
+	 * not the one the post claims, and the record itself has to be one the user can open.
+	 *
+	 * @param mixed $note_id the note_id the form posted
+	 * @param array $options the notes box's decoded options
+	 */
+	private static function require_can_write_note( $note_id, &$options ) {
+		global $plugins;
+		$existing_note = false;
+		if ( $note_id && $note_id != 'new' ) {
+			$existing_note = self::get_note( (int) $note_id );
+			if ( ! $existing_note || $existing_note['note_id'] != (int) $note_id ) {
+				self::refuse_write( 'Sorry, that note could not be found.' );
+			}
+			$options['owner_table'] = $existing_note['owner_table'];
+			$options['owner_id']    = $existing_note['owner_id'];
+		}
+		$owner_table = isset( $options['owner_table'] ) && is_string( $options['owner_table'] ) ? $options['owner_table'] : '';
+		if ( ! $owner_table || ! isset( $plugins[ $owner_table ] ) || empty( $options['title'] ) || ! is_string( $options['title'] ) ) {
+			self::refuse_write( 'Sorry, that note could not be saved.' );
+		}
+		if ( ! $plugins[ $owner_table ]->can_i( $existing_note ? 'edit' : 'create', $options['title'] ) ) {
+			self::refuse_write( 'Sorry, you do not have permission to ' . ( $existing_note ? 'edit' : 'create' ) . ' ' . $options['title'] . '.' );
+		}
+		// The record the note is on, looked up with its own plugin so its data access rules apply.
+		$owner_id = isset( $options['owner_id'] ) ? (int) $options['owner_id'] : 0;
+		$getter   = array( $plugins[ $owner_table ], 'get_' . $owner_table );
+		if ( $owner_id > 0 && is_callable( $getter ) ) {
+			$owner = call_user_func( $getter, $owner_id );
+			if ( ! is_array( $owner ) || ! isset( $owner[ $owner_table . '_id' ] ) || $owner[ $owner_table . '_id' ] != $owner_id ) {
+				self::refuse_write( 'Sorry, that record could not be found.' );
+			}
 		}
 	}
 

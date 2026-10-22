@@ -25,10 +25,11 @@ class module_change_request extends module_base
 	public function __construct() {
 		$this->module_name     = 'change_request';
 		$this->module_position = 30;
-		$this->version         = 2.299;
+		$this->version         = 2.300;
 	}
 
 	public function init() {
+		// 2.300 - 2026-10-22 - saves check the permission the change request page asks for
 		$this->links                = array();
 		$this->change_request_types = array();
 		// 2.299 - 2026-10-17 - 4.0.0 relaunch: security token on saves, deleted requests clear from cache, PHP 8.4
@@ -293,6 +294,13 @@ Change request details:<br><br>
             }
 		}else */
 		if ( "save_change_request" == $_REQUEST['_process'] ) {
+			// "Create" for a new change request and "Edit" for an existing one. The public
+			// request form does not come through here: it goes by external_hook().
+			self::require_can_save( isset( $_REQUEST['change_request_id'] ) ? $_REQUEST['change_request_id'] : 0, 'Change Requests', false, self::link_open( false ), function ( $id ) {
+				$found = self::get_change_request( $id );
+
+				return isset( $found['change_request_id'] ) && $found['change_request_id'] == $id;
+			} );
 			$change_request_id = $this->save_change_request( $_REQUEST['change_request_id'], $_POST );
 			set_message( "Change_request saved successfully" );
 			redirect_browser( self::link_open( $change_request_id ) );

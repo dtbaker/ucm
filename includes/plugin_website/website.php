@@ -20,10 +20,11 @@ class module_website extends module_base
 	public function __construct() {
 		$this->module_name     = 'website';
 		$this->module_position = 570;
-		$this->version         = 2.272;
+		$this->version         = 2.273;
 	}
 
 	public function init() {
+		//2.273 - 2026-10-22 - saves check the permission the website page asks for
 		$this->links         = array();
 		$this->website_types = array();
 		//2.272 - 2026-10-17 - 4.0.0 relaunch: delete permission checked, security token on website saves
@@ -267,6 +268,13 @@ class module_website extends module_base
 				redirect_browser( self::link_open( false ) );
 			}
 		} elseif ( "save_website" == $_REQUEST['_process'] ) {
+			// "Create" for a new one and "Edit" for an existing one, as the website page asks.
+			self::require_can_save( isset( $_REQUEST['website_id'] ) ? $_REQUEST['website_id'] : 0, 'Websites', false, self::link_open( false ), function ( $id ) {
+				$found = self::get_website( $id );
+
+				return isset( $found['website_id'] ) && $found['website_id'] == $id;
+			} );
+			module_customer::require_customer_access( isset( $_POST['customer_id'] ) ? $_POST['customer_id'] : 0, self::link_open( false ) );
 			$website_id = $this->save_website( $_REQUEST['website_id'], $_POST );
 			hook_handle_callback( 'website_save', $website_id );
 			$_REQUEST['_redirect'] = $this->link_open( $website_id );

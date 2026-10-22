@@ -9,7 +9,7 @@ class module_backup extends module_base
 	public function __construct() {
 		$this->module_name     = 'backup';
 		$this->module_position = 90;
-		$this->version         = 2.118;
+		$this->version         = 2.119;
 	}
 	// 2.118 - 2026-10-17 - 4.0.0 relaunch: forms use the form helper, public pages no longer crash on odd parameters, PHP 8.4
 	// 2.117 - 2017-05-02 - backup fix
@@ -36,6 +36,7 @@ class module_backup extends module_base
 	}
 
 	public function init() {
+		// 2.119 - 2026-10-22 - starting a backup checks the permission to edit backups
 		$this->links = array();
 
 		module_config::register_js( 'backup', 'backup.js' );

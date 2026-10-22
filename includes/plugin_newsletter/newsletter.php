@@ -16,7 +16,7 @@ class module_newsletter extends module_base
 	public $links;
 	public $newsletter_types;
 
-	public $version = 2.471;
+	public $version = 2.472;
 	// 2.471 - 2026-10-17 - newsletter list no longer warns about a newsletter with no template
 	// 2.470 - 2026-10-17 - 4.0.0 relaunch: member newsletter page crash fixed, delete permission checked, security token on saves
 	// 2.469 - 2021-04-07 - php8 compatibility fix
@@ -93,6 +93,7 @@ class module_newsletter extends module_base
 	}
 
 	public function init() {
+		// 2.472 - 2026-10-22 - saves and sends check the permission the newsletter pages ask for
 		$this->links            = array();
 		$this->newsletter_types = array();
 
@@ -390,6 +391,12 @@ class module_newsletter extends module_base
 			}
 		} elseif ( "save_newsletter" == $_REQUEST['_process'] ) {
 			$newsletter_id = isset( $_REQUEST['newsletter_id'] ) ? (int) $_REQUEST['newsletter_id'] : false;
+			// "Create" for a new newsletter and "Edit" for an existing one, as the newsletter page asks.
+			self::require_can_save( $newsletter_id, 'Newsletters', false, self::link_list( false ), function ( $id ) {
+				$found = self::get_newsletter( $id );
+
+				return isset( $found['newsletter_id'] ) && $found['newsletter_id'] == $id;
+			} );
 			$newsletter_id = $this->save_newsletter( $newsletter_id, $_POST );
 			if ( isset( $_REQUEST['butt_send'] ) ) {
 				redirect_browser( $this->link_send( $newsletter_id ) );
@@ -415,6 +422,8 @@ class module_newsletter extends module_base
 			set_message( "Newsletter saved successfully" );
 			redirect_browser( $this->link_open( $newsletter_id ) );
 		} elseif ( "send_send" == $_REQUEST['_process'] ) {
+			// Sending is what the "Send Newsletter" page lets in, and it asks for nothing more.
+			self::require_can( 'view', 'Send Newsletter', false, self::link_list( false ) );
 			$newsletter_id = (int) $_REQUEST['newsletter_id'];
 			$send_id       = (int) $_REQUEST['send_id'];
 			if ( $newsletter_id && $send_id ) {
@@ -427,6 +436,7 @@ class module_newsletter extends module_base
 			}
 
 		} elseif ( "modify_send" == $_REQUEST['_process'] ) {
+			self::require_can( 'view', 'Send Newsletter', false, self::link_list( false ) );
 			$send_id       = (int) $_REQUEST['send_id'];
 			$newsletter_id = (int) $_REQUEST['newsletter_id'];
 			$send          = get_single( 'newsletter_send', array( 'send_id', 'newsletter_id' ), array(
@@ -455,6 +465,7 @@ class module_newsletter extends module_base
 			}
 
 		} elseif ( "enque_send" == $_REQUEST['_process'] ) {
+			self::require_can( 'view', 'Send Newsletter', false, self::link_list( false ) );
 			$newsletter_id = (int) $_REQUEST['newsletter_id'];
 			$send_id       = (int) $_REQUEST['send_id'];
 
@@ -736,6 +747,10 @@ class module_newsletter extends module_base
 			}
 		} elseif ( "save_newsletter_template" == $_REQUEST['_process'] ) {
 
+			// Templates are listed under Settings, which is what asks for permission to edit them.
+			if ( ! module_config::can_i( 'edit', 'Settings' ) ) {
+				self::refuse_write( 'Sorry, you do not have permission to edit Settings.', self::link_open_template( false ) );
+			}
 			if ( isset( $_REQUEST['butt_del'] ) ) {
 				$data = self::get_newsletter_template( $_REQUEST['newsletter_template_id'] );
 				if ( module_form::confirm_delete( 'newsletter_template_id', "Really delete newsletter template: " . $data['newsletter_template_name'], self::link_open_template( $_REQUEST['newsletter_template_id'] ) ) ) {

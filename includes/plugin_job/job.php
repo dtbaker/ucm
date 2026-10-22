@@ -30,7 +30,7 @@ class module_job extends module_base
 	public $links;
 	public $job_types;
 
-	public $version = 2.617;
+	public $version = 2.618;
 	//2.617 - 2026-10-17 - 4.0.0 relaunch: saves without an hourly rate keep task prices, security token, missing records handled
 	//2.616 - 2019-04-06 - php error fix
 	//2.615 - 2018-06-05 - fix for hourly rate when creating a job
@@ -252,6 +252,7 @@ class module_job extends module_base
 	}
 
 	public function init() {
+		//2.618 - 2026-10-22 - task saves check the permission the job page asks for, and so does deleting a job
 		$this->links     = array();
 		$this->job_types = array();
 
@@ -1489,10 +1490,17 @@ Job Name: <strong>{JOB_NAME}</strong> <br/>
 
 		if ( 'save_job_task' === $_REQUEST['_process'] ) {
 
+			// The task form is only reachable from a job the user can open and edit tasks on.
+			$task_job = self::get_job( isset( $_POST['job_id'] ) ? (int) $_POST['job_id'] : 0 );
+			if ( ! $task_job || $task_job['job_id'] != (int) $_POST['job_id'] ) {
+				self::refuse_write( 'Sorry, that job could not be found.', self::link_open( false ) );
+			}
+			self::require_can( 'edit', 'Job Tasks', false, self::link_open( $task_job['job_id'] ) );
 			$jobtask = new UCMJobTask();
 			$jobtask->handle_submit();
 
 		} elseif ( isset( $_REQUEST['butt_del'] ) && $_REQUEST['butt_del'] && $_REQUEST['job_id'] ) {
+			self::require_can( 'delete', 'Jobs', false, self::link_open( false ) );
 			$data = self::get_job( $_REQUEST['job_id'] );
 			if ( module_form::confirm_delete( 'job_id', _l( "Really delete job: %s", $data['name'] ), self::link_open( $_REQUEST['job_id'] ) ) ) {
 				$this->delete_job( $_REQUEST['job_id'] );
@@ -1599,6 +1607,9 @@ Job Name: <strong>{JOB_NAME}</strong> <br/>
 
 				$task_id     = (int) $_REQUEST['task_id'];
 				$task_log_id = (int) $_REQUEST['delete_task_log_id'];
+				if ( ! isset( $job_tasks[ $task_id ] ) ) {
+					exit; // a task on some other job.
+				}
 				$sql         = "DELETE FROM `" . _DB_PREFIX . "task_log` WHERE task_id = '$task_id' AND task_log_id = '$task_log_id' LIMIT 1";
 				query( $sql );
 				echo 'done';
@@ -1705,6 +1716,18 @@ Job Name: <strong>{JOB_NAME}</strong> <br/>
 				set_error( 'Permission denied' );
 				exit;
 			}
+			// A new task needs "create" and a changed or removed one needs "edit", the same
+			// two the job page asks for before it offers each.
+			$existing_tasks = self::get_tasks( $job_id );
+			$needs          = array();
+			foreach ( isset( $_POST['job_task'] ) && is_array( $_POST['job_task'] ) ? array_keys( $_POST['job_task'] ) : array() as $posted_task_id ) {
+				$needs[ (int) $posted_task_id > 0 && isset( $existing_tasks[ (int) $posted_task_id ] ) ? 'edit' : 'create' ] = true;
+			}
+			foreach ( array_keys( $needs ) as $needed ) {
+				if ( ! self::can_i( $needed, 'Job Tasks' ) ) {
+					self::refuse_write( 'Sorry, you do not have permission to ' . $needed . ' Job Tasks.' );
+				}
+			}
 			$result   = $this->save_job_tasks( $job_id, $_POST );
 			$job_data = self::get_job( $job_id, false );
 			//if(!$job_data || $job_data['job_id'] != $job_id)
@@ -1810,8 +1833,9 @@ Job Name: <strong>{JOB_NAME}</strong> <br/>
 			if ( (int) $job_id > 0 ) {
 				$original_job_data = self::get_job( $job_id, false );
 				if ( ! $original_job_data || $original_job_data['job_id'] != $job_id ) {
-					$original_job_data = array();
-					$job_id            = false;
+					// Not there, or not one this user may see. Saving would otherwise make a
+					// new job in its place.
+					self::refuse_write( 'Sorry, that job could not be found.', self::link_open( false ) );
 				}
 			} else {
 				$original_job_data = array();
@@ -1827,6 +1851,14 @@ Job Name: <strong>{JOB_NAME}</strong> <br/>
 				// user not allowed to create jobs.
 				set_error( 'Unable to edit Jobs' );
 				redirect_browser( self::link_open( false ) );
+			}
+
+			// Renewing makes a second job, and a deposit makes an invoice.
+			if ( isset( $_REQUEST['generate_renewal'] ) && $_REQUEST['generate_renewal'] > 0 ) {
+				self::require_can( 'create', 'Jobs', false, self::link_open( false ) );
+			}
+			if ( isset( $_REQUEST['butt_create_deposit'] ) && isset( $_REQUEST['job_deposit'] ) && $_REQUEST['job_deposit'] > 0 ) {
+				module_invoice::require_can( 'create', 'Invoices', false, self::link_open( false ) );
 			}
 
 			$job_id = $this->save_job( $job_id, $_POST );

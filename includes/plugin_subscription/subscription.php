@@ -22,10 +22,11 @@ class module_subscription extends module_base
 	public function __construct() {
 		$this->module_name     = 'subscription';
 		$this->module_position = 30;
-		$this->version         = 2.205;
+		$this->version         = 2.206;
 	}
 
 	public function init() {
+		// 2.206 - 2026-10-22 - saves check the permission the subscription page asks for
 		$this->links              = array();
 		$this->subscription_types = array();
 		// 2.205 - 2026-10-17 - 4.0.0 relaunch: two cron runs no longer bill twice, security token on saves, missing records handled
@@ -589,6 +590,7 @@ class module_subscription extends module_base
 			module_form::reject_invalid_form_auth();
 		}
 		if ( isset( $_REQUEST['butt_del'] ) && $_REQUEST['butt_del'] && $_REQUEST['subscription_id'] ) {
+			self::require_can( 'delete', 'Subscriptions', false, self::link_open( false ) );
 			$data = self::get_subscription( $_REQUEST['subscription_id'] );
 			if ( module_form::confirm_delete( 'subscription_id', "Really delete subscription: " . $data['name'], self::link_open( $_REQUEST['subscription_id'] ) ) ) {
 				$this->delete_subscription( $_REQUEST['subscription_id'] );
@@ -596,6 +598,12 @@ class module_subscription extends module_base
 				redirect_browser( self::link_open( false ) );
 			}
 		} elseif ( "save_subscription" == $_REQUEST['_process'] ) {
+			// "Create" for a new one and "Edit" for an existing one, as the subscription page asks.
+			self::require_can_save( isset( $_REQUEST['subscription_id'] ) ? $_REQUEST['subscription_id'] : 0, 'Subscriptions', false, self::link_open( false ), function ( $id ) {
+				$found = self::get_subscription( $id );
+
+				return isset( $found['subscription_id'] ) && $found['subscription_id'] == $id;
+			} );
 			$subscription_id = $this->save_subscription( $_REQUEST['subscription_id'], $_POST );
 			set_message( "Subscription saved successfully" );
 			redirect_browser( self::link_open( $subscription_id ) );

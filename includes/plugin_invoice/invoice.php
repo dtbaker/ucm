@@ -44,10 +44,11 @@ class module_invoice extends module_base
 	public function __construct() {
 		$this->module_name     = 'invoice';
 		$this->module_position = 250;
-		$this->version         = 2.810;
+		$this->version         = 2.811;
 	}
 
 	public function init() {
+		//2.811 - 2026-10-22 - saves check the permission the invoice page asks for
 		$this->links         = array();
 		$this->invoice_types = array();
 		//2.810 - 2026-10-17 - 4.0.0 relaunch: Stripe Checkout, shared payment recording, payment checks, renewal totals, no PHP notices
@@ -1628,7 +1629,12 @@ Job: <strong>{JOB_NAME}</strong> <br/>
 		} elseif ( "assign_credit_to_customer" == $_REQUEST['_process'] ) {
 			$invoice_id = (int) $_REQUEST['invoice_id'];
 			if ( $invoice_id > 0 ) {
+				// Moving an overpayment onto the customer's account is an edit to the invoice.
+				self::require_can( 'edit', 'Invoices', false, self::link_open( false ) );
 				$invoice_data = $this->get_invoice( $invoice_id );
+				if ( ! module_security::can_access_data( 'invoice', $invoice_data, $invoice_id ) ) {
+					self::refuse_write( 'Sorry, that invoice could not be found.', self::link_open( false ) );
+				}
 				$credit       = $invoice_data['total_amount_credit'];
 				if ( $credit > 0 ) {
 					if ( $invoice_data['customer_id'] ) {
@@ -1663,7 +1669,9 @@ Job: <strong>{JOB_NAME}</strong> <br/>
 
 			}
 
-			if ( ! $this->can_i( 'edit', 'Invoices' ) ) {
+			// A new invoice needs "create", the same as the page that offers the form, and an
+			// existing one "edit".
+			if ( ! $this->can_i( $invoice_id > 0 ? 'edit' : 'create', 'Invoices' ) ) {
 				// bug fix, customer making a payment displays this edit access denied.
 				if ( isset( $_REQUEST['butt_makepayment'] ) && $_REQUEST['butt_makepayment'] == 'yes' ) {
 					//redirect_browser(self::link_public_pay($invoice_id));
@@ -1671,9 +1679,21 @@ Job: <strong>{JOB_NAME}</strong> <br/>
 
 					return;
 				} else {
-					echo 'Edit access denied. Sorry.';
+					echo ( $invoice_id > 0 ? 'Edit' : 'Create' ) . ' access denied. Sorry.';
 					exit;
 				}
+			}
+			// Nor may an invoice be filed under a customer or job the user cannot see.
+			module_customer::require_customer_access( isset( $_POST['customer_id'] ) ? $_POST['customer_id'] : 0, self::link_open( false ) );
+			if ( ! empty( $_POST['job_id'] ) && class_exists( 'module_job', false ) ) {
+				$linked_job = module_job::get_job( (int) $_POST['job_id'] );
+				if ( ! $linked_job || $linked_job['job_id'] != (int) $_POST['job_id'] ) {
+					self::refuse_write( 'Sorry, that job could not be found.', self::link_open( false ) );
+				}
+			}
+			// Renewing or crediting makes another invoice.
+			if ( ( isset( $_REQUEST['generate_renewal'] ) && $_REQUEST['generate_renewal'] > 0 ) || ! empty( $_REQUEST['butt_generate_credit'] ) ) {
+				self::require_can( 'create', 'Invoices', false, self::link_open( false ) );
 			}
 			$data = $_POST;
 
@@ -4546,8 +4566,9 @@ Job: <strong>{JOB_NAME}</strong> <br/>
 			// confirm deletion of these tickets:
 			$invoice_ids = isset( $_REQUEST['invoice_bulk_operation'] ) && is_array( $_REQUEST['invoice_bulk_operation'] ) ? $_REQUEST['invoice_bulk_operation'] : array();
 			foreach ( $invoice_ids as $invoice_id => $k ) {
-				if ( $k != 'yes' ) {
-					unset( $invoice_ids[ $invoice_id ] );
+				$invoice = self::get_invoice( (int) $invoice_id );
+				if ( $k != 'yes' || ! $invoice || ! isset( $invoice['invoice_id'] ) || $invoice['invoice_id'] != (int) $invoice_id || ! module_security::can_access_data( 'invoice', $invoice, (int) $invoice_id ) ) {
+					unset( $invoice_ids[ $invoice_id ] ); // not ticked, or not one this user may open.
 				} else {
 					$invoice_ids[ $invoice_id ] = module_invoice::link_open( $invoice_id, true );
 				}
