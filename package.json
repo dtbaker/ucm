@@ -8,6 +8,6 @@
   },
   "devDependencies": {
     "@playwright/test": "^1.64.0",
-    "mysql2": "^3.23.1"
+    "mysql2": "^3.24.5"
   }
 }
