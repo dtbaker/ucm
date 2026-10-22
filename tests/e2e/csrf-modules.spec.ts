@@ -655,7 +655,9 @@ test.describe('Form auth key, popups', () => {
     const name = stamped('CSRF Test Invoice');
     let doomed: string[] = [];
     try {
-      await page.goto('/?m[]=invoice&p[]=invoice_admin&invoice_id=new&customer_id=1');
+      // A customer that exists: saving an invoice for one that does not is refused now.
+      const customerId = await aCustomer(page);
+      await page.goto('/?m[]=invoice&p[]=invoice_admin&invoice_id=new&customer_id=' + customerId);
       const form = page.locator('form:has(input[name="_process"][value="save_invoice"])');
       await expect(form.locator('input[name="form_auth_key"]').first()).toBeAttached();
 
