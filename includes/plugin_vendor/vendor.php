@@ -32,10 +32,11 @@ class module_vendor extends module_base
 	public function __construct() {
 		$this->module_name     = 'vendor';
 		$this->module_position = 560;
-		$this->version         = 2.124;
+		$this->version         = 2.125;
 	}
 
 	public function init() {
+		// 2.125 - 2026-11-01 - hidden until there are vendors, and called Vendors (old) in the menu: it is to be merged into Customers
 		// 2.124 - 2026-10-22 - saves check the permission the vendor page asks for
 		$this->links        = array();
 		$this->vendor_types = array();
@@ -49,11 +50,34 @@ class module_vendor extends module_base
 		module_config::register_css( 'vendor', 'vendor.css' );
 	}
 
+	/** @var bool|null whether the vendor table has a row in it, found once per request */
+	private static $has_vendors = null;
+
+	/**
+	 * This plugin is to be merged into the Customers area, where a customer type called
+	 * Vendors does the same job and can be invoiced. Until then it stays for the installs that
+	 * already hold vendors, and is invisible to every other: with no vendor in the table there is
+	 * nothing to show, so the application skips init() and leaves it out of the menu. See
+	 * module_base::is_dormant().
+	 *
+	 * One row is enough to wake it, and it is a single indexed look at the table, where the
+	 * menu check below joins the vendor, contact and address tables.
+	 */
+	public function is_dormant() {
+		if ( self::$has_vendors === null ) {
+			self::$has_vendors = self::db_table_exists( 'vendor' )
+				&& (bool) qa1( 'SELECT `vendor_id` FROM `' . _DB_PREFIX . 'vendor` LIMIT 1' );
+		}
+
+		return ! self::$has_vendors;
+	}
+
 	public function pre_menu() {
 
+		// Only reached when there are vendors (see is_dormant()). Of those, the ones this user may see.
 		if ( count( $this->get_vendors( array(), array( 'columns' => 'c.vendor_id' ) ) ) && $this->can_i( 'view', 'Vendors' ) ) {
 			$this->links['vendors'] = array(
-				"name"      => "Vendors",
+				"name"      => "Vendors (old)",
 				"p"         => "vendor_admin_list",
 				"args"      => array( 'vendor_id' => false ),
 				'icon_name' => 'users',
