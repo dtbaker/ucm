@@ -22,10 +22,11 @@ return array(
 	// A member of the agency's own team: the customers, work, quotes, invoices and tickets
 	// the administrator sees, to look at.
 	'Demo Staff'    => array(
-		'Customer'              => array( 'Customers', 'Customer', 'Contacts', 'All Customer Contacts', 'All Customer Notes', 'Customer Groups', 'Leads', 'Suppliers' ),
+		// "Vendors", and its contacts and notes, are the demo's own customer type for suppliers.
+		// The old Vendors plugin, which is to be merged into Customers, is not given: see
+		// roles-retired.php.
+		'Customer'              => array( 'Customers', 'Customer', 'Contacts', 'All Customer Contacts', 'All Customer Notes', 'Customer Groups', 'Leads', 'Suppliers', 'Vendors', 'All Vendor Contacts', 'All Vendor Notes' ),
 		'Customer Data Access'  => array( 'All customers in system' ),
-		'Vendor'                => array( 'Vendors', 'Contacts', 'All Vendor Contacts' ),
-		'Vendor Data Access'    => array( 'All vendors in system' ),
 		// Config > Users is what opens a user's page, including a staff member's own profile.
 		// With "Only My Account" that is the only account they are shown.
 		'Config'                => array( 'Users' ),

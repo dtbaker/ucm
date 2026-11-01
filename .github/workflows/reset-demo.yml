@@ -84,6 +84,14 @@ jobs:
         env:
           DEMO_DEPLOY_PATH: ${{ secrets.DEMO_DEPLOY_PATH }}
         run: ssh demo "cd '$DEMO_DEPLOY_PATH' && php=/usr/local/php82/bin/php && { [ -x \$php ] || php=php; } && UCM_DEMO_ACTION=seeded \$php -q custom/demo/reset.php seeded"
+      - name: Save the changes to the sample data in the snapshot
+        # A snapshot taken before the seed's latest changes: it is brought up to date, and
+        # "snapshot" repairs first, which removes what the update replaced. Not "seeded",
+        # which would date all of the data as made today.
+        if: steps.seed.outputs.migrated == 'true'
+        env:
+          DEMO_DEPLOY_PATH: ${{ secrets.DEMO_DEPLOY_PATH }}
+        run: ssh demo "cd '$DEMO_DEPLOY_PATH' && php=/usr/local/php82/bin/php && { [ -x \$php ] || php=php; } && UCM_DEMO_ACTION=snapshot \$php -q custom/demo/reset.php snapshot"
       - name: Every demo login signs in
         env:
           DEMO_URL: ${{ secrets.DEMO_URL }}

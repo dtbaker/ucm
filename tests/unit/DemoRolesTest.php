@@ -135,4 +135,42 @@ class DemoRolesTest extends TestCase {
 	private function is_data_access( $category ) {
 		return substr( $category, -11 ) === 'Data Access' || 'Ticket Access' === $category;
 	}
+
+	private function retired() {
+		return require dirname( __DIR__, 2 ) . '/custom/demo/roles-retired.php';
+	}
+
+	public function test_nothing_is_both_given_and_taken_away() {
+		$roles = $this->roles();
+		foreach ( $this->retired() as $role => $categories ) {
+			$this->assertArrayHasKey( $role, $roles, "$role is retired from, but is not a demo role" );
+			foreach ( $categories as $category => $names ) {
+				foreach ( $names as $name ) {
+					$given = isset( $roles[ $role ][ $category ] ) ? $roles[ $role ][ $category ] : array();
+					$this->assertNotContains( $name, $given, "$role is given and also retired from $category: $name" );
+				}
+			}
+		}
+	}
+
+	public function test_signing_in_is_never_retired() {
+		foreach ( $this->retired() as $role => $categories ) {
+			$this->assertNotContains( 'Can User Login', isset( $categories['User Specific'] ) ? $categories['User Specific'] : array(), "$role could be made unable to sign in" );
+		}
+	}
+
+	public function test_staff_see_the_vendors_customer_type_and_not_the_old_vendors_plugin() {
+		$staff = $this->roles()['Demo Staff'];
+
+		$this->assertContains( 'Vendors', $staff['Customer'], 'the Vendors customer type has to be in the staff menu' );
+		$this->assertContains( 'All Vendor Contacts', $staff['Customer'] );
+		$this->assertContains( 'All Vendor Notes', $staff['Customer'] );
+		$this->assertArrayNotHasKey( 'Vendor', $staff, 'the old Vendors plugin is to be merged into Customers' );
+		$this->assertArrayNotHasKey( 'Vendor Data Access', $staff );
+		$this->assertSame(
+			array( 'Vendor' => array( 'Vendors', 'Contacts', 'All Vendor Contacts' ), 'Vendor Data Access' => array( 'All vendors in system' ) ),
+			$this->retired()['Demo Staff'],
+			'a demo that already gave staff the old permissions has to have them taken away'
+		);
+	}
 }
