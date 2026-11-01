@@ -5130,7 +5130,7 @@ parameters:
 		-
 			message: '#^Constant _DB_PREFIX not found\.$#'
 			identifier: constant.notFound
-			count: 17
+			count: 18
 			path: includes/plugin_vendor/vendor.php
 
 		-

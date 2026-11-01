@@ -7,7 +7,8 @@ $search = isset( $_REQUEST['search'] ) ? $_REQUEST['search'] : array();
 if ( ! module_vendor::can_i( 'view', $page_type ) ) {
 	redirect_browser( _BASE_HREF );
 }
-$module->page_title = _l( $page_type );
+// "Vendors" is the permission's name and has to stay; the page is called what the menu calls it.
+$module->page_title = _l( 'Vendors (old)' );
 
 
 $vendors = module_vendor::get_vendors( $search, array( 'as_resource' => true ) );
@@ -171,7 +172,7 @@ if ( file_exists( 'includes/plugin_user/pages/contact_admin_list.php' ) && modul
 print_heading( array(
 	'main'   => true,
 	'type'   => 'h2',
-	'title'  => $page_type,
+	'title'  => _l( 'Vendors (old)' ),
 	'button' => $header_buttons,
 ) );
 

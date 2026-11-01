@@ -18,6 +18,28 @@ class module_base
 	}
 
 	/**
+	 * Is this plugin being retired, with nothing left in it?
+	 *
+	 * A plugin that is to be merged into another part of the application can say so here
+	 * while its own tables are empty, and the application then leaves it out: init.php does not
+	 * call its init(), and get_menu() gives it no sidebar links. A new install never sees it and
+	 * is never charged for it, and an install that has data in it carries on exactly as before.
+	 * The plugin comes back by itself on the next page load after a record is made.
+	 *
+	 * Only that work is skipped. A page of the plugin still opens if somebody types its address,
+	 * and the static helpers other plugins call work as they always did, so an answer of true
+	 * must only ever mean there is nothing for the skipped work to act on.
+	 *
+	 * Called from init.php before init(), and again from get_menu(). A plugin that overrides it
+	 * should remember its answer for the request: it may be asked a dozen times.
+	 *
+	 * @return bool
+	 */
+	public function is_dormant() {
+		return false;
+	}
+
+	/**
 	 * Third party libraries this plugin needs at runtime.
 	 *
 	 * Return an array keyed by library id. Each entry is handed to ucm_libraries, which
@@ -186,7 +208,7 @@ class module_base
 
 	function get_menu( $holding_module = false, $holding_page = false, $type = false ) {
 
-		if ( ! self::is_plugin_enabled() ) {
+		if ( ! self::is_plugin_enabled() || $this->is_dormant() ) {
 			return array();
 		}
 
