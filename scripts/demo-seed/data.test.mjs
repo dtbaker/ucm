@@ -58,3 +58,28 @@ test('every customer has the one contact the app turns into a primary contact', 
     assert.match(vendor.contact.email, /@example\.com$/, vendor.name);
   }
 });
+
+test('the vendors are customers of a type of their own, in the Customers area, not the old Vendors plugin', () => {
+  assert.equal(data.VENDOR_TYPE.plural, 'Vendors');
+  assert.equal(data.VENDOR_TYPE.name, 'Vendor');
+  assert.ok(data.VENDOR_TYPE.icon, 'the type needs a menu icon');
+  assert.ok(data.vendors.length >= 3, 'the demo should have a few vendors to show');
+  const names = data.vendors.map((vendor) => vendor.name);
+  for (const name of ['Brightside Illustration', 'Parcelhawk Hosting']) {
+    assert.ok(names.includes(name), `${name} should be a vendor`);
+  }
+  for (const vendor of data.vendors) {
+    // A customer form needs what a customer needs: a first contact and an address.
+    assert.ok(vendor.contact.name && vendor.contact.last_name, vendor.name);
+    assert.ok(vendor.address.line_1 && vendor.address.country, vendor.name);
+  }
+});
+
+test('a vendor with the name of a customer, or of another vendor, is reported', () => {
+  const clash = { ...data, vendors: [{ ...data.vendors[0], name: data.customers[0].name }] };
+  assert.ok(check(clash).some((p) => p.includes('is also one of the customers')), check(clash).join('\n'));
+  const twice = { ...data, vendors: [data.vendors[0], data.vendors[0]] };
+  assert.ok(check(twice).some((p) => p.includes('same name')));
+  const bare = { ...data, vendors: [{ ...data.vendors[0], address: undefined }] };
+  assert.ok(check(bare).some((p) => p.includes('has no address')));
+});

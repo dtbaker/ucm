@@ -62,10 +62,30 @@ export const customers = [
   },
 ];
 
+/**
+ * The agency's suppliers. They are customers of a type of their own, "Vendors", in the app's
+ * Customers area, and not records of the old Vendors plugin, which is to be merged into the
+ * Customers area and says so at the top of its page. The type is created as the Supplier
+ * kind of billing, the same as the installer's own Suppliers type.
+ */
+export const VENDOR_TYPE = { name: 'Vendor', plural: 'Vendors', icon: 'truck' };
+
 export const vendors = [
-  { name: 'Parcelhawk Hosting', contact: { name: 'Rowan', last_name: 'Pike', email: 'rowan.pike@example.com', phone: '555-0301' } },
-  { name: 'Greenline Print & Signage', contact: { name: 'Dee', last_name: 'Hartnett', email: 'dee.hartnett@example.com', phone: '555-0322' } },
-  { name: 'Brightside Illustration', contact: { name: 'Noor', last_name: 'Fielding', email: 'noor.fielding@example.com', phone: '555-0344' } },
+  {
+    name: 'Parcelhawk Hosting',
+    contact: { name: 'Rowan', last_name: 'Pike', email: 'rowan.pike@example.com', phone: '555-0301' },
+    address: { line_1: '300 Datacentre Way', suburb: 'Redfield', state: 'TX', post_code: '75001', country: 'United States' },
+  },
+  {
+    name: 'Greenline Print & Signage',
+    contact: { name: 'Dee', last_name: 'Hartnett', email: 'dee.hartnett@example.com', phone: '555-0322' },
+    address: { line_1: '17 Ironworks Yard', suburb: 'Millbrook', state: 'OH', post_code: '43201', country: 'United States' },
+  },
+  {
+    name: 'Brightside Illustration',
+    contact: { name: 'Noor', last_name: 'Fielding', email: 'noor.fielding@example.com', phone: '555-0344' },
+    address: { line_1: '3 Studio Lane', suburb: 'Fernhill', state: 'MN', post_code: '55401', country: 'United States' },
+  },
 ];
 
 /**

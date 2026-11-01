@@ -27,6 +27,12 @@
  *    the least that lets the login work: widen it in Settings > Security Roles, then
  *    take a new snapshot, and repair will leave it alone.
  *
+ * Repair also keeps two things tidy that are not about the logins. It takes from a demo role the
+ * permissions custom/demo/roles-retired.php says it should no longer have. And it removes from
+ * the old Vendors plugin any vendor that now exists, under the same name, as a customer of the
+ * Vendors type, because the demo's vendors were moved into the Customers area, which the old
+ * plugin is to be merged into. A vendor with no counterpart is never touched.
+ *
  * snapshot repairs first and refuses to save anything that is still broken, so a snapshot
  * always holds all three working logins.
  *
@@ -472,6 +478,117 @@ function ucm_demo_sync_role( mysqli $db, $role_id, array $spec, $write ) {
 	return array( 'pending' => $pending, 'missing' => $missing );
 }
 
+/** What demo roles were once given and should no longer have: custom/demo/roles-retired.php. */
+function ucm_demo_retired_spec() {
+	return require __DIR__ . '/roles-retired.php';
+}
+
+/**
+ * Take away from a role the permissions its definition used to list and no longer does.
+ *
+ * @param bool $write false only counts them
+ *
+ * @return int how many were there to remove
+ */
+function ucm_demo_retire_permissions( mysqli $db, $role_id, array $spec, $write ) {
+	$p       = _DB_PREFIX;
+	$present = 0;
+	foreach ( $spec as $category => $names ) {
+		foreach ( $names as $name ) {
+			$find = $db->prepare( "SELECT security_permission_id FROM `{$p}security_permission` WHERE category = ? AND name = ?" );
+			$find->bind_param( 'ss', $category, $name );
+			$find->execute();
+			foreach ( $find->get_result()->fetch_all() as $row ) {
+				$permission_id = (int) $row[0];
+				$has           = (int) ucm_demo_value( $db, "SELECT COUNT(*) FROM `{$p}security_role_perm` WHERE security_role_id = ? AND security_permission_id = ?", 'ii', array( $role_id, $permission_id ) );
+				if ( ! $has ) {
+					continue;
+				}
+				$present++;
+				if ( $write ) {
+					$delete = $db->prepare( "DELETE FROM `{$p}security_role_perm` WHERE security_role_id = ? AND security_permission_id = ?" );
+					$delete->bind_param( 'ii', $role_id, $permission_id );
+					$delete->execute();
+				}
+			}
+		}
+	}
+
+	return $present;
+}
+
+/** Does this table have all of these columns? */
+function ucm_demo_has_columns( mysqli $db, $table, array $columns ) {
+	$have = array();
+	foreach ( $db->query( 'SHOW COLUMNS FROM `' . _DB_PREFIX . $table . '`' )->fetch_all( MYSQLI_ASSOC ) as $row ) {
+		$have[] = $row['Field'];
+	}
+
+	return ! array_diff( $columns, $have );
+}
+
+/**
+ * Remove from the old Vendors plugin any vendor that now also exists, under the same name, as
+ * a customer of the "Vendors" customer type.
+ *
+ * The demo used to keep its suppliers in the old plugin, which is to be merged into the
+ * Customers area. scripts/demo-seed.mjs makes them again as customers, and this takes away the
+ * originals, with their contacts and what hangs off them. It is done here and not through the
+ * app, because in demo mode the app refuses to delete the first vendor, as a "Demo Vendor".
+ *
+ * Only a vendor with a counterpart is touched, so nothing is removed that has not been
+ * replaced, and a vendor somebody added by hand under another name stays. The demo's own
+ * three logins are never deleted. Names are compared here and not in SQL, so a difference
+ * in collation between the tables cannot stop a repair.
+ *
+ * @param bool $write false only lists them
+ *
+ * @return string[] the names of the vendors that were, or would be, removed
+ */
+function ucm_demo_retire_moved_vendors( mysqli $db, $write ) {
+	$p      = _DB_PREFIX;
+	$tables = ucm_demo_tables( $db );
+	foreach ( array( 'vendor', 'customer', 'customer_type', 'user' ) as $needed ) {
+		if ( ! in_array( $p . $needed, $tables, true ) ) {
+			return array();
+		}
+	}
+	$wanted = array();
+	foreach ( $db->query( "SELECT c.customer_name FROM `{$p}customer` c JOIN `{$p}customer_type` t ON t.customer_type_id = c.customer_type_id WHERE t.type_name_plural = 'Vendors'" )->fetch_all() as $row ) {
+		$wanted[ strtolower( trim( $row[0] ) ) ] = true;
+	}
+	$moved  = array();
+	$owners = array();
+	foreach ( array( 'address', 'note', 'extra', 'group_member' ) as $table ) {
+		if ( in_array( $p . $table, $tables, true ) && ucm_demo_has_columns( $db, $table, array( 'owner_table', 'owner_id' ) ) ) {
+			$owners[] = $table;
+		}
+	}
+	$logins = array_keys( UCM_DEMO_ACCOUNTS );
+	foreach ( $db->query( "SELECT vendor_id, vendor_name FROM `{$p}vendor`" )->fetch_all( MYSQLI_ASSOC ) as $vendor ) {
+		if ( trim( $vendor['vendor_name'] ) === '' || ! isset( $wanted[ strtolower( trim( $vendor['vendor_name'] ) ) ] ) ) {
+			continue;
+		}
+		$moved[] = $vendor['vendor_name'];
+		if ( ! $write ) {
+			continue;
+		}
+		$id = (int) $vendor['vendor_id'];
+		$db->query(
+			"DELETE FROM `{$p}user` WHERE vendor_id = $id AND email NOT IN ("
+			. implode( ',', array_map( function ( $email ) use ( $db ) {
+				return "'" . $db->real_escape_string( $email ) . "'";
+			}, $logins ) ) . ')'
+		);
+		foreach ( $owners as $table ) {
+			$db->query( "DELETE FROM `{$p}{$table}` WHERE owner_table = 'vendor' AND owner_id = $id" );
+		}
+		$db->query( "DELETE FROM `{$p}vendor` WHERE vendor_id = $id" );
+	}
+
+	return $moved;
+}
+
 /** The id of the role of this name that this user has, or 0. */
 function ucm_demo_user_role( mysqli $db, $user_id, $role_name ) {
 	$p = _DB_PREFIX;
@@ -603,6 +720,27 @@ function ucm_demo_repair( mysqli $db, $write ) {
 					. implode( ', ', array_slice( $synced['missing'], 0, 6 ) ) . ( count( $synced['missing'] ) > 6 ? ', ...' : '' ) . ".\n";
 			}
 		}
+
+		// And take away what it used to be given and no longer should have.
+		$retired = ucm_demo_retired_spec();
+		if ( $role_id && isset( $retired[ $role_name ] ) ) {
+			$gone = ucm_demo_retire_permissions( $db, $role_id, $retired[ $role_name ], $write );
+			if ( $gone && $write ) {
+				$changed = true;
+				echo "  $label: role \"$role_name\" no longer has $gone permissions it was once given.\n";
+			} elseif ( $gone ) {
+				$problems[] = "$label: role \"$role_name\" still has $gone permissions it should no longer have.";
+			}
+		}
+	}
+
+	// The old Vendors area, once its vendors are customers.
+	$moved = ucm_demo_retire_moved_vendors( $db, $write );
+	if ( $moved && $write ) {
+		$changed = true;
+		echo '  Removed ' . count( $moved ) . ' vendors from the old Vendors area, which are now customers of the Vendors type: ' . implode( ', ', $moved ) . ".\n";
+	} elseif ( $moved ) {
+		$problems[] = count( $moved ) . ' vendors are still in the old Vendors area as well as being customers of the Vendors type: ' . implode( ', ', $moved ) . '.';
 	}
 	if ( $changed ) {
 		// A cached permission list would hide the repair.
