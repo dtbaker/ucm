@@ -13,7 +13,7 @@
  *   php scripts/upgrade-test-tools.php release     <root>                        print the release version (_SCRIPT_VERSION)
  *   php scripts/upgrade-test-tools.php bump-release <root> <note>                release version + 0.0.1, with a changelog line
  *   php scripts/upgrade-test-tools.php plugins-json <root>                       every plugin's version, as the client sends it
- *   php scripts/upgrade-test-tools.php summarise   < response.json               the server's answer: message, then each offer in order
+ *   php scripts/upgrade-test-tools.php summarise   < response.json               the server's answer: message, licence refusal (none / invalid / unavailable), then each offer in order
  */
 
 $cmd  = isset( $argv[1] ) ? $argv[1] : '';
@@ -43,6 +43,10 @@ if ( 'summarise' === $cmd ) {
 	echo 'new_version: ', isset( $updates['new_version'] ) ? $updates['new_version'] : '', "\n";
 	echo 'check_again: ', ! empty( $updates['check_again'] ) ? 'yes' : 'no', "\n";
 	echo 'licences:    ', isset( $data['licence_codes'] ) ? json_encode( $data['licence_codes'] ) : '(none)', "\n";
+	// A refusal for want of a valid licence code: the update server's none / invalid / unavailable.
+	if ( ! empty( $updates['licence_required'] ) ) {
+		echo 'licence:     refused (', isset( $updates['licence_status'] ) ? $updates['licence_status'] : '?', ")\n";
+	}
 	$plugins = isset( $updates['plugins'] ) && is_array( $updates['plugins'] ) ? $updates['plugins'] : array();
 	echo 'offers:      ', count( $plugins ), " (in the order the client installs them)\n";
 	$position = 0;

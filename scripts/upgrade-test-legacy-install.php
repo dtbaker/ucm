@@ -11,6 +11,8 @@
  *
  * Only for the local test stack. Copy it into an EMPTY document root as install.php, set
  * UCM_UT_SERVER in the container's environment to the local update server, and open it.
+ * UCM_UT_CODE is the licence code it sends, as the original did: a throwaway UUID-shaped
+ * value the local Envato stand-in knows (see "Setup" in the runbook), never a real code.
  */
 
 header( 'Content-Type: text/html; charset=utf-8' );
@@ -26,6 +28,9 @@ function ut_legacy_out( $message ) {
 
 echo "<!doctype html><title>UCM install (local test)</title>\n";
 
+if ( ! strlen( (string) $code ) ) {
+	ut_legacy_out( 'Note: UCM_UT_CODE is not set, so no licence code is sent. An update server that checks codes may say no.' );
+}
 if ( ! $server ) {
 	ut_legacy_out( 'Set UCM_UT_SERVER to the local update server URL, for example http://172.31.250.10/upgrade.php' );
 	exit;

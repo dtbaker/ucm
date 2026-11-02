@@ -6,7 +6,8 @@
  *   node scripts/upgrade-test-drive.mjs check                  Settings, Upgrade, Check for Upgrades: prints the message and each row
  *   node scripts/upgrade-test-drive.mjs upgrade                check, then Start the Upgrade, and wait for every row
  *   node scripts/upgrade-test-drive.mjs manual                 Run Manual Upgrades: prints the page text
- *   node scripts/upgrade-test-drive.mjs codes a b ...          type these codes in the box, then Check for Upgrades ("-" is an empty box)
+ *   node scripts/upgrade-test-drive.mjs codes a b ...          type these codes in the box, then Check for Upgrades ("-" is an empty box). Prints the page message, the rows, the saved box
+ *   node scripts/upgrade-test-drive.mjs install <plugin>       ask the install step for one plugin directly (what Start the Upgrade sends), with the codes saved now: prints its message
  *   node scripts/upgrade-test-drive.mjs notice                 whether the "Set a private secret" warning shows on Settings and Upgrade
  *   node scripts/upgrade-test-drive.mjs page <path>            open a page as the admin: status, PHP error text, first lines
  *   node scripts/upgrade-test-drive.mjs help <path>            open a screen and its help panel (the ? button): prints the heading and summary
@@ -114,6 +115,8 @@ try {
     const text = await bodyText();
     show('page (upgrade section)', await sectionText());
     show('rows', r.map((x) => `${x.ticked ? '[x]' : '[ ]'} ${x.plugin} | ${x.cells.slice(1, 5).join(' | ')}`).join('\n') || '(none)');
+    // With no usable licence code the page does not ask the server anything and links back to the box.
+    if (!r.length) console.log('link back to the licence box: ' + (text.includes('Enter or change your license code') ? 'yes' : 'no'));
     if (cmd === 'upgrade') {
       if (!r.length) throw new Error('nothing to upgrade');
       const started = Date.now();
@@ -141,6 +144,18 @@ try {
     await page.goto(UPGRADE);
     console.log('box now holds: ' + JSON.stringify(await boxes.evaluateAll((els) => els.map((e) => e.value))));
     console.log('thanks-for-purchasing line present: ' + (await bodyText()).includes('thanks for purchasing'));
+  } else if (cmd === 'install') {
+    if (!args[0]) throw new Error('usage: install <plugin>');
+    await page.goto(UPGRADE);
+    const key = await page.evaluate(() => window.ucm && window.ucm.form_auth_key);
+    if (!key) throw new Error('no form auth key on the page');
+    const response = await page.request.post(UPGRADE, { form: { install_upgrade: 'yes', via_ajax: '1', plugin_name: args[0], form_auth_key: key }, failOnStatusCode: false });
+    const body = await response.text();
+    let json = null;
+    try { json = JSON.parse(body); } catch (e) { /* not JSON: printed below */ }
+    console.log(`HTTP ${response.status()} message: ${json && json.message ? json.message : '(none)'}`);
+    if (json && json.errors && json.errors.length) console.log('errors: ' + json.errors.join(' | '));
+    console.log(body.slice(0, 600));
   } else if (cmd === 'notice') {
     for (const [name, url] of [['Settings', SETTINGS], ['Advanced settings', SETTINGS_ADV], ['Upgrade', UPGRADE]]) {
       const res = await page.goto(url);

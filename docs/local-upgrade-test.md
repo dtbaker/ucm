@@ -3,8 +3,9 @@
 A repeatable test of the whole update path, run entirely on one machine: build a release,
 install it in a fresh container, publish a newer version from a local update server, and
 check that the installation finds the update, installs it in the right order, migrates its
-database, shows the right messages, treats the licence code as optional and never sends it,
-swaps the old bundled libraries for the Composer ones, and keeps working when retired plugin
+database, shows the right messages, asks for a licence code and sends it (with the site address)
+to an update server that checks it with Envato, refuses politely when the code is missing or
+wrong, swaps the old bundled libraries for the Composer ones, and keeps working when retired plugin
 folders are left behind.
 
 It covers all three ways the product gets onto a server, and both ways it gets updated:
@@ -22,9 +23,11 @@ and what you should see. Record what you actually saw in the results log at the 
 
 > **Status.** Written 2026-10-17 and run from top to bottom in Mode A the same day. Run again
 > on 2026-11-02 against the 4.0.1 release zip (PHP 8.4, and the install plus S1 and S2 on
-> PHP 8.2), when the licence code became optional, dompdf and PHPMailer moved to Composer and
-> four payment gateways were retired. The steps below are the corrected ones, and the
-> results of that run are in the [results log](#results-log). Where the product misbehaves,
+> PHP 8.2), when dompdf and PHPMailer moved to Composer and four payment gateways were
+> retired. Later the same day automated updates started to need a licence code that the
+> update server checks with Envato, and S8 and the setup were rewritten for that and re-run
+> (setup, S1, S2, S7's escaping check, S8 and the first four checks of S12; see the second
+> entry in the [results log](#results-log)). The steps below are the corrected ones. Where the product misbehaves,
 > the step says what you will see today and points at [Findings](#findings). If a step is
 > wrong for you, fix it and add a line to the change log at the bottom.
 
@@ -46,7 +49,7 @@ header lists every command. Set `UT_BASE` to the client it should drive.
 | Order | Offers and installs run in the documented order, including the "behind" rules | [S5](#s5-install-order) |
 | Help | Updated bundled help arrives with the help plugin and shows on screen | [S6](#s6-help-documentation) |
 | Messages | Server messages, the changelog text and progress text show, escaped | [S7](#s7-messages-on-the-upgrade-page) |
-| Licences | The code is optional and never sent: no code, a short code, a wrong code, several codes and the right code all give the same offers | [S8](#s8-licence-codes) |
+| Licences | No code sends nothing and shows a prompt; a wrong, foreign or unverifiable code is refused with its own message and installs nothing; a right code gets the offers. The server's Envato stand-in, its cache and its outage rule | [S8](#s8-licence-codes) |
 | Manual path | Files copied by hand, then Run Manual Upgrades | [S9](#s9-the-manual-upgrade-path) |
 | Legacy | The old API endpoints still answer without errors | [S10](#s10-legacy-api-endpoints) |
 | Manual upgrade | A whole release unzipped over the top keeps its settings and upgrades cleanly | [S11](#s11-a-full-manual-unzip-over-the-top) |
@@ -63,8 +66,11 @@ header lists every command. Set `UT_BASE` to the client it should drive.
 - `includes/plugin_paymethod_stripe/pages/stripe_form.php` is left behind by both update
   paths and answers a blank HTTP 500 if its address is opened (S13).
 - The `ucm-web` copy of `upgrade.php` still carries its temporary gate, which answers
-  "Updates are paused" to every request without the testing code. A 4.0.1 client sends no
-  code, so with the gate in place no 4.0.1 client can update (setup step 2, S7, S8).
+  "Updates are paused" to every request that does not carry the one testing code. With the
+  gate in place no buyer can update, whatever their code (setup step 2, S7, S8).
+- The old one-file installer's request for the whole product as a zip
+  (`return_base_system_in_zip`, S12) is answered **before** the licence check, so the update
+  server hands the zip to a request with no code or a wrong one (S12, Findings).
 
 Fixed since 2026-10-17, and now passing: S12 (the old installer's zip is built from the
 release file list and starts), the stale-code problem in the in-app updater (dtbaker/ucm#29),
@@ -98,10 +104,19 @@ The local stack copies that layout exactly:
 The client is the release as built ("release A"). The server holds the same build with
 deliberate edits ("release B"): bumped versions, new files, help changes.
 
-**Two modes.** Mode A uses the real `ucm-web/api` wrapper, including its licence gate.
+**Two modes.** Mode A uses the real `ucm-web/api` wrapper, including its testing gate.
 Mode B is for anyone without access to `ucm-web`: the client posts straight to the server
-install's `upgrade_server.php`. Mode B skips the wrapper and the gate, so the licence
-scenarios marked "Mode A" do not apply to it. Everything else is the same.
+install's `upgrade_server.php`. Mode B skips the wrapper and the gate, so the scenarios
+marked "Mode A" do not apply to it. The licence check is in `upgrade_server.php`, so it runs
+in both modes and S8 works in either.
+
+**The licence check needs Envato, and a test run must not use the real one.** The update
+server asks Envato's author API whether a code is a sale of the product. A runbook
+environment cannot (and must not) do that with a real token and real codes, so setup step 6
+runs a small stand-in for that API inside the server container
+(`tests/e2e/fixtures/envato-stub.php`) and points the server at it with two environment
+variables. The stand-in knows a few throwaway, UUID-shaped codes (see Setup); every other
+code is "not a sale".
 
 ## Rules
 
@@ -109,18 +124,22 @@ scenarios marked "Mode A" do not apply to it. Everything else is the same.
   checkout. The local copy of `ucm-web/api` is a copy too.
 - **Never talk to production.** Both test containers resolve `ultimateclientmanager.com`,
   `www.` and `api.` to `127.0.0.1`. Check that in setup step 6 before anything else.
-- **Never write a real licence code down.** `ucm-web/api/upgrade.php` may carry a gate that
-  only serves one testing code, stored as a hash. The local copy has that hash replaced
-  with the hash of a throwaway code, and the gate itself is switched off in the copy,
-  because a 4.0.1 client sends no code at all. Nothing here needs the real one.
+- **Never write a real licence code, or a real Envato token, down.** `ucm-web/api/upgrade.php`
+  may carry a gate that only serves one testing code, stored as a hash. The local copy has
+  that hash replaced with the hash of a throwaway code, and the gate itself is switched off
+  in the copy, so S8 sees the real licence check and not the gate's message. Nothing here
+  needs the real code, and the test server's token is the stand-in's own throwaway
+  (`e2e-token`). Do not give a test container a real token, and do not run it without
+  `UCM_ENVATO_API_URL` pointing at the stand-in: with a real token and no override it would
+  call Envato itself.
 - **Leave the development stack alone.** Different container names, a different network,
   different ports. Nothing here touches `ucm-app`, `ucm-db` or port 8090. Worktree stacks
   on the same machine take ports in the 8090s too, so the setup checks its ports are free
   before it starts anything.
-- **A licence failure is not a bug to fix with enforcement.** The product deliberately
-  does no licence checking. A code is a thank-you, kept on the site, never sent, and not
-  needed for an update. The gate in the API is a temporary switch for testing a release.
-  Record what happens; do not add checks.
+- **A licence refusal is the expected answer, not a bug.** Automated updates need a code
+  that Envato confirms, and the client says so in words. The gate in the API is a separate,
+  temporary switch for testing a release. Record what you see, including any request that
+  is served when it should have been refused; do not add checks here.
 
 ## Prerequisites
 
@@ -140,7 +159,14 @@ export UCM=$(git rev-parse --show-toplevel)
 export UCM_WEB="$(dirname "$(git rev-parse --path-format=absolute --git-common-dir)")/../ucm-web"
 export UT="$HOME/ucm-upgrade-test"          # scratch space; deleted at the end
 export REF=master                           # the branch or tag to build release A from
-export UT_CODE=local-upgrade-test-code      # throwaway licence code, lower case. Only S8 and the 4.0.0 client in S13 use it
+# Throwaway licence codes. UUID shaped, because the server drops anything else before it asks Envato.
+# The Envato stand-in answers them as: ...0001 a sale of UCM, ...0002 a sale of another item,
+# ...00ff an Envato outage, anything else (such as ...00aa) not a sale. Never a real code.
+export UT_CODE=00000000-e2e0-4000-8000-000000000001          # valid: every scenario that needs updates saves it
+export UT_CODE_OTHER=00000000-e2e0-4000-8000-000000000002    # S8: a sale of some other item
+export UT_CODE_OUTAGE=00000000-e2e0-4000-8000-0000000000ff   # S8: Envato is down
+export UT_CODE_BAD=00000000-e2e0-4000-8000-0000000000aa      # S8: Envato has never heard of it
+export UT_STUB_PORT=8115                                      # the stand-in, inside the server container only (not published)
 export UT_NET=172.31.250.0/24 UT_API_IP=172.31.250.10 UT_CLIENT_IP=172.31.250.20 UT_LEGACY_IP=172.31.250.30
 export UT_CLIENT_PORT=8110 UT_API_PORT=8111 UT_LEGACY_PORT=8112 UT_OLD_PORT=8113 UT_82_PORT=8114 UT_MAIL_PORT=8026
 export SERVER="$UT/server-www/demo.ultimateclientmanager.com/public_html"
@@ -226,7 +252,13 @@ Expect the three folders at the top of the zip, all four files listed, and "web 
 clean". `Documentation` and `Licensing` are for the buyer to read and stay out of the web
 root. The release ships no `config.local.php`; the wizard writes it.
 
-Mode A: copy the API, point its licence gate at the throwaway code, and switch the gate
+Put the Envato stand-in where the server container will find it (both modes):
+
+```bash
+mkdir -p "$UT/server-www/envato-stub" && cp "$UCM/tests/e2e/fixtures/envato-stub.php" "$UT/server-www/envato-stub/"
+```
+
+Mode A: copy the API, point its testing gate at the throwaway code, and switch the gate
 off.
 
 ```bash
@@ -243,9 +275,11 @@ else
 fi
 ```
 
-Write down which of those you got. With the gate present, a 4.0.1 client is paused whatever
-you do, because it sends no code (see [Findings](#findings)); a copy of the gated file is
-kept as `$UT/upgrade.php.gated` for the one check in S7 that wants it. The
+Write down which of those you got. The gate hash is now the hash of `$UT_CODE`, so a client
+that saves that code gets through it and any other code is paused (see
+[Findings](#findings)). It is switched off in the working copy so that the refusals in S8
+come from the licence check, not the gate; a copy of the gated file is kept as
+`$UT/upgrade.php.gated` for the one check in S7 that wants it. The
 `latest_updates*.html` files are a six-hour cache, so they are left out to force a fresh
 render in S10.
 
@@ -397,12 +431,27 @@ docker run -d --name ucm-ut-api --network ucm-ut --ip "$UT_API_IP" -p "$UT_API_P
   -e APACHE_DOCUMENT_ROOT="$DOCROOT" \
   -e UCM_DB_SERVER=db -e UCM_DB_NAME=ucm_ut_server -e UCM_DB_USER=ucm -e UCM_DB_PASS=ucm \
   -e UCM_SECRET=local-upgrade-test-server \
+  -e UCM_ENVATO_TOKEN=e2e-token -e UCM_ENVATO_API_URL="http://127.0.0.1:$UT_STUB_PORT/envato-stub.php" \
   -v "$UT/server-www:/var/www" ucm-ut-php
+docker exec -d ucm-ut-api php -S 127.0.0.1:$UT_STUB_PORT -t /var/www/envato-stub      # the Envato stand-in
+sleep 2
 for c in ucm-ut-client ucm-ut-api; do docker exec "$c" getent hosts api.ultimateclientmanager.com; done
+docker exec ucm-ut-api curl -s -H 'Authorization: Bearer e2e-token' "http://127.0.0.1:$UT_STUB_PORT/envato-stub.php?code=$UT_CODE"; echo
 ```
 
 **Stop if either `getent` line shows anything but `127.0.0.1`.** That is the guard that
-keeps this run away from production.
+keeps this run away from production. The last command should print
+`{"item":{"id":2621629,"name":"stub"}}`: the stand-in says `$UT_CODE` is a sale of UCM.
+
+What the two new variables are. A server that answers updates needs an Envato personal token
+(`UCM_ENVATO_TOKEN`, or `_UCM_ENVATO_TOKEN` in its `includes/config.php`) to ask Envato about
+a code, and without one it answers every request "could not be checked" (S8 shows it).
+`UCM_ENVATO_API_URL` (or `_UCM_ENVATO_API_URL`) replaces Envato's address; only server
+configuration can set it. Here the token is the stand-in's own `e2e-token` and the address is
+the stand-in, which `php -S` serves on `127.0.0.1:$UT_STUB_PORT` inside the container. It is
+not published on a host port. The development stack does the same with its own
+`docker-compose.yml`. If you ever restart the container, start the stand-in again. In Mode B
+the same two variables are all it takes, since the check lives in `upgrade_server.php`.
 
 The server is reached by its private IP on purpose. The client only accepts an update URL
 on the official hosts, a loopback address, a `*.localhost` name or a private IP
@@ -418,15 +467,17 @@ case "$DOCROOT" in
 esac
 db ucm_install_test -e "REPLACE INTO ucm_config (\`key\`,\`val\`) VALUES
   ('ucm_upgrade_url','$UPGRADE_URL'),
-  ('help_allow_remote','0');"
+  ('help_allow_remote','0'),
+  ('_installation_code','$UT_CODE');"
 ```
 
 `help_allow_remote` is off so the help panel shows the bundled article rather than trying
 the live site first. Configuration is read from the database on every request, so the
-change applies straight away. The licence code is not set: it is optional, and S8 checks
-that nothing changes when one is typed. Confirm on the client: Settings, then Upgrade. The
-licence box is empty, the page says the code is optional, is not sent anywhere and is not
-needed for updates, and there is no "ucm_upgrade_url setting is incorrect" warning.
+change applies straight away. The throwaway licence code is saved, because the client does
+not contact the server at all without one (S8 starts every scenario from a saved code and
+changes it only there). Confirm on the client: Settings, then Upgrade. The box holds the
+code, the page says the code and the site's address are sent to the update server to confirm
+the purchase, and there is no "ucm_upgrade_url setting is incorrect" warning.
 
 ### 8. Snapshot the clean state
 
@@ -445,13 +496,14 @@ ut_reset() {   # client back to the snapshot, server back to release A
   rsync -a --delete "$UT/baseline/client/" "$CLIENT/"
   db ucm_install_test < "$UT/baseline/client.sql"
   rsync -a --delete "$UT/unzipped/Main Files/" "$SERVER/"
-  docker exec ucm-ut-api rm -rf /tmp/ucm-upgrade-rate
+  docker exec ucm-ut-api rm -rf /tmp/ucm-upgrade-rate /tmp/ucm-licence-cache   # the rate counter and the server's cache of Envato's answers
   sleep 3   # opcache revalidates every 2 seconds
 }
-ut_offer() {   # what the server offers the client right now, in install order. Sends no licence code, as the client does; ut_offer <code> sends that one
+ut_offer() {   # what the server offers the client right now, in install order. Sends $UT_CODE and the site address, as the client does; ut_offer <code> sends that one, ut_offer '' sends none
   php "$TOOLS" plugins-json "$CLIENT" > "$UT/client-plugins.json"
   curl -s -X POST "http://localhost:$UT_API_PORT${UPGRADE_URL#http://$UT_API_IP}" \
-    ${1:+--data-urlencode "installation_code=$1"} \
+    --data-urlencode "installation_code=${1-$UT_CODE}" \
+    --data-urlencode "installation_location=http://localhost:$UT_CLIENT_PORT/" \
     --data-urlencode "release_version=${UT_RELEASE-$(php "$TOOLS" release "$CLIENT")}" \
     --data-urlencode "client_protocol=2" \
     --data-urlencode "libraries=$(shasum -a 256 "$CLIENT/vendor/composer/installed.json" 2>/dev/null | cut -d' ' -f1)" \
@@ -461,8 +513,12 @@ ut_version() { db ucm_install_test -N -e "SELECT val FROM ucm_config WHERE \`key
 ```
 
 `ut_offer` asks the server the same question the client asks, from the host, so you can
-see the offer without the browser. It sends no licence code, because the client does not.
-**After you edit anything in `$SERVER`, wait 3 seconds before `ut_offer` or a page check**:
+see the offer without the browser. It sends the licence code and the site address, as the
+client does. `ut_offer <code>` sends another code, and `ut_offer ''` sends an empty one
+(a real client would not ask at all, S8). A refusal prints as `licence: refused (none |
+invalid | unavailable)` and `offers: 0`, with the server's message above it.
+`ut_reset` clears the server's cache of Envato's answers, which would otherwise keep an
+invalid code invalid for an hour. **After you edit anything in `$SERVER`, wait 3 seconds before `ut_offer` or a page check**:
 the server's opcache revalidates every 2 seconds, and an offer asked for too soon is the old
 one (it showed `offers: 0` right after `bump-release` on 2026-11-02). It sends the client's release version as the client
 does; `UT_RELEASE= ut_offer` sends none, which is how a 3.x client asks. The upgrade page is still the real test: always check
@@ -474,7 +530,10 @@ To drive the client without a browser use `node scripts/upgrade-test-drive.mjs <
 from the repository root (`UT_BASE` defaults to the client on :8110; every command logs in
 as the seeded admin first). `check` is Check for Upgrades, `upgrade` is check plus Start the
 Upgrade and waits for every row (it prints each row's progress text), `manual` is Run Manual
-Upgrades. The steps below say "Upgrade on the client" for either a person or that script.
+Upgrades, `codes <code> ...` saves the licence box and checks (S8), `install <plugin>` sends
+the install step for one plugin directly (S8). The steps below say "Upgrade on the client"
+for either a person or that script. Give `codes` each code as its own argument: zsh does not
+split a quoted variable holding two codes.
 
 To drive the client in a browser, log in at <http://localhost:8110> (`$UT_CLIENT_PORT`) as
 `admin@example.com` / `password` (the installer's seeded account). Logging in with that
@@ -503,7 +562,9 @@ No changes.
 2. On the client, Check for Upgrades.
 
 Expect `offers: 0`, and the page says "No upgrade available at this time." with no table.
-A client identical to its server has nothing to install.
+A client identical to its server has nothing to install. This is already a licence check
+passing: the client sends `$UT_CODE`, the server asks the Envato stand-in, and answers
+normally. (With a refused code the page would say so instead; that is S8.)
 
 ### S2. One plugin bumped
 
@@ -753,16 +814,17 @@ php "$TOOLS" bump "$SERVER" faq "screen map update"
    `//<version> - <date> - <text>` comment in the plugin file.
 2. **Progress and completion.** Seen in S2 to S4: per-file "installed successfully",
    per-plugin "all good", and "Success! Everything worked."
-3. **A server message, escaped.** Mode A only. The only message the local API can show is
-   the gate's paused message, so this check puts the gated copy back for a moment and gives
-   its message markup. The client sends no code, so it is paused whatever is in its box:
+3. **A server message, escaped.** Mode A only. The licence refusals are fixed text, so the
+   only server message that can carry markup here is the gate's paused message. This check
+   puts the gated copy back for a moment and gives its message markup. The gate now accepts
+   `$UT_CODE`, so save a different code in the box to be paused:
 
    ```bash
    cp "$UT/upgrade.php.gated" "$API/upgrade.php"
    perl -pi -e "s/'Updates are paused for a short while/'<b>UT-ESCAPE<\/b> & <i>check<\/i> Updates are paused for a short while/" "$API/upgrade.php"
    sleep 3
    php "$TOOLS" bump "$SERVER" faq "gated"; sleep 3
-   node scripts/upgrade-test-drive.mjs check
+   node scripts/upgrade-test-drive.mjs codes $UT_CODE_OTHER
    ```
 
    On the client (Settings, Upgrade), Check for Upgrades. The message shows with the tags as
@@ -771,8 +833,9 @@ php "$TOOLS" bump "$SERVER" faq "screen map update"
    `&lt;b&gt;`, and no `<b>` or `<i>` element is inside the content area. Then put the
    ungated copy back by re-running setup step 2's API copy and gate commands.
 
-   This also shows the problem with the gate in `ucm-web`: `ut_offer` with no code gets the
-   same paused answer, because a 4.0.1 client has no code to send.
+   This also shows the problem with the gate in `ucm-web`: any code except the testing one
+   gets the same paused answer, so with it deployed no buyer can update. (`ut_offer` with
+   `$UT_CODE` gets through; `ut_offer $UT_CODE_BAD` is paused.)
 4. **Rate limiting.** The server allows 600 requests per address per 10 minutes.
 
    ```bash
@@ -792,16 +855,32 @@ php "$TOOLS" bump "$SERVER" faq "screen map update"
 
 ### S8. Licence codes
 
-Since 4.0.1 the licence code is optional. It is kept in the `_installation_code` setting as a
-record of a purchase, it is not sent anywhere, and an update does not need it. So every row
-below must give the **same offers**, and the request that reaches the server must carry no
-code, no `client_ip` and no `installation_location`.
+Automated updates need a licence code. The client keeps it in the `_installation_code`
+setting (the box on Settings, Upgrade; several codes are stored joined with `|`).
 
-Turn on a request log in the local API copy first, so the last point is proved from the
-server's side and not just from reading the client code:
+- **No usable code** (blank, the `UCM_LICENCE_CODES_GO_HERE` placeholder, or `free`): the
+  client does **not** contact the server. Check for Upgrades says "Automated updates need a
+  licence code. Enter the purchase code from your CodeCanyon downloads page below to receive
+  them..." with a link back to the box, and the install step refuses with "Automated updates
+  need a licence code. Please enter your licence code first."
+- **A code:** every request carries `installation_code` and `installation_location` (the
+  site's address), and no `client_ip`. The User-Agent is `UCM/<version>`.
+- **The server** drops anything that is not UUID shaped, asks Envato's author API (here the
+  stand-in) whether what is left is a sale of CodeCanyon item 2621629, and serves updates
+  only for a valid one. Every refusal is an ordinary HTTP 200 JSON answer: `message` set,
+  `plugins` empty, `new_version` 0, `licence_required: true` and a `licence_status` of
+  `none`, `invalid` or `unavailable`. A valid answer carries `licence_codes`, which the
+  client keeps to show "The above license code is for ... thanks for purchasing!".
+- **The cache.** The server remembers each answer in `<temp>/ucm-licence-cache/`, one file
+  named by the sha256 of the code: valid for a day, invalid for an hour, and a code that
+  was valid within 30 days stays valid through an Envato outage. A code never seen that
+  gets no answer from Envato is "unavailable", not "invalid". `ut_reset` clears the cache.
+
+Turn on a request log in the local API copy first, so what reached the server is proved from
+its side and not just from reading the client code:
 
 ```bash
-perl -pi -e 's/^(ini_set\( .display_errors., false \);)/$1\nfile_put_contents( "\/tmp\/ut-post.log", json_encode( array( "keys" => array_keys( \$_REQUEST ), "code" => isset( \$_REQUEST["installation_code"] ) ? \$_REQUEST["installation_code"] : null ) ) . "\\n", FILE_APPEND ); \/\/ UT: request log/' "$API/upgrade.php"
+perl -pi -e 's/^(ini_set\( .display_errors., false \);)/$1\nfile_put_contents( "\/tmp\/ut-post.log", json_encode( array( "keys" => array_keys( \$_REQUEST ), "code" => isset( \$_REQUEST["installation_code"] ) ? \$_REQUEST["installation_code"] : null, "ua" => isset( \$_SERVER["HTTP_USER_AGENT"] ) ? \$_SERVER["HTTP_USER_AGENT"] : null ) ) . "\\n", FILE_APPEND ); \/\/ UT: request log/' "$API/upgrade.php"
 php -l "$API/upgrade.php"; docker exec ucm-ut-api rm -f /tmp/ut-post.log
 ```
 
@@ -817,41 +896,111 @@ before=$(fingerprint)
 Each check is `node scripts/upgrade-test-drive.mjs codes <code> [<code> ...]`, which types the
 code or codes into the box on Settings, Upgrade and presses Check for Upgrades (that button
 saves the box first; there is no separate save; `-` is an empty box; extra boxes are blanked).
-After all of them, `[ "$(fingerprint)" = "$before" ] && echo unchanged`.
+It prints the message and the rows, then the box as saved. Run them in this order, as
+separate commands:
 
-| Code typed | Expect |
-| --- | --- |
-| (empty, `-`) | No gate message and no bare page. The three rows `corefiles`, `database`, `faq` are offered, all ticked. The box stays empty. |
-| `abc` | Not saved: codes of five characters or fewer are dropped (only `free` is kept). The box is empty again. Same offers. |
-| `wrong-code-123` | Saved, shown in the box, and the **same three rows**. Nothing says the code is wrong. |
-| `wrong-code-123` and `local-upgrade-test-code` | Both saved (`+` adds a box; stored joined with `\|`). Same three rows. |
-| `LOCAL-UPGRADE-TEST-CODE` | Saved as typed. Same three rows. |
-| `local-upgrade-test-code` | Same three rows. |
+```bash
+for c in - abc wrong-code-123 $UT_CODE_BAD $UT_CODE_OTHER $UT_CODE_OUTAGE; do
+  echo "=== $c"; node scripts/upgrade-test-drive.mjs codes "$c"
+  echo "requests so far: $(docker exec ucm-ut-api sh -c 'cat /tmp/ut-post.log 2>/dev/null | wc -l')"
+done
+node scripts/upgrade-test-drive.mjs codes $UT_CODE_BAD $UT_CODE
+node scripts/upgrade-test-drive.mjs codes "$(echo $UT_CODE | tr a-f A-F)"
+node scripts/upgrade-test-drive.mjs codes $UT_CODE
+[ "$(fingerprint)" = "$before" ] && echo unchanged
+```
+
+| Code typed | Reaches the server? | Expect |
+| --- | --- | --- |
+| (empty, `-`) | No | "Automated updates need a licence code. Enter the purchase code ... below ..." and the link "Enter or change your license code". No rows. The box stays empty. |
+| `abc` | No | Not saved: codes of five characters or fewer are dropped (only `free` is kept), so the box is empty again and the result is the same as empty. |
+| `wrong-code-123` | Yes | Saved and shown in the box. It is not UUID shaped, so the server drops it and treats the request as having no code: "Automated updates need a licence code. Enter the purchase code from your CodeCanyon downloads page on this page to receive them..." (the same sentence as the client's with "below" replaced by "on this page"). |
+| `$UT_CODE_BAD` (never a sale) | Yes | "This licence code was not recognised as a purchase of Ultimate Client Manager, so automated updates are not available. Please check the code..." No rows. |
+| `$UT_CODE_OTHER` (a sale of another item) | Yes | The same "was not recognised" message. |
+| `$UT_CODE_OUTAGE` (Envato is down) | Yes | "Your licence code could not be checked just now. Please try again in a few minutes." No rows. This is not cached, so a retry asks Envato again. |
+| `$UT_CODE_BAD` and `$UT_CODE` (second box: `+`) | Yes | One valid code is enough: `corefiles`, `database`, `faq`, all ticked. Both codes stay saved (joined with `\|`), and the thanks line shows under the valid one. Order does not matter. |
+| `$UT_CODE` in upper case | Yes | The server lower-cases what it receives, so the same three rows. The box keeps the case as typed. The thanks line does **not** show (the client looks up the saved name with the case typed; see [Findings](#findings)). |
+| `$UT_CODE` | Yes | The same three rows, and under the box "The above license code is for Ultimate Client Manager - thanks for purchasing!" |
 
 Then:
 
-1. The box and the page. The Upgrade page says "Your license code is optional. It is kept on
-   this site as a record of your purchase, is not sent anywhere, and updates do not need
-   it." "Please enter your license code before doing an upgrade." never appears. The line
-   "The above license code is for ... thanks for purchasing!" never appears either: it
-   needs a confirmed code in `_licence_code_<code>`, which nothing writes any more.
-2. What the server received. Every request in `docker exec ucm-ut-api sh -c 'sort /tmp/ut-post.log | uniq -c'`
-   has the same keys, `application`, `current_version`, `release_version`, `current_plugins`,
-   `current_files`, `requested_plugin`, `get_file_contents`, `client_protocol`, `libraries`,
-   and `"code":null`. No `installation_code`, `client_ip` or `installation_location`. Keep
-   a code saved, then run **Start the Upgrade**, and look again: the download requests carry
-   none either (on 2026-11-02: 11 requests, none with a code).
-3. `[ "$(fingerprint)" = "$before" ] && echo unchanged` after the checks, so a wrong code
-   installed and removed nothing. Then Start the Upgrade with the right code saved: it
-   installs the same way as S2.
-4. From the command line: `ut_offer` (no code), `ut_offer wrong-code-123`, `ut_offer ''` and
-   `ut_offer local-upgrade-test-code` all print the same offers. That shows the server
-   side ignores codes, as long as the gate in the API copy is off. With the gate on, only
-   a request carrying the testing code is answered, and the 4.0.1 client never carries it.
-5. A client older than 4.0.1 (S13's 4.0.0 install) still posts its saved code and still
-   shows "Please enter your license code before doing an upgrade." on a bare page when the
-   box is empty. Type any throwaway code of six characters or more to get past it. This is
-   the old client, not the release under test, and it goes away once the client is updated.
+1. **The empty box sends nothing.** `requests so far` stays at `0` through `-` and `abc`, and
+   goes to 1 at `wrong-code-123`, 2, 3, 4 for the next three (2026-11-02: 0, 0, 1, 2, 3, 4).
+   While `-` is saved, the install step refuses too, and no request reaches the server:
+
+   ```bash
+   node scripts/upgrade-test-drive.mjs codes -
+   node scripts/upgrade-test-drive.mjs install faq
+   ```
+
+   Expect `message: Automated updates need a licence code. Please enter your licence code
+   first.` and the request count unchanged.
+2. **What the server received.** `docker exec ucm-ut-api sh -c 'sort /tmp/ut-post.log | uniq -c'`:
+   every line has the keys `application`, `installation_code`, `installation_location`,
+   `current_version`, `release_version`, `current_plugins`, `current_files`,
+   `requested_plugin`, `get_file_contents`, `client_protocol`, `libraries`, and a `"code"`
+   that is exactly what was typed (joined with `|`), and a `"ua"` of `UCM/<product version>`.
+   **No `client_ip`.**
+3. **Nothing was installed by a refusal.** `[ "$(fingerprint)" = "$before" ] && echo unchanged`
+   after all of the checks. A refusal shows no table, so there is nothing to tick. Forcing
+   the install step for a refused code, which the page never offers:
+
+   ```bash
+   node scripts/upgrade-test-drive.mjs codes $UT_CODE_BAD >/dev/null
+   node scripts/upgrade-test-drive.mjs install faq
+   [ "$(fingerprint)" = "$before" ] && echo unchanged
+   ```
+
+   The server refuses the download, nothing is written, and `unchanged` prints. The client
+   says "Downloading files..." with no error and `"success":1`, which is misleading (see
+   [Findings](#findings)); in the real flow the check refuses first, so the button never shows.
+4. **The right code installs.** `node scripts/upgrade-test-drive.mjs codes $UT_CODE`, then
+   `node scripts/upgrade-test-drive.mjs upgrade` (or Start the Upgrade by hand). It installs
+   exactly as S2 does, ending "Success! Everything worked.", and the download requests
+   carry the code too (`sort /tmp/ut-post.log | uniq -c` shows the code on every line).
+5. **From the command line.** Each prints a different answer:
+
+   ```bash
+   ut_reset; php "$TOOLS" bump "$SERVER" faq "licence check"; sleep 3
+   for c in '' wrong-code-123 $UT_CODE_BAD $UT_CODE_OTHER $UT_CODE_OUTAGE $UT_CODE; do echo "=== ${c:-(empty)}"; ut_offer "$c" | grep -E '^(message|licence:|offers)'; done
+   ```
+
+   Expect `licence: refused (none)` for the empty and the `wrong-code-123` requests,
+   `(invalid)` for `$UT_CODE_BAD` and `$UT_CODE_OTHER`, `(unavailable)` for `$UT_CODE_OUTAGE`,
+   each with `new_version: 0` and `offers: 0`, and for `$UT_CODE` the `licences:` line naming
+   the product and 3 offers.
+6. **The cache and the outage rule.** Stop the stand-in, as if Envato were down:
+
+   ```bash
+   ut_reset; php "$TOOLS" bump "$SERVER" faq "outage check"; sleep 3
+   ut_offer | grep offers                       # 3: valid, so it is cached for a day
+   docker exec ucm-ut-api pkill -f 'php -S'     # Envato is gone
+   ut_offer | grep offers                       # still 3: the cached answer
+   ut_offer $UT_CODE_OTHER | grep -E '^(message|licence:)'   # never seen: "could not be checked", licence: refused (unavailable)
+   node scripts/upgrade-test-drive.mjs check | sed -n 1,3p   # the client, with the saved $UT_CODE: still offered
+   docker exec -d ucm-ut-api php -S 127.0.0.1:$UT_STUB_PORT -t /var/www/envato-stub; sleep 2
+   ut_offer $UT_CODE_OTHER | grep -E '^(message|licence:)'   # back: "not recognised", licence: refused (invalid)
+   ```
+
+   The cache files are named by hash, and hold the answer and the time and nothing about who
+   asked: `docker exec ucm-ut-api sh -c 'cat /tmp/ucm-licence-cache/*'` prints
+   `{"s":"valid","t":...}` lines.
+7. **No token: fail closed.** A server with no Envato token cannot check anything, so it
+   answers "could not be checked" to everyone, even a good code. The container's own
+   environment cannot be changed without restarting it, so ask the check class directly,
+   once without the variables and once with:
+
+   ```bash
+   docker exec -e UCM_ENVATO_TOKEN= -e UCM_ENVATO_API_URL= ucm-ut-api php -r 'require "/var/www/demo.ultimateclientmanager.com/public_html/includes/plugin_config/class.licence_check.php"; echo ucm_licence_check::check(array("'"$UT_CODE"'"), null, "")["status"], "\n";'
+   docker exec ucm-ut-api php -r 'require "/var/www/demo.ultimateclientmanager.com/public_html/includes/plugin_config/class.licence_check.php"; echo ucm_licence_check::check(array("'"$UT_CODE"'"), null, "")["status"], "\n";'
+   ```
+
+   Expect `unavailable` for the first (no token, no cache) and `valid` for the second.
+8. **A client older than 4.0.1** (S13's 4.0.0 install) posts its saved code and
+   `client_ip` as well, and stops with "Please enter your license code before doing an
+   upgrade." on a bare page when its box is empty. The saved code must be UUID shaped, or the
+   new server treats it as no code. Setup for S13 saves `$UT_CODE`, which is. This is the old
+   client, not the release under test, and it goes away once the client is updated.
 
 Remove the request log by re-running setup step 2's API copy and gate commands.
 
@@ -993,8 +1142,9 @@ Before the CodeCanyon zip carried the whole product, a buyer could upload one
 a zip (`return_as_zip` and `return_base_system_in_zip`), unpacked it beside itself, and
 sent the buyer to the setup wizard. The original script is no longer in either repository,
 so `scripts/upgrade-test-legacy-install.php` stands in for it. It makes the same request
-that `ucm-web/api/download_zip.php` still makes. If you have a copy of the original, use
-it instead and say so in the results.
+that `ucm-web/api/download_zip.php` still makes, licence code included (`UCM_UT_CODE`, a
+throwaway from Setup). If you have a copy of the original, use it instead and say so in the
+results.
 
 **Expected today: this passes.** It failed on 2026-10-17 (see [Findings](#findings)); since
 the zip is built from `includes/release-files.txt` it is complete and starts.
@@ -1008,7 +1158,7 @@ docker run -d --name ucm-ut-legacy --network ucm-ut --ip "$UT_LEGACY_IP" -p "$UT
   --add-host www.ultimateclientmanager.com:127.0.0.1 \
   --add-host api.ultimateclientmanager.com:127.0.0.1 \
   -e APACHE_DOCUMENT_ROOT=/var/www/html \
-  -e UCM_UT_SERVER="$UPGRADE_URL" -e UCM_UT_CODE="$UT_CODE" \
+  -e UCM_UT_SERVER="$UPGRADE_URL" -e UCM_UT_CODE="$UT_CODE_BAD" \
   -v "$LEGACY:/var/www/html" ucm-ut-php
 # Wait for Apache on a page that does not exist. Never poll install.php: one GET of it runs the install.
 for i in $(seq 1 30); do [ "$(curl -s -o /dev/null -w '%{http_code}' "http://localhost:$UT_LEGACY_PORT/ut-not-here")" = 404 ] && break; sleep 1; done
@@ -1017,20 +1167,27 @@ curl -s --max-time 300 "http://localhost:$UT_LEGACY_PORT/install.php" | sed 's/<
 
 1. **The download.** Expect `Unpacked <n> entries` and a link to the setup wizard. On
    2026-11-02 it read `Unpacked 4125 entries` (4,125 files, the same as the release's file
-   list). On 2026-10-17 it read 3,315, with 2,844 files against 3,640 in the release.
-2. **A wrong code.** Mode A with the gate present only. A 4.0.1 install sends no code, and
-   with the gate off in the API copy (setup step 2) every request is served, including this
-   one: you get the zip. With the gate on, ask for the zip with a code the gate does not know:
+   list), and `Unpacked 4126 entries` when re-run after the licence work. Note the block
+   above sends `$UT_CODE_BAD`, a code Envato does not know, on purpose: see step 2. On 2026-10-17 it read 3,315, with 2,844 files against 3,640 in the release.
+2. **A wrong code, and no code.** The server's licence check should refuse these. Ask for
+   the zip with no code, with a code Envato does not know and with the good one:
 
    ```bash
-   curl -s -X POST "http://localhost:$UT_API_PORT${UPGRADE_URL#http://$UT_API_IP}" \
-     -d installation_code=wrong-code-123 -d current_version=0 -d get_file_contents=1 \
-     -d return_as_zip=1 -d return_base_system_in_zip=1 | head -c 300; echo
+   for c in '' $UT_CODE_BAD $UT_CODE; do
+     printf '%-40s ' "${c:-(no code)}"
+     curl -s -X POST "http://localhost:$UT_API_PORT${UPGRADE_URL#http://$UT_API_IP}" \
+       -d "installation_code=$c" -d current_version=0 -d get_file_contents=1 \
+       -d return_as_zip=1 -d return_base_system_in_zip=1 | head -c 2; echo
+   done
    ```
 
-   With the gate on, expect the JSON "Updates are paused" answer instead of a zip. The
-   stand-in reports the same thing as "The server did not send a zip", and unpacks nothing.
-   With the gate off, the first bytes are `PK` (a zip).
+   **Expected: a JSON refusal for the first two** (the stand-in installer then says "The
+   server did not send a zip", with the server's message, and unpacks nothing), and `PK` (a
+   zip) for the good code. **Today: all three give `PK`** (2026-11-02). The whole-product zip
+   is answered before the licence check runs, so the old installer's download works with a
+   missing or wrong code, which is why step 1 above unpacked with `$UT_CODE_BAD`. See
+   [Findings](#findings). Record which you see. When this is fixed, step 1 needs `$UT_CODE`
+   instead.
 3. **Compare it with the release.**
 
    ```bash
@@ -1127,9 +1284,11 @@ mkdir -p "$UT/old-baseline"
 rsync -a --delete "$OLD/" "$UT/old-baseline/tree/"
 docker exec ucm-ut-db mysqldump -uroot -proot ucm_ut_old 2>/dev/null > "$UT/old-baseline/old.sql"
 old_reset() { rsync -a --delete "$UT/old-baseline/tree/" "$OLD/"; db ucm_ut_old < "$UT/old-baseline/old.sql"; sleep 3; }
-old_offer() {   # what the server offers a 4.0.0 client, sending what a 4.0.0 client sends
+old_offer() {   # what the server offers a 4.0.0 client, sending what a 4.0.0 client sends: its code and the site address
   php "$TOOLS" plugins-json "$OLD" > "$UT/old-plugins.json"
   curl -s -X POST "http://localhost:$UT_API_PORT${UPGRADE_URL#http://$UT_API_IP}" \
+    --data-urlencode "installation_code=$UT_CODE" \
+    --data-urlencode "installation_location=http://localhost:$UT_OLD_PORT/" \
     --data-urlencode "release_version=$(php "$TOOLS" release "$OLD")" \
     --data-urlencode "current_plugins@$UT/old-plugins.json" | tee "$UT/old-offer.json" | php "$TOOLS" summarise
 }
@@ -1148,7 +1307,8 @@ export UT_BASE="http://localhost:$UT_OLD_PORT"        # for the drive script, in
 ```
 
 The throwaway licence code is set because a 4.0.0 client still refuses to check for updates
-without one (S8, last point). Any code of six characters or more does.
+without one (S8, last point), and because the update server now refuses a request without a
+code Envato's stand-in knows. It must be UUID shaped, so `$UT_CODE`.
 
 **Before.**
 
@@ -1175,8 +1335,9 @@ without one (S8, last point). Any code of six characters or more does.
    containing "Failed" and "Error" in `vendor/stripe` are not failures: do not grep for
    those words). With the request log from S8 still on in the API copy, `docker exec ucm-ut-api sh -c
    'sort /tmp/ut-post.log | uniq -c'` shows the requests of this 4.0.0 client, which carry
-   `installation_code` and `client_ip` (41 on 2026-11-02): a 4.0.0 client sends them, only a
-   4.0.1 client does not (S8).
+   `installation_code` and `client_ip` (41 on 2026-11-02): a 4.0.0 client sends both, a
+   4.0.1 client sends the code and the site address but no `client_ip` (S8). The log lines
+   are the 4.0.0 client's own requests, so the code on them is `$UT_CODE`.
 6. The libraries: `ut_lib_check ucm-ut-old "$OLD"` prints `loadable` and `libraries ok`: all
    five old paths are gone, `vendor/dompdf`, `vendor/phpmailer`, `vendor/stripe` and
    `vendor/composer/installed.json` are there. Every file of the release's `vendor/`
@@ -1193,8 +1354,9 @@ without one (S8, last point). Any code of six characters or more does.
    multipart/mixed=true`. It saves the SMTP settings to `ucm-ut-mail:1025` first, deletes
    its own two messages afterwards, and reads them back from the mailhog on `$UT_MAIL_PORT`.
 8. A 3.x client, from the command line: ask with no release and no libraries,
-   `curl -s -X POST "http://localhost:$UT_API_PORT${UPGRADE_URL#http://$UT_API_IP}" --data-urlencode "current_plugins@$UT/old-plugins.json" | php "$TOOLS" summarise | head -12`.
-   The `database` row also carries the libraries. (A 3.x client has no `vendor/`, so it
+   `curl -s -X POST "http://localhost:$UT_API_PORT${UPGRADE_URL#http://$UT_API_IP}" --data-urlencode "installation_code=$UT_CODE" --data-urlencode "current_plugins@$UT/old-plugins.json" | php "$TOOLS" summarise | head -12`.
+   (A 3.x client did send a code, so it gets the licence check too; leave the code out and
+   you get `licence: refused (none)`.) The `database` row also carries the libraries. (A 3.x client has no `vendor/`, so it
    needs them; a client whose `libraries` fingerprint matches the server's is sent one file.)
 
 **S13b. Unzip over the top.** `old_reset`, then do what the upgrade guide says:
@@ -1281,7 +1443,7 @@ docker run -d --name ucm-ut-client82 --network ucm-ut --ip 172.31.250.60 -p "$UT
 for i in $(seq 1 30); do curl -fsS -o /dev/null "http://localhost:$UT_82_PORT/" 2>/dev/null && break; sleep 1; done
 CI=1 UCM_INSTALL_DB_NAME=ucm_ut_82 UCM_INSTALL_BASE_URL="http://localhost:$UT_82_PORT" npx playwright test tests/e2e/install.spec.ts \
   --workers=1 --retries=0 --reporter=list > "$UT/install82.log" 2>&1; echo "exit $?"; tail -3 "$UT/install82.log"
-db ucm_ut_82 -e "REPLACE INTO ucm_config (\`key\`,\`val\`) VALUES ('ucm_upgrade_url','$UPGRADE_URL'),('help_allow_remote','0');"
+db ucm_ut_82 -e "REPLACE INTO ucm_config (\`key\`,\`val\`) VALUES ('ucm_upgrade_url','$UPGRADE_URL'),('help_allow_remote','0'),('_installation_code','$UT_CODE');"
 export UT_BASE="http://localhost:$UT_82_PORT"
 node scripts/upgrade-test-drive.mjs check              # No upgrade available at this time.
 rsync -a --delete "$UT/unzipped/Main Files/" "$SERVER/"; sleep 3
@@ -1308,10 +1470,19 @@ it, and each step that meets it says what you will see today.
 | --- | --- | --- |
 | **The secret warning never shows on an install updated in-app.** The flag that switches it on, `_UCM_SECRET_IS_INSTALL_PATH`, is defined only in `includes/config.php`, and the in-app updater never replaces that file. An install updated from 4.0.0 in-app keeps its 4.0.0 `config.php`, which has no such constant, and `init.php:91` defines `_UCM_SECRET` as the install path without defining the flag. | `includes/config.php:83-94`, `init.php:91-95`, `includes/functions.php:157` (`ucm_secret_notice_html()` reads `defined(...) && ...`) | Settings and Settings, Upgrade show nothing on exactly the installs the warning is for. It does show after a full unzip. Suggested fix: derive it where it is read (`_UCM_SECRET === _UCM_FOLDER`), or define the flag in the `init.php` fallback as well. |
 | **`includes/plugin_paymethod_stripe/pages/stripe_form.php` is left behind** by both update paths, because the stripe plugin deletes only the `stripe-php` folder ("and nothing else"). It requires the deleted `stripe-php/lib/Stripe.php`. | `includes/plugin_paymethod_stripe/cleanup.php`; the orphan page | Opening `/?m[]=paymethod_stripe&p[]=stripe_form` on an upgraded install is a blank HTTP 500. Nothing links to it, so it is dead weight, but the cleanup could remove it too. |
-| **The temporary gate in `ucm-web/api/upgrade.php` pauses every 4.0.1 client.** It answers "Updates are paused ..." to any request without the testing code, and a 4.0.1 client sends no code. | `../ucm-web/api/upgrade.php` lines 29-58 | If it is still deployed when 4.0.1 is released, no 4.0.1 install can update. Remove the block before release (its own comment says so). The local copy switches it off. |
-| A 4.0.0 client still stops with "Please enter your license code before doing an upgrade." when its box is empty, and still sends the code, `client_ip` and `installation_location`. | the 4.0.0 client, not this release | A buyer on 4.0.0 with no code saved must type any six characters once before the in-app update to 4.0.1 will check. After it, the 4.0.1 client sends nothing. |
+| **The temporary gate in `ucm-web/api/upgrade.php` pauses every client except one testing code.** It answers "Updates are paused ..." to any request that does not carry the testing code, whatever else is valid. | `../ucm-web/api/upgrade.php` lines 29-58 | If it is still deployed when 4.0.1 is released, no buyer can update. Remove the block before release (its own comment says so). The local copy points it at a throwaway code and switches it off. |
+| A 4.0.0 client still stops with "Please enter your license code before doing an upgrade." when its box is empty, and still sends the code, `client_ip` and `installation_location`. | the 4.0.0 client, not this release | A buyer on 4.0.0 with no code saved must type a code of six characters or more once before the in-app update to 4.0.1 will check, and the code must be a real purchase code for the update server to serve it. The 4.0.1 client sends the code and the site address, and no `client_ip`. |
 | A site that loses its database details now shows the **setup wizard** rather than a blank 500. | `init.php`, `is_installed()` | Better than a blank page, but a live site whose `config.local.php` was not moved before an unzip (S11b) shows a first-run wizard to visitors. |
 | Three PHP warnings in the update server's own endpoints | `ucm-web/api/info.php:88`, `help.php:53` | In the private repository. Display is off, so nothing reaches a page (S10). |
+
+### Found re-running the licence parts (2026-11-02, after automated updates came to need a code)
+
+| What | Where | Effect |
+| --- | --- | --- |
+| **The whole-product zip is served without a licence check.** `return_base_system_in_zip` is answered at the top of `ucm_upgrade_server_respond()`, before `ucm_licence_check::check()` runs. | `includes/plugin_config/upgrade_server.php`, the `$return_base_system_in_zip` block above the licence check | A request with no code or a wrong one gets the full release zip (S12 step 2, `PK` three times). The in-app updater's own downloads (`return_as_zip` with `get_file_contents`) are checked. If the zip is meant to need a code too, move the check above that block. |
+| **The refusal for a code that is not UUID shaped says "on this page" after "downloads page".** The server's text for `none` reads "...Enter the purchase code from your CodeCanyon downloads page on this page to receive them." | `class.licence_check.php`, `message_for()` default case | Awkward wording only. The client's own text for an empty box says "below" where this says "on this page". |
+| **The install step reports success when the server refuses the download.** With a refused code saved and the install step called directly (S8 step 3), the answer is `"Downloading files..."`, `errors: []`, `success: 1`, and nothing is written. | `class.upgrade.php`, `install_plugin_update_files()` | Only reachable by skipping the check, or by a code that is revoked between the check and the install. The page itself would show "Success" with nothing installed. |
+| **An upper-case licence code never gets the "thanks for purchasing" line.** The server lower-cases the code and the client saves `_licence_code_<lower case>`, then looks it up with the case typed. | `config_upgrade.php` (lookup), `config.php` `check_for_upgrades()` (save) | The update works; only the line under the box is missing. |
 
 ### Found in the first full run (2026-10-17)
 
@@ -1324,7 +1495,7 @@ it, and each step that meets it says what you will see today.
 | **Still true 2026-11-02.** The Upgrade screen's help opens "The plugin system" | `includes/plugin_config/config.help.json`, generated from `ucm-web` `site/src/content/docs/developers/plugins.md` frontmatter | Answers the S6 question: it shows `developers/plugins`; it should show `install/upgrading` ("Upgrading from 2.x"). |
 | **Still true 2026-11-02.** The client ignores `check_again` | no reference to it outside `upgrade_server.php` | A client that is behind gets part of its updates and is never told there are more. It has to think of pressing Check for Upgrades again. |
 | **Not re-checked 2026-11-02** (the script read the button before the 4 seconds were up and saw "Completed"). "Completed, click here to continue" is hidden on a short run | `includes/plugin_form/js/form.js`, `dtbaker_loading_button()` restores the button text after 4 seconds | A run under 4 seconds ends with the button reading "Start the Upgrade" again, as if nothing happened. |
-| **Gone (2026-11-02): the licence gate was removed from the client.** An empty licence code ends on a bare page | `config_upgrade.php`, `exit` after "Please enter your license code before doing an upgrade." | No menu or link back. |
+| **Gone (2026-11-02): the old licence gate in the client.** An empty licence code ended on a bare page | `config_upgrade.php`, `exit` after "Please enter your license code before doing an upgrade." | No menu or link back. The new prompt (S8) is a message with a link back to the licence box. |
 
 ### The old installer's zip (S12)
 
@@ -1353,7 +1524,7 @@ the template.
 ```
 Local upgrade test - <date> - <who>
 Release A: <zip or REF> @ <commit>   Mode: A | B        Image PHP: <version(s)>
-Licence gate in the API copy: present (switched off) | absent
+Licence gate in the API copy: present (switched off) | absent     Envato stand-in: running (token e2e-token)
 
 S1 baseline                     pass | fail | n/a   <notes>
 S2 one plugin bumped            ...
@@ -1362,12 +1533,12 @@ S4 core file alone / release bump / old client / new file (and release-files.txt
 S5 order: name / db / config    ...
 S6 help: index no bump / index bump / screen map / upgrade-screen article  ...
 S7 messages: changelog / progress / escaping / rate limit  ...
-S8 licences: every row gives the same offers; request log keys; unchanged fingerprint  ...
+S8 licences: no code (nothing sent) / short / not UUID / bad / other item / outage / bad+good / upper / good; request log keys; unchanged fingerprint; cache + outage; no token  ...
 S9 manual path                  ...
 S10 legacy endpoints            ...
 S11a unzip over a current install: settings / uploads / manual upgrade / help  ...
 S11b unzip over a pre-rewrite install: what a real host gets / fix  ...
-S12 old installer: download / file diff / starts / wizard  ...
+S12 old installer: download / zip with no code, bad code, good code / file diff / starts / wizard  ...
 S13a 4.0.0 in-app: rows / old paths gone / vendor arrived / PDF producer / email generator  ...
 S13b 4.0.0 unzip + Run Manual Upgrades: same  ...
 S13c leftovers (stripe_form.php)  ...
@@ -1422,6 +1593,29 @@ Anything surprising:
 - The runbook's REAL_HOST check silently tested nothing in zsh (one argument); ut_last_error reported a silenced session warning as the "last error".
 - A re-run of Run Manual Upgrades prints "Upgrading plugin from version 2.188 to 2.188" for data, invoice and paymethod_stripe, and "Array ( )" on the note line.
 - The old 4.0.0 install's settings test email said "sent=false" while the invoice email arrived; with 4.0.1 both arrive.
+```
+
+### Run of 2026-11-02, licence parts only (automated updates need a code), by the docs agent
+
+Only what the licence work touches was re-run; everything else was not run again and keeps
+the results above (S3 to S6, S9 to S11, S13 to S16 not re-run; their text was adjusted for
+the new helpers and the saved code, not exercised).
+
+```
+Local upgrade test - 2026-11-02 - docs agent (Claude), licence parts
+Release A: built from release/codecanyon-update @ 96d9cc5 (4,816 entries, built in a clone)   Mode: A
+Image PHP: 8.4.18        Envato stand-in: php -S in ucm-ut-api, token e2e-token
+Licence gate in the API copy: present (hash of the throwaway code; switched off, a gated copy kept for S7)
+
+Setup 1-8 (install by wizard 2 passed, client, server + stand-in, snapshot)  pass
+S1 baseline                     pass   the client sends the saved code; offers: 0 and "No upgrade available at this time."
+S2 one plugin bumped            pass   corefiles (23), database (1), faq 2.151 -> 2.152; licences line names the product; files identical; version recorded
+S7 escaping                     pass   gated copy: UT_CODE gets through the gate, UT_CODE_OTHER is paused; the markup shows as text
+S8 licences                     pass   empty and abc: no request reached the server (0, 0), prompt + link shown; wrong-code-123: 1, "Automated updates need a licence code ... on this page"; BAD and OTHER: "was not recognised"; OUTAGE: "could not be checked just now"; BAD+good in either order, upper case and good: the three rows; thanks line for the lower-case code only; fingerprint unchanged after every refusal; request keys include installation_code and installation_location, no client_ip, ua UCM/4.0.1; the install step with an empty box refuses by message and sends nothing; forced install with a refused code writes nothing but reports success; valid upgrade installs (Success! Everything worked.)
+                                       cache: valid answer cached (outage with the stand-in down still serves, a never-seen code is "unavailable"); no token: the check class answers "unavailable", with the stand-in "valid"
+S12 download / zip / diff / start   download pass (Unpacked 4126 entries, with UT_CODE_BAD); file diff pass (nothing missing or extra, config.php matches); GET / 302; zip with no code, bad code, good code: FAIL, all three answered PK (finding); wizard not re-run
+S3-S6, S9-S11, S13-S16          not re-run
+Anything surprising: the zip route skips the licence check; "downloads page on this page" wording; install step says success on a refused download; upper-case code gets no thanks line (all under Findings).
 ```
 
 ## Teardown
@@ -1487,7 +1681,18 @@ rm -rf "$UT"
 - **The old installer's check `ut_last_error ... $REAL_HOST` prints `no PHP error` in zsh.**
   zsh does not split `$REAL_HOST`, so docker got one odd argument. Use `${=REAL_HOST}`.
 - **A 4.0.0 client says "Please enter your license code before doing an upgrade."** It is the
-  old client's gate. Put any code of six characters or more in the box (S13).
+  old client's gate. Put a UUID-shaped code in the box that the stand-in knows (`$UT_CODE`, S13).
+- **Every check says "could not be checked just now".** The server cannot reach the Envato
+  stand-in. Check it is running (`docker exec ucm-ut-api curl -s -H 'Authorization: Bearer
+  e2e-token' "http://127.0.0.1:$UT_STUB_PORT/envato-stub.php?code=$UT_CODE"`), restart it with the
+  `docker exec -d ... php -S` line from setup step 6 if the container was restarted, and check
+  the container has `UCM_ENVATO_TOKEN` and `UCM_ENVATO_API_URL` (`docker exec ucm-ut-api env | grep ENVATO`).
+- **A code stays "not recognised" after it should be good.** The server caches an invalid
+  answer for an hour. `ut_reset` clears it (`docker exec ucm-ut-api rm -rf /tmp/ucm-licence-cache`).
+- **The client says "Automated updates need a licence code" with a code in the box.** Codes of
+  five characters or fewer are dropped on save, and `free` and the
+  `UCM_LICENCE_CODES_GO_HERE` placeholder do not count. Check `_installation_code` in the
+  database.
 - **A new file in `$SERVER` is not offered (S4).** Add it to `$SERVER/includes/release-files.txt`:
   the server lists a built release from that file, not from the disk.
 - **`composer install` in S13 cannot reach packagist.** It is the host's network; the test
@@ -1552,3 +1757,19 @@ rm -rf "$UT"
   email without a browser. Findings updated: the secret warning never shows after an in-app
   update, `stripe_form.php` is left behind, and the `ucm-web` gate would pause every 4.0.1
   client.
+- 2026-11-02 (later): automated updates now need a licence code, so the runbook changed.
+  The client sends `installation_code` and `installation_location` again (never
+  `client_ip`) and sends nothing at all while no code is saved; the update server verifies the
+  code with Envato's author API (cached, with an outage rule) and refuses with a message the
+  Upgrade page shows. Setup: throwaway UUID-shaped codes (`UT_CODE` and friends), a
+  stand-in for Envato's API run with `php -S` inside the server container and the
+  `UCM_ENVATO_TOKEN` / `UCM_ENVATO_API_URL` environment variables, and step 7 saves
+  `$UT_CODE`. `ut_offer` sends `$UT_CODE` and the site address; `ut_reset` clears the server's
+  licence cache; `old_offer` and S13, S16 and the S12 stand-in installer send a code. S8 is
+  rewritten (no code: nothing sent; bad, foreign, outage; the cache and the outage rule;
+  no token: fail closed); S7's escaping check and S12's wrong-code check are reworked; the
+  rules, status text and findings no longer say the code is optional. New tool support:
+  `upgrade-test-drive.mjs install <plugin>`, the licence refusal line in `summarise`.
+  Run for real: setup, S1, S2, S7 escaping, S8 and S12's first four checks. New findings:
+  the whole-product zip is served with no code, and three small ones (wording, a misleading
+  install success, no thanks line for upper-case codes).
