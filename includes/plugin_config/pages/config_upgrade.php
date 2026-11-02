@@ -726,7 +726,7 @@ if ( isset( $_REQUEST['process_upgrade'] ) && isset( $_REQUEST['via_ajax'] ) ) {
 										// we check if this is a confirmed licence code.
 										// if it is we display the item name, rather than the code.
 										if ( module_config::c( 'upgrade_page_show_extra_info', 1 ) && strlen( $license_code ) > 10 ) {
-											$confirmed = module_config::c( '_licence_code_' . $license_code, false );
+											$confirmed = module_config::c( '_licence_code_' . strtolower( $license_code ), false );
 											if ( $confirmed ) {
 												$foo = explode( '|', $confirmed );
 												?>

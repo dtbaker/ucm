@@ -154,7 +154,7 @@ class ucm_licence_check
 			case self::INVALID:
 				return 'This licence code was not recognised as a purchase of Ultimate Client Manager, so automated updates are not available. Please check the code on your CodeCanyon downloads page. You can still download the latest version from CodeCanyon and upload it by hand.';
 			default:
-				return 'Automated updates need a licence code. Enter the purchase code from your CodeCanyon downloads page on this page to receive them. You can still download the latest version from CodeCanyon and upload it by hand.';
+				return 'Automated updates need a licence code. Enter the purchase code from your CodeCanyon downloads page in the licence box on this page to receive them. You can still download the latest version from CodeCanyon and upload it by hand.';
 		}
 	}
 
