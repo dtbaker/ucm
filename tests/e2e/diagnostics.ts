@@ -14,7 +14,6 @@
 export const VENDORED = [
   '/includes/plugin_security/htmlpurifier/',
   '/includes/plugin_encrypt/phpseclib/',
-  '/includes/plugin_email/class.',
   '/includes/plugin_paymethod_',
   '/includes/plugin_calendar/wdCalendar/',
   '/includes/plugin_captcha/inc/',

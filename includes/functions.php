@@ -1104,9 +1104,33 @@ function print_header_message_popdown() {
 }
 
 
+/**
+ * A copy of request data that is safe to put in an email: anything that looks like a
+ * password, token, key, secret, cookie or card number is replaced, at any depth.
+ *
+ * @param mixed $data
+ *
+ * @return mixed
+ */
+function ucm_redact_for_email( $data ) {
+	if ( ! is_array( $data ) ) {
+		return $data;
+	}
+	$clean = array();
+	foreach ( $data as $key => $value ) {
+		if ( is_string( $key ) && preg_match( '/pass|secret|token|cookie|auth|key|hash|card|cvv|signature/i', $key ) ) {
+			$clean[ $key ] = '[removed]';
+		} else {
+			$clean[ $key ] = ucm_redact_for_email( $value );
+		}
+	}
+
+	return $clean;
+}
+
 function send_error( $message ) {
 	//echo $message;exit;
-	mail( _ERROR_EMAIL, "Admin System Notification (" . date( "Y-m-d H:i:s" ) . ")", $message . "\n\n" . var_export( $_REQUEST, true ) . "\n\n" . var_export( $_SERVER, true ) );
+	mail( _ERROR_EMAIL, "Admin System Notification (" . date( "Y-m-d H:i:s" ) . ")", $message . "\n\n" . var_export( ucm_redact_for_email( $_REQUEST ), true ) . "\n\n" . var_export( ucm_redact_for_email( $_SERVER ), true ) );
 }
 
 
