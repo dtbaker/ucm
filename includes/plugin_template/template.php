@@ -21,7 +21,7 @@ class module_template extends module_base
 	public function __construct() {
 		$this->module_name     = 'template';
 		$this->module_position = 510;
-		$this->version         = 2.261;
+		$this->version         = 2.262;
 	}
 
 	public static function can_i( $actions, $name = false, $category = false, $module = false ) {
@@ -38,6 +38,7 @@ class module_template extends module_base
 
 	function init() {
 		$this->links = array();
+		//2.262 - 2026-11-02 - stored values are read without instantiating objects
 		//2.261 - 2026-10-17 - 4.0.0 relaunch: security token on template saves, escaped request values, PHP 8.4 fixes
 		//2.260 - 2019-04-06 - php error fix
 		//2.259 - 2015-11-06 - javascript template improvement
@@ -320,7 +321,7 @@ class module_template extends module_base
 			if ( $tags && isset( $template['tags'] ) && $template_key ) {
 				// check these tags
 				$new_tags      = false;
-				$existing_tags = @unserialize( $template['tags'] );
+				$existing_tags = @unserialize( $template['tags'], array( 'allowed_classes' => false ) );
 				foreach ( $tags as $key => $val ) {
 					if ( ! isset( $existing_tags[ strtoupper( $key ) ] ) && ! isset( $existing_tags[ $key ] ) ) {
 						$new_tags = true;
@@ -361,7 +362,7 @@ class module_template extends module_base
 		}
 		foreach ( $data as $key => $val ) {
 			if ( $key == 'tags' ) {
-				$template->{$key} = @unserialize( $val );
+				$template->{$key} = @unserialize( $val, array( 'allowed_classes' => false ) );
 			} else {
 				$template->{$key} = $val;
 			}

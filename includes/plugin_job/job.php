@@ -30,7 +30,8 @@ class module_job extends module_base
 	public $links;
 	public $job_types;
 
-	public $version = 2.618;
+	public $version = 2.619;
+	//2.619 - 2026-11-02 - stored values are read without instantiating objects
 	//2.617 - 2026-10-17 - 4.0.0 relaunch: saves without an hourly rate keep task prices, security token, missing records handled
 	//2.616 - 2019-04-06 - php error fix
 	//2.615 - 2018-06-05 - fix for hourly rate when creating a job
@@ -2590,7 +2591,7 @@ Job Name: <strong>{JOB_NAME}</strong> <br/>
 			// this is used in finance.php line 1053
 			$job['staff_total_grouped'] = array();
 			if ( isset( $job['c_staff_total_grouped'] ) && strlen( $job['c_staff_total_grouped'] ) ) {
-				$job['staff_total_grouped'] = @unserialize( $job['c_staff_total_grouped'] );
+				$job['staff_total_grouped'] = @unserialize( $job['c_staff_total_grouped'], array( 'allowed_classes' => false ) );
 			}
 			if ( isset( $cache_key ) ) {
 				module_cache::put( 'job', $cache_key, $job, $cache_timeout );
@@ -4199,7 +4200,7 @@ Job Name: <strong>{JOB_NAME}</strong> <br/>
 		return array(
 			'default_task_list_id' => $extra['extra_id'],
 			'name'                 => $extra['extra_key'],
-			'task_data'            => unserialize( $extra['extra'] ),
+			'task_data'            => unserialize( $extra['extra'], array( 'allowed_classes' => false ) ),
 		);
 	}
 

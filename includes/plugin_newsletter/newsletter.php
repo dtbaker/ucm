@@ -16,7 +16,8 @@ class module_newsletter extends module_base
 	public $links;
 	public $newsletter_types;
 
-	public $version = 2.473;
+	public $version = 2.474;
+	// 2.474 - 2026-11-02 - stored send and member data is read without instantiating objects
 	// 2.473 - 2026-11-02 - removed an old commented-out block that evaluated the template body
 	// 2.471 - 2026-10-17 - newsletter list no longer warns about a newsletter with no template
 	// 2.470 - 2026-10-17 - 4.0.0 relaunch: member newsletter page crash fixed, delete permission checked, security token on saves
@@ -1758,7 +1759,7 @@ class module_newsletter extends module_base
 			// todo: BIG TODO: cache this loop, it will run every time a newsletter is mailed during the render query. eep!
 			$extra_fields = $cache_data = array();
 			if ( isset( $send_data['cache'] ) ) {
-				$cache_data = @unserialize( $send_data['cache'] );
+				$cache_data = @unserialize( $send_data['cache'], array( 'allowed_classes' => false ) );
 				if ( $cache_data && isset( $cache_data['extra_fields'] ) ) {
 					$extra_fields = $cache_data['extra_fields'];
 				}
@@ -1771,7 +1772,7 @@ class module_newsletter extends module_base
 				while ( $send_member = mysqli_fetch_assoc( $send_members ) ) {
 					$cache = array();
 					if ( isset( $send_member['data_cache'] ) && strlen( $send_member['data_cache'] ) > 1 ) {
-						$cache = unserialize( $send_member['data_cache'] );
+						$cache = unserialize( $send_member['data_cache'], array( 'allowed_classes' => false ) );
 						if ( $cache ) {
 							// we have extra fields! woo!
 							foreach ( $cache as $key => $val ) {
@@ -1829,7 +1830,7 @@ class module_newsletter extends module_base
 					//}
 				}
 				if ( isset( $use_newsletter_member['data_cache'] ) && strlen( $use_newsletter_member['data_cache'] ) > 1 ) {
-					$cache = unserialize( $use_newsletter_member['data_cache'] );
+					$cache = unserialize( $use_newsletter_member['data_cache'], array( 'allowed_classes' => false ) );
 					if ( is_array( $cache ) ) {
 						foreach ( $cache as $key => $val ) {
 							if ( is_array( $val ) ) {

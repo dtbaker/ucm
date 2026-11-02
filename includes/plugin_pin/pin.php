@@ -17,12 +17,13 @@ class module_pin extends module_base
 	public function __construct() {
 		$this->module_name     = 'pin';
 		$this->module_position = 420;
-		$this->version         = 2.121;
+		$this->version         = 2.122;
 	}
 
 	public function init() {
 		module_config::register_css( 'pin', 'pin.css' );
 		module_config::register_js( 'pin', 'pin.js' );
+		//2.122 - 2026-11-02 - stored values are read without instantiating objects
 		//2.121 - 2026-10-17 - 4.0.0 relaunch: forms use the form helper, PHP 8.4
 		//2.12 - 2016-02-02 - pin theme overriding support
 		//2.11 css tweak
@@ -78,7 +79,7 @@ class module_pin extends module_base
 			'owner_id'    => module_security::get_loggedin_id()
 		) );
 		foreach ( $extra_fields as $extra ) {
-			$pins[ $extra['extra_id'] ] = unserialize( $extra['extra'] );
+			$pins[ $extra['extra_id'] ] = unserialize( $extra['extra'], array( 'allowed_classes' => false ) );
 		}
 
 		return $pins;

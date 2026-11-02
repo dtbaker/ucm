@@ -175,7 +175,7 @@ if ( isset( $_REQUEST['export_json'] ) ) {
 					$checkbox_permissions[] = $available_permission;
 					continue;
 				}
-				$available_perms = @unserialize( $available_permission['available_perms'] );
+				$available_perms = @unserialize( $available_permission['available_perms'], array( 'allowed_classes' => false ) );
 				if ( ! $last_category || $last_category != $available_permission['category'] ) {
 					$x++;
 				}
@@ -294,7 +294,7 @@ if ( isset( $_REQUEST['export_json'] ) ) {
 			<?php
 			$permission = 'view';
 			foreach ( $checkbox_permissions as $available_permission ) {
-				$available_perms = @unserialize( $available_permission['available_perms'] );
+				$available_perms = @unserialize( $available_permission['available_perms'], array( 'allowed_classes' => false ) );
 				?>
 				<tr class="<?php echo $x++ % 2 ? 'odd' : 'even'; ?>">
 					<td>

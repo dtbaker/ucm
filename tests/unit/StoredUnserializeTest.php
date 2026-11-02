@@ -17,6 +17,25 @@ class StoredUnserializeTest extends TestCase
 		'includes/plugin_email',
 		'includes/plugin_extra',
 		'includes/plugin_ticket',
+		'includes/plugin_newsletter',
+		'includes/plugin_security',
+		'includes/plugin_invoice',
+		'includes/plugin_template',
+		'includes/plugin_job',
+		'includes/plugin_finance',
+		'includes/plugin_quote',
+		'includes/plugin_pin',
+		'includes/plugin_subscription',
+		'includes/plugin_user',
+		'includes/plugin_paymethod_banktransfer',
+		'includes/plugin_paymethod_check',
+		'includes/plugin_paymethod_other',
+		'includes/plugin_paymethod_paypal',
+		'includes/plugin_paymethod_square',
+		'includes/plugin_file',
+		'includes/plugin_form',
+		'includes/plugin_note',
+		'includes/plugin_calendar',
 	);
 
 	/** @return string[] */
@@ -30,7 +49,8 @@ class StoredUnserializeTest extends TestCase
 			$iterator = new RecursiveIteratorIterator( new RecursiveDirectoryIterator( $root . $dir, FilesystemIterator::SKIP_DOTS ) );
 			foreach ( $iterator as $info ) {
 				// Bundled third party code keeps its own rules.
-				if ( 'php' === $info->getExtension() && false === strpos( $info->getPathname(), '/vendor/' ) ) {
+				$path = $info->getPathname();
+				if ( 'php' === $info->getExtension() && false === strpos( $path, '/vendor/' ) && false === strpos( $path, '/htmlpurifier/' ) ) {
 					$files[] = $info->getPathname();
 				}
 			}
@@ -124,6 +144,49 @@ class StoredUnserializeTest extends TestCase
 
 		$file = 'a:2:{s:4:"file";s:12:"upload-1.pdf";s:4:"name";s:7:"Doc.pdf";}';
 		$this->assertSame( array( 'file' => 'upload-1.pdf', 'name' => 'Doc.pdf' ), unserialize( $file, array( 'allowed_classes' => false ) ) );
+	}
+
+	public function test_values_stored_by_the_plugins_read_back_identically() {
+		$options = array( 'allowed_classes' => false );
+		$stored  = array(
+			// invoice_payment.data: gateway log lines and ids, as module_invoice::add_payment_data() writes them.
+			'payment data'        => array( 'log' => array( 'Payment recorded from stripe transaction pi_1.', 'Worth a look: late.' ), 'paypal_order_id' => array( '5O190127TN364715T' ), 'custom_notes' => 'Paid by cheque' ),
+			// security_permission.available_perms
+			'available perms'     => array( 'view' => true, 'edit' => true, 'create' => true, 'delete' => true ),
+			// template.tags
+			'template tags'       => array( 'CUSTOMER_NAME' => 'Customer name', 'LINK' => 'Link to the page' ),
+			// extra.extra for job / quote default tasks and pins
+			'task defaults'       => array( 0 => array( 'description' => 'Design', 'hours' => 1.5, 'amount' => '120.00', 'taxable' => 1 ), 1 => array( 'description' => 'Build', 'hours' => 0, 'amount' => '', 'taxable' => 0 ) ),
+			'pin'                 => array( 'index.php?m=job&p=job_admin&job_id=3', 'Job 3: A "quoted" title' ),
+			// job / finance c_staff_total_grouped
+			'staff total grouped' => array( 7 => array( 'hours' => 3.25, 'amount' => 195.0 ), 12 => array( 'hours' => 0, 'amount' => 0 ) ),
+			// newsletter_send.cache and newsletter_member.data_cache
+			'newsletter cache'    => array( 'sends' => array( 4 => array( 'send_id' => 4, 'status' => 2, 'cache' => '' ) ), 'extra_fields' => array( 'company' => true ), 'unicode' => "Caf\u{e9} \u{2603}" ),
+			'member data cache'   => array( 'first_name' => 'Sam', 'email' => 'sam@example.com', 'member_id' => 9 ),
+		);
+		foreach ( $stored as $label => $value ) {
+			$this->assertSame( $value, unserialize( serialize( $value ), $options ), $label );
+		}
+	}
+
+	public function test_values_written_by_older_releases_still_read() {
+		$options = array( 'allowed_classes' => false );
+		// Literal strings in the shape the app has always stored them.
+		$perms = 'a:4:{s:4:"view";b:1;s:4:"edit";b:1;s:6:"create";b:1;s:6:"delete";b:1;}';
+		$this->assertSame( array( 'view' => true, 'edit' => true, 'create' => true, 'delete' => true ), unserialize( $perms, $options ) );
+		$payment = 'a:2:{s:3:"log";a:1:{i:0;s:12:"Paid in full";}s:12:"custom_notes";s:6:"Cheque";}';
+		$this->assertSame( array( 'log' => array( 'Paid in full' ), 'custom_notes' => 'Cheque' ), unserialize( $payment, $options ) );
+		$pin = 'a:2:{i:0;s:9:"index.php";i:1;s:5:"Title";}';
+		$this->assertSame( array( 'index.php', 'Title' ), unserialize( $pin, $options ) );
+	}
+
+	public function test_a_stored_object_in_one_of_these_values_comes_back_inert() {
+		$hostile = serialize( array( 'log' => new ArrayObject( array( 'x' ) ), 'custom_notes' => 'n' ) );
+		$data    = unserialize( $hostile, array( 'allowed_classes' => false ) );
+		$this->assertSame( 'n', $data['custom_notes'] );
+		$this->assertNotInstanceOf( 'ArrayObject', $data['log'] );
+		// The callers all test isset( $details['custom_notes'] ) or is_array(), and carry on.
+		$this->assertFalse( is_array( $data['log'] ) );
 	}
 
 	public function test_an_object_payload_is_never_constructed() {

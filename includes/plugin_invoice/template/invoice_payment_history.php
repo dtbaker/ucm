@@ -123,7 +123,7 @@ if ( module_config::c( 'invoice_show_payment_history', 1 ) ) {
 				'ITEM_PAYMENT_RECEIPT_URL' => module_invoice::link_receipt( $invoice_payment_data['invoice_payment_id'] ),
 			);
 			if ( isset( $invoice_payment_data['data'] ) && $invoice_payment_data['data'] ) {
-				$details = unserialize( $invoice_payment_data['data'] );
+				$details = unserialize( $invoice_payment_data['data'], array( 'allowed_classes' => false ) );
 				if ( isset( $details['custom_notes'] ) ) {
 					$row_replace['ITEM_PAYMENT_DETAILS'] = htmlspecialchars( $details['custom_notes'] );
 				}
