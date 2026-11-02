@@ -173,10 +173,8 @@ jobs:
             --config p/security-audit \
             --config p/owasp-top-ten \
             --exclude vendor --exclude node_modules --exclude temp \
-            --exclude 'includes/plugin_pdf/dompdf' \
             --exclude 'includes/plugin_security/htmlpurifier' \
             --exclude 'includes/plugin_encrypt/phpseclib' \
-            --exclude 'includes/plugin_paymethod_stripe/stripe-php' \
             --exclude 'includes/plugin_ticket/cron/mime_parser.php' \
             --exclude 'js/tiny_mce3.4.4' \
             --exclude-rule generic.nginx.security.request-host-used.request-host-used \
@@ -198,7 +196,7 @@ jobs:
     #                               two are suppressed in place with a reason.
     #   unknown-value-with-script-tag,
     #   react-unsanitized-method    only ever matched the bundled TinyMCE, which is
-    #                               excluded with dompdf, htmlpurifier and phpseclib.
+    #                               excluded with htmlpurifier and phpseclib.
     #   curl-ssl-verifypeer-off     one, in the bundled Authorize.Net library (since removed): its pinned
     #                               CA bundle expired in 2012 and the documented
     #                               workaround was to stop verifying the peer on a request
@@ -225,10 +223,8 @@ jobs:
             --config r/php.lang.security.curl-ssl-verifypeer-off \
             --config r/html.security.plaintext-http-link \
             --exclude vendor --exclude node_modules --exclude temp \
-            --exclude 'includes/plugin_pdf/dompdf' \
             --exclude 'includes/plugin_security/htmlpurifier' \
             --exclude 'includes/plugin_encrypt/phpseclib' \
-            --exclude 'includes/plugin_paymethod_stripe/stripe-php' \
             --exclude 'includes/plugin_ticket/cron/mime_parser.php' \
             --exclude 'js/tiny_mce3.4.4'
 

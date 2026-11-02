@@ -63,14 +63,10 @@
     <exclude-pattern>*/includes/config.local.php</exclude-pattern>
 
     <!-- Exclude third-party/vendor code (same as .php-cs-fixer.php) -->
-    <exclude-pattern>*/plugin_pdf/dompdf/*</exclude-pattern>
-    <!-- PHPMailer, bundled as class.phpmailer.php / class.pop3.php / class.smtp.php -->
-    <exclude-pattern>*/plugin_email/class.*</exclude-pattern>
     <exclude-pattern>*/plugin_encrypt/phpseclib/*</exclude-pattern>
     <exclude-pattern>*/plugin_security/htmlpurifier/*</exclude-pattern>
     <exclude-pattern>*/plugin_calendar/wdCalendar/*</exclude-pattern>
     <exclude-pattern>*/plugin_captcha/inc/*</exclude-pattern>
-    <exclude-pattern>*/plugin_paymethod_stripe/stripe-php/*</exclude-pattern>
     <exclude-pattern>*/plugin_ticket/cron/mime_parser.php</exclude-pattern>
     <!-- HTML/template files with no or minimal PHP -->
     <exclude-pattern>*/plugin_change_request/pages/popup_content_0.php</exclude-pattern>

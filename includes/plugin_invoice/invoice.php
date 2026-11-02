@@ -44,10 +44,11 @@ class module_invoice extends module_base
 	public function __construct() {
 		$this->module_name     = 'invoice';
 		$this->module_position = 250;
-		$this->version         = 2.811;
+		$this->version         = 2.812;
 	}
 
 	public function init() {
+		//2.812 - 2026-11-02 - stored values are read without instantiating objects
 		//2.811 - 2026-10-22 - saves check the permission the invoice page asks for
 		$this->links         = array();
 		$this->invoice_types = array();
@@ -1342,7 +1343,7 @@ Job: <strong>{JOB_NAME}</strong> <br/>
 									'METHOD'            => 'What payment method was used',
 								) );
 
-								$details                                 = @unserialize( $invoice_payment_data['data'] );
+								$details                                 = @unserialize( $invoice_payment_data['data'], array( 'allowed_classes' => false ) );
 								$invoice_payment_data['receipt_details'] = isset( $details['custom_notes'] ) ? htmlspecialchars( $details['custom_notes'] ) : '';
 
 								// load up the receipt template.
@@ -3301,7 +3302,7 @@ Job: <strong>{JOB_NAME}</strong> <br/>
 							$invoice_payment_id            = 0;
 							$invoice_payment_data_existing = false;
 						} else {
-							$invoice_payment_data['data'] = @unserialize( $invoice_payment_data_existing['data'] );
+							$invoice_payment_data['data'] = @unserialize( $invoice_payment_data_existing['data'], array( 'allowed_classes' => false ) );
 							if ( ! is_array( $invoice_payment_data['data'] ) ) {
 								$invoice_payment_data['data'] = array();
 							}

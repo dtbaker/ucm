@@ -143,12 +143,16 @@ do
 	fi
 done
 
-# The dependencies buyers cannot install themselves. Stripe is the one that bites: it has
-# no bundled fallback, so an archive without vendor/ ships a payment method that cannot
-# take a payment, and nothing else in the build would notice.
+# The dependencies buyers cannot install themselves. None has a bundled fallback: an archive
+# without vendor/ ships a payment method that cannot take a payment, PDFs that cannot be
+# made and email that cannot be sent, and nothing else in the build would notice. dompdf's
+# fonts are checked too, because it cannot draw a page without them.
 for required in \
 	'Main Files/vendor/autoload.php' \
-	'Main Files/vendor/stripe/stripe-php/init.php'
+	'Main Files/vendor/stripe/stripe-php/init.php' \
+	'Main Files/vendor/dompdf/dompdf/src/Dompdf.php' \
+	'Main Files/vendor/dompdf/dompdf/lib/fonts/DejaVuSans.ttf' \
+	'Main Files/vendor/phpmailer/phpmailer/src/PHPMailer.php'
 do
 	if ! grep -qxF "$required" <<<"$listing"; then
 		echo "FAIL: the archive is missing $required"

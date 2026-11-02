@@ -19,8 +19,9 @@ class module_quote extends module_base
 	public function __construct() {
 		$this->module_name     = 'quote';
 		$this->module_position = 440;
-		$this->version         = 2.181;
+		$this->version         = 2.182;
 	}
+	//2.182 - 2026-11-02 - stored values are read without instantiating objects
 	//2.180 - 2026-10-17 - 4.0.0 relaunch: security token on saves, broken print logo removed, PHP notices fixed
 	//2.179 - 2017-05-18 - quote email fix
 	//2.178 - 2017-05-07 - quote pdf fix
@@ -2652,7 +2653,7 @@ Thank you,<br><br>
 		return array(
 			'default_task_list_id' => $extra['extra_id'],
 			'name'                 => $extra['extra_key'],
-			'task_data'            => unserialize( $extra['extra'] ),
+			'task_data'            => unserialize( $extra['extra'], array( 'allowed_classes' => false ) ),
 		);
 	}
 

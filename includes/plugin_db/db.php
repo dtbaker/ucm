@@ -5,7 +5,7 @@ class module_db extends module_base
 	public function __construct() {
 		$this->module_name     = 'db';
 		$this->module_position = 20;
-		$this->version         = 2.141;
+		$this->version         = 2.142;
 	}
 
 	public static function can_i( $actions, $name = false, $category = false, $module = false ) {

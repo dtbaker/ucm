@@ -39,7 +39,7 @@ if ( $data_type_id ) {
 				$data_items = $module->get_data_items( $data['data_record_id'] );
 				foreach ( $_REQUEST['data_field'] as $data_field_id => $data_field_value ) {
 					if ( isset( $search_fields[ $data_field_id ] ) ) {
-						$settings = isset( $data_items[ $data_field_id ] ) ? @unserialize( $data_items[ $data_field_id ]['data_field_settings'] ) : false;
+						$settings = isset( $data_items[ $data_field_id ] ) ? @unserialize( $data_items[ $data_field_id ]['data_field_settings'], array( 'allowed_classes' => false ) ) : false;
 						if ( is_array( $data_field_value ) ) {
 							$array_search = true;
 							$array_match  = false;
@@ -52,7 +52,7 @@ if ( $data_type_id ) {
 
 								if ( $data_field_value_value ) {
 									// search this field!
-									$foo = @unserialize( $data_items[ $data_field_id ]['data_text'] );
+									$foo = @unserialize( $data_items[ $data_field_id ]['data_text'], array( 'allowed_classes' => false ) );
 									if ( $foo ) {
 										$data_items[ $data_field_id ]['data_text'] = $foo;
 									}
@@ -125,7 +125,7 @@ if ( $data_type_id ) {
 									default:
 										// search default (text and stuff)
 										if ( isset( $data_items[ $data_field_id ] ) ) {
-											$foo = @unserialize( $data_items[ $data_field_id ]['data_text'] );
+											$foo = @unserialize( $data_items[ $data_field_id ]['data_text'], array( 'allowed_classes' => false ) );
 											if ( is_array( $foo ) ) {
 												if ( ! in_array( $data_field_value, $foo ) ) {
 													unset( $datas[ $data_id ] );

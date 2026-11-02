@@ -1369,12 +1369,6 @@ parameters:
 			path: includes/plugin_email/email.php
 
 		-
-			message: '#^Access to an undefined property UCMEmail\:\:\$error_text\.$#'
-			identifier: property.notFound
-			count: 2
-			path: includes/plugin_email/email.php
-
-		-
 			message: '#^Access to an undefined property UCMEmail\:\:\$from\.$#'
 			identifier: property.notFound
 			count: 5
@@ -1525,96 +1519,6 @@ parameters:
 			path: includes/plugin_email/email.php
 
 		-
-			message: '#^Access to property \$AltBody on an unknown class PHPMailer\.$#'
-			identifier: class.notFound
-			count: 2
-			path: includes/plugin_email/email.php
-
-		-
-			message: '#^Access to property \$Body on an unknown class PHPMailer\.$#'
-			identifier: class.notFound
-			count: 2
-			path: includes/plugin_email/email.php
-
-		-
-			message: '#^Access to property \$CharSet on an unknown class PHPMailer\.$#'
-			identifier: class.notFound
-			count: 2
-			path: includes/plugin_email/email.php
-
-		-
-			message: '#^Access to property \$ErrorInfo on an unknown class PHPMailer\.$#'
-			identifier: class.notFound
-			count: 1
-			path: includes/plugin_email/email.php
-
-		-
-			message: '#^Access to property \$From on an unknown class PHPMailer\.$#'
-			identifier: class.notFound
-			count: 2
-			path: includes/plugin_email/email.php
-
-		-
-			message: '#^Access to property \$FromName on an unknown class PHPMailer\.$#'
-			identifier: class.notFound
-			count: 2
-			path: includes/plugin_email/email.php
-
-		-
-			message: '#^Access to property \$Host on an unknown class PHPMailer\.$#'
-			identifier: class.notFound
-			count: 2
-			path: includes/plugin_email/email.php
-
-		-
-			message: '#^Access to property \$MessageID on an unknown class PHPMailer\.$#'
-			identifier: class.notFound
-			count: 2
-			path: includes/plugin_email/email.php
-
-		-
-			message: '#^Access to property \$Password on an unknown class PHPMailer\.$#'
-			identifier: class.notFound
-			count: 2
-			path: includes/plugin_email/email.php
-
-		-
-			message: '#^Access to property \$SMTPAuth on an unknown class PHPMailer\.$#'
-			identifier: class.notFound
-			count: 3
-			path: includes/plugin_email/email.php
-
-		-
-			message: '#^Access to property \$SMTPOptions on an unknown class PHPMailer\.$#'
-			identifier: class.notFound
-			count: 2
-			path: includes/plugin_email/email.php
-
-		-
-			message: '#^Access to property \$SMTPSecure on an unknown class PHPMailer\.$#'
-			identifier: class.notFound
-			count: 2
-			path: includes/plugin_email/email.php
-
-		-
-			message: '#^Access to property \$Sender on an unknown class PHPMailer\.$#'
-			identifier: class.notFound
-			count: 2
-			path: includes/plugin_email/email.php
-
-		-
-			message: '#^Access to property \$Subject on an unknown class PHPMailer\.$#'
-			identifier: class.notFound
-			count: 2
-			path: includes/plugin_email/email.php
-
-		-
-			message: '#^Access to property \$Username on an unknown class PHPMailer\.$#'
-			identifier: class.notFound
-			count: 2
-			path: includes/plugin_email/email.php
-
-		-
 			message: '#^Call to an undefined method module_email\:\:AddAttachment\(\)\.$#'
 			identifier: method.notFound
 			count: 2
@@ -1693,69 +1597,9 @@ parameters:
 			path: includes/plugin_email/email.php
 
 		-
-			message: '#^Call to method AddAddress\(\) on an unknown class PHPMailer\.$#'
-			identifier: class.notFound
-			count: 1
-			path: includes/plugin_email/email.php
-
-		-
-			message: '#^Call to method AddAttachment\(\) on an unknown class PHPMailer\.$#'
-			identifier: class.notFound
-			count: 2
-			path: includes/plugin_email/email.php
-
-		-
-			message: '#^Call to method AddBCC\(\) on an unknown class PHPMailer\.$#'
-			identifier: class.notFound
-			count: 1
-			path: includes/plugin_email/email.php
-
-		-
-			message: '#^Call to method AddCC\(\) on an unknown class PHPMailer\.$#'
-			identifier: class.notFound
-			count: 1
-			path: includes/plugin_email/email.php
-
-		-
-			message: '#^Call to method AddReplyTo\(\) on an unknown class PHPMailer\.$#'
-			identifier: class.notFound
-			count: 1
-			path: includes/plugin_email/email.php
-
-		-
-			message: '#^Call to method IsMail\(\) on an unknown class PHPMailer\.$#'
-			identifier: class.notFound
-			count: 1
-			path: includes/plugin_email/email.php
-
-		-
-			message: '#^Call to method IsSMTP\(\) on an unknown class PHPMailer\.$#'
-			identifier: class.notFound
-			count: 1
-			path: includes/plugin_email/email.php
-
-		-
-			message: '#^Call to method Send\(\) on an unknown class PHPMailer\.$#'
-			identifier: class.notFound
-			count: 1
-			path: includes/plugin_email/email.php
-
-		-
-			message: '#^Call to method isHTML\(\) on an unknown class PHPMailer\.$#'
-			identifier: class.notFound
-			count: 1
-			path: includes/plugin_email/email.php
-
-		-
 			message: '#^Constant _DB_PREFIX not found\.$#'
 			identifier: constant.notFound
 			count: 13
-			path: includes/plugin_email/email.php
-
-		-
-			message: '#^Instantiated class PHPMailer not found\.$#'
-			identifier: class.notFound
-			count: 1
 			path: includes/plugin_email/email.php
 
 		-
@@ -3412,100 +3256,10 @@ parameters:
 			path: includes/plugin_paymethod_paypal/paymethod_paypal.php
 
 		-
-			message: '#^Call to an undefined method Exception\:\:getJsonBody\(\)\.$#'
-			identifier: method.notFound
-			count: 1
-			path: includes/plugin_paymethod_stripe/pages/stripe_form.php
-
-		-
-			message: '#^Call to method getJsonBody\(\) on an unknown class Stripe_CardError\.$#'
-			identifier: class.notFound
-			count: 1
-			path: includes/plugin_paymethod_stripe/pages/stripe_form.php
-
-		-
-			message: '#^Call to static method create\(\) on an unknown class Stripe_Charge\.$#'
-			identifier: class.notFound
-			count: 1
-			path: includes/plugin_paymethod_stripe/pages/stripe_form.php
-
-		-
-			message: '#^Call to static method setApiKey\(\) on an unknown class Stripe\.$#'
-			identifier: class.notFound
-			count: 1
-			path: includes/plugin_paymethod_stripe/pages/stripe_form.php
-
-		-
-			message: '#^Caught class Stripe_CardError not found\.$#'
-			identifier: class.notFound
-			count: 1
-			path: includes/plugin_paymethod_stripe/pages/stripe_form.php
-
-		-
-			message: '#^Variable \$currency_code might not be defined\.$#'
-			identifier: variable.undefined
-			count: 2
-			path: includes/plugin_paymethod_stripe/pages/stripe_form.php
-
-		-
-			message: '#^Variable \$description might not be defined\.$#'
-			identifier: variable.undefined
-			count: 4
-			path: includes/plugin_paymethod_stripe/pages/stripe_form.php
-
-		-
-			message: '#^Variable \$invoice_id might not be defined\.$#'
-			identifier: variable.undefined
-			count: 2
-			path: includes/plugin_paymethod_stripe/pages/stripe_form.php
-
-		-
-			message: '#^Variable \$invoice_payment_data might not be defined\.$#'
-			identifier: variable.undefined
-			count: 1
-			path: includes/plugin_paymethod_stripe/pages/stripe_form.php
-
-		-
-			message: '#^Variable \$invoice_payment_id might not be defined\.$#'
-			identifier: variable.undefined
-			count: 6
-			path: includes/plugin_paymethod_stripe/pages/stripe_form.php
-
-		-
 			message: '#^Constant _DB_PREFIX not found\.$#'
 			identifier: constant.notFound
 			count: 3
 			path: includes/plugin_paymethod_stripe/paymethod_stripe.php
-
-		-
-			message: '#^Call to method loadHtml\(\) on an unknown class Dompdf\\Dompdf\.$#'
-			identifier: class.notFound
-			count: 1
-			path: includes/plugin_pdf/pdf.php
-
-		-
-			message: '#^Call to method output\(\) on an unknown class Dompdf\\Dompdf\.$#'
-			identifier: class.notFound
-			count: 1
-			path: includes/plugin_pdf/pdf.php
-
-		-
-			message: '#^Call to method render\(\) on an unknown class Dompdf\\Dompdf\.$#'
-			identifier: class.notFound
-			count: 1
-			path: includes/plugin_pdf/pdf.php
-
-		-
-			message: '#^Call to method setPaper\(\) on an unknown class Dompdf\\Dompdf\.$#'
-			identifier: class.notFound
-			count: 1
-			path: includes/plugin_pdf/pdf.php
-
-		-
-			message: '#^Instantiated class Dompdf\\Dompdf not found\.$#'
-			identifier: class.notFound
-			count: 1
-			path: includes/plugin_pdf/pdf.php
 
 		-
 			message: '#^Variable \$this might not be defined\.$#'

@@ -7,14 +7,23 @@ GPL-3.0, so that text is there too.
 
 | Component | Version | Licence | Copyright | Path |
 | --- | --- | --- | --- | --- |
+| dompdf | 3.1.6 | [LGPL-2.1-only](LICENSES/LGPL-2.1.txt) | The dompdf contributors | `vendor/dompdf/dompdf` |
+| Cpdf (R&OS PDF class) | bundled with dompdf 3.1.6 | Public domain | Wayne Munro and contributors | `vendor/dompdf/dompdf/lib/Cpdf.php` |
+| PHP Font Lib | 1.0.2 | [LGPL-2.1-or-later](LICENSES/LGPL-2.1.txt) | Fabien Menager and contributors | `vendor/dompdf/php-font-lib` |
+| PHP SVG Lib | 1.0.2 | [LGPL-3.0-or-later](LICENSES/LGPL-3.0.txt) | Fabien Menager and contributors | `vendor/dompdf/php-svg-lib` |
+| Sabberworm PHP CSS Parser | 9.5.0 | [MIT](LICENSES/MIT.txt) | Raphael Schweikert and contributors | `vendor/sabberworm/php-css-parser` |
+| HTML5-PHP | 2.12.0 | [MIT](LICENSES/MIT.txt) | Matt Butcher, Matt Farina and contributors | `vendor/masterminds/html5` |
+| DejaVu Sans fonts (used by dompdf) | 2.37 | [Bitstream Vera and Arev licence, with public-domain DejaVu changes](LICENSES/DejaVu-Fonts.txt) | Bitstream, Inc., Tavmjong Bah and the DejaVu authors | `vendor/dompdf/dompdf/lib/fonts/DejaVuSans.ttf` |
+| PHPMailer | 6.12.0 | [LGPL-2.1-only](LICENSES/LGPL-2.1.txt) | Marcus Bointon, Jim Jagielski, Andy Prevost and contributors | `vendor/phpmailer/phpmailer` |
+| Stripe PHP bindings | 22.0.0 | [MIT](LICENSES/MIT.txt) | Stripe, Inc. | `vendor/stripe/stripe-php` |
 | jQuery UI CSS theme "smoothness" | 1.9.2 | [MIT](LICENSES/MIT.txt) | jQuery Foundation and other contributors | `css/smoothness` |
 | jQuery UI CSS theme "ui-lightness" | 1.8.1 | [MIT](LICENSES/MIT.txt) OR [GPL-2.0](LICENSES/GPL-2.0.txt) | jQuery UI authors | `css/ui-lightness` |
+| wdCalendar (jQuery calendar widget) | unversioned | [MIT](LICENSES/MIT.txt) (published upstream as MIT or GPL-3.0; the bundled files carry no licence header) | The wdCalendar authors | `includes/plugin_calendar/wdCalendar/src/Plugins` |
 | jQuery | 1.4 | [MIT](LICENSES/MIT.txt) OR [GPL-2.0](LICENSES/GPL-2.0.txt) | John Resig | `includes/plugin_calendar/wdCalendar/src/jquery.js` |
 | reCAPTCHA PHP client library (v1) | 1.11 | [MIT](LICENSES/MIT.txt) | Mike Crawford and Ben Maurer, reCAPTCHA | `includes/plugin_captcha/inc/recaptchalib.php` |
 | jQuery Easing | 1.3 | [BSD-3-Clause](LICENSES/BSD-3-Clause.txt) | George McGinley Smith | `includes/plugin_change_request/fancybox/jquery.easing-1.3.pack.js` |
 | fancyBox | 1.3.4 | [MIT](LICENSES/MIT.txt) OR [GPL-2.0](LICENSES/GPL-2.0.txt) | Janis Skarnelis | `includes/plugin_change_request/fancybox/jquery.fancybox-1.3.4.js` |
 | jQuery Mousewheel | 3.0.4 | [MIT](LICENSES/MIT.txt) | Brandon Aaron | `includes/plugin_change_request/fancybox/jquery.mousewheel-3.0.4.pack.js` |
-| PHPMailer | 5.2.21 | [LGPL-2.1-or-later](LICENSES/LGPL-2.1.txt) | Marcus Bointon, Jim Jagielski, Andy Prevost and contributors | `includes/plugin_email/class.phpmailer.php` |
 | phpseclib | 0.2.x (2010) | [MIT](LICENSES/MIT.txt) | Jim Wigginton | `includes/plugin_encrypt/phpseclib` |
 | Featherlight | 1.3.4 | [MIT](LICENSES/MIT.txt) | Noel Raoul Bossart | `includes/plugin_file/js/featherlight.js` |
 | Plupload jQuery queue and jQuery UI widgets | 2.1.2 | [GPL-2.0-only](LICENSES/GPL-2.0.txt) | Moxiecode Systems AB | `includes/plugin_file/js/jquery.plupload.queue` |
@@ -23,13 +32,6 @@ GPL-3.0, so that text is there too.
 | jQuery Timepicker Addon | 1.6.3 | [MIT](LICENSES/MIT.txt) | Trent Richardson | `includes/plugin_form/js/jquery-ui-timepicker-addon.js` |
 | jquery-timepicker | 1.11.6 | [MIT](LICENSES/MIT.txt) | Jon Thornton | `includes/plugin_form/js/jquery.timepicker.min.js` |
 | TinyMCE | 4.1.7 | [LGPL-2.1-or-later](LICENSES/LGPL-2.1.txt) | Moxiecode Systems AB | `includes/plugin_form/js/tinymce4.0.11` |
-| Stripe PHP bindings | 1.11.0 | [MIT](LICENSES/MIT.txt) | Stripe, Inc. | `includes/plugin_paymethod_stripe/stripe-php` |
-| dompdf | 1.0.2 | [LGPL-2.1-or-later](LICENSES/LGPL-2.1.txt) | The dompdf contributors | `includes/plugin_pdf/dompdf` |
-| Cpdf (R&OS PDF class) | bundled with dompdf 1.0.2 | Public domain | Wayne Munro and contributors | `includes/plugin_pdf/dompdf/lib/Cpdf.php` |
-| html5lib-php | bundled with dompdf 1.0.2 | [MIT](LICENSES/MIT.txt) | The html5lib contributors | `includes/plugin_pdf/dompdf/lib/html5lib` |
-| Sabberworm PHP CSS Parser | bundled with dompdf 1.0.2 | [MIT](LICENSES/MIT.txt) | Raphael Schweikert | `includes/plugin_pdf/dompdf/lib/php-css-parser` |
-| PHP Font Lib | bundled with dompdf 1.0.2 | [LGPL-2.1-or-later](LICENSES/LGPL-2.1.txt) | Fabien Menager | `includes/plugin_pdf/dompdf/lib/php-font-lib` |
-| PHP SVG Lib | bundled with dompdf 1.0.2 | [LGPL-3.0-or-later](LICENSES/LGPL-3.0.txt) | Fabien Menager | `includes/plugin_pdf/dompdf/lib/php-svg-lib` |
 | HTML Purifier | 4.19.0 | [LGPL-2.1-or-later](LICENSES/LGPL-2.1.txt) | Edward Z. Yang | `includes/plugin_security/htmlpurifier` |
 | jQuery SignaturePad | 2.5.1 | [BSD-3-Clause](LICENSES/BSD-3-Clause.txt) | Thomas J Bradley | `includes/plugin_signature/js/jquery.signaturepad.min.js` |
 | FlashCanvas | unversioned | [MIT](LICENSES/MIT.txt) | Tim Cameron Ryan and the FlashCanvas Project | `includes/plugin_signature/lib/flashcanvas.js` |

@@ -37,7 +37,8 @@ if (
 		Your system is installed and ready to use. This optional step checks for a newer
 		version of Ultimate Client Manager. <br>
 		If you bought this on CodeCanyon.net you can enter your <strong>license purchase
-			code</strong> below - it is in the "license" file on your downloads page. <br>
+			code</strong> below - it is in the "license" file on your downloads page. It is optional:
+			it is kept on this site as a record of your purchase and is not sent anywhere. <br>
 		The license code will look something like this: 30d91230-a8df-4545-1237-467abcd5b920
 	</p>
 

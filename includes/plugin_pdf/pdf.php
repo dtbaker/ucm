@@ -1,5 +1,7 @@
 <?php
 
+require_once dirname( __FILE__ ) . '/class.ucm_pdf.php';
+
 class module_pdf extends module_base
 {
 	public $links;
@@ -20,7 +22,7 @@ class module_pdf extends module_base
 	public function __construct() {
 		$this->module_name     = 'pdf';
 		$this->module_position = 410;
-		$this->version         = 2.136;
+		$this->version         = 2.137;
 	}
 
 	/**
@@ -28,15 +30,18 @@ class module_pdf extends module_base
 	 */
 	public function third_party_libraries() {
 		return array(
-			'dompdf' => array(
-				'name'       => 'dompdf',
-				'package'    => 'dompdf/dompdf',
-				'constraint' => '^3.1',
-				'class'      => 'Dompdf\\Dompdf',
-				'bundled'    => 'includes/plugin_pdf/dompdf/autoload.inc.php',
-				'feature'    => 'PDF generation for invoices, quotes and contracts',
-			),
+			'dompdf' => ucm_pdf::library(),
 		);
+	}
+
+	/**
+	 * Runs when this plugin's version is applied, on in-app updates and zip uploads alike.
+	 * Updating never deletes files, so take out the old bundled dompdf here.
+	 */
+	function install_upgrade() {
+		ucm_pdf::remove_bundled_dompdf();
+
+		return parent::install_upgrade();
 	}
 
 	function init() {
@@ -59,6 +64,7 @@ class module_pdf extends module_base
 		// 2.134 - 2021-04-07 - php8 compatibility fix
 		// 2.135 - 2021-09-24 - change to dompdf generation
 		// 2.136 - 2026-10-17 - 4.0.0 relaunch: PDFs saved to disk, automatic mPDF installer removed, PHP 8.4
+		// 2.137 - 2026-11-02 - dompdf 3 from Composer replaces the bundled dompdf 1.0.2; the old folder is removed on upgrade
 		$this->links = array();
 	}
 
@@ -135,14 +141,14 @@ function convert_html2pdf( $html, $pdf ) {
 			}
 			set_time_limit( 120 );
 
-			$dompdf = new \Dompdf\Dompdf();
-			$dompdf->loadHtml( file_get_contents( $html ) );
-			$dompdf->setPaper( module_config::c( 'pdf_media_size', 'A4' ) );
-			$dompdf->render();
 			// Dompdf::stream() sends the PDF straight to the browser and writes nothing to
 			// disk. Every caller of this function expects a file afterwards - to attach to
 			// an email, or to serve with its own headers - so write the file out instead.
-			file_put_contents( $pdf, $dompdf->output() );
+			$output = ucm_pdf::render( file_get_contents( $html ), module_config::c( 'pdf_media_size', 'A4' ) );
+			if ( false === $output ) {
+				return false;
+			}
+			file_put_contents( $pdf, $output );
 
 			break;
 	}

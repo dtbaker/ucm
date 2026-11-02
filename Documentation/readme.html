@@ -29,7 +29,7 @@ code { font: .9em/1.4 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; 
 <main>
 
 <h1>Ultimate Client Manager</h1>
-<p class="lead">Getting started with version 4.0.0. This page covers installing and upgrading. Everything
+<p class="lead">Getting started with version 4.0.1. This page covers installing and upgrading. Everything
 else is in the full documentation at
 <a href="https://ultimateclientmanager.com/docs/">ultimateclientmanager.com/docs</a>, which is kept up to
 date with each release.</p>
@@ -52,8 +52,9 @@ full list.</p>
 	<li>Create an empty database and a database user in your hosting control panel.</li>
 	<li>Open the address you uploaded to in a browser. The setup wizard asks for the database details,
 		creates the tables, and saves your settings in <code>includes/config.local.php</code>.</li>
-	<li>Sign in. The installer creates sample accounts with the password <code>password</code>. Change it
-		when you are asked to, or delete the sample accounts.</li>
+	<li>Sign in as the administrator, <code>admin@example.com</code>, with the password
+		<code>password</code>. You are asked to choose a new password straight away. The other sample
+		accounts have no password and cannot sign in until you give them one, or you can delete them.</li>
 	<li>Set up the scheduled task, so invoices, renewals and reminders go out on time. See
 		<a href="https://ultimateclientmanager.com/docs/running/scheduled-tasks/">scheduled tasks</a>.</li>
 </ol>
@@ -70,6 +71,22 @@ full list.</p>
 </ol>
 <div class="note">This release is a large one. Read the
 <a href="https://ultimateclientmanager.com/docs/install/upgrading/">upgrade guide</a> before you start.</div>
+<p>The upgrade installs newer copies of the PDF and email libraries and removes the old bundled ones.
+Uploading the new files does not delete anything from your site. Four payment methods that are no
+longer included, Authorize.Net, Coinbase, MultiSafepay and Pay.nl, stay on a site that already has
+them. If you do not use them, you can delete their folders
+(<code>plugin_paymethod_authorize</code>, <code>plugin_paymethod_coinbase</code>,
+<code>plugin_paymethod_multisafepay</code> and <code>plugin_paymethod_paynl</code>) from the
+<code>includes</code> folder.</p>
+
+<h2>What the update check sends</h2>
+<p>Nothing is sent until you press <strong>Check for Upgrades</strong> under Settings, then Upgrade. The
+request goes to <code>api.ultimateclientmanager.com</code> and contains the version of each plugin, a
+checksum of each plugin file, and a checksum of the bundled libraries. It does not contain your site
+address, your licence code, or any customer or invoice data. Like any web request it arrives from your
+server's IP address, which the update server uses only to limit how often one address can ask. A licence
+code is optional: it is kept on your site as a record of your purchase, every installation is offered the
+same updates, and nothing in the product stops working without one.</p>
 
 <div class="more">
 <h2>More help</h2>
