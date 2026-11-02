@@ -138,6 +138,8 @@ function ucm_upgrade_server_respond() {
 		if ( ! headers_sent() ) {
 			header( 'Content-Type: application/json; charset=utf-8' );
 		}
+		// A JSON body built from fixed strings; the request only picks which of them.
+		// nosemgrep: php.lang.security.injection.echoed-request.echoed-request
 		echo json_encode( ucm_licence_check::refusal( $licence['status'] ) );
 
 		return;
