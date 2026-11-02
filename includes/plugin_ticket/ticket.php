@@ -184,13 +184,37 @@ class module_ticket extends module_base
 		return __CLASS__;
 	}
 
+	/**
+	 * A random throwaway password for a user created from a ticket.
+	 *
+	 * The person never sees it, they reset it or log in with the link in their email, but it is
+	 * still a real login password, so it comes from random_int() (the system CSPRNG) rather than
+	 * a hash of the clock. Letters and digits only, so it is safe in any form field or email.
+	 *
+	 * @param int $length Number of characters, never fewer than 10.
+	 *
+	 * @return string
+	 */
+	public static function generate_password( $length = 12 ) {
+		$alphabet = 'abcdefghijklmnopqrstuvwxyz0123456789';
+		$max      = strlen( $alphabet ) - 1;
+		$password = '';
+		for ( $i = max( 10, (int) $length ); $i > 0; $i-- ) {
+			$password .= $alphabet[ random_int( 0, $max ) ];
+		}
+
+		return $password;
+	}
+
 	public function __construct() {
 		$this->module_name     = 'ticket';
 		$this->module_position = 530;
-		$this->version         = 2.507;
+		$this->version         = 2.508;
 	}
 
 	public function init() {
+		// 2.508 - 2026-11-02 - users created from a ticket get a random password, not a hash of the clock
+		// 2.507 - 2026-11-02 - stored ticket headers and options never rebuild objects when read back
 		// 2.506 - 2026-10-22 - saves and the bulk actions check the permission the ticket pages ask for
 		$this->links       = array();
 		$this->ticket_types = array();
@@ -999,7 +1023,7 @@ Thanks,
 								'customer_id' => $default_customer_id,
 								'email'       => $email,
 								'status_id'   => 1,
-								'password'    => substr( md5( time() . mt_rand( 0, 600 ) ), 3, 7 ),
+								'password'    => self::generate_password(),
 							);
 							global $plugins;
 							$from_user_id = $plugins['user']->create_user( $from_user );
@@ -3540,7 +3564,7 @@ Thanks,
 										'customer_id' => $account['default_customer_id'],
 										'email'       => $from_address,
 										'status_id'   => 1,
-										'password'    => substr( md5( time() . mt_rand( 0, 600 ) ), 3 ),
+										'password'    => self::generate_password(),
 									);
 									global $plugins;
 									$from_user_id                   = $plugins['user']->create_user( $from_user, 'support' );
@@ -3551,7 +3575,7 @@ Thanks,
 										'customer_id' => - 1, // instead of 0, use -1.
 										'email'       => $from_address,
 										'status_id'   => 1,
-										'password'    => substr( md5( time() . mt_rand( 0, 600 ) ), 3 ),
+										'password'    => self::generate_password(),
 									);
 									global $plugins;
 									$from_user_id                   = $plugins['user']->create_user( $from_user, 'support' );
