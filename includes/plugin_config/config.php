@@ -1020,7 +1020,6 @@ public static function js_combine($version, $reinit=false){
 		require_once _UCM_FOLDER . 'includes/plugin_config/class.upgrade_server.php';
 		$post_fields = array(
 			'application'           => _APPLICATION_ID,
-			'installation_code'     => module_config::c( '_installation_code' ),
 			'current_version'       => module_config::c( '_admin_system_version', 2.1 ),
 			// The release, so a server that compares releases offers the core files when
 			// only they changed. An old server ignores it and still reads current_version.

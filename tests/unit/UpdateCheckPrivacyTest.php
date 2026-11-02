@@ -19,6 +19,10 @@ class UpdateCheckPrivacyTest extends TestCase {
 		$this->assertStringNotContainsString( "'installation_location'", $source );
 	}
 
+	public function test_the_check_does_not_send_the_licence_code() {
+		$this->assertStringNotContainsString( "'installation_code'", $this->source() );
+	}
+
 	public function test_the_user_agent_does_not_carry_the_site_address() {
 		$this->assertMatchesRegularExpression( "/\\\$user_agent\\s*=\\s*'UCM\\/'\\s*\\.\\s*_SCRIPT_VERSION;/", $this->source() );
 	}

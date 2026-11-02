@@ -94,13 +94,6 @@ if ( isset( $_REQUEST['process_upgrade'] ) && isset( $_REQUEST['via_ajax'] ) ) {
 } elseif ( isset( $_REQUEST['install_upgrade'] ) ) {
 	// installs the latest version of files (all at once - old slow way - not used in new ajax method above)
 
-	if ( ! strlen( trim( module_config::c( '_installation_code' ) ) ) ) {
-		?>
-		Please enter your license code before doing an upgrade.
-		<?php
-		exit;
-	}
-
 	if ( ! isset( $setup_upgrade_hack ) && ( ! isset( $_REQUEST['doupdate'] ) || ! is_array( $_REQUEST['doupdate'] ) ) ) {
 		echo 'please select at least one upgrade to perform';
 		exit;
@@ -303,13 +296,6 @@ if ( isset( $_REQUEST['process_upgrade'] ) && isset( $_REQUEST['via_ajax'] ) ) {
 
 	// checks for any available upgrades, calls the new ajax handler to check each plugin individually.
 
-	if ( ! strlen( trim( module_config::c( '_installation_code' ) ) ) ) {
-		?>
-		Please enter your license code before doing an upgrade.
-		<?php
-		exit;
-
-	}
 	if ( false ) {
 		// todo - check each plugin indivdually via ajax..
 		// display a list of all modules, check each one via ajax.
@@ -708,7 +694,7 @@ if ( isset( $_REQUEST['process_upgrade'] ) && isset( $_REQUEST['via_ajax'] ) ) {
 					'message' => '<strong id="ucm_product_version">' . _l( 'You are running Ultimate Client Manager version %s.', htmlspecialchars( module_config::product_version() ) ) . '</strong>',
 				),
 				array(
-					'message' => _l( 'Please insert your license code(s) below to receive upgrades and new features.' ) . ' ' . _hr( 'Your license code can be found from your CodeCanyon downloads page. <a href="%s">Click here</a> for help.', 'http://dtbaker.net/admin/includes/plugin_envato/images/envato-license-code.gif' )
+					'message' => _l( 'Your license code is optional. It is kept on this site as a record of your purchase, is not sent anywhere, and updates do not need it.' )
 				),
 				array(
 					'field' => array(
