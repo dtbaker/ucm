@@ -18,6 +18,38 @@ class module_base
 	}
 
 	/**
+	 * Call module_<plugin>::link_open() for a plugin name that came from data.
+	 *
+	 * Search results and the extra-fields lists store the owning plugin's name next to a
+	 * record id, then need that record's link. Building the call as a string and eval()ing it
+	 * let a bad table name or id run as code. This resolves the class instead: the name must be
+	 * a plain identifier, the class must be a registered plugin (extends module_base) and
+	 * link_open() must be callable. Anything else returns false and calls nothing.
+	 *
+	 * @param string $plugin  Plugin name without the module_ prefix, e.g. "customer".
+	 * @param mixed  $id      Record id. Numeric ids are cast to int; a non-numeric id is passed on as a string.
+	 * @param mixed  ...$args Further arguments for link_open(), e.g. the "full link" flag.
+	 *
+	 * @return string|false The result of link_open(), or false when the plugin or method is not usable.
+	 */
+	public static function call_link_open( $plugin, $id, ...$args ) {
+		if ( ! is_string( $plugin ) || ! preg_match( '/^[a-z][a-z0-9_]*$/i', $plugin ) ) {
+			return false;
+		}
+		$class = 'module_' . $plugin;
+		if ( ! class_exists( $class ) || ! is_subclass_of( $class, 'module_base' ) || ! is_callable( array( $class, 'link_open' ) ) ) {
+			return false;
+		}
+		if ( is_int( $id ) || ( is_string( $id ) && ctype_digit( $id ) ) ) {
+			$id = (int) $id;
+		} elseif ( ! is_string( $id ) ) {
+			return false;
+		}
+
+		return call_user_func_array( array( $class, 'link_open' ), array_merge( array( $id ), $args ) );
+	}
+
+	/**
 	 * Third party libraries this plugin needs at runtime.
 	 *
 	 * Return an array keyed by library id. Each entry is handed to ucm_libraries, which
@@ -551,7 +583,7 @@ class module_base
 								$url_key[ $key ] = $r[ $key ];
 							}
 						}
-						$return_results [] = '<a href="' . eval( 'return module_' . $fields['plugin'] . '::link_open($r[$pkey],false);' ) . '">' . $fields['title'] . $match . '</a>';
+						$return_results [] = '<a href="' . module_base::call_link_open( $fields['plugin'], $r[ $pkey ], false ) . '">' . $fields['title'] . $match . '</a>';
 					}
 				} else {
 					// old search.

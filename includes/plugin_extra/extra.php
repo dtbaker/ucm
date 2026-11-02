@@ -14,7 +14,7 @@ class module_extra extends module_base
 	public function __construct() {
 		$this->module_name     = 'extra';
 		$this->module_position = 180;
-		$this->version         = 2.266;
+		$this->version         = 2.267;
 	}
 
 	public static function can_i( $actions, $name = false, $category = false, $module = false ) {
@@ -226,8 +226,9 @@ class module_extra extends module_base
 					$match_string          = _shl( htmlspecialchars( $result['extra'] ), $search_key );
 					$link                  = '#';
 					$result['owner_table'] = preg_replace( '#[^a-z]#', '', $result['owner_table'] );
-					if ( is_callable( 'module_' . $result['owner_table'] . '::link_open' ) ) {
-						eval( '$link = module_' . $result['owner_table'] . '::link_open(' . $result['owner_id'] . ');' );
+					$owner_link            = module_base::call_link_open( $result['owner_table'], (int) $result['owner_id'] );
+					if ( false !== $owner_link ) {
+						$link = $owner_link;
 					}
 					$ajax_results [] = '<a href="' . $link . '">' . ucwords( $result['owner_table'] ) . ' ' . htmlspecialchars( $result['extra_key'] ) . ': ' . $match_string . '</a>';
 				}
