@@ -161,4 +161,20 @@ class LicenceCheckTest extends TestCase {
 		}
 		$this->assertStringContainsString( 'licence code', ucm_licence_check::message_for( ucm_licence_check::NONE ) );
 	}
+
+	public function test_the_one_file_installer_is_told_to_install_by_hand_not_to_use_a_licence_box() {
+		$updater   = ucm_licence_check::message_for( ucm_licence_check::NONE );
+		$installer = ucm_licence_check::message_for( ucm_licence_check::NONE, true );
+
+		$this->assertStringContainsString( 'licence box', $updater );
+		$this->assertStringNotContainsString( 'licence box', $installer );
+		$this->assertStringContainsString( 'installer needs a licence code', $installer );
+		$this->assertStringContainsString( 'upload the files yourself', $installer );
+		$this->assertSame( $installer, ucm_licence_check::refusal( ucm_licence_check::NONE, true )['available_updates']['message'] );
+		// A wrong code reads the same either way.
+		$this->assertSame(
+			ucm_licence_check::message_for( ucm_licence_check::INVALID ),
+			ucm_licence_check::message_for( ucm_licence_check::INVALID, true )
+		);
+	}
 }

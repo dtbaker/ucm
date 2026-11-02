@@ -113,15 +113,6 @@ function ucm_upgrade_server_respond() {
 	$client_release = ucm_upgrade_server::client_release( isset( $_REQUEST['release_version'] ) ? $_REQUEST['release_version'] : null );
 	$server_release = defined( '_SCRIPT_VERSION' ) ? (string) _SCRIPT_VERSION : '';
 
-	// The old one-file installer, and ucm-web/api/download_zip.php: the whole product in one
-	// zip, so a site installed from it is the same as one unzipped from CodeCanyon. It is
-	// built from the release's own file list, and nothing below applies to it.
-	if ( $return_base_system_in_zip ) {
-		ucm_upgrade_server_send_release_zip( $root, $application );
-
-		return;
-	}
-
 	// Updates are for installations with a CodeCanyon purchase code. Everything below this
 	// point hands out files, so a request without a valid one stops here with a message the
 	// client shows. See ucm_licence_check.
@@ -140,7 +131,18 @@ function ucm_upgrade_server_respond() {
 		}
 		// A JSON body built from fixed strings; the request only picks which of them.
 		// nosemgrep: php.lang.security.injection.echoed-request.echoed-request
-		echo json_encode( ucm_licence_check::refusal( $licence['status'] ) );
+		echo json_encode( ucm_licence_check::refusal( $licence['status'], $return_base_system_in_zip ) );
+
+		return;
+	}
+
+	// The old one-file installer, and ucm-web/api/download_zip.php: the whole product in one
+	// zip, so a site installed from it is the same as one unzipped from CodeCanyon. It is
+	// built from the release's own file list, and nothing below applies to it. Only a valid
+	// licence code gets this far; someone without one installs by hand from GitHub or
+	// CodeCanyon.
+	if ( $return_base_system_in_zip ) {
+		ucm_upgrade_server_send_release_zip( $root, $application );
 
 		return;
 	}

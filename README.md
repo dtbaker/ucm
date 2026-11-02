@@ -151,6 +151,9 @@ replaced by a deploy) or as `UCM_ENVATO_TOKEN` in its environment. Without a tok
 cannot check anything, so every update request is answered "could not be checked". Results
 are cached per code (a day for a good code, an hour for a bad one, and a good code keeps
 working through an Envato outage for 30 days), so Envato is not asked on every request.
+The one-file installer's zip (`return_base_system_in_zip`, which `ucm-web/api/download_zip.php`
+requests) needs a valid code in the same way. A manual install, from GitHub or from the
+CodeCanyon download, never contacts the server and needs no code.
 Never commit the token, and never use a real one in a test environment: the local test in
 [docs/local-upgrade-test.md](docs/local-upgrade-test.md) uses a stand-in for Envato's API.
 

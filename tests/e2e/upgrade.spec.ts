@@ -143,6 +143,33 @@ test.describe('Updating from an update server', () => {
     expect(unreachable.available_updates.message).toContain('try again');
   });
 
+  test('the one-file installer\'s zip needs a purchase code too', async ({ request }) => {
+    const path = SERVER_URL.replace('http://localhost', '');
+    const ask = (code: string | null) => {
+      const form: Record<string, string> = { current_version: '0', get_file_contents: '1', return_as_zip: '1', return_base_system_in_zip: '1' };
+      if (code !== null) form.installation_code = code;
+      return request.post(path, { form, failOnStatusCode: false });
+    };
+
+    for (const code of [null, OTHER_ITEM]) {
+      const response = await ask(code);
+      expect(response.status(), `code ${code}`).toBe(200);
+      expect(response.headers()['content-type'], `code ${code}`).toContain('application/json');
+      const data = JSON.parse(await response.text());
+      expect(data.available_updates.licence_required, `code ${code}`).toBe(true);
+    }
+    expect(JSON.parse(await (await ask(null)).text()).available_updates.message).toContain('one-file installer');
+
+    // A valid code gets past the licence check. This installation is a working copy, not a
+    // built release, so it has no file list to zip and says so; what matters is that the
+    // answer is not a licence refusal.
+    const allowed = await ask(LICENCE);
+    const body = await allowed.body();
+    if (body.subarray(0, 2).toString() !== 'PK') {
+      expect(JSON.parse(body.toString()).available_updates.licence_required).toBeUndefined();
+    }
+  });
+
   test('a valid code is answered with the item it is for', async ({ request }) => {
     const response = await request.post(SERVER_URL.replace('http://localhost', ''), {
       form: { installation_code: LICENCE, current_plugins: '{}', requested_plugin: 'config', client_protocol: '2' },

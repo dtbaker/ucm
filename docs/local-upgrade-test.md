@@ -68,12 +68,8 @@ header lists every command. Set `UT_BASE` to the client it should drive.
 - The `ucm-web` copy of `upgrade.php` still carries its temporary gate, which answers
   "Updates are paused" to every request that does not carry the one testing code. With the
   gate in place no buyer can update, whatever their code (setup step 2, S7, S8).
-- The old one-file installer's request for the whole product as a zip
-  (`return_base_system_in_zip`, S12) is answered **before** the licence check, so the update
-  server hands the zip to a request with no code or a wrong one (S12, Findings).
-
 Fixed since 2026-10-17, and now passing: S12 (the old installer's zip is built from the
-release file list and starts), the stale-code problem in the in-app updater (dtbaker/ucm#29),
+release file list, starts, and needs a licence code), the stale-code problem in the in-app updater (dtbaker/ucm#29),
 the three `REFUSED` lines on the core row, a core-only change never being offered, and the
 blank HTTP 500 on a fresh unzip with no `config.local.php`.
 
@@ -1146,8 +1142,11 @@ that `ucm-web/api/download_zip.php` still makes, licence code included (`UCM_UT_
 throwaway from Setup). If you have a copy of the original, use it instead and say so in the
 results.
 
-**Expected today: this passes.** It failed on 2026-10-17 (see [Findings](#findings)); since
-the zip is built from `includes/release-files.txt` it is complete and starts.
+**Expected today: this passes**, with a valid code. It failed on 2026-10-17 (see
+[Findings](#findings)); since the zip is built from `includes/release-files.txt` it is
+complete and starts. The one-file installer needs a licence code like the in-app updater
+does (a manual install from GitHub or CodeCanyon does not), so the block below sends
+`$UT_CODE`.
 
 ```bash
 ut_reset
@@ -1158,7 +1157,7 @@ docker run -d --name ucm-ut-legacy --network ucm-ut --ip "$UT_LEGACY_IP" -p "$UT
   --add-host www.ultimateclientmanager.com:127.0.0.1 \
   --add-host api.ultimateclientmanager.com:127.0.0.1 \
   -e APACHE_DOCUMENT_ROOT=/var/www/html \
-  -e UCM_UT_SERVER="$UPGRADE_URL" -e UCM_UT_CODE="$UT_CODE_BAD" \
+  -e UCM_UT_SERVER="$UPGRADE_URL" -e UCM_UT_CODE="$UT_CODE" \
   -v "$LEGACY:/var/www/html" ucm-ut-php
 # Wait for Apache on a page that does not exist. Never poll install.php: one GET of it runs the install.
 for i in $(seq 1 30); do [ "$(curl -s -o /dev/null -w '%{http_code}' "http://localhost:$UT_LEGACY_PORT/ut-not-here")" = 404 ] && break; sleep 1; done
@@ -1167,8 +1166,7 @@ curl -s --max-time 300 "http://localhost:$UT_LEGACY_PORT/install.php" | sed 's/<
 
 1. **The download.** Expect `Unpacked <n> entries` and a link to the setup wizard. On
    2026-11-02 it read `Unpacked 4125 entries` (4,125 files, the same as the release's file
-   list), and `Unpacked 4126 entries` when re-run after the licence work. Note the block
-   above sends `$UT_CODE_BAD`, a code Envato does not know, on purpose: see step 2. On 2026-10-17 it read 3,315, with 2,844 files against 3,640 in the release.
+   list), and `Unpacked 4126 entries` when re-run after the licence work. On 2026-10-17 it read 3,315, with 2,844 files against 3,640 in the release.
 2. **A wrong code, and no code.** The server's licence check should refuse these. Ask for
    the zip with no code, with a code Envato does not know and with the good one:
 
@@ -1183,11 +1181,11 @@ curl -s --max-time 300 "http://localhost:$UT_LEGACY_PORT/install.php" | sed 's/<
 
    **Expected: a JSON refusal for the first two** (the stand-in installer then says "The
    server did not send a zip", with the server's message, and unpacks nothing), and `PK` (a
-   zip) for the good code. **Today: all three give `PK`** (2026-11-02). The whole-product zip
-   is answered before the licence check runs, so the old installer's download works with a
-   missing or wrong code, which is why step 1 above unpacked with `$UT_CODE_BAD`. See
-   [Findings](#findings). Record which you see. When this is fixed, step 1 needs `$UT_CODE`
-   instead.
+   zip) for the good code. The refusal for no code reads "The one-file installer needs a
+   licence code. Enter the purchase code from your CodeCanyon downloads page. To install
+   without one, download UCM from GitHub or CodeCanyon and upload the files yourself.", and
+   for a code Envato does not know, the same "was not recognised" text as the updater. Record
+   which you see.
 3. **Compare it with the release.**
 
    ```bash
@@ -1479,7 +1477,7 @@ it, and each step that meets it says what you will see today.
 
 | What | Where | Effect |
 | --- | --- | --- |
-| **The whole-product zip is served without a licence check.** `return_base_system_in_zip` is answered at the top of `ucm_upgrade_server_respond()`, before `ucm_licence_check::check()` runs. | `includes/plugin_config/upgrade_server.php`, the `$return_base_system_in_zip` block above the licence check | A request with no code or a wrong one gets the full release zip (S12 step 2, `PK` three times). The in-app updater's own downloads (`return_as_zip` with `get_file_contents`) are checked. If the zip is meant to need a code too, move the check above that block. |
+| **Fixed 2026-11-02: the whole-product zip was served without a licence check.** `return_base_system_in_zip` was answered before `ucm_licence_check::check()` ran, so a request with no code or a wrong one got the full release zip (S12 step 2 gave `PK` three times). | `includes/plugin_config/upgrade_server.php` | The zip now comes after the licence check. No code, or a code Envato does not know, gets a JSON refusal and the one-file installer unpacks nothing. A manual install from GitHub or CodeCanyon never asks the server, so it needs no code. |
 | **The refusal for a code that is not UUID shaped says "on this page" after "downloads page".** The server's text for `none` reads "...Enter the purchase code from your CodeCanyon downloads page on this page to receive them." | `class.licence_check.php`, `message_for()` default case | Awkward wording only. The client's own text for an empty box says "below" where this says "on this page". |
 | **The install step reports success when the server refuses the download.** With a refused code saved and the install step called directly (S8 step 3), the answer is `"Downloading files..."`, `errors: []`, `success: 1`, and nothing is written. | `class.upgrade.php`, `install_plugin_update_files()` | Only reachable by skipping the check, or by a code that is revoked between the check and the install. The page itself would show "Success" with nothing installed. |
 | **An upper-case licence code never gets the "thanks for purchasing" line.** The server lower-cases the code and the client saves `_licence_code_<lower case>`, then looks it up with the case typed. | `config_upgrade.php` (lookup), `config.php` `check_for_upgrades()` (save) | The update works; only the line under the box is missing. |

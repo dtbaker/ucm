@@ -144,8 +144,11 @@ class ucm_licence_check
 
 	/**
 	 * What to tell an installation that is not getting updates, in words it can show.
+	 *
+	 * @param string $status     VALID, INVALID, NONE or UNAVAILABLE.
+	 * @param bool   $installing True for the one-file installer, which has no licence box to point at.
 	 */
-	public static function message_for( $status ) {
+	public static function message_for( $status, $installing = false ) {
 		switch ( $status ) {
 			case self::VALID:
 				return '';
@@ -154,6 +157,10 @@ class ucm_licence_check
 			case self::INVALID:
 				return 'This licence code was not recognised as a purchase of Ultimate Client Manager, so automated updates are not available. Please check the code on your CodeCanyon downloads page. You can still download the latest version from CodeCanyon and upload it by hand.';
 			default:
+				if ( $installing ) {
+					return 'The one-file installer needs a licence code. Enter the purchase code from your CodeCanyon downloads page. To install without one, download UCM from GitHub or CodeCanyon and upload the files yourself.';
+				}
+
 				return 'Automated updates need a licence code. Enter the purchase code from your CodeCanyon downloads page in the licence box on this page to receive them. You can still download the latest version from CodeCanyon and upload it by hand.';
 		}
 	}
@@ -162,10 +169,10 @@ class ucm_licence_check
 	 * The response a client gets instead of an update. The same shape as "nothing to update",
 	 * so every client version shows the message and stops rather than reporting an error.
 	 */
-	public static function refusal( $status ) {
+	public static function refusal( $status, $installing = false ) {
 		return array(
 			'available_updates' => array(
-				'message'          => self::message_for( $status ),
+				'message'          => self::message_for( $status, $installing ),
 				'new_version'      => 0,
 				'plugins'          => array(),
 				'check_again'      => 0,
