@@ -63,7 +63,6 @@
     <exclude-pattern>*/includes/config.local.php</exclude-pattern>
 
     <!-- Exclude third-party/vendor code (same as .php-cs-fixer.php) -->
-    <exclude-pattern>*/plugin_pdf/dompdf/*</exclude-pattern>
     <!-- PHPMailer, bundled as class.phpmailer.php / class.pop3.php / class.smtp.php -->
     <exclude-pattern>*/plugin_email/class.*</exclude-pattern>
     <exclude-pattern>*/plugin_encrypt/phpseclib/*</exclude-pattern>

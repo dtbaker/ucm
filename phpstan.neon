@@ -22,7 +22,6 @@ parameters:
 
     # Third-party code bundled into the repo. Same list as phpcs.xml.dist.
     excludePaths:
-        - includes/plugin_pdf/dompdf/*
         - includes/plugin_encrypt/phpseclib/*
         - includes/plugin_email/class.*
         - includes/plugin_security/htmlpurifier/*

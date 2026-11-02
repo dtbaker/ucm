@@ -130,7 +130,7 @@ function ucm_upgrade_server_respond() {
 
 	// The release file list, when this server was deployed from a built release. Plugin
 	// rows are built from it so that nothing the server wrote into a plugin folder at run
-	// time - dompdf's font caches, say - is offered to clients as part of the plugin.
+	// time - a cache file, say - is offered to clients as part of the plugin.
 	$release_manifest = ucm_upgrade_server::release_manifest( $root );
 
 	$plugin_list = is_array( $plugins ) ? $plugins : array();
