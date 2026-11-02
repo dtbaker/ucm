@@ -37,8 +37,9 @@ if (
 		Your system is installed and ready to use. This optional step checks for a newer
 		version of Ultimate Client Manager. <br>
 		If you bought this on CodeCanyon.net you can enter your <strong>license purchase
-			code</strong> below - it is in the "license" file on your downloads page. It is optional:
-			it is kept on this site as a record of your purchase and is not sent anywhere. <br>
+			code</strong> below - it is in the "license" file on your downloads page. A code is needed for
+			automated updates: checking for updates sends it, with the address of this site, to the update
+			server to confirm your purchase. <br>
 		The license code will look something like this: 30d91230-a8df-4545-1237-467abcd5b920
 	</p>
 
@@ -47,7 +48,7 @@ if (
 
 			<input type="hidden" name="install_upgrade" value="true">
 			<input type="hidden" name="save_license_codes" value="true">
-			<input type="text" name="license_codes[0]" value="<?php echo module_config::c( '_installation_code', '' ); ?>"
+			<input type="text" name="license_codes[0]" value="<?php echo htmlspecialchars( module_config::c( '_installation_code', '' ) ); ?>"
 			       style="width:400px; padding:5px; border:1px solid #CCC;">
 
 			<input type="submit" name="go" value="<?php _e( 'Check for Updates' ); ?>" class="submit_button btn btn-success"

@@ -29,6 +29,7 @@ if ( ! defined( '_UCM_FOLDER' ) ) {
 }
 
 require_once _UCM_FOLDER . 'includes/plugin_config/class.upgrade_server.php';
+require_once _UCM_FOLDER . 'includes/plugin_config/class.licence_check.php';
 
 if ( ! defined( '_UCM_UPGRADE_SERVER' ) && ! module_config::c( 'upgrade_server_enabled', 0 ) ) {
 	if ( ! headers_sent() ) {
@@ -117,6 +118,27 @@ function ucm_upgrade_server_respond() {
 	// built from the release's own file list, and nothing below applies to it.
 	if ( $return_base_system_in_zip ) {
 		ucm_upgrade_server_send_release_zip( $root, $application );
+
+		return;
+	}
+
+	// Updates are for installations with a CodeCanyon purchase code. Everything below this
+	// point hands out files, so a request without a valid one stops here with a message the
+	// client shows. See ucm_licence_check.
+	$licence_cache_directory = module_config::c( 'upgrade_server_licence_cache_dir', '' );
+	if ( ! $licence_cache_directory ) {
+		$licence_cache_directory = rtrim( sys_get_temp_dir(), '/' ) . '/ucm-licence-cache';
+	}
+	$licence = ucm_licence_check::check(
+		ucm_licence_check::codes_from_request( isset( $_REQUEST['installation_code'] ) ? $_REQUEST['installation_code'] : '' ),
+		null,
+		$licence_cache_directory
+	);
+	if ( ucm_licence_check::VALID !== $licence['status'] ) {
+		if ( ! headers_sent() ) {
+			header( 'Content-Type: application/json; charset=utf-8' );
+		}
+		echo json_encode( ucm_licence_check::refusal( $licence['status'] ) );
 
 		return;
 	}
@@ -332,7 +354,7 @@ function ucm_upgrade_server_respond() {
 			'plugins'     => $update_plugins,
 			'check_again' => $check_again_for_updates,
 		),
-		'licence_codes'     => array(),
+		'licence_codes'     => $licence['codes'],
 	);
 
 	if ( ! headers_sent() ) {

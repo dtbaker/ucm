@@ -256,7 +256,9 @@ class ucm_upgrade_manager
 		);
 		$errors = array();
 
-		{
+		if ( ! strlen( module_config::licence_code_for_updates() ) ) {
+			$result['message'] = 'Automated updates need a licence code. Please enter your licence code first.';
+		} else {
 			/*$available_updates = module_config::check_for_upgrades($plugin_name);
 		    if($available_updates && isset($available_updates['message']) && strlen(trim($available_updates['message']))>2){
 		        $result['message'] = $available_updates['message'];

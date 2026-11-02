@@ -556,7 +556,12 @@ if ( isset( $_REQUEST['process_upgrade'] ) && isset( $_REQUEST['via_ajax'] ) ) {
 
 		} else {
 			?>
-			No upgrade available at this time.
+			<?php if ( ! empty( $available_updates['licence_required'] ) ) { ?>
+				<br>
+				<a href="<?php echo htmlspecialchars( _BASE_HREF . '?m=config&p=config_upgrade' ); ?>"><?php _e( 'Enter or change your license code' ); ?></a>
+			<?php } else { ?>
+				No upgrade available at this time.
+			<?php } ?>
 			<br>
 			<?php
 			if ( isset( $setup_upgrade_hack ) ) {
@@ -694,7 +699,7 @@ if ( isset( $_REQUEST['process_upgrade'] ) && isset( $_REQUEST['via_ajax'] ) ) {
 					'message' => '<strong id="ucm_product_version">' . _l( 'You are running Ultimate Client Manager version %s.', htmlspecialchars( module_config::product_version() ) ) . '</strong>',
 				),
 				array(
-					'message' => _l( 'Your license code is optional. It is kept on this site as a record of your purchase, is not sent anywhere, and updates do not need it.' )
+					'message' => _l( 'Please enter your license code below to receive automated updates and new features.' ) . ' ' . _l( 'Your license code can be found on your CodeCanyon downloads page.' ) . ' ' . _l( 'When you check for updates, your license code and the address of this site are sent to the update server to confirm your purchase. Without a code you can still download the latest version from CodeCanyon and upload it by hand.' )
 				),
 				array(
 					'field' => array(
@@ -727,7 +732,7 @@ if ( isset( $_REQUEST['process_upgrade'] ) && isset( $_REQUEST['via_ajax'] ) ) {
 												?>
 												<div class="dynamic_clear">
 													<small>
-														<?php _e( 'The above license code is for <a href="%s" target="_blank">%s</a> - thanks for purchasing!', $foo[0], $foo[1] ); ?>
+														<?php _e( 'The above license code is for <a href="%s" target="_blank" rel="noopener">%s</a> - thanks for purchasing!', htmlspecialchars( $foo[0] ), htmlspecialchars( isset( $foo[1] ) ? $foo[1] : '' ) ); ?>
 													</small>
 												</div>
 												<?php
