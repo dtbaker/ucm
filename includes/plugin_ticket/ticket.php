@@ -187,7 +187,7 @@ class module_ticket extends module_base
 	public function __construct() {
 		$this->module_name     = 'ticket';
 		$this->module_position = 530;
-		$this->version         = 2.506;
+		$this->version         = 2.507;
 	}
 
 	public function init() {
@@ -727,7 +727,7 @@ Thanks,
 							if ( $envato_ticket && $envato_ticket['envato_ticket_id'] ) {
 								if ( isset( $all_items_rel[ $envato_ticket['envato_item_id'] ] ) && $envato_ticket['envato_author_id'] ) {
 									$envato_author    = get_single( 'envato_author', 'envato_author_id', $envato_ticket['envato_author_id'] );
-									$buys             = @unserialize( $envato_author['purchase_history'] );
+									$buys             = @unserialize( $envato_author['purchase_history'], array( 'allowed_classes' => false ) );
 									$purchase_history = array();
 									foreach ( $buys as $buy ) {
 										$purchase_history[] = $buy;
@@ -1056,7 +1056,7 @@ Thanks,
 
 						// set the default group if one exists for this particular ticket type.
 						if ( $ticket_id && isset( $public_types[ $ticket_type_id ] ) && ! empty( $public_types[ $ticket_type_id ]['default_groups'] ) ) {
-							$default_groups = @unserialize( $public_types[ $ticket_type_id ]['default_groups'] );
+							$default_groups = @unserialize( $public_types[ $ticket_type_id ]['default_groups'], array( 'allowed_classes' => false ) );
 							if ( is_array( $default_groups ) && count( $default_groups ) ) {
 								foreach ( $default_groups as $group_id ) {
 									module_group::add_to_group( $group_id, $ticket_id, 'ticket' );
@@ -2868,7 +2868,7 @@ Thanks,
 		$email->set_to( 'user', $to_user_id );
 
 
-		$headers = @unserialize( $last_ticket_message['cache'] );
+		$headers = @unserialize( $last_ticket_message['cache'], array( 'allowed_classes' => false ) );
 		if ( ! is_array( $headers ) ) {
 			$headers = array();
 		}
@@ -3043,7 +3043,7 @@ Thanks,
 		//$email->set_from('user',$from_user_id);
 		//$email->set_from('foo','foo',$to,'Admin');
 
-		$headers = $last_message ? @unserialize( $last_message['cache'] ) : false;
+		$headers = $last_message ? @unserialize( $last_message['cache'], array( 'allowed_classes' => false ) ) : false;
 
 		if ( $allow_to_cc_bcc && $headers && is_array( $headers ) ) {
 			// we're right to do our cc/bcc hack
@@ -3627,7 +3627,7 @@ Thanks,
 										$past_ticket_messages = self::get_ticket_messages( $existing_ticket['ticket_id'], true );
 										//foreach($past_ticket_messages as $past_ticket_message){
 										while ( $past_ticket_message = mysqli_fetch_assoc( $past_ticket_messages ) ) {
-											$past_header_cache = @unserialize( $past_ticket_message['cache'] );
+											$past_header_cache = @unserialize( $past_ticket_message['cache'], array( 'allowed_classes' => false ) );
 											$past_to_temp      = array();
 											if ( $past_ticket_message['to_user_id'] ) {
 												$past_to_temp = module_user::get_user( $past_ticket_message['to_user_id'], false );
@@ -3751,7 +3751,7 @@ Thanks,
 								$ticket_id = update_insert( 'ticket_id', 'new', 'ticket', $new_ticket_data );
 								// set the default group if one exists for this particular ticket type.
 								if ( $ticket_id && $ticket_type_id && isset( $ticket_types[ $ticket_type_id ] ) && ! empty( $ticket_types[ $ticket_type_id ]['default_groups'] ) ) {
-									$default_groups = @unserialize( $ticket_types[ $ticket_type_id ]['default_groups'] );
+									$default_groups = @unserialize( $ticket_types[ $ticket_type_id ]['default_groups'], array( 'allowed_classes' => false ) );
 									if ( is_array( $default_groups ) && count( $default_groups ) ) {
 										foreach ( $default_groups as $group_id ) {
 											module_group::add_to_group( $group_id, $ticket_id, 'ticket' );

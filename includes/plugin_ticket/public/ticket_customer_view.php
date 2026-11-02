@@ -195,7 +195,7 @@
 								</div>
 								<div class="ticket_message_title_full">
 									<?php
-									$header_cache = @unserialize( $ticket_message['cache'] ); ?>
+									$header_cache = @unserialize( $ticket_message['cache'], array( 'allowed_classes' => false ) ); ?>
 									<span>
                                                                 <?php _e( 'Date:' ); ?> <strong>
                                               <?php echo print_date( $ticket_message['message_time'], true ); ?></strong>

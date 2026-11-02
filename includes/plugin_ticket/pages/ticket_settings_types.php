@@ -75,7 +75,7 @@ if ( isset( $_REQUEST['ticket_type_id'] ) && $_REQUEST['ticket_type_id'] ) {
 			)
 		);
 		$groups                      = module_group::get_groups( 'ticket' );
-		$default_groups              = @unserialize( $ticket_type['default_groups'] );
+		$default_groups              = @unserialize( $ticket_type['default_groups'], array( 'allowed_classes' => false ) );
 		if ( ! is_array( $default_groups ) ) {
 			$default_groups = array( 0 );
 		}

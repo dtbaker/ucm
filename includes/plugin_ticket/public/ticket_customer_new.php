@@ -204,7 +204,7 @@
 															'type'    => $extra['type'],
 															'name'    => 'ticket_extra[' . $extra['ticket_data_key_id'] . ']',
 															'value'   => isset( $_POST['ticket_extra'] ) && isset( $_POST['ticket_extra'][ $extra['ticket_data_key_id'] ] ) ? $_POST['ticket_extra'][ $extra['ticket_data_key_id'] ] : '',
-															'options' => isset( $extra['options'] ) && $extra['options'] ? unserialize( $extra['options'] ) : array(),
+															'options' => isset( $extra['options'] ) && $extra['options'] ? unserialize( $extra['options'], array( 'allowed_classes' => false ) ) : array(),
 														) );
 
 														if (

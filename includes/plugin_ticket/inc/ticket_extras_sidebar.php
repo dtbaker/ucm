@@ -37,7 +37,7 @@ if ( module_config::c( 'ticket_allow_extra_data', 1 ) ) {
 								'type'      => $extra['type'],
 								'name'      => 'ticket_extra[' . $extra['ticket_data_key_id'] . ']',
 								'value'     => isset( $ticket['extra_data'][ $extra['ticket_data_key_id'] ] ) ? $ticket['extra_data'][ $extra['ticket_data_key_id'] ]['value'] : '',
-								'options'   => isset( $extra['options'] ) && $extra['options'] ? unserialize( $extra['options'] ) : array(),
+								'options'   => isset( $extra['options'] ) && $extra['options'] ? unserialize( $extra['options'], array( 'allowed_classes' => false ) ) : array(),
 								'class'     => 'no_permissions',
 								// encryption is available on this field
 								'encrypt'   => ( class_exists( 'module_encrypt', false ) && isset( $extra['encrypt_key_id'] ) && $extra['encrypt_key_id'] ),

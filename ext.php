@@ -9,7 +9,7 @@ if ( strpos( $_SERVER['REQUEST_URI'], '/m.wordpress/h.public' ) !== false && iss
 	if ( is_file( $GLOBALS['wordpress_temp_file'] ) && filemtime( $GLOBALS['wordpress_temp_file'] ) > ( time() - 3600 ) ) {
 		//		header("Last-Modified: ".gmdate("D, d M Y H:i:s", filemtime($GLOBALS['wordpress_temp_file']))." GMT");
 		//        header("HTTP/1.1 304 Not Modified");
-		$data = unserialize( file_get_contents( $GLOBALS['wordpress_temp_file'] ) );
+		$data = unserialize( file_get_contents( $GLOBALS['wordpress_temp_file'] ), array( 'allowed_classes' => false ) );
 		echo $data['content'];
 		exit;
 	}

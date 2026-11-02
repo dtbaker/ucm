@@ -247,7 +247,7 @@ if ( isset( $_REQUEST['print'] ) ) {
 									echo 'no changes';
 								}
 								foreach ( $res as $field ) {
-									$field_data = @unserialize( $field['data_field_settings'] );
+									$field_data = @unserialize( $field['data_field_settings'], array( 'allowed_classes' => false ) );
 									echo isset( $field_data['title'] ) ? $field_data['title'] . ',' : '';
 								}
 							}
@@ -269,7 +269,7 @@ if ( isset( $_REQUEST['print'] ) ) {
 				if ( $current_revision && $view_revision_id ) {
 					// user wants a custom revision, we pull out the custom $data_field_groups
 					// and we tell the form layout to use the serialized cached field layout information
-					$data_field_groups = unserialize( $current_revision['field_group_cache'] );
+					$data_field_groups = unserialize( $current_revision['field_group_cache'], array( 'allowed_classes' => false ) );
 					// we dont always read from cache, because then any ui changes wouldn't be reflected in older reports (if we want to change older reports)
 				}
 				$replace              = ! empty( $_REQUEST['customer_id'] ) ? module_customer::get_replace_fields( $_REQUEST['customer_id'] ) : array();
@@ -362,7 +362,7 @@ if ( isset( $_REQUEST['print'] ) ) {
 				if ( $current_revision && $view_revision_id ) {
 					// user wants a custom revision, we pull out the custom $data_field_groups
 					// and we tell the form layout to use the serialized cached field layout information
-					$data_field_groups = unserialize( $current_revision['field_group_cache'] );
+					$data_field_groups = unserialize( $current_revision['field_group_cache'], array( 'allowed_classes' => false ) );
 					// we dont always read from cache, because then any ui changes wouldn't be reflected in older reports (if we want to change older reports)
 				}
 				$replace              = ! empty( $_REQUEST['customer_id'] ) ? module_customer::get_replace_fields( $_REQUEST['customer_id'] ) : array();
@@ -439,7 +439,7 @@ if ( isset( $_REQUEST['print'] ) ) {
 				if ( $current_revision && $view_revision_id ) {
 					// user wants a custom revision, we pull out the custom $data_field_groups
 					// and we tell the form layout to use the serialized cached field layout information
-					$data_field_groups = unserialize( $current_revision['field_group_cache'] );
+					$data_field_groups = unserialize( $current_revision['field_group_cache'], array( 'allowed_classes' => false ) );
 					// we dont always read from cache, because then any ui changes wouldn't be reflected in older reports (if we want to change older reports)
 				}
 				// no break
@@ -507,7 +507,7 @@ if ( isset( $_REQUEST['print'] ) ) {
 										//if($current_revision['data_record_revision_id'] == $view_revision_id){
 										$custom_highlight_fields[ $field['data_field_id'] ] = true;
 										//}
-										$field_data = unserialize( $field['data_field_settings'] );
+										$field_data = unserialize( $field['data_field_settings'], array( 'allowed_classes' => false ) );
 										echo $field_data['title'] . ',';
 									}
 								}
