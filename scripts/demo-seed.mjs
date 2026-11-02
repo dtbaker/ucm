@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 /**
  * Fill the public demo with a believable, made-up agency's books: customers and their
- * contacts, vendors, jobs with tasks and logged time, quotes, invoices in every state,
- * support tickets, websites, calendar entries and notes.
+ * contacts, vendors (customers of a Vendors type), jobs with tasks and logged time, quotes,
+ * invoices in every state, support tickets, websites, calendar entries and notes.
  *
  *   node scripts/demo-seed.mjs https://demo.ultimateclientmanager.com
  *
@@ -11,13 +11,16 @@
  * and relationship is the one the app works out. See scripts/demo-seed/data.mjs for what
  * is created, and custom/README.md for how it fits with the deploy and the daily reset.
  *
- * Safe to run twice: when the sample customers are already there it does nothing and says
- * so. It also refuses to run against a site that is not showing the demo banner, because
- * it would otherwise add a dozen customers to somebody's real books.
+ * Safe to run twice: when the sample customers are already there it does not make them
+ * again, and says so. It also refuses to run against a site that is not showing the demo
+ * banner, because it would otherwise add a dozen customers to somebody's real books.
  *
- * Prints SEEDED on its last line when it created the data, and PRESENT when it did not,
- * and writes the same to $GITHUB_OUTPUT as seeded=true|false, so a workflow knows whether
- * the snapshot needs taking again. Exit code 1 is a failure, and says where.
+ * A demo made by an earlier version is brought up to date instead of rebuilt (see upgrade()).
+ *
+ * Prints SEEDED on its last line when it created the data, MIGRATED when it only brought
+ * existing data up to date, and PRESENT when it did nothing. It writes the same to
+ * $GITHUB_OUTPUT as seeded=true|false and migrated=true|false, so a workflow knows whether,
+ * and how, the snapshot needs taking again. Exit code 1 is a failure, and says where.
  *
  * Needs Node 18 or later and nothing installed. Never prints a credential.
  */
@@ -62,6 +65,12 @@ export function check(set = data) {
   need(names.has(set.PORTAL_CUSTOMER), `the portal customer "${set.PORTAL_CUSTOMER}" is not one of the customers`);
   need(set.customers.filter((customer) => customer.portal).length === 1, 'exactly one customer should be the customer login\'s');
   need(set.customers.find((customer) => customer.portal)?.contact.email === CUSTOMER_LOGIN, `the portal customer's first contact is not ${CUSTOMER_LOGIN}`);
+  const vendorNames = new Set(set.vendors.map((vendor) => vendor.name));
+  need(vendorNames.size === set.vendors.length, 'two vendors have the same name');
+  for (const vendor of set.vendors) {
+    need(!names.has(vendor.name), `vendor "${vendor.name}" is also one of the customers`);
+    need(Boolean(vendor.address?.line_1), `vendor "${vendor.name}" has no address`);
+  }
   for (const [kind, rows] of [['job', set.jobs], ['quote', set.quotes], ['invoice', set.invoices], ['ticket', set.tickets], ['file', set.files]]) {
     for (const row of rows) {
       need(names.has(row.customer), `${kind} "${row.name || row.subject}" belongs to "${row.customer}", who is not a customer`);
@@ -255,17 +264,119 @@ async function alreadyThere(demo) {
   return null;
 }
 
+/** The key of the address block on the new customer form, which is a hash. */
+async function addressKeyOf(demo) {
+  const blank = (await demo.page('/?m[]=customer&p[]=customer_admin_edit&customer_id=new')).text;
+  const key = /name="address\[([a-f0-9]+)\]\[line_1\]"/.exec(blank)?.[1];
+  if (!key) {
+    throw new Error('The new customer form has no address block to fill in.');
+  }
+
+  return key;
+}
+
+/** What the new customer form posts for a customer, or a vendor, and its first contact. */
+function customerForm(customer, addressKey, more = {}) {
+  const form = {
+    _process: 'save_customer',
+    customer_id: 'new',
+    customer_name: customer.name,
+    ...customer.contact,
+    user_id: '',
+    [`address[${addressKey}][address_id]`]: '',
+    [`address[${addressKey}][owner_id]`]: '0',
+    [`address[${addressKey}][owner_table]`]: 'customer',
+    [`address[${addressKey}][address_type]`]: 'physical',
+    ...more,
+  };
+  for (const [field, value] of Object.entries(customer.address)) {
+    form[`address[${addressKey}][${field}]`] = value;
+  }
+
+  return form;
+}
+
+/**
+ * The id of the Vendors customer type, making the type if the demo has not got it. It is the
+ * Supplier kind of billing, the same as the installer's own Suppliers type, and it puts
+ * "Vendors" in the main menu.
+ */
+async function vendorTypeId(demo) {
+  const { name, plural, icon } = data.VENDOR_TYPE;
+  const found = await demo.findId('/?m[]=customer&p[]=customer_settings_types', 'customer_type_id', plural);
+  if (found) {
+    return { id: found, made: false };
+  }
+  const id = await demo.create('/?m[]=customer', {
+    _process: 'save_customer_type', customer_type_id: '0', type_name: name, type_name_plural: plural,
+    menu_position: '0', menu_icon: icon, billing_type: '1',
+  }, 'customer_type_id', `the ${plural} customer type`);
+
+  return { id, made: true };
+}
+
+/**
+ * The vendors, as customers of the Vendors type. Each one that is already there is left alone,
+ * so this is safe to run on a demo that has some.
+ *
+ * @returns {{ids: string[], made: number}} the customer ids, in the order of the data
+ */
+async function createVendors(demo, typeId, addressKey) {
+  const ids = [];
+  let made = 0;
+  for (const vendor of data.vendors) {
+    let id = await demo.findId(`/?m[]=customer&p[]=customer_admin_list&customer_type_id=${typeId}&search[generic]=${enc(vendor.name)}`, 'customer_id', vendor.name);
+    if (!id) {
+      id = await demo.create('/?m[]=customer', customerForm(vendor, addressKey, { customer_type_id: typeId }), 'customer_id', `vendor ${vendor.name}`);
+      made++;
+    }
+    ids.push(id);
+  }
+
+  return { ids, made };
+}
+
+/** The pages that make the app write down the permissions of a type's own menu, contacts and notes. */
+const vendorPages = (typeId, customerId) => [
+  `/?m[]=customer&p[]=customer_admin_list&customer_type_id=${typeId}`,
+  `/?m[]=customer&p[]=customer_admin_edit&customer_id=${customerId}`,
+  `/?m[]=user&p[]=contact_admin_list&customer_id=${customerId}`,
+];
+
+/**
+ * Bring a demo made by an earlier version up to date, without rebuilding it. Today that is one
+ * thing: the vendors used to be records of the old Vendors plugin, which is to be merged into
+ * the Customers area. They are made again as customers of a Vendors type. The old records are
+ * not touched here: the app refuses to delete the first vendor in demo mode, so repair removes
+ * them on the server, once their replacements are there (custom/demo/reset.php).
+ *
+ * @returns {Promise<boolean>} whether anything was made
+ */
+async function upgrade(demo, log) {
+  const type = await vendorTypeId(demo);
+  const { ids, made } = await createVendors(demo, type.id, await addressKeyOf(demo));
+  if (type.made) {
+    log(`Made the ${data.VENDOR_TYPE.plural} customer type.`);
+  }
+  if (made) {
+    log(`Made ${made} of ${data.vendors.length} vendors as customers of that type.`);
+  }
+  if (type.made || made) {
+    for (const page of vendorPages(type.id, ids[0])) {
+      await demo.page(page);
+    }
+  }
+
+  return type.made || made > 0;
+}
+
 async function seed(demo, log) {
   const today = new Date();
   const day = (offset) => dayOffset(offset, today);
   const ids = { customers: {}, contacts: {}, websites: {}, jobs: {}, tasks: {}, invoices: [], quotes: [], files: [], vendors: [] };
 
   // The form's own hidden fields name the address block, whose key is a hash.
-  const blank = (await demo.page('/?m[]=customer&p[]=customer_admin_edit&customer_id=new')).text;
-  const addressKey = /name="address\[([a-f0-9]+)\]\[line_1\]"/.exec(blank)?.[1];
-  if (!addressKey) {
-    throw new Error('The new customer form has no address block to fill in.');
-  }
+  const addressKey = await addressKeyOf(demo);
 
   // Who the staff are, for assigning work to.
   const jobForm = (await demo.page('/?m[]=job&p[]=job_admin&job_id=new')).text;
@@ -276,20 +387,7 @@ async function seed(demo, log) {
   const users = (await demo.page('/?m[]=user&p[]=user_admin')).text.split(/<tr\b/);
   const portalUser = users.find((row) => row.includes(CUSTOMER_LOGIN))?.match(/user_id=([1-9]\d*)/)?.[1] || '';
   for (const customer of data.customers) {
-    const form = {
-      _process: 'save_customer',
-      customer_id: 'new',
-      customer_name: customer.name,
-      ...customer.contact,
-      user_id: '',
-      [`address[${addressKey}][address_id]`]: '',
-      [`address[${addressKey}][owner_id]`]: '0',
-      [`address[${addressKey}][owner_table]`]: 'customer',
-      [`address[${addressKey}][address_type]`]: 'physical',
-    };
-    for (const [field, value] of Object.entries(customer.address)) {
-      form[`address[${addressKey}][${field}]`] = value;
-    }
+    const form = customerForm(customer, addressKey);
     if (customer.portal) {
       // The customer login already exists, as a contact of nobody. Moving it onto this
       // customer is how the app attaches an existing person to one.
@@ -313,11 +411,11 @@ async function seed(demo, log) {
   }
   log(`${data.customers.length} customers with their contacts and ${Object.keys(ids.websites).length} websites`);
 
-  // --- vendors
-  for (const vendor of data.vendors) {
-    ids.vendors.push(await demo.create('/?m[]=vendor', { _process: 'save_vendor', vendor_id: 'new', vendor_name: vendor.name, ...vendor.contact }, 'vendor_id', `vendor ${vendor.name}`));
-  }
-  log(`${data.vendors.length} vendors`);
+  // --- vendors, as customers of a type of their own
+  const vendorType = await vendorTypeId(demo);
+  ids.vendorType = vendorType.id;
+  ids.vendors = (await createVendors(demo, vendorType.id, addressKey)).ids;
+  log(`${data.vendors.length} vendors, as customers of the ${data.VENDOR_TYPE.plural} type`);
 
   // --- jobs, with their tasks and the hours worked on them
   for (const job of data.jobs) {
@@ -608,9 +706,7 @@ async function openEveryScreen(demo, ids) {
     `/?m[]=customer&p[]=customer_admin_edit&customer_id=${customer}`,
     `/?m[]=user&p[]=contact_admin&customer_id=${customer}`,
     '/?m[]=user&p[]=contact_admin_list&customer_id=' + customer,
-    '/?m[]=vendor&p[]=vendor_admin',
-    `/?m[]=vendor&p[]=vendor_admin_edit&vendor_id=${ids.vendors[0]}`,
-    `/?m[]=user&p[]=contact_admin_list&vendor_id=${ids.vendors[0]}`,
+    ...vendorPages(ids.vendorType, ids.vendors[0]),
     '/?m[]=quote&p[]=quote_admin',
     `/?m[]=quote&p[]=quote_admin&quote_id=${ids.quotes[0]}`,
     '/?m[]=invoice&p[]=invoice_admin',
@@ -680,15 +776,20 @@ export async function run(base, log = (line) => console.log(line)) {
   await demo.login();
   const present = await alreadyThere(demo);
   if (present) {
-    log(`Sample data is already there ("${present}" exists), so nothing was created.`);
+    log(`Sample data is already there ("${present}" exists), so it was not made again.`);
+    if (await upgrade(demo, (line) => log(`  ${line}`))) {
+      log(`Brought up to date: ${demo.requests} requests.`);
 
-    return false;
+      return 'migrated';
+    }
+
+    return 'present';
   }
   log('Creating the sample data:');
   await seed(demo, (line) => log(`  ${line}`));
   log(`Done: ${demo.requests} requests.`);
 
-  return true;
+  return 'seeded';
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
@@ -698,11 +799,11 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
     process.exit(64);
   }
   try {
-    const seeded = await run(base);
+    const outcome = await run(base);
     if (process.env.GITHUB_OUTPUT) {
-      appendFileSync(process.env.GITHUB_OUTPUT, `seeded=${seeded}\n`);
+      appendFileSync(process.env.GITHUB_OUTPUT, `seeded=${outcome === 'seeded'}\nmigrated=${outcome === 'migrated'}\n`);
     }
-    console.log(seeded ? 'SEEDED' : 'PRESENT');
+    console.log(outcome.toUpperCase());
   } catch (error) {
     console.error(`Failed: ${error.message}`);
     process.exit(1);
