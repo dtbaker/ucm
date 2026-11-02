@@ -1,40 +1,24 @@
 <?php
 
+// dompdf is installed with Composer and is the only generator now. The old html2ps and
+// mPDF choices were removed with their bundled copies; an install still saved with one of
+// them falls back to dompdf in convert_html2pdf().
 $options = array(
-	'html2ps' => 'html2ps',
-	'mpdf'    => 'mPDF',
+	'dompdf' => 'dompdf',
 	//'pdfrocket' => 'PDF Rocket Service',
 );
-if ( ! is_file( 'includes/plugin_pdf/html2ps/html2ps.config' ) ) {
-	unset( $options['html2ps'] );
-}
-if ( ! is_dir( 'includes/plugin_pdf/mpdf/' ) || ! is_file( 'includes/plugin_pdf/mpdf/mpdf.php' ) ) {
-	unset( $options['mpdf'] );
-	// The automatic mPDF installer was removed. It fetched a zip over plaintext HTTP from
-	// a third-party host and extracted it into a PHP include path with no TLS, no
-	// signature check and no path-traversal guard - remote code execution for anyone able
-	// to MITM the connection or acquire the domain. Install mPDF via Composer or by hand.
-	?>
-	<h3>Please install the mPDF library:</h3>
-	Manual Install:
-	<ul>
-		<li><a href="https://github.com/mpdf/mpdf/releases" target="_blank" rel="noopener noreferrer">Download
-				mPDF</a> from its official release page</li>
-		<li>Unzip this file to your desktop</li>
-		<li>Upload the 'mpdf' folder to this UCM installation: includes/plugin_pdf/mpdf/</li>
-		<li>Come back here, if this message is gone then it worked and you can now generate PDFs</li>
-	</ul>
-	<?php
+if ( ! ucm_libraries::have( 'dompdf' ) ) {
+	ucm_libraries::print_missing_notice( 'dompdf' );
 }
 $settings = array(
 	array(
 		'key'         => 'pdf_library',
-		'default'     => 'mpdf',
+		'default'     => 'dompdf',
 		'type'        => 'select',
 		'blank'       => false,
 		'options'     => $options,
 		'description' => 'Which PDF library to use',
-		'help'        => 'Choose a different PDF library if you notice PDF generation is not working or is slow. mPDF is the better option but may not display some things correctly.',
+		'help'        => 'dompdf is installed with Composer and generates every PDF.',
 	),
 	array(
 		'key'         => 'pdf_media_size',
@@ -69,7 +53,7 @@ $settings = array(
 	),
 );
 
-if ( module_config::c( 'pdf_library', 'mpdf' ) == 'pdfrocket' ) {
+if ( module_config::c( 'pdf_library', 'dompdf' ) == 'pdfrocket' ) {
 	// please go here: http://www.html2pdfrocket.com/Account/Register
 	// choose PHP
 	$settings[] = array(

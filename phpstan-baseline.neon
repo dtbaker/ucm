@@ -1369,12 +1369,6 @@ parameters:
 			path: includes/plugin_email/email.php
 
 		-
-			message: '#^Access to an undefined property UCMEmail\:\:\$error_text\.$#'
-			identifier: property.notFound
-			count: 2
-			path: includes/plugin_email/email.php
-
-		-
 			message: '#^Access to an undefined property UCMEmail\:\:\$from\.$#'
 			identifier: property.notFound
 			count: 5
@@ -3476,36 +3470,6 @@ parameters:
 			identifier: constant.notFound
 			count: 3
 			path: includes/plugin_paymethod_stripe/paymethod_stripe.php
-
-		-
-			message: '#^Call to method loadHtml\(\) on an unknown class Dompdf\\Dompdf\.$#'
-			identifier: class.notFound
-			count: 1
-			path: includes/plugin_pdf/pdf.php
-
-		-
-			message: '#^Call to method output\(\) on an unknown class Dompdf\\Dompdf\.$#'
-			identifier: class.notFound
-			count: 1
-			path: includes/plugin_pdf/pdf.php
-
-		-
-			message: '#^Call to method render\(\) on an unknown class Dompdf\\Dompdf\.$#'
-			identifier: class.notFound
-			count: 1
-			path: includes/plugin_pdf/pdf.php
-
-		-
-			message: '#^Call to method setPaper\(\) on an unknown class Dompdf\\Dompdf\.$#'
-			identifier: class.notFound
-			count: 1
-			path: includes/plugin_pdf/pdf.php
-
-		-
-			message: '#^Instantiated class Dompdf\\Dompdf not found\.$#'
-			identifier: class.notFound
-			count: 1
-			path: includes/plugin_pdf/pdf.php
 
 		-
 			message: '#^Variable \$this might not be defined\.$#'
