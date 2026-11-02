@@ -314,6 +314,13 @@ jobs:
         env:
           UCM_BASE_URL: http://localhost:8092
         run: npx playwright test tests/e2e/csrf.spec.ts tests/e2e/csrf-modules.spec.ts tests/e2e/auth.spec.ts tests/e2e/address.spec.ts
+      - name: Check the old Vendors plugin stays out of a new install's menu
+        # A new install has no vendors, so the plugin that is to be merged into Customers must
+        # not be in its menu. It needs the install's own database, to know that it has none.
+        env:
+          UCM_BASE_URL: http://localhost:8092
+          UCM_DB_NAME: ucm_install_test
+        run: npx playwright test tests/e2e/vendor-menu.spec.ts
       - name: Check the public pages for PHP warnings
         env:
           UCM_BASE_URL: http://localhost:8092

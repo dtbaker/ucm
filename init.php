@@ -345,7 +345,11 @@ if ( $plugins_to_init ) {
 			// this is a hack for php 5.2 to get the can_i() thing working
 			//eval('module_'.$plugin_name.'::$module_name_hack = module_'.$plugin_name.'::get_class();');
 			if ( _UCM_INSTALLED && $plugins[ $plugin_name ]->is_plugin_enabled() ) {
-				$plugins[ $plugin_name ]->init();
+				// A plugin that is being retired and has nothing in it has nothing to set up. See
+				// module_base::is_dormant().
+				if ( ! $plugins[ $plugin_name ]->is_dormant() ) {
+					$plugins[ $plugin_name ]->init();
+				}
 				//if(!$plugins[$plugin_name]->get_installed_plugin_version()){
 				//$uninstalled_plugins[$plugin_name] = &$plugins[$plugin_name];
 				//unset($plugins[$plugin_name]);
