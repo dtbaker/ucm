@@ -1,5 +1,7 @@
 <?php
 
+require_once __DIR__ . '/ucm_mailer.php';
+
 // for the email table.
 define( '_MAIL_STATUS_PENDING', 1 );
 define( '_MAIL_STATUS_OVER_QUOTA', 5 );
@@ -13,7 +15,40 @@ class module_email extends module_base
 	public function __construct() {
 		$this->module_name     = 'email';
 		$this->module_position = 160;
-		$this->version         = 2.366;
+		$this->version         = 2.367;
+	}
+
+	/**
+	 * Sending goes through PHPMailer 6, managed by Composer. The copy of PHPMailer 5 that
+	 * used to sit in this folder is gone and is not a fallback: it had known security
+	 * problems, so there is nothing to fall back to.
+	 *
+	 * @return array
+	 */
+	public function third_party_libraries() {
+		return array(
+			'phpmailer' => array(
+				'name'       => 'PHPMailer',
+				'package'    => 'phpmailer/phpmailer',
+				'constraint' => '^6.9',
+				'class'      => 'PHPMailer\\PHPMailer\\PHPMailer',
+				'bundled'    => '',
+				'feature'    => 'Sending email',
+			),
+		);
+	}
+
+	/**
+	 * Runs on every install and update of this plugin. Before the usual table work, delete
+	 * the PHPMailer 5 files an older version left in this folder: the updater only ever
+	 * adds files, so they would otherwise sit on disk, unused but reachable.
+	 *
+	 * @return mixed
+	 */
+	function install_upgrade() {
+		ucm_mailer::remove_legacy_files( __DIR__ );
+
+		return parent::install_upgrade();
 	}
 
 	public static function can_i( $actions, $name = false, $category = false, $module = false ) {
@@ -29,6 +64,7 @@ class module_email extends module_base
 	}
 
 	function init() {
+		// 2.367 - 2026-11-02 - 4.0.1 PHPMailer 6 from Composer replaces the bundled PHPMailer 5.2.21 (security fixes); the old files are removed on upgrade
 		// 2.366 - 2026-10-17 - 4.0.0 relaunch: security token on saves, contract accept works with emails blocked, compose warning fixed
 		// 2.365 - 2021-04-07 - php8 compatibility fix
 		// 2.364 - 2017-07-24 - auto bcc option
@@ -756,6 +792,8 @@ if ( class_exists( 'UCMBaseSingle' ) ) {
 		public $display_key = 'description';
 		public $display_name = 'Email';
 		public $display_name_plural = 'Emails';
+		/** @var string why the last send failed, for the page to show */
+		public $error_text = '';
 		public $db_fields = array(
 			'create_time'   => array(),
 			'sent_time'     => array(),
@@ -1282,100 +1320,50 @@ if ( class_exists( 'UCMBaseSingle' ) ) {
 				return true;
 			}
 
-			$headers     = unserialize( $email_data['headers'] );
-			$attachments = unserialize( $email_data['attachments'] );
+			$headers     = @unserialize( $email_data['headers'], array( 'allowed_classes' => false ) );
+			$attachments = @unserialize( $email_data['attachments'], array( 'allowed_classes' => false ) );
+			if ( ! is_array( $headers ) ) {
+				$headers = array();
+			}
+			if ( ! is_array( $attachments ) ) {
+				$attachments = array();
+			}
 
+			if ( ! ucm_libraries::have( 'phpmailer' ) ) {
+				// vendor/ is missing, so there is nothing to send with. Leave the email
+				// queued rather than deleting it, and say why.
+				$this->error_text = _l( 'PHPMailer is not installed. Run composer install, or upload the vendor folder from the release zip.' );
+				if ( $debug ) {
+					echo "Failed to send email: " . $this->error_text;
+				}
+
+				return false;
+			}
 
 			try {
 
-				require_once( "class.phpmailer.php" );
-				$mail = new PHPMailer();
-				//$mail -> Hostname = 'yoursite.com';
-				$mail->CharSet = 'UTF-8';
-				// turn on HTML emails
-				$mail->isHTML( true );
-				// SeT SMTP or php Mail method:
-				if ( module_config::c( 'email_smtp', 0 ) ) {
-					if ( _DEBUG_MODE ) {
-						module_debug::log( array(
-							'title' => 'Email Module',
-							'data'  => 'Connecting via SMTP to: ' . module_config::c( 'email_smtp_hostname', '' )
-						) );
-					}
-					$mail->IsSMTP();
-					// turn on SMTP authentication
-					$mail->SMTPSecure = module_config::c( 'email_smtp_auth', '' );
-					$mail->SMTPAuth   = module_config::c( 'email_smtp_authentication', 0 );
-					$mail->Host       = module_config::c( 'email_smtp_hostname', '' );
-					if ( $mail->SMTPAuth ) {
-						$mail->Username = module_config::c( 'email_smtp_username', '' );
-						$mail->Password = module_config::c( 'email_smtp_password', '' );
-					}
-					if ( module_config::c( 'email_ignore_certificate', 0 ) ) {
-						$mail->SMTPOptions = array(
-							'ssl' => array(
-								'verify_peer'       => false,
-								'verify_peer_name'  => false,
-								'allow_self_signed' => true
-							)
-						);
-					}
-				} else {
-					$mail->IsMail();
+				$smtp = (bool) module_config::c( 'email_smtp', 0 );
+				if ( $smtp && _DEBUG_MODE ) {
+					module_debug::log( array(
+						'title' => 'Email Module',
+						'data'  => 'Connecting via SMTP to: ' . module_config::c( 'email_smtp_hostname', '' )
+					) );
 				}
-
-				// pull out the data from $email_data
-				$mail->MessageID = $email_data['message_id'];
-				$mail->Subject   = $email_data['subject'];
-				$mail->Body      = $email_data['html_content'];
-				$mail->AltBody   = $email_data['text_content'];
-
-				// from the headers:
-				$mail->Sender = $headers['Sender'];
-				if ( isset( $headers['ReplyToEmail'] ) ) {
-					$mail->AddReplyTo( $headers['ReplyToEmail'], isset( $headers['ReplyToName'] ) ? $headers['ReplyToName'] : '' );
-				}
-				$mail->From     = $headers['FromEmail'];
-				$mail->FromName = $headers['FromName'];
-				$test_to_str    = '';
-				if ( ! empty( $headers['to'] ) && is_array( $headers['to'] ) ) {
-					foreach ( $headers['to'] as $to ) {
-						$mail->AddAddress( $to['email'], $to['name'] );
-						$test_to_str .= " TO: " . $to['email'] . ' - ' . $to['name'];
-					}
-				}
-				if ( ! empty( $headers['cc'] ) && is_array( $headers['cc'] ) ) {
-					foreach ( $headers['cc'] as $cc ) {
-						$mail->AddCC( $cc['email'], $cc['name'] );
-					}
-				}
-				if ( ! empty( $headers['bcc'] ) && is_array( $headers['bcc'] ) ) {
-					foreach ( $headers['bcc'] as $bcc ) {
-						$mail->AddBCC( $bcc['email'], $bcc['name'] );
-					}
-				}
-
-				// attachemnts
-				$temp_folder = _UCM_FILE_STORAGE_DIR . 'includes/plugin_email/attachments/';
-				if ( is_array( $attachments ) ) {
-					foreach ( $attachments as $file_path => $file_name ) {
-						if ( strpos( $file_path, 'temp_' ) === 0 && is_file( $temp_folder . basename( $file_path ) ) ) {
-							$mail->AddAttachment( $temp_folder . basename( $file_path ), $file_name );
-						} elseif ( is_file( $file_path ) ) {
-							$mail->AddAttachment( $file_path, $file_name );
-						}
-					}
-				}
-
-
-				// debugging.
-				//        $html = $this->message_html;
-				//        $mail->ClearAllRecipients();
-				//        $mail->AddAddress('davidtest@blueteddy.com.au','David Test');
-				//        $html = $test_to_str.$html;
-
+				$mail = ucm_mailer::build( $email_data, $headers, $attachments, array(
+					'smtp'               => $smtp,
+					'hostname'           => module_config::c( 'email_smtp_hostname', '' ),
+					'secure'             => module_config::c( 'email_smtp_auth', '' ),
+					'authenticate'       => module_config::c( 'email_smtp_authentication', 0 ),
+					'username'           => module_config::c( 'email_smtp_username', '' ),
+					'password'           => module_config::c( 'email_smtp_password', '' ),
+					'ignore_certificate' => module_config::c( 'email_ignore_certificate', 0 ),
+				), _UCM_FILE_STORAGE_DIR . 'includes/plugin_email/attachments/' );
 
 				if ( _DEBUG_MODE ) {
+					$test_to_str = '';
+					foreach ( $mail->getToAddresses() as $to ) {
+						$test_to_str .= " TO: " . $to[0] . ' - ' . $to[1];
+					}
 					module_debug::log( array( 'title' => 'Email Module', 'data' => 'Sending to: ' . $test_to_str ) );
 				}
 				if ( ! $mail->Send() ) {
@@ -1418,7 +1406,12 @@ if ( class_exists( 'UCMBaseSingle' ) ) {
 
 				// true on succes, false on fail.
 				return ( $this->status == _MAIL_STATUS_SENT );
-			} catch ( Exception $e ) {
+			} catch ( \Throwable $e ) {
+				$this->error_text = $e->getMessage();
+				if ( $debug ) {
+					echo "Failed to send email: " . $this->error_text;
+				}
+
 				return false;
 			}
 		}
