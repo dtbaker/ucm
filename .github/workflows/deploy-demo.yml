@@ -154,6 +154,16 @@ jobs:
         env:
           DEMO_DEPLOY_PATH: ${{ secrets.DEMO_DEPLOY_PATH }}
         run: ssh demo "cd '$DEMO_DEPLOY_PATH' && php=/usr/local/php82/bin/php && { [ -x \$php ] || php=php; } && UCM_DEMO_ACTION=seeded \$php -q custom/demo/reset.php seeded"
+      - name: Save the changes to the sample data in the snapshot
+        # For a demo made by an earlier version, which the seed brings up to date instead of
+        # making again (today: the vendors, which move from the old Vendors plugin into
+        # customers). Repair, which "snapshot" runs first, removes the old records now that
+        # their replacements are there. Not "seeded": that would date the whole of the data
+        # as made today, and this did not make it.
+        if: steps.seed.outputs.migrated == 'true'
+        env:
+          DEMO_DEPLOY_PATH: ${{ secrets.DEMO_DEPLOY_PATH }}
+        run: ssh demo "cd '$DEMO_DEPLOY_PATH' && php=/usr/local/php82/bin/php && { [ -x \$php ] || php=php; } && UCM_DEMO_ACTION=snapshot \$php -q custom/demo/reset.php snapshot"
       - name: Smoke test
         env:
           DEMO_URL: ${{ secrets.DEMO_URL }}

@@ -60,7 +60,7 @@ missing is created, so the first deploy after this change repairs the demo and t
 first snapshot, with all three logins in it.
 
 **What the logins can see.** `demo/roles.php` lists, by the app's own permission names, what
-the "Demo Staff" role may view: customers, vendors, jobs, quotes, invoices, tickets, timers,
+the "Demo Staff" role may view: customers, vendors (the customer type), jobs, quotes, invoices, tickets, timers,
 the calendar, websites, files and contracts, the dashboard, and the staff member's own
 profile. It is an allowlist of view permissions. Nothing under Settings, Security, Backups,
 Finance, Newsletters or reports is in it, and `DemoRolesTest` fails if one is added.
@@ -103,7 +103,8 @@ page, so storing them hashed gives nothing away.
 
 Left alone the demo is the installer's two sample customers and nothing else, so the staff and
 customer logins have nothing to look at. `scripts/demo-seed.mjs` gives it a small made-up
-agency: six customers with contacts (and the installer's two), three vendors, four websites,
+agency: six customers with contacts (and the installer's two), three vendors, kept as customers
+of a type called Vendors, four websites,
 eight jobs with tasks and logged time, five recorded timers, four quotes, twelve invoices in
 every state (draft, sent, part paid, overdue, paid), five support tickets with replies, files,
 calendar entries and notes. Every business and person is invented and every address is on
@@ -121,15 +122,18 @@ permission rows a role is built from have a different id on each install, the co
 `system_base_href` and the plugin versions of one site, and a dump taken from one site and loaded
 into another quietly breaks both. The script touches none of them.
 
-**Safe to run twice.** It does nothing, and says so, when any of the sample customers is already
-there. It refuses to run against a site that is not showing the demo banner, so it cannot add a
+**Safe to run twice.** It does not make the data again, and says so, when any of the sample
+customers is already there. It refuses to run against a site that is not showing the demo banner, so it cannot add a
 dozen customers to somebody's real books, and it relies on demo mode blocking email: paying an
 invoice in full sends the customer a receipt, and with `_BLOCK_EMAILS` off that would be mailed.
-It needs Node 18 or later and nothing installed, and prints `SEEDED` or `PRESENT` last.
+It needs Node 18 or later and nothing installed, and prints `SEEDED`, `MIGRATED` or `PRESENT`
+last.
 
 **When it runs.** *Deploy to demo* runs it after `ensure`, and *Reset demo* runs it after a
 restore, both only when it has made new data (`seeded=true`), and then take the snapshot by
-running `reset.php seeded`. The daily reset puts the snapshot back, so in the ordinary case the
+running `reset.php seeded`. When it only brought existing data up to date (`migrated=true`, see
+below) they take the snapshot with `reset.php snapshot` instead: `seeded` dates the whole of the
+data as made today, and the data it did not make was not. The daily reset puts the snapshot back, so in the ordinary case the
 script finds the data there and does nothing. The second run is a safety net for a snapshot taken
 before there was any.
 
@@ -149,12 +153,25 @@ nothing else moves. This also dates the hours logged on job tasks. The app stamp
 with the moment it was logged, and has no field to say otherwise, so `seeded` dates those from
 the day their task was done; it is the one thing the script cannot set through a form.
 
-**Changing the data later.** The script does not update what is there, so editing
-`data.mjs` changes only a demo that is made afresh. To rebuild the demo's data, start from a
-database without it (the installer's, or a snapshot taken before it), run the script, and take
-a snapshot. `node --test scripts/demo-seed/data.test.mjs` checks that the data holds together
-(customers named exist, no invoice is paid twice over, a completed job has nothing left to do),
-and runs in CI.
+**Changing the data later.** The script does not update what is there, so editing `data.mjs`
+changes only a demo that is made afresh. To rebuild the demo's data, start from a database without
+it (the installer's, or a snapshot taken before it), run the script, and take a snapshot. A change
+that has to reach a demo that already exists is an `upgrade()` in the script: it runs when the
+data is already there, makes only what is missing, and prints `MIGRATED` if it made anything.
+`node --test scripts/demo-seed/data.test.mjs` checks that the data holds together (customers named
+exist, no invoice is paid twice over, a completed job has nothing left to do), and runs in CI.
+
+**The vendors are customers.** The old Vendors plugin says at the top of its page that it is to be
+merged into the Customers area, so the demo's suppliers (Parcelhawk Hosting, Greenline Print &
+Signage, Brightside Illustration) are customers of a customer type called Vendors, with a contact
+and an address each. The script makes the type, with the Supplier kind of billing like the
+installer's own Suppliers type, and it puts "Vendors" in the main menu. A demo made when the
+vendors were still records of the old plugin is upgraded: the script makes them as customers,
+then `repair` removes the old records, for any vendor that now has a customer of the same name
+under the Vendors type. That is done on the server, in `reset.php`, because in demo mode the app
+refuses to delete the first vendor as a "Demo Vendor". The old plugin is still in the app, so the
+administrator's menu has two links called Vendors until it is merged; the staff role is given the
+new one only (`demo/roles-retired.php` takes the old permissions away).
 
 **What the customer login cannot do.** It is view-only, so it opens lists and records but not
 a ticket: the app only opens a ticket for someone who may edit or create tickets, so the
