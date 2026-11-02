@@ -216,4 +216,20 @@ class ucm_mailer
 
 		return (bool) preg_match( '/^[^\s<>",;:\\\\\x00-\x1f\x7f@]+@[^\s<>",;\\\\\x00-\x1f\x7f@\[\]]+$/D', $address );
 	}
+
+	/**
+	 * May this value, which arrives from the browser in the compose form's options, be
+	 * called once the email has gone? Only the "Class::method" name of a module's own
+	 * email_sent hook (module_invoice::email_sent, module_file::email_sent) that really
+	 * exists. A code string, a function name, a closure or an array is refused.
+	 *
+	 * @param mixed $callback
+	 *
+	 * @return bool
+	 */
+	public static function is_success_callback( $callback ) {
+		return is_string( $callback )
+		       && preg_match( '/^module_[a-z0-9_]+::[a-z0-9_]*email_sent$/i', $callback ) === 1
+		       && is_callable( $callback );
+	}
 }

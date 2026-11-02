@@ -14,6 +14,7 @@ class StoredUnserializeTest extends TestCase
 	private const PLUGIN_DIRS = array(
 		'includes/plugin_cache',
 		'includes/plugin_data',
+		'includes/plugin_email',
 		'includes/plugin_extra',
 		'includes/plugin_ticket',
 	);

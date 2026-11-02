@@ -64,7 +64,7 @@ class module_email extends module_base
 	}
 
 	function init() {
-		// 2.367 - 2026-11-02 - 4.0.1 PHPMailer 6 from Composer replaces the bundled PHPMailer 5.2.21 (security fixes); the old files are removed on upgrade
+		// 2.367 - 2026-11-02 - 4.0.1 PHPMailer 6 from Composer replaces the bundled PHPMailer 5.2.21 (security fixes); the old files are removed on upgrade; stored values never rebuild objects; the after-send hook is limited to a module's email_sent method
 		// 2.366 - 2026-10-17 - 4.0.0 relaunch: security token on saves, contract accept works with emails blocked, compose warning fixed
 		// 2.365 - 2021-04-07 - php8 compatibility fix
 		// 2.364 - 2017-07-24 - auto bcc option
@@ -532,7 +532,7 @@ class module_email extends module_base
 
 										$list_data_items = $plugins['data']->get_data_items( $data_record_id );
 										foreach ( $list_fields as $list_field ) {
-											$settings = @unserialize( $list_data_items[ $list_field['data_field_id'] ]['data_field_settings'] );
+											$settings = @unserialize( $list_data_items[ $list_field['data_field_id'] ]['data_field_settings'], array( 'allowed_classes' => false ) );
 											if ( ! isset( $settings['field_type'] ) ) {
 												$settings['field_type'] = isset( $list_field['field_type'] ) ? $list_field['field_type'] : false;
 											}
@@ -598,19 +598,14 @@ class module_email extends module_base
 		}
 
 		if ( $email->send() ) {
-			if ( isset( $options['success_callback_args'] ) && count( $options['success_callback_args'] ) && $options['success_callback'] && is_callable( $options['success_callback'] ) ) {
-				// new callback method using call_user_func_array
+			if ( isset( $options['success_callback_args'] ) && is_array( $options['success_callback_args'] ) && count( $options['success_callback_args'] ) && ucm_mailer::is_success_callback( isset( $options['success_callback'] ) ? $options['success_callback'] : false ) ) {
 				$args             = $options['success_callback_args'];
 				$args['email_id'] = $email->id;
-				if ( preg_match( '#module_\w#', $options['success_callback'] ) ) {
-					// The callback comes from the caller's options, and the guard above is what
-					// keeps it to a module method.
-					// nosemgrep: php.lang.security.injection.tainted-callable.tainted-callable
-					call_user_func( $options['success_callback'], $args );
-				}
-			}/*else if($options['success_callback']){
-                eval($options['success_callback']);
-            }*/
+				// is_success_callback() has just limited this to a module's own email_sent
+				// method, because the value comes back from the browser inside the options.
+				// nosemgrep: php.lang.security.injection.tainted-callable.tainted-callable
+				call_user_func( $options['success_callback'], $args );
+			}
 			set_message( 'Email sent successfully' );
 			redirect_browser( $options['complete_url'] );
 		} elseif ( $email->status == _MAIL_STATUS_SCHEDULED ) {
@@ -626,7 +621,7 @@ class module_email extends module_base
 	public static function get_email( $email_id ) {
 		$email = get_single( 'email', 'email_id', $email_id );
 		if ( $email ) {
-			$email['attachments'] = @unserialize( $email['attachments'] );
+			$email['attachments'] = @unserialize( $email['attachments'], array( 'allowed_classes' => false ) );
 		}
 		// todo: permission check
 		if ( ! $email ) {
@@ -1014,7 +1009,7 @@ if ( class_exists( 'UCMBaseSingle' ) ) {
 			if ( $current_revision && $view_revision_id ) {
 				// user wants a custom revision, we pull out the custom $data_field_groups
 				// and we tell the form layout to use the serialized cached field layout information
-				$data_field_groups = unserialize( $current_revision['field_group_cache'] );
+				$data_field_groups = unserialize( $current_revision['field_group_cache'], array( 'allowed_classes' => false ) );
 				$data_items        = $plugins['data']->get_data_items( $data_record_id, $view_revision_id );
 				// we dont always read from cache, because then any ui changes wouldn't be reflected in older reports (if we want to change older reports)
 				foreach ( $data_field_groups as $data_field_group ) {

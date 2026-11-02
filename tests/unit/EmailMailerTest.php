@@ -412,4 +412,34 @@ class EmailMailerTest extends TestCase
 		$this->assertSame( array(), $removed );
 		$this->assertFileExists( $root . '/class.phpmailer.php' );
 	}
+
+	// ---- the hook that runs after a compose-form email is sent -------------------------
+
+	public function test_only_a_modules_email_sent_hook_is_an_allowed_success_callback() {
+		$this->assertTrue( ucm_mailer::is_success_callback( 'module_unit_fixture::email_sent' ) );
+		$this->assertFalse( ucm_mailer::is_success_callback( 'module_unit_fixture::other' ), 'only email_sent hooks' );
+		$this->assertFalse( ucm_mailer::is_success_callback( 'module_unit_fixture::missing_email_sent' ), 'must exist' );
+		$this->assertFalse( ucm_mailer::is_success_callback( 'system' ) );
+		$this->assertFalse( ucm_mailer::is_success_callback( 'file_put_contents' ) );
+		$this->assertFalse( ucm_mailer::is_success_callback( 'phpinfo(); module_x' ) );
+		$this->assertFalse( ucm_mailer::is_success_callback( 'x module_unit_fixture::email_sent' ), 'anchored at the start' );
+		$this->assertFalse( ucm_mailer::is_success_callback( array( 'module_unit_fixture', 'email_sent' ) ) );
+		$this->assertFalse( ucm_mailer::is_success_callback( function () {
+			return true;
+		} ) );
+		$this->assertFalse( ucm_mailer::is_success_callback( false ) );
+		$this->assertFalse( ucm_mailer::is_success_callback( null ) );
+	}
+}
+
+/**
+ * Stands in for a module that offers an after-send hook.
+ */
+class module_unit_fixture
+{
+	public static function email_sent( $args ) {
+	}
+
+	public static function other( $args ) {
+	}
 }
