@@ -18,6 +18,7 @@ GPL-3.0, so that text is there too.
 | Stripe PHP bindings | 22.0.0 | [MIT](LICENSES/MIT.txt) | Stripe, Inc. | `vendor/stripe/stripe-php` |
 | jQuery UI CSS theme "smoothness" | 1.9.2 | [MIT](LICENSES/MIT.txt) | jQuery Foundation and other contributors | `css/smoothness` |
 | jQuery UI CSS theme "ui-lightness" | 1.8.1 | [MIT](LICENSES/MIT.txt) OR [GPL-2.0](LICENSES/GPL-2.0.txt) | jQuery UI authors | `css/ui-lightness` |
+| wdCalendar (jQuery calendar widget) | unversioned | [MIT](LICENSES/MIT.txt) (published upstream as MIT or GPL-3.0; the bundled files carry no licence header) | The wdCalendar authors | `includes/plugin_calendar/wdCalendar/src/Plugins` |
 | jQuery | 1.4 | [MIT](LICENSES/MIT.txt) OR [GPL-2.0](LICENSES/GPL-2.0.txt) | John Resig | `includes/plugin_calendar/wdCalendar/src/jquery.js` |
 | reCAPTCHA PHP client library (v1) | 1.11 | [MIT](LICENSES/MIT.txt) | Mike Crawford and Ben Maurer, reCAPTCHA | `includes/plugin_captcha/inc/recaptchalib.php` |
 | jQuery Easing | 1.3 | [BSD-3-Clause](LICENSES/BSD-3-Clause.txt) | George McGinley Smith | `includes/plugin_change_request/fancybox/jquery.easing-1.3.pack.js` |
