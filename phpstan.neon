@@ -25,6 +25,5 @@ parameters:
         - includes/plugin_encrypt/phpseclib/*
         - includes/plugin_security/htmlpurifier/*
         - includes/plugin_captcha/inc/*
-        - includes/plugin_paymethod_stripe/stripe-php/*
         - includes/plugin_ticket/cron/mime_parser.php
         - includes/plugin_file/upload/plupload/*

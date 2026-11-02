@@ -17,7 +17,8 @@ define( '_APPLICATION_ID', 47626 ); // not used any more.
 // reports none and gets core files only with a plugin update. Plugins are still compared by
 // their own versions: bump every plugin whose files changed too, or its files never arrive.
 // README.md, under "Releasing".
-define( '_SCRIPT_VERSION', '4.0.0' );
+define( '_SCRIPT_VERSION', '4.0.1' );
+// 4.0.1 - 2026-11-02 - security: current PDF and email libraries, permission checks on saves, safer stored data and generated passwords; the licence code is optional
 // 4.0.0 - 2026-10-17 - relaunch: PHP 8 rewrite, security and payment fixes, update server in the app, new logo
 // 3.555 - 2022-12-27 - uasort boolean fix
 // 3.552 - 2021-04-07 - php 8 magic quotes fix

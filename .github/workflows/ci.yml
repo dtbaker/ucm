@@ -175,7 +175,6 @@ jobs:
             --exclude vendor --exclude node_modules --exclude temp \
             --exclude 'includes/plugin_security/htmlpurifier' \
             --exclude 'includes/plugin_encrypt/phpseclib' \
-            --exclude 'includes/plugin_paymethod_stripe/stripe-php' \
             --exclude 'includes/plugin_ticket/cron/mime_parser.php' \
             --exclude 'js/tiny_mce3.4.4' \
             --exclude-rule generic.nginx.security.request-host-used.request-host-used \
@@ -226,7 +225,6 @@ jobs:
             --exclude vendor --exclude node_modules --exclude temp \
             --exclude 'includes/plugin_security/htmlpurifier' \
             --exclude 'includes/plugin_encrypt/phpseclib' \
-            --exclude 'includes/plugin_paymethod_stripe/stripe-php' \
             --exclude 'includes/plugin_ticket/cron/mime_parser.php' \
             --exclude 'js/tiny_mce3.4.4'
 

@@ -67,7 +67,6 @@
     <exclude-pattern>*/plugin_security/htmlpurifier/*</exclude-pattern>
     <exclude-pattern>*/plugin_calendar/wdCalendar/*</exclude-pattern>
     <exclude-pattern>*/plugin_captcha/inc/*</exclude-pattern>
-    <exclude-pattern>*/plugin_paymethod_stripe/stripe-php/*</exclude-pattern>
     <exclude-pattern>*/plugin_ticket/cron/mime_parser.php</exclude-pattern>
     <!-- HTML/template files with no or minimal PHP -->
     <exclude-pattern>*/plugin_change_request/pages/popup_content_0.php</exclude-pattern>
