@@ -289,6 +289,38 @@ class EmailMailerTest extends TestCase
 		$this->assertStringContainsString( 'SMTP', $mail->ErrorInfo );
 	}
 
+	public function test_addresses_the_old_phpmailer_let_through_still_work() {
+		// A dotless host, and a From that is not strictly an address at all. PHPMailer 5
+		// never checked the From; PHPMailer 6 would refuse both without ucm_mailer's validator.
+		$mail = ucm_mailer::build(
+			$this->email_data(),
+			$this->headers( array(
+				'FromEmail' => 'info@localhost:8090',
+				'Sender'    => 'bounces@intranet',
+				'to'        => array( array( 'email' => 'admin@localhost', 'name' => '' ) ),
+			) ),
+			array(),
+			array()
+		);
+		$head = $this->header_block( $this->mime( $mail ) );
+
+		$this->assertMatchesRegularExpression( '/^From: Example Billing <info@localhost:8090>/mi', $head );
+		$this->assertMatchesRegularExpression( '/^To: admin@localhost/mi', $head );
+	}
+
+	public function test_addresses_that_could_split_a_header_or_smtp_command_are_refused() {
+		foreach ( array( "a@b.com\r\nBcc: victim@example.net", "a@b.com\nX: y", 'a b@example.net', '<a@b.com>', 'a@b.com,c@d.com', 'a@b.com>', '@b.com', 'a@' ) as $bad ) {
+			$this->assertFalse( ucm_mailer::valid_address( $bad ), json_encode( $bad ) );
+		}
+		foreach ( array( 'pat@example.net', 'pat+tag@example.net', 'admin@localhost', 'a@192.168.0.1' ) as $good ) {
+			$this->assertTrue( ucm_mailer::valid_address( $good ), $good );
+		}
+
+		$mail = ucm_mailer::build( $this->email_data(), $this->headers( array( 'FromEmail' => "a@b.com\r\nBcc: victim@example.net" ) ), array(), array() );
+		$this->assertFalse( $mail->preSend() );
+		$this->assertStringContainsString( 'Invalid address', $mail->ErrorInfo );
+	}
+
 	public function test_an_invalid_recipient_address_is_rejected_without_sending() {
 		$mail = ucm_mailer::build( $this->email_data(), $this->headers( array( 'to' => array( array( 'email' => 'not an address', 'name' => '' ) ), 'cc' => array(), 'bcc' => array() ) ), array(), array( 'smtp' => true, 'hostname' => '127.0.0.1:1' ) );
 

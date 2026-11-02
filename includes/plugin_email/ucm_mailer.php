@@ -89,6 +89,13 @@ class ucm_mailer
 	public static function build( array $email_data, array $headers, array $attachments, array $settings, $temp_folder = '' ) {
 		// Exceptions off, as before: a problem comes back from send() as false with the
 		// reason in ErrorInfo, rather than escaping into the page.
+		// PHPMailer 5 checked recipients with a lenient pattern (admin@localhost and
+		// user@intranet were fine) and never checked From or the bounce address. PHPMailer 6
+		// checks all three with PHP's stricter filter, which would stop working installs
+		// sending. Keep the old leniency; newlines and anything that could split an SMTP
+		// command are still refused.
+		PHPMailer::$validator = array( __CLASS__, 'valid_address' );
+
 		$mail          = new PHPMailer( false );
 		$mail->CharSet = PHPMailer::CHARSET_UTF8;
 		$mail->isHTML( true );
@@ -186,5 +193,27 @@ class ucm_mailer
 		}
 
 		return '<' . $message_id . '@' . $host . '>';
+	}
+
+	/**
+	 * Is this an address worth handing to the mail server? Everything the lenient PHPMailer
+	 * 5 pattern accepted, plus plain local@host shapes such as webmaster@localhost:8090 that
+	 * it never looked at (it did not validate From). No whitespace, control characters,
+	 * angle brackets, quotes or commas outside the quoted-local form the pattern allows.
+	 *
+	 * @param string $address
+	 *
+	 * @return bool
+	 */
+	public static function valid_address( $address ) {
+		$address = (string) $address;
+		if ( strpbrk( $address, "\r\n\0" ) !== false ) {
+			return false;
+		}
+		if ( PHPMailer::validateAddress( $address, 'pcre8' ) ) {
+			return true;
+		}
+
+		return (bool) preg_match( '/^[^\s<>",;:\\\\\x00-\x1f\x7f@]+@[^\s<>",;\\\\\x00-\x1f\x7f@\[\]]+$/D', $address );
 	}
 }
