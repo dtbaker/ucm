@@ -55,6 +55,10 @@ if ( ! isset( $setup_upgrade_hack ) ) {
 	) );
 }
 
+if ( ! isset( $setup_upgrade_hack ) ) {
+	echo ucm_secret_notice_html();
+}
+
 if ( isset( $_REQUEST['save_license_codes'] ) && isset( $_REQUEST['license_codes'] ) && is_array( $_REQUEST['license_codes'] ) ) {
 	$license_codes = '';
 	foreach ( $_REQUEST['license_codes'] as $license_code ) {
