@@ -32,6 +32,7 @@ class StoredUnserializeTest extends TestCase
 		'includes/plugin_paymethod_other',
 		'includes/plugin_paymethod_paypal',
 		'includes/plugin_paymethod_square',
+		'includes/plugin_paymethod_stripe',
 		'includes/plugin_file',
 		'includes/plugin_form',
 		'includes/plugin_note',

@@ -5,7 +5,6 @@ if ( ! module_config::can_i( 'edit', 'Settings' ) ) {
 	redirect_browser( _BASE_HREF );
 }
 
-$stripe_checkout        = module_paymethod_stripe::use_checkout_sessions();
 $stripe_have_sdk        = module_paymethod_stripe::have_sdk();
 $stripe_webhook_url     = module_paymethod_stripe::webhook_url();
 $stripe_webhook_secret  = trim( (string) module_config::c( 'payment_method_stripe_webhook_secret', '' ) );
@@ -15,15 +14,8 @@ $stripe_subscriptions   = module_config::c( 'payment_method_stripe_subscriptions
 if ( ! $stripe_have_sdk ) { ?>
 	<div class="alert alert-warning" role="alert">
 		<p>
-			<strong><?php _e( 'The Stripe library is not installed, so payments are still going through the old Stripe Checkout.' ); ?></strong>
-			<?php _e( 'Stripe does not accept that flow from accounts opened recently, and it cannot answer a 3-D Secure challenge, so cards issued in the EEA and the UK will decline. Re-upload the files for this release, including the vendor folder, or run composer install.' ); ?>
-		</p>
-	</div>
-<?php } elseif ( ! $stripe_checkout ) { ?>
-	<div class="alert alert-warning" role="alert">
-		<p>
-			<strong><?php _e( 'This site is deliberately set back to the old Stripe Checkout.' ); ?></strong>
-			<?php _e( 'Turn off the "Use the old Stripe Checkout" advanced setting to take payments through Stripe Checkout again. The old flow is not accepted from accounts opened recently and declines EEA and UK cards.' ); ?>
+			<strong><?php _e( 'The Stripe library is not installed, so Stripe payments cannot be taken.' ); ?></strong>
+			<?php _e( 'Re-upload the files for this release, including the vendor folder, or run composer install.' ); ?>
 		</p>
 	</div>
 <?php } elseif ( $stripe_method_enabled && $stripe_webhook_secret === '' ) { ?>
@@ -83,7 +75,7 @@ print_heading( 'Stripe Settings' ); ?>
 			'default'     => '',
 			'type'        => 'text',
 			'description' => 'Your Stripe Publishable Key (Test or Live)',
-			'help'        => 'Only used by the old Stripe Checkout. Stripe Checkout and subscriptions both run on the secret key alone, so you can leave this blank unless you have turned the old flow back on.',
+			'help'        => 'Not needed any more. Stripe Checkout and subscriptions both run on the secret key alone, so you can leave this blank.',
 		),
 		array(
 			'key'         => 'payment_method_stripe_webhook_secret',
@@ -193,9 +185,8 @@ print_heading( 'Stripe Settings' ); ?>
 	approximated schedule drifts away from this site's own a little more every cycle, and the two
 	then disagree about which period has been paid for.</p>
 
-<p>Automatic payments are only offered when the Stripe library is installed and this site is on
-	Stripe Checkout. On the old Stripe Checkout setting, and on an install whose vendor folder has
-	not arrived, the option is hidden rather than half-working.</p>
+<p>Automatic payments are only offered when the Stripe library is installed. On an install whose
+	vendor folder has not arrived, the option is hidden rather than half-working.</p>
 
 <p>Leaving this switched off is a complete, working setup: the scheduled job generates and emails
 	each renewal invoice and the customer pays it like any other. That is how the Square payment
