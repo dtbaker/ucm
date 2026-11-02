@@ -133,4 +133,24 @@ class StripeCleanupTest extends TestCase
 		$this->assertStringNotContainsString( 'stripe-php/lib', $code );
 		$this->assertMatchesRegularExpression( "/'bundled'\s*=>\s*''/", $code, 'the library declaration has no bundled fallback' );
 	}
+
+	public function test_the_old_charges_form_is_deleted_and_the_other_pages_are_not() {
+		$root = $this->fake_install();
+		file_put_contents( $root . '/includes/plugin_paymethod_stripe/pages/stripe_form.php', '<?php // old form' );
+
+		$this->assertTrue( ucm_stripe_cleanup::remove_old_charges_form( $root ) );
+		$this->assertFileDoesNotExist( $root . '/includes/plugin_paymethod_stripe/pages/stripe_form.php' );
+		$this->assertFileExists( $root . '/includes/plugin_paymethod_stripe/pages/stripe_settings.php' );
+		$this->assertTrue( ucm_stripe_cleanup::remove_old_charges_form( $root ), 'and a second run is harmless' );
+	}
+
+	public function test_a_symlinked_charges_form_is_left_alone() {
+		$root   = $this->fake_install();
+		$secret = $this->temp_dir() . '/keep.php';
+		file_put_contents( $secret, '<?php // not ours' );
+		symlink( $secret, $root . '/includes/plugin_paymethod_stripe/pages/stripe_form.php' );
+
+		$this->assertFalse( ucm_stripe_cleanup::remove_old_charges_form( $root ) );
+		$this->assertFileExists( $secret );
+	}
 }

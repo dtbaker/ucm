@@ -47,6 +47,41 @@ class ucm_stripe_cleanup
 	}
 
 	/**
+	 * Delete includes/plugin_paymethod_stripe/pages/stripe_form.php, the old Charges form.
+	 *
+	 * It needs the stripe-php copy deleted above, so left behind it would answer with a blank
+	 * server error. Same containment rules as the folder: the plugin folder must really be
+	 * <root>/includes/plugin_paymethod_stripe, only a plain file is removed, never a link.
+	 *
+	 * @param string|null $root Install root, defaults to this install. Tests pass a temp dir.
+	 *
+	 * @return bool True when the file is gone afterwards.
+	 */
+	public static function remove_old_charges_form( $root = null ) {
+		if ( null === $root ) {
+			$root = _UCM_FOLDER;
+		}
+		$real_root  = realpath( $root );
+		$plugin_dir = realpath( rtrim( $root, '/\\' ) . '/includes/plugin_paymethod_stripe' );
+		if ( false === $real_root || false === $plugin_dir ) {
+			return false;
+		}
+		if ( $plugin_dir !== $real_root . DIRECTORY_SEPARATOR . 'includes' . DIRECTORY_SEPARATOR . 'plugin_paymethod_stripe' ) {
+			return false;
+		}
+		$target = $plugin_dir . DIRECTORY_SEPARATOR . 'pages' . DIRECTORY_SEPARATOR . 'stripe_form.php';
+		if ( is_link( $target ) ) {
+			return false;
+		}
+		if ( is_file( $target ) ) {
+			@unlink( $target );
+			clearstatcache();
+		}
+
+		return ! file_exists( $target );
+	}
+
+	/**
 	 * Delete a folder and everything in it without following symbolic links.
 	 *
 	 * @param string $dir absolute folder path, already checked by the caller

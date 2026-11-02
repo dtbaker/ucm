@@ -53,6 +53,7 @@ class module_paymethod_stripe extends module_base
 	 */
 	function install_upgrade() {
 		ucm_stripe_cleanup::remove_bundled_stripe_php();
+		ucm_stripe_cleanup::remove_old_charges_form();
 
 		return parent::install_upgrade();
 	}

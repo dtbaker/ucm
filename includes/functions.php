@@ -154,7 +154,9 @@ function ucm_password_verify( $password, $hash, $user_id = null ) {
  */
 function ucm_secret_notice_html( $is_install_path = null, $is_demo = null ) {
 	if ( null === $is_install_path ) {
-		$is_install_path = defined( '_UCM_SECRET_IS_INSTALL_PATH' ) && _UCM_SECRET_IS_INSTALL_PATH;
+		// Read from the secret itself, not from a flag set in config.php: an in-app update
+		// never replaces config.php, so a flag defined there would be missing after one.
+		$is_install_path = defined( '_UCM_SECRET' ) && defined( '_UCM_FOLDER' ) && _UCM_SECRET === _UCM_FOLDER;
 	}
 	if ( null === $is_demo ) {
 		$is_demo = defined( '_DEMO_MODE' ) && _DEMO_MODE;
