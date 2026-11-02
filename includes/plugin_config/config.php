@@ -11,7 +11,7 @@ class module_config extends module_base
 	public function __construct() {
 		$this->module_name     = 'config';
 		$this->module_position = 40;
-		$this->version         = 2.437;
+		$this->version         = 2.438;
 	}
 
 	public static function can_i( $actions, $name = false, $category = false, $module = false ) {
@@ -1027,8 +1027,6 @@ public static function js_combine($version, $reinit=false){
 			'release_version'       => _SCRIPT_VERSION,
 			'current_plugins'       => json_encode( $current_plugins ),
 			'current_files'         => json_encode( $current_files ),
-			'client_ip'             => isset( $_SERVER['REMOTE_ADDR'] ) ? $_SERVER['REMOTE_ADDR'] : '',
-			'installation_location' => full_link( '/' ),
 			'requested_plugin'      => $requested_plugin,
 			'get_file_contents'     => $get_file_contents,
 			// Asks a server that understands it to send a checksum with every file.
@@ -1053,7 +1051,7 @@ public static function js_combine($version, $reinit=false){
 				'data'  => 'Posting to API',
 			) );
 		}
-		$user_agent = 'UCM/' . module_config::c( '_admin_system_version', 2.1 ) . ' (+' . full_link( '/' ) . ')';
+		$user_agent = 'UCM/' . _SCRIPT_VERSION;
 		if ( ! function_exists( 'curl_init' ) ) {
 			$postdata = http_build_query(
 				$post_fields
