@@ -17,6 +17,20 @@ export async function login(page: Page) {
   await page.waitForURL(url => !url.href.includes('login') || url.href.includes('home'));
 }
 
+/**
+ * The folder theme the signed-in user is looking at, read from the body class every folder
+ * theme sets ('theme-metis', 'theme-shadcn'). null for a theme that sets none. Specs that
+ * assert on theme markup branch on this, so the suite can run against whichever theme the
+ * install has selected.
+ */
+export async function activeTheme(page: Page): Promise<string | null> {
+  await page.goto('/');
+  const cls = (await page.locator('body').getAttribute('class')) ?? '';
+  const m = cls.match(/\btheme-([a-z0-9_]+)/);
+
+  return m ? m[1] : null;
+}
+
 /** Every page publishes the live token as ucm.form_auth_key. */
 export async function formAuthKey(page: Page): Promise<string> {
   await page.goto('/?m[]=customer&p[]=customer_admin');
