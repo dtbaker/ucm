@@ -114,6 +114,7 @@ class RawFormTest extends TestCase
 		'includes/plugin_theme/themes/left/pages/login.php'        => 2,
 		'includes/plugin_theme/themes/metis/pages/login.php'       => 2,
 		'includes/plugin_theme/themes/pro/pages/login.php'         => 2,
+		'includes/plugin_theme/themes/shadcn/pages/login.php'      => 2,
 		'includes/plugin_theme/themes/whitelabel1/pages/login.php' => 2,
 	);
 

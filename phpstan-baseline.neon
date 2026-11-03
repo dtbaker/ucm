@@ -4183,6 +4183,66 @@ parameters:
 			message: '#^Variable \$display_mode might not be defined\.$#'
 			identifier: variable.undefined
 			count: 1
+			path: includes/plugin_theme/themes/shadcn/design_footer.php
+
+		-
+			message: '#^Variable \$start_time might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_theme/themes/shadcn/design_footer.php
+
+		-
+			message: '#^Variable \$display_mode might not be defined\.$#'
+			identifier: variable.undefined
+			count: 3
+			path: includes/plugin_theme/themes/shadcn/design_header.php
+
+		-
+			message: '#^Variable \$page_title might not be defined\.$#'
+			identifier: variable.undefined
+			count: 2
+			path: includes/plugin_theme/themes/shadcn/design_header.php
+
+		-
+			message: '#^Constant _UCM_INSTALLED not found\.$#'
+			identifier: constant.notFound
+			count: 1
+			path: includes/plugin_theme/themes/shadcn/design_menu.php
+
+		-
+			message: '#^Variable \$display_mode might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_theme/themes/shadcn/design_menu.php
+
+		-
+			message: '#^Variable \$load_pages might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_theme/themes/shadcn/design_menu.php
+
+		-
+			message: '#^Variable \$plugins might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_theme/themes/shadcn/design_menu.php
+
+		-
+			message: '#^Variable \$this might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_theme/themes/shadcn/includes/plugin_pin/inc/pin_menu.php
+
+		-
+			message: '#^Variable \$plugins might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: includes/plugin_theme/themes/shadcn/pages/search_results.php
+
+		-
+			message: '#^Variable \$display_mode might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
 			path: includes/plugin_theme/themes/whitelabel1/design_footer.php
 
 		-
