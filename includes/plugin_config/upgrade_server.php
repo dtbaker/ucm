@@ -129,9 +129,13 @@ function ucm_upgrade_server_respond() {
 		if ( ! headers_sent() ) {
 			header( 'Content-Type: application/json; charset=utf-8' );
 		}
-		// A JSON body built from fixed strings; the request only picks which of them.
-		// nosemgrep: php.lang.security.injection.echoed-request.echoed-request
-		echo json_encode( ucm_licence_check::refusal( $licence['status'], $return_base_system_in_zip ) );
+		// A JSON body built from fixed strings; the request only picks which of them. The
+		// status is mapped onto the class constants here so that no request value reaches the
+		// output, which is also what lets a scanner see it.
+		$refusal_status = ucm_licence_check::NONE === $licence['status']
+			? ucm_licence_check::NONE
+			: ( ucm_licence_check::INVALID === $licence['status'] ? ucm_licence_check::INVALID : ucm_licence_check::UNAVAILABLE );
+		echo json_encode( ucm_licence_check::refusal( $refusal_status, true === $return_base_system_in_zip ) );
 
 		return;
 	}
