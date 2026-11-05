@@ -59,6 +59,7 @@ while ( ob_get_level() > $ucm_demo_ob_level ) {
 // The default first and the legacy theme last, the same order as Settings > Theme.
 $ucm_demo_themes = array(
 	'metis'          => 'Default',
+	'shadcn'         => 'Modern (preview)',
 	'theme_adminlte' => 'AdminLTE',
 	'whitelabel1'    => 'White Label',
 );
