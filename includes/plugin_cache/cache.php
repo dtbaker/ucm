@@ -13,7 +13,7 @@ class module_cache extends module_base
 	public function __construct() {
 		$this->module_name     = 'cache';
 		$this->module_position = 10;
-		$this->version         = 2.233;
+		$this->version         = 2.234;
 	}
 
 	public static function can_i( $actions, $name = false, $category = false, $module = false ) {
@@ -177,7 +177,7 @@ class module_cache extends module_base
 			if ( ! isset( self::$_db_cache[ $group ] ) || ! isset( self::$_db_cache[ $group ][ $cache_key ] ) ) {
 				return false;
 			}
-			$data = is_array( self::$_db_cache[ $group ][ $cache_key ] ) ? self::$_db_cache[ $group ][ $cache_key ] : unserialize( self::$_db_cache[ $group ][ $cache_key ] );
+			$data = is_array( self::$_db_cache[ $group ][ $cache_key ] ) ? self::$_db_cache[ $group ][ $cache_key ] : unserialize( self::$_db_cache[ $group ][ $cache_key ], array( 'allowed_classes' => false ) );
 			if ( $data ) {
 				if ( _DEBUG_MODE && module_config::c( 'cache_debug', 0 ) ) {
 					module_debug::log( array(
@@ -391,7 +391,7 @@ class module_cache extends module_base
 	public static function get_perm_cache($cache_key,$time_limit=3600) { // 1 hour
         $cache_file = _UCM_FOLDER . "temp/cache_".basename($cache_key);
         if(is_file($cache_file) && filemtime($cache_file) > time()-$time_limit){
-            return unserialize(file_get_contents($cache_file));
+            return unserialize( file_get_contents($cache_file), array( 'allowed_classes' => false ) );
         }
         return false;
 	}

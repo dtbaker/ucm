@@ -183,7 +183,7 @@ class ucm_upgrade_server
 	 * List a directory from the release file list instead of from the disk.
 	 *
 	 * The server is a live installation, so its folders hold files the release never had:
-	 * dompdf writes font caches into its own plugin folder, and an admin can drop anything
+	 * a plugin may write caches into its own folder, and an admin can drop anything
 	 * anywhere. Walking the disk offers all of that to every client as part of the plugin.
 	 * The release list is exactly what was shipped, so a plugin row built from it carries
 	 * the plugin and nothing that grew beside it.

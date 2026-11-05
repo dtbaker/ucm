@@ -1387,7 +1387,7 @@ module_form::print_form_open_tag( array(
 								$notes   = '';
 								$details = false;
 								if ( isset( $invoice_payment_data['data'] ) && $invoice_payment_data['data'] ) {
-									$details = @unserialize( $invoice_payment_data['data'] );
+									$details = @unserialize( $invoice_payment_data['data'], array( 'allowed_classes' => false ) );
 									if ( $details && isset( $details['custom_notes'] ) ) {
 										$notes = $details['custom_notes'];
 									}
@@ -1480,7 +1480,7 @@ module_form::print_form_open_tag( array(
 						</td>
 						<td>
 							<?php if ( isset( $invoice_payment_data['data'] ) && $invoice_payment_data['data'] ) {
-								$details = @unserialize( $invoice_payment_data['data'] );
+								$details = @unserialize( $invoice_payment_data['data'], array( 'allowed_classes' => false ) );
 								if ( $details && ! empty( $details['custom_notes'] ) ) {
 									echo htmlspecialchars( $details['custom_notes'] ) . '<br>';
 								}

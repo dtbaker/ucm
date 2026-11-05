@@ -28,6 +28,11 @@ const UPGRADE_URL = '/?m[]=config&p[]=config_upgrade';
 const SERVER_URL = 'http://localhost/includes/plugin_config/upgrade_server.php';
 const SCOPE = 'includes/plugin_config';
 
+/** Purchase codes the stand-in for Envato's API (tests/e2e/fixtures/envato-stub.php) knows. */
+const LICENCE = '00000000-e2e0-4000-8000-000000000001';
+const OTHER_ITEM = '00000000-e2e0-4000-8000-000000000002';
+const OUTAGE = '00000000-e2e0-4000-8000-0000000000ff';
+
 /** Settings this spec changes, and what they were before it started. */
 const CHANGED = ['upgrade_server_enabled', 'ucm_upgrade_url', '_installation_code'] as const;
 const originals: Record<string, string> = {};
@@ -84,9 +89,8 @@ test.describe('Updating from an update server', () => {
     await saveSettings(page, key, {
       upgrade_server_enabled: '1',
       ucm_upgrade_url: SERVER_URL,
-      // The client refuses to start an update without one. It is not checked by anything;
-      // see docs/proposals - no licence enforcement, the code is a thank you.
-      _installation_code: originals._installation_code || 'e2e-test-code',
+      // The update server only answers a request that carries a purchase code it can verify.
+      _installation_code: LICENCE,
     });
     await page.close();
   });
@@ -106,7 +110,7 @@ test.describe('Updating from an update server', () => {
 
   test('the update server answers without a warning in the body', async ({ request }) => {
     const response = await request.post(SERVER_URL.replace('http://localhost', ''), {
-      form: { current_plugins: '{}', requested_plugin: 'config', client_protocol: '2' },
+      form: { installation_code: LICENCE, current_plugins: '{}', requested_plugin: 'config', client_protocol: '2' },
     });
     expect(response.status()).toBe(200);
     const body = await response.text();
@@ -118,9 +122,66 @@ test.describe('Updating from an update server', () => {
     expect(data.available_updates.plugins.config.files.length).toBeGreaterThan(0);
   });
 
+  test('a request with no purchase code, or one that is not a sale of UCM, gets a message and no files', async ({ request }) => {
+    const path = SERVER_URL.replace('http://localhost', '');
+    const ask = async (code: string | null) => {
+      const form: Record<string, string> = { current_plugins: '{}', requested_plugin: 'config', get_file_contents: '1', client_protocol: '2' };
+      if (code !== null) form.installation_code = code;
+      const response = await request.post(path, { form });
+      expect(response.status()).toBe(200);
+      return JSON.parse(await response.text());
+    };
+
+    for (const code of [null, 'free', 'not-a-code', OTHER_ITEM, '00000000-e2e0-4000-8000-000000000003']) {
+      const data = await ask(code);
+      expect(data.available_updates.plugins, `code ${code}`).toEqual([]);
+      expect(data.available_updates.licence_required, `code ${code}`).toBe(true);
+      expect(data.available_updates.message, `code ${code}`).toMatch(/licence code/i);
+    }
+    const unreachable = await ask(OUTAGE);
+    expect(unreachable.available_updates.plugins).toEqual([]);
+    expect(unreachable.available_updates.message).toContain('try again');
+  });
+
+  test('the one-file installer\'s zip needs a purchase code too', async ({ request }) => {
+    const path = SERVER_URL.replace('http://localhost', '');
+    const ask = (code: string | null) => {
+      const form: Record<string, string> = { current_version: '0', get_file_contents: '1', return_as_zip: '1', return_base_system_in_zip: '1' };
+      if (code !== null) form.installation_code = code;
+      return request.post(path, { form, failOnStatusCode: false });
+    };
+
+    for (const code of [null, OTHER_ITEM]) {
+      const response = await ask(code);
+      expect(response.status(), `code ${code}`).toBe(200);
+      expect(response.headers()['content-type'], `code ${code}`).toContain('application/json');
+      const data = JSON.parse(await response.text());
+      expect(data.available_updates.licence_required, `code ${code}`).toBe(true);
+    }
+    expect(JSON.parse(await (await ask(null)).text()).available_updates.message).toContain('one-file installer');
+
+    // A valid code gets past the licence check. This installation is a working copy, not a
+    // built release, so it has no file list to zip and says so; what matters is that the
+    // answer is not a licence refusal.
+    const allowed = await ask(LICENCE);
+    const body = await allowed.body();
+    if (body.subarray(0, 2).toString() !== 'PK') {
+      expect(JSON.parse(body.toString()).available_updates.licence_required).toBeUndefined();
+    }
+  });
+
+  test('a valid code is answered with the item it is for', async ({ request }) => {
+    const response = await request.post(SERVER_URL.replace('http://localhost', ''), {
+      form: { installation_code: LICENCE, current_plugins: '{}', requested_plugin: 'config', client_protocol: '2' },
+    });
+    const data = JSON.parse(await response.text());
+    expect(Object.keys(data.licence_codes)).toEqual([LICENCE]);
+  });
+
   test('every file in a download comes with a checksum that matches it', async ({ request }) => {
     const response = await request.post(SERVER_URL.replace('http://localhost', ''), {
       form: {
+        installation_code: LICENCE,
         current_plugins: '{}',
         requested_plugin: 'config',
         get_file_contents: '1',
@@ -150,7 +211,7 @@ test.describe('Updating from an update server', () => {
     const release = /define\(\s*'_SCRIPT_VERSION',\s*'([^']+)'/.exec(readFileSync('init.php', 'utf8'))![1];
     const ask = async (extra: Record<string, string>) => {
       const response = await request.post(SERVER_URL.replace('http://localhost', ''), {
-        form: { current_plugins: JSON.stringify(current), client_protocol: '2', ...extra },
+        form: { installation_code: LICENCE, current_plugins: JSON.stringify(current), client_protocol: '2', ...extra },
       });
       expect(response.status()).toBe(200);
       return (await response.text()).trim();
@@ -224,5 +285,29 @@ test.describe('Updating from an update server', () => {
     expect(body).toContain('No upgrade available at this time');
     expect(body).not.toContain('Incorrect API url');
     expect(body).not.toMatch(/\b(Warning|Notice|Deprecated|Fatal error)<\/b>:/);
+  });
+  test('without a licence code the Upgrade page asks for one and does not contact the update server', async ({ page }) => {
+    test.setTimeout(120000);
+    await login(page);
+    const settingsKey = await openSettings(page);
+    await saveSettings(page, settingsKey, { _installation_code: '' });
+    try {
+      const key = await formAuthKey(page);
+      const response = await page.request.post(UPGRADE_URL, {
+        form: { check_upgrade: 'yes', form_auth_key: key },
+        failOnStatusCode: false,
+      });
+      const body = await response.text();
+      expect(response.status()).toBe(200);
+      expect(body).toContain('Automated updates need a licence code');
+      expect(body).not.toContain('No upgrade available at this time');
+
+      await page.goto(UPGRADE_URL);
+      await expect(page.getByText('Please enter your license code below to receive automated updates').first()).toBeVisible();
+      await expect(page.getByText('the address of this site are sent to the update server').first()).toBeVisible();
+    } finally {
+      const again = await openSettings(page);
+      await saveSettings(page, again, { _installation_code: LICENCE });
+    }
   });
 });

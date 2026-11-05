@@ -3,6 +3,7 @@
 //306412171 ucm_1306412206_per@gmail.com
 
 require_once( dirname( __FILE__ ) . '/subscriptions.php' );
+require_once( dirname( __FILE__ ) . '/cleanup.php' );
 
 class module_paymethod_stripe extends module_base
 {
@@ -21,20 +22,15 @@ class module_paymethod_stripe extends module_base
 	public function __construct() {
 		$this->module_name     = 'paymethod_stripe';
 		$this->module_position = 400;
-		$this->version         = 2.247;
+		$this->version         = 2.248;
 	}
 
 	/**
-	 * No bundled fallback, deliberately.
+	 * No bundled fallback, deliberately: the Stripe SDK comes from Composer (vendor/).
 	 *
-	 * The copy in includes/plugin_paymethod_stripe/stripe-php is 1.11.0, from 2014. It
-	 * predates namespaces entirely (Stripe_Charge, not \Stripe\Charge) and it speaks the
-	 * Charges API, which Stripe no longer accepts from new integrations at all. It cannot
-	 * stand in for the modern SDK, so it is not declared as a fallback here.
-	 *
-	 * Since subscriptions moved to Checkout, the only thing left that loads it is the
-	 * one-off Charges form behind the payment_method_stripe_legacy_checkout escape hatch.
-	 * Nothing a customer reaches by default touches it.
+	 * This plugin used to carry stripe-php 1.11.0 from 2014. It predates namespaces and speaks
+	 * the Charges API, which Stripe no longer accepts from new integrations, so it could never
+	 * stand in for the modern SDK. It and the one-off Charges form that used it are gone.
 	 *
 	 * @return array
 	 */
@@ -51,7 +47,19 @@ class module_paymethod_stripe extends module_base
 		);
 	}
 
+	/**
+	 * Runs when this plugin's version is applied, on in-app updates and zip uploads alike.
+	 * Updating never deletes files, so take out the old bundled stripe-php 1.11.0 here.
+	 */
+	function install_upgrade() {
+		ucm_stripe_cleanup::remove_bundled_stripe_php();
+		ucm_stripe_cleanup::remove_old_charges_form();
+
+		return parent::install_upgrade();
+	}
+
 	function init() {
+		// 2.248 - 2026-11-02 - the dead bundled stripe-php 1.11.0 and the old Charges form are removed (the folder is deleted on upgrade); stored values are read without instantiating objects
 		// 2.247 - 2026-10-17 - Stripe PHP library 22, on Stripe API version 2026-09-30.endive
 		// 2.246 - 2026-10-17 - 4.0.0 relaunch: Stripe Checkout Sessions for payments and subscriptions, clearer key setup
 		// 2.245 - 2017-02-27 - config fix
@@ -182,7 +190,7 @@ class module_paymethod_stripe extends module_base
 
 	public static function add_payment_data( $invoice_payment_id, $key, $val ) {
 		$payment      = module_invoice::get_invoice_payment( $invoice_payment_id );
-		$payment_data = @unserialize( $payment['data'] );
+		$payment_data = @unserialize( $payment['data'], array( 'allowed_classes' => false ) );
 		if ( ! is_array( $payment_data ) ) {
 			$payment_data = array();
 		}
@@ -203,19 +211,11 @@ class module_paymethod_stripe extends module_base
 	}
 
 	/**
-	 * Should this install take payments through Checkout Sessions?
-	 *
-	 * Yes, unless the SDK is missing or an admin has deliberately gone back to the old
-	 * flow. The escape hatch exists because 5,000 installs upgrade at once and "there is
-	 * a checkbox" is a better answer to a surprise than "open a support ticket".
+	 * Can this install take payments through Checkout Sessions? Yes when the SDK is there.
 	 *
 	 * @return bool
 	 */
 	public static function use_checkout_sessions() {
-		if ( module_config::c( 'payment_method_stripe_legacy_checkout', 0 ) ) {
-			return false;
-		}
-
 		return self::have_sdk();
 	}
 
@@ -806,17 +806,11 @@ class module_paymethod_stripe extends module_base
 				return self::start_checkout_session( $invoice_id, $payment_amount, $invoice_payment_id, $invoice_payment_data, $description );
 			}
 
-			// The Charges API form. Kept only for an install whose vendor/ folder has not
-			// arrived yet, or whose admin has deliberately switched back. Stripe will not
-			// accept this from an account opened today, and it cannot answer an SCA
-			// challenge, so EEA and UK cards decline on it with no retry path.
-			//self::stripe_redirect($description,$payment_amount,$user_id,$invoice_payment_id,$invoice_id,$invoice_payment_data['currency_id']);
-			$currency      = module_config::get_currency( $invoice_payment_data['currency_id'] );
-			$currency_code = $currency['code'];
-			$template      = new module_template();
-			ob_start();
-			include( module_theme::include_ucm( 'includes/plugin_paymethod_stripe/pages/stripe_form.php' ) );
-			$template->content = ob_get_clean();
+			// Without the Stripe library there is nothing to pay with: the old Charges form is
+			// gone, and Stripe no longer accepts it from newer accounts anyway.
+			$template          = new module_template();
+			$template->content = '<h1>' . htmlspecialchars( $description ) . '</h1><p>' . htmlspecialchars( _l( 'Stripe payments are not available on this site right now. Please choose another payment method, or contact us.' ) ) . '</p>';
+			send_error( 'Stripe payment attempted for invoice payment ' . (int) $invoice_payment_id . ' but the Stripe library (vendor/stripe/stripe-php) is not installed.' );
 			echo $template->render( 'pretty_html' );
 			exit;
 		}
@@ -1034,25 +1028,8 @@ class module_paymethod_stripe extends module_base
 				exit;
 
 			case 'pay':
-				$invoice_id         = isset( $_REQUEST['invoice_id'] ) ? $_REQUEST['invoice_id'] : false;
-				$invoice_payment_id = isset( $_REQUEST['invoice_payment_id'] ) ? $_REQUEST['invoice_payment_id'] : false;
-				if ( $invoice_id && $invoice_payment_id && isset( $_POST['stripeToken'] ) ) {
-
-					$invoice_payment_data = module_invoice::get_invoice_payment( $invoice_payment_id );
-					$invoice_data         = module_invoice::get_invoice( $invoice_id );
-					if ( $invoice_payment_data && $invoice_data && $invoice_id == $invoice_data['invoice_id'] && $invoice_payment_data['invoice_id'] == $invoice_data['invoice_id'] ) {
-						$currency      = module_config::get_currency( $invoice_payment_data['currency_id'] );
-						$currency_code = $currency['code'];
-						$description   = _l( 'Payment for invoice %s', $invoice_data['name'] );
-
-						$template = new module_template();
-						ob_start();
-						include( module_theme::include_ucm( 'includes/plugin_paymethod_stripe/pages/stripe_form.php' ) );
-						$template->content = ob_get_clean();
-						echo $template->render( 'pretty_html' );
-						exit;
-					}
-				}
+				// The old Charges form posted a card token here. That flow is gone; payments
+				// now go through Stripe Checkout, which starts from the invoice page.
 				echo 'Error paying via Stripe';
 				exit;
 		}

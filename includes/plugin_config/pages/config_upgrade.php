@@ -55,6 +55,10 @@ if ( ! isset( $setup_upgrade_hack ) ) {
 	) );
 }
 
+if ( ! isset( $setup_upgrade_hack ) ) {
+	echo ucm_secret_notice_html();
+}
+
 if ( isset( $_REQUEST['save_license_codes'] ) && isset( $_REQUEST['license_codes'] ) && is_array( $_REQUEST['license_codes'] ) ) {
 	$license_codes = '';
 	foreach ( $_REQUEST['license_codes'] as $license_code ) {
@@ -89,13 +93,6 @@ if ( isset( $_REQUEST['process_upgrade'] ) && isset( $_REQUEST['via_ajax'] ) ) {
 
 } elseif ( isset( $_REQUEST['install_upgrade'] ) ) {
 	// installs the latest version of files (all at once - old slow way - not used in new ajax method above)
-
-	if ( ! strlen( trim( module_config::c( '_installation_code' ) ) ) ) {
-		?>
-		Please enter your license code before doing an upgrade.
-		<?php
-		exit;
-	}
 
 	if ( ! isset( $setup_upgrade_hack ) && ( ! isset( $_REQUEST['doupdate'] ) || ! is_array( $_REQUEST['doupdate'] ) ) ) {
 		echo 'please select at least one upgrade to perform';
@@ -299,13 +296,6 @@ if ( isset( $_REQUEST['process_upgrade'] ) && isset( $_REQUEST['via_ajax'] ) ) {
 
 	// checks for any available upgrades, calls the new ajax handler to check each plugin individually.
 
-	if ( ! strlen( trim( module_config::c( '_installation_code' ) ) ) ) {
-		?>
-		Please enter your license code before doing an upgrade.
-		<?php
-		exit;
-
-	}
 	if ( false ) {
 		// todo - check each plugin indivdually via ajax..
 		// display a list of all modules, check each one via ajax.
@@ -566,7 +556,12 @@ if ( isset( $_REQUEST['process_upgrade'] ) && isset( $_REQUEST['via_ajax'] ) ) {
 
 		} else {
 			?>
-			No upgrade available at this time.
+			<?php if ( ! empty( $available_updates['licence_required'] ) ) { ?>
+				<br>
+				<a href="<?php echo htmlspecialchars( _BASE_HREF . '?m=config&p=config_upgrade' ); ?>"><?php _e( 'Enter or change your license code' ); ?></a>
+			<?php } else { ?>
+				No upgrade available at this time.
+			<?php } ?>
 			<br>
 			<?php
 			if ( isset( $setup_upgrade_hack ) ) {
@@ -704,7 +699,7 @@ if ( isset( $_REQUEST['process_upgrade'] ) && isset( $_REQUEST['via_ajax'] ) ) {
 					'message' => '<strong id="ucm_product_version">' . _l( 'You are running Ultimate Client Manager version %s.', htmlspecialchars( module_config::product_version() ) ) . '</strong>',
 				),
 				array(
-					'message' => _l( 'Please insert your license code(s) below to receive upgrades and new features.' ) . ' ' . _hr( 'Your license code can be found from your CodeCanyon downloads page. <a href="%s">Click here</a> for help.', 'http://dtbaker.net/admin/includes/plugin_envato/images/envato-license-code.gif' )
+					'message' => _l( 'Please enter your license code below to receive automated updates and new features.' ) . ' ' . _l( 'Your license code can be found on your CodeCanyon downloads page.' ) . ' ' . _l( 'When you check for updates, your license code and the address of this site are sent to the update server to confirm your purchase. Without a code you can still download the latest version from CodeCanyon and upload it by hand.' )
 				),
 				array(
 					'field' => array(
@@ -731,13 +726,13 @@ if ( isset( $_REQUEST['process_upgrade'] ) && isset( $_REQUEST['via_ajax'] ) ) {
 										// we check if this is a confirmed licence code.
 										// if it is we display the item name, rather than the code.
 										if ( module_config::c( 'upgrade_page_show_extra_info', 1 ) && strlen( $license_code ) > 10 ) {
-											$confirmed = module_config::c( '_licence_code_' . $license_code, false );
+											$confirmed = module_config::c( '_licence_code_' . strtolower( $license_code ), false );
 											if ( $confirmed ) {
 												$foo = explode( '|', $confirmed );
 												?>
 												<div class="dynamic_clear">
 													<small>
-														<?php _e( 'The above license code is for <a href="%s" target="_blank">%s</a> - thanks for purchasing!', $foo[0], $foo[1] ); ?>
+														<?php _e( 'The above license code is for <a href="%s" target="_blank" rel="noopener">%s</a> - thanks for purchasing!', htmlspecialchars( $foo[0] ), htmlspecialchars( isset( $foo[1] ) ? $foo[1] : '' ) ); ?>
 													</small>
 												</div>
 												<?php

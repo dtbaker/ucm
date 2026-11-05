@@ -6,7 +6,9 @@
     "require": {
         "php": "^8.2",
         "ezyang/htmlpurifier": "^4.19",
-        "stripe/stripe-php": "^22.0"
+        "stripe/stripe-php": "^22.0",
+        "dompdf/dompdf": "^3.1",
+        "phpmailer/phpmailer": "^6.9"
     },
     "require-dev": {
         "phpstan/extension-installer": "^1.4",
@@ -23,6 +25,9 @@
         "allow-plugins": {
             "dealerdirect/phpcodesniffer-composer-installer": true,
             "phpstan/extension-installer": true
+        },
+        "platform": {
+            "php": "8.2.0"
         }
     },
     "scripts": {

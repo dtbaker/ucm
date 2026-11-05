@@ -199,7 +199,7 @@ if ( isset( $_REQUEST['search_field'] ) ) {
 			$data_items = $module->get_data_items( $data['data_record_id'] );
 			foreach ( $_REQUEST['search_field'] as $data_field_id => $data_field_value ) {
 				if ( true || isset( $search_fields[ $data_field_id ] ) ) { // todo- choose which fields to search.
-					$settings = isset( $data_items[ $data_field_id ] ) ? @unserialize( $data_items[ $data_field_id ]['data_field_settings'] ) : false;
+					$settings = isset( $data_items[ $data_field_id ] ) ? @unserialize( $data_items[ $data_field_id ]['data_field_settings'], array( 'allowed_classes' => false ) ) : false;
 					if ( is_array( $data_field_value ) ) {
 						if ( ! empty( $settings['field_type'] ) && $settings['field_type'] == 'date' ) {
 							// search based on date from/to
@@ -245,7 +245,7 @@ if ( isset( $_REQUEST['search_field'] ) ) {
 							if ( $data_field_value_value ) {
 								$array_search = true;
 								// search this field!
-								$foo = @unserialize( $data_items[ $data_field_id ]['data_text'] );
+								$foo = @unserialize( $data_items[ $data_field_id ]['data_text'], array( 'allowed_classes' => false ) );
 								if ( $foo ) {
 									$data_items[ $data_field_id ]['data_text'] = $foo;
 								}
@@ -318,7 +318,7 @@ if ( isset( $_REQUEST['search_field'] ) ) {
 								default:
 									// search default (text and stuff)
 									if ( isset( $data_items[ $data_field_id ] ) ) {
-										$foo = @unserialize( $data_items[ $data_field_id ]['data_text'] );
+										$foo = @unserialize( $data_items[ $data_field_id ]['data_text'], array( 'allowed_classes' => false ) );
 										if ( is_array( $foo ) ) {
 
 											if ( ! in_array( $data_field_value, $foo ) ) {
@@ -439,7 +439,7 @@ foreach ( $datas as $table_row_id => $data ) {
 	$table_data_output[ $table_row_id ] = array();
 	foreach ( $list_fields as $data_field_id => $list_field ) {
 		$list_data_items = $module->get_data_items( $data['data_record_id'] );
-		$settings        = @unserialize( $list_data_items[ $list_field['data_field_id'] ]['data_field_settings'] );
+		$settings        = @unserialize( $list_data_items[ $list_field['data_field_id'] ]['data_field_settings'], array( 'allowed_classes' => false ) );
 		if ( ! isset( $settings['field_type'] ) ) {
 			$settings['field_type'] = isset( $list_field['field_type'] ) ? $list_field['field_type'] : false;
 		}
@@ -453,7 +453,7 @@ foreach ( $datas as $table_row_id => $data ) {
 					break;
 			}
 		}
-		$foo = @unserialize( $value );
+		$foo = @unserialize( $value, array( 'allowed_classes' => false ) );
 		if ( is_array( $foo ) ) {
 			$value = $foo;
 		}

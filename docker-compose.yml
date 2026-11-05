@@ -10,6 +10,10 @@ services:
     environment:
       - APACHE_DOCUMENT_ROOT=/var/www/html
       - UCM_DEBUG=1
+      # The update server in this container checks purchase codes against a stand-in for
+      # Envato's author API. See tests/e2e/fixtures/envato-stub.php.
+      - UCM_ENVATO_TOKEN=e2e-token
+      - UCM_ENVATO_API_URL=http://localhost/tests/e2e/fixtures/envato-stub.php
       # Demo chrome off unless asked for. ./scripts/demo-mode.sh on flips it.
       - UCM_DEMO_MODE=${UCM_DEMO_MODE:-0}
       # Follows demo mode unless set. Listed so the override actually reaches PHP - a

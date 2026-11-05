@@ -184,13 +184,37 @@ class module_ticket extends module_base
 		return __CLASS__;
 	}
 
+	/**
+	 * A random throwaway password for a user created from a ticket.
+	 *
+	 * The person never sees it, they reset it or log in with the link in their email, but it is
+	 * still a real login password, so it comes from random_int() (the system CSPRNG) rather than
+	 * a hash of the clock. Letters and digits only, so it is safe in any form field or email.
+	 *
+	 * @param int $length Number of characters, never fewer than 10.
+	 *
+	 * @return string
+	 */
+	public static function generate_password( $length = 12 ) {
+		$alphabet = 'abcdefghijklmnopqrstuvwxyz0123456789';
+		$max      = strlen( $alphabet ) - 1;
+		$password = '';
+		for ( $i = max( 10, (int) $length ); $i > 0; $i-- ) {
+			$password .= $alphabet[ random_int( 0, $max ) ];
+		}
+
+		return $password;
+	}
+
 	public function __construct() {
 		$this->module_name     = 'ticket';
 		$this->module_position = 530;
-		$this->version         = 2.506;
+		$this->version         = 2.508;
 	}
 
 	public function init() {
+		// 2.508 - 2026-11-02 - users created from a ticket get a random password, not a hash of the clock
+		// 2.507 - 2026-11-02 - stored ticket headers and options never rebuild objects when read back
 		// 2.506 - 2026-10-22 - saves and the bulk actions check the permission the ticket pages ask for
 		$this->links       = array();
 		$this->ticket_types = array();
@@ -727,7 +751,7 @@ Thanks,
 							if ( $envato_ticket && $envato_ticket['envato_ticket_id'] ) {
 								if ( isset( $all_items_rel[ $envato_ticket['envato_item_id'] ] ) && $envato_ticket['envato_author_id'] ) {
 									$envato_author    = get_single( 'envato_author', 'envato_author_id', $envato_ticket['envato_author_id'] );
-									$buys             = @unserialize( $envato_author['purchase_history'] );
+									$buys             = @unserialize( $envato_author['purchase_history'], array( 'allowed_classes' => false ) );
 									$purchase_history = array();
 									foreach ( $buys as $buy ) {
 										$purchase_history[] = $buy;
@@ -999,7 +1023,7 @@ Thanks,
 								'customer_id' => $default_customer_id,
 								'email'       => $email,
 								'status_id'   => 1,
-								'password'    => substr( md5( time() . mt_rand( 0, 600 ) ), 3, 7 ),
+								'password'    => self::generate_password(),
 							);
 							global $plugins;
 							$from_user_id = $plugins['user']->create_user( $from_user );
@@ -1056,7 +1080,7 @@ Thanks,
 
 						// set the default group if one exists for this particular ticket type.
 						if ( $ticket_id && isset( $public_types[ $ticket_type_id ] ) && ! empty( $public_types[ $ticket_type_id ]['default_groups'] ) ) {
-							$default_groups = @unserialize( $public_types[ $ticket_type_id ]['default_groups'] );
+							$default_groups = @unserialize( $public_types[ $ticket_type_id ]['default_groups'], array( 'allowed_classes' => false ) );
 							if ( is_array( $default_groups ) && count( $default_groups ) ) {
 								foreach ( $default_groups as $group_id ) {
 									module_group::add_to_group( $group_id, $ticket_id, 'ticket' );
@@ -2868,7 +2892,7 @@ Thanks,
 		$email->set_to( 'user', $to_user_id );
 
 
-		$headers = @unserialize( $last_ticket_message['cache'] );
+		$headers = @unserialize( $last_ticket_message['cache'], array( 'allowed_classes' => false ) );
 		if ( ! is_array( $headers ) ) {
 			$headers = array();
 		}
@@ -3043,7 +3067,7 @@ Thanks,
 		//$email->set_from('user',$from_user_id);
 		//$email->set_from('foo','foo',$to,'Admin');
 
-		$headers = $last_message ? @unserialize( $last_message['cache'] ) : false;
+		$headers = $last_message ? @unserialize( $last_message['cache'], array( 'allowed_classes' => false ) ) : false;
 
 		if ( $allow_to_cc_bcc && $headers && is_array( $headers ) ) {
 			// we're right to do our cc/bcc hack
@@ -3540,7 +3564,7 @@ Thanks,
 										'customer_id' => $account['default_customer_id'],
 										'email'       => $from_address,
 										'status_id'   => 1,
-										'password'    => substr( md5( time() . mt_rand( 0, 600 ) ), 3 ),
+										'password'    => self::generate_password(),
 									);
 									global $plugins;
 									$from_user_id                   = $plugins['user']->create_user( $from_user, 'support' );
@@ -3551,7 +3575,7 @@ Thanks,
 										'customer_id' => - 1, // instead of 0, use -1.
 										'email'       => $from_address,
 										'status_id'   => 1,
-										'password'    => substr( md5( time() . mt_rand( 0, 600 ) ), 3 ),
+										'password'    => self::generate_password(),
 									);
 									global $plugins;
 									$from_user_id                   = $plugins['user']->create_user( $from_user, 'support' );
@@ -3627,7 +3651,7 @@ Thanks,
 										$past_ticket_messages = self::get_ticket_messages( $existing_ticket['ticket_id'], true );
 										//foreach($past_ticket_messages as $past_ticket_message){
 										while ( $past_ticket_message = mysqli_fetch_assoc( $past_ticket_messages ) ) {
-											$past_header_cache = @unserialize( $past_ticket_message['cache'] );
+											$past_header_cache = @unserialize( $past_ticket_message['cache'], array( 'allowed_classes' => false ) );
 											$past_to_temp      = array();
 											if ( $past_ticket_message['to_user_id'] ) {
 												$past_to_temp = module_user::get_user( $past_ticket_message['to_user_id'], false );
@@ -3751,7 +3775,7 @@ Thanks,
 								$ticket_id = update_insert( 'ticket_id', 'new', 'ticket', $new_ticket_data );
 								// set the default group if one exists for this particular ticket type.
 								if ( $ticket_id && $ticket_type_id && isset( $ticket_types[ $ticket_type_id ] ) && ! empty( $ticket_types[ $ticket_type_id ]['default_groups'] ) ) {
-									$default_groups = @unserialize( $ticket_types[ $ticket_type_id ]['default_groups'] );
+									$default_groups = @unserialize( $ticket_types[ $ticket_type_id ]['default_groups'], array( 'allowed_classes' => false ) );
 									if ( is_array( $default_groups ) && count( $default_groups ) ) {
 										foreach ( $default_groups as $group_id ) {
 											module_group::add_to_group( $group_id, $ticket_id, 'ticket' );

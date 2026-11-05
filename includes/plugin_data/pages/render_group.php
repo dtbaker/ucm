@@ -16,9 +16,9 @@ if ( ! isset( $mode ) ) {
 if ( $current_revision && $view_revision_id ) {
 	// user wants a custom revision, we pull out the custom $data_field_groups
 	// and we tell the form layout to use the serialized cached field layout information
-	$data_field_groups = unserialize( $current_revision['field_group_cache'] );
+	$data_field_groups = unserialize( $current_revision['field_group_cache'], array( 'allowed_classes' => false ) );
 	$data_field_group  = $data_field_groups[ $data_field_group_id ];
-	$all_data_fields   = unserialize( $current_revision['field_cache'] );
+	$all_data_fields   = unserialize( $current_revision['field_cache'], array( 'allowed_classes' => false ) );
 	if ( isset( $all_data_fields[ $data_field_group_id ] ) ) {
 		$data_fields = $all_data_fields[ $data_field_group_id ];
 	} else {

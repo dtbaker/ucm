@@ -36,7 +36,7 @@ class module_security extends module_base
 	public function __construct() {
 		$this->module_name     = 'security';
 		$this->module_position = 50;
-		$this->version         = 2.529;
+		$this->version         = 2.530;
 	}
 
 	/**
@@ -56,6 +56,7 @@ class module_security extends module_base
 	}
 
 	public function init() {
+		// 2.530 - 2026-11-02 - stored values are read without instantiating objects
 		// 2.529 - 2026-10-22 - ending a session checks the permission to edit settings
 		$this->links          = array();
 		$this->security_types = array();
@@ -277,7 +278,7 @@ class module_security extends module_base
 			foreach ( self::$perms_cache as $ps ) {
 				if ( $ps['name'] == $access_requirements['name'] && $ps['category'] == $access_requirements['category'] && $ps['module'] == $access_requirements['module'] ) {
 					$security_permission_id = $ps['security_permission_id'];
-					$available_perms        = @unserialize( $ps['available_perms'] );
+					$available_perms        = @unserialize( $ps['available_perms'], array( 'allowed_classes' => false ) );
 					if ( ! is_array( $available_perms ) ) {
 						$available_perms = array();
 					}
@@ -300,7 +301,7 @@ class module_security extends module_base
 				) );
 				if ( $existing ) {
 					$security_permission_id = $existing['security_permission_id'];
-					$available_perms        = @unserialize( $existing['available_perms'] );
+					$available_perms        = @unserialize( $existing['available_perms'], array( 'allowed_classes' => false ) );
 					if ( ! is_array( $available_perms ) ) {
 						$available_perms = array();
 					}
@@ -690,7 +691,14 @@ class module_security extends module_base
 		//return (self::getcred() && isset($_SESSION['_access_level'])) ? $_SESSION['_access_level'] : false;
 	}*/
 	public static function get_data_access() {
-		return ( self::getcred() && isset( $_SESSION['_data_access'] ) && $_SESSION['_data_access'] ) ? unserialize( $_SESSION['_data_access'] ) : array();
+		if ( self::getcred() && isset( $_SESSION['_data_access'] ) && is_string( $_SESSION['_data_access'] ) && $_SESSION['_data_access'] ) {
+			// A session value that is not a plain array must never turn into an object.
+			$access = @unserialize( $_SESSION['_data_access'], array( 'allowed_classes' => false ) );
+
+			return is_array( $access ) ? $access : array();
+		}
+
+		return array();
 	}
 
 	// this is used when filtering out customers from the system.
@@ -1087,7 +1095,7 @@ class module_security extends module_base
 						$available_perms        = array();
 						if ( $existing ) {
 							$security_permission_id = $existing['security_permission_id'];
-							$available_perms        = @unserialize( $existing['available_perms'] );
+							$available_perms        = @unserialize( $existing['available_perms'], array( 'allowed_classes' => false ) );
 							if ( ! is_array( $available_perms ) ) {
 								$available_perms = array();
 							}

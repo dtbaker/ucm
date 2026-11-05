@@ -82,6 +82,15 @@ if ( ! defined( '_UCM_SECRET' ) && $ucm_secret_env !== '' ) {
 unset( $ucm_secret_env );
 if ( ! defined( '_UCM_SECRET' ) ) {
 	define( '_UCM_SECRET', _UCM_FOLDER );
+	// Tells the rest of the app (and a future admin notice) that the secret is just the
+	// install path. It is not replaced automatically: every public link UCM has already
+	// emailed or stored - invoice, quote, file, newsletter and calendar links, the cron.php
+	// link, backup downloads and the hash PayPal sends back for a running subscription - is
+	// signed with this value, so a new one would break all of them at once.
+	define( '_UCM_SECRET_IS_INSTALL_PATH', true );
+}
+if ( ! defined( '_UCM_SECRET_IS_INSTALL_PATH' ) ) {
+	define( '_UCM_SECRET_IS_INSTALL_PATH', false );
 }
 
 define( "_EXTERNAL_TUNNEL", 'ext.php' );

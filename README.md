@@ -138,6 +138,25 @@ quotes. Every release:
 5. Update the changelog, build with `./scripts/build-release.sh --verify`, and run
    [docs/local-upgrade-test.md](docs/local-upgrade-test.md) against the build.
 
+### Deploying the update server
+
+The installation that answers update requests (the one buyers' `ucm_upgrade_url` points at,
+running `includes/plugin_config/upgrade_server.php`) only serves buyers: the in-app update
+check sends the licence code and the site address, and the server asks Envato whether the
+code is a sale of this item. That needs an Envato personal token with the **View your
+items' sales history** permission, created at <https://build.envato.com/create-token/>.
+Give it to the server as `_UCM_ENVATO_TOKEN` in its `includes/config.php`
+(`define( '_UCM_ENVATO_TOKEN', '...' );`; `includes/config.local.php` works too and is not
+replaced by a deploy) or as `UCM_ENVATO_TOKEN` in its environment. Without a token the server
+cannot check anything, so every update request is answered "could not be checked". Results
+are cached per code (a day for a good code, an hour for a bad one, and a good code keeps
+working through an Envato outage for 30 days), so Envato is not asked on every request.
+The one-file installer's zip (`return_base_system_in_zip`, which `ucm-web/api/download_zip.php`
+requests) needs a valid code in the same way. A manual install, from GitHub or from the
+CodeCanyon download, never contacts the server and needs no code.
+Never commit the token, and never use a real one in a test environment: the local test in
+[docs/local-upgrade-test.md](docs/local-upgrade-test.md) uses a stand-in for Envato's API.
+
 ## Upgrading
 
 See the [upgrade guide](https://ultimateclientmanager.com/docs/install/upgrading/) for

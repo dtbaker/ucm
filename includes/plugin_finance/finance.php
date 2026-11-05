@@ -17,8 +17,9 @@ class module_finance extends module_base
 	public function __construct() {
 		$this->module_name     = 'finance';
 		$this->module_position = 210;
-		$this->version         = 2.313;
+		$this->version         = 2.314;
 	}
+	// 2.314 - 2026-11-02 - stored values are read without instantiating objects
 	// 2.312 - 2026-10-17 - 4.0.0 relaunch: transactions carry a sub total for the tax report, security token, escaped columns
 	// 2.311 - 2017-06-14 - tax report fixes
 	// 2.310 - 2017-05-02 - big changes
@@ -805,7 +806,7 @@ class module_finance extends module_base
 			}
 
 			if ( isset( $invoice_payment_data['data'] ) && strlen( $invoice_payment_data['data'] ) ) {
-				$details = @unserialize( $invoice_payment_data['data'] );
+				$details = @unserialize( $invoice_payment_data['data'], array( 'allowed_classes' => false ) );
 				if ( $details && isset( $details['custom_notes'] ) && strlen( $details['custom_notes'] ) ) {
 					$invoice_payment_data['description'] .= " \n(" . $details['custom_notes'] . ')';
 				}
@@ -1234,7 +1235,7 @@ class module_finance extends module_base
 				// we have a job with staff expenses. split this up into gruops based on staff members.
 				$staff_total_grouped = false;
 				if ( isset( $finance['c_staff_total_grouped'] ) && strlen( $finance['c_staff_total_grouped'] ) ) {
-					$staff_total_grouped = @unserialize( $finance['c_staff_total_grouped'] );
+					$staff_total_grouped = @unserialize( $finance['c_staff_total_grouped'], array( 'allowed_classes' => false ) );
 				}
 				if ( $staff_total_grouped === false ) {
 					//	                echo 'here: ';

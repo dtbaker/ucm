@@ -22,10 +22,11 @@ class module_subscription extends module_base
 	public function __construct() {
 		$this->module_name     = 'subscription';
 		$this->module_position = 30;
-		$this->version         = 2.206;
+		$this->version         = 2.207;
 	}
 
 	public function init() {
+		// 2.207 - 2026-11-02 - stored values are read without instantiating objects
 		// 2.206 - 2026-10-22 - saves check the permission the subscription page asks for
 		$this->links              = array();
 		$this->subscription_types = array();
@@ -1404,7 +1405,7 @@ class module_subscription extends module_base
 				// pull in any custom payment notes from the invoice page
 				$notes = '';
 				if ( isset( $full_finance_item['data'] ) && strlen( $full_finance_item['data'] ) ) {
-					$details = @unserialize( $full_finance_item['data'] );
+					$details = @unserialize( $full_finance_item['data'], array( 'allowed_classes' => false ) );
 					if ( $details && isset( $details['custom_notes'] ) && strlen( $details['custom_notes'] ) ) {
 						$notes = " \n(" . $details['custom_notes'] . ')';
 					}

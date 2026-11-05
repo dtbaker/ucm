@@ -32,7 +32,7 @@ if ( isset( $_REQUEST['ticket_data_key_id'] ) && $_REQUEST['ticket_data_key_id']
 		<?php
 		$options_value = '';
 		if ( $ticket_data_key['type'] == 'select' && isset( $ticket_data_key['options'] ) && $ticket_data_key['options'] ) {
-			$options_arr = unserialize( $ticket_data_key['options'] );
+			$options_arr = unserialize( $ticket_data_key['options'], array( 'allowed_classes' => false ) );
 			if ( is_array( $options_arr ) ) {
 				foreach ( $options_arr as $key => $val ) {
 					if ( ! strlen( $val ) ) {

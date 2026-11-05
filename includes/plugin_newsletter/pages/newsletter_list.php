@@ -173,7 +173,7 @@ print_heading( $header );
 			$newsletter['send_data'] = module_newsletter::get_send( $newsletter['send_id'] );
 			// special cache for old newsletter subject.
 			if ( isset( $newsletter['send_data']['cache'] ) && strlen( $newsletter['send_data']['cache'] ) > 1 ) {
-				$cache = unserialize( $newsletter['send_data']['cache'] );
+				$cache = unserialize( $newsletter['send_data']['cache'], array( 'allowed_classes' => false ) );
 				if ( $cache ) {
 					$newsletter = array_merge( $newsletter, $cache );
 				}

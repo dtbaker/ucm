@@ -26,7 +26,7 @@ class module_data extends module_base
 	public function __construct() {
 		$this->module_name     = 'data';
 		$this->module_position = 150;
-		$this->version         = 2.187;
+		$this->version         = 2.188;
 	}
 
 	public static function can_i( $actions, $name = false, $category = false, $module = false ) {
@@ -744,7 +744,7 @@ class module_data extends module_base
 									$_FILES['data_field']['tmp_name'][ $data_field_id ] = array( $_FILES['data_field']['tmp_name'][ $data_field_id ] );
 									$_FILES['data_field']['name'][ $data_field_id ]     = array( $_FILES['data_field']['name'][ $data_field_id ] );
 								}
-								$previous_files = isset( $previous_data_items[ $data_field_id ]['data_text'] ) ? @unserialize( $previous_data_items[ $data_field_id ]['data_text'] ) : array();
+								$previous_files = isset( $previous_data_items[ $data_field_id ]['data_text'] ) ? @unserialize( $previous_data_items[ $data_field_id ]['data_text'], array( 'allowed_classes' => false ) ) : array();
 								if ( ! is_array( $previous_files ) ) {
 									$previous_files = array();
 								}
@@ -855,7 +855,7 @@ class module_data extends module_base
 						$_FILES['data_field']['tmp_name'][ $data_field_id ] = array( $_FILES['data_field']['tmp_name'][ $data_field_id ] );
 						$_FILES['data_field']['name'][ $data_field_id ]     = array( $_FILES['data_field']['name'][ $data_field_id ] );
 					}
-					$previous_files = isset( $previous_data_items[ $data_field_id ]['data_text'] ) ? @unserialize( $previous_data_items[ $data_field_id ]['data_text'] ) : array();
+					$previous_files = isset( $previous_data_items[ $data_field_id ]['data_text'] ) ? @unserialize( $previous_data_items[ $data_field_id ]['data_text'], array( 'allowed_classes' => false ) ) : array();
 					if ( ! is_array( $previous_files ) ) {
 						$previous_files = array();
 					}
@@ -1367,7 +1367,7 @@ class module_data extends module_base
 		if ( isset( $element['multiple'] ) && $element['multiple'] ) {
 			$element['multiple'] = true;
 			// pass 'multiple' through to the UCM form builder which should handle everything
-			$value_unserialize = @unserialize( $element['value'] );
+			$value_unserialize = @unserialize( $element['value'], array( 'allowed_classes' => false ) );
 			if ( is_array( $value_unserialize ) ) {
 				if ( $element['type'] == 'file' && isset( $value_unserialize['file'] ) && $value_unserialize['name'] ) {
 					$value_unserialize = array( $value_unserialize );
@@ -1387,7 +1387,7 @@ class module_data extends module_base
 			$all_values = array( $element['value'] );
 		}
 		if ( $element['type'] == 'checkbox_list' ) {
-			$test = @unserialize( $element['value'] );
+			$test = @unserialize( $element['value'], array( 'allowed_classes' => false ) );
 			if ( is_array( $test ) && count( $test ) ) {
 				$all_values = array( $test );
 			} else {
@@ -1503,7 +1503,7 @@ class module_data extends module_base
 							if ( is_array( $value ) ) {
 								$file_data = $value;
 							} else {
-								$file_data = @unserialize( $value );
+								$file_data = @unserialize( $value, array( 'allowed_classes' => false ) );
 							}
 							$file_link = _UCM_FILE_STORAGE_DIR . 'includes/plugin_data/upload/' . basename( $file_data['file'] );
 							if ( is_file( $file_link ) ) {
@@ -1701,7 +1701,7 @@ class module_data extends module_base
 							}
 						} else {
 							if ( $value && ! is_array( $value ) ) {
-								$value_temp = unserialize( $value );
+								$value_temp = unserialize( $value, array( 'allowed_classes' => false ) );
 							} elseif ( is_array( $value ) ) {
 								$value_temp = $value;
 							} else {
@@ -1838,7 +1838,7 @@ class module_data extends module_base
 				if ( hash_equals( $real_hash, $hash ) ) {
 					$data = self::get_data_items( $data_record_id );
 					if ( $data && isset( $data[ $data_field_id ] ) ) {
-						$file_data = @unserialize( $data[ $data_field_id ]['data_text'] );
+						$file_data = @unserialize( $data[ $data_field_id ]['data_text'], array( 'allowed_classes' => false ) );
 						if ( count( $file_data ) && ! isset( $file_data['file'] ) && isset( $file_data[ $value_key ]['file'] ) ) {
 							$file_data = $file_data[ $value_key ];
 						}
@@ -1976,7 +1976,7 @@ class module_data extends module_base
 					// this is used in the 'extra' plugin to get more data through to the invoice
 					$return = array();
 					foreach ( $data_items as $data_item ) {
-						$settings = @unserialize( $data_item['data_field_settings'] );
+						$settings = @unserialize( $data_item['data_field_settings'], array( 'allowed_classes' => false ) );
 						if ( $settings && ! empty( $settings['title'] ) ) {
 							$return[ $settings['title'] ] = $data_item['data_text'];
 						}

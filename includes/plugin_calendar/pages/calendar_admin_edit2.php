@@ -19,7 +19,7 @@ $base_path = _BASE_HREF . 'includes/plugin_calendar/wdCalendar/';
             var date;
             if (typeof (idate) == "string") {
                 date = idate.split(/\D/);
-                eval("var date = new Date(" + date.join(",") + ")");
+                date = new (Function.prototype.bind.apply(Date, [null].concat(date)))();
             }
             if (typeof (idate) == "object") {
                 date = new Date(idate.toString());

@@ -29,6 +29,7 @@ if ( ! defined( '_UCM_FOLDER' ) ) {
 }
 
 require_once _UCM_FOLDER . 'includes/plugin_config/class.upgrade_server.php';
+require_once _UCM_FOLDER . 'includes/plugin_config/class.licence_check.php';
 
 if ( ! defined( '_UCM_UPGRADE_SERVER' ) && ! module_config::c( 'upgrade_server_enabled', 0 ) ) {
 	if ( ! headers_sent() ) {
@@ -112,9 +113,38 @@ function ucm_upgrade_server_respond() {
 	$client_release = ucm_upgrade_server::client_release( isset( $_REQUEST['release_version'] ) ? $_REQUEST['release_version'] : null );
 	$server_release = defined( '_SCRIPT_VERSION' ) ? (string) _SCRIPT_VERSION : '';
 
+	// Updates are for installations with a CodeCanyon purchase code. Everything below this
+	// point hands out files, so a request without a valid one stops here with a message the
+	// client shows. See ucm_licence_check.
+	$licence_cache_directory = module_config::c( 'upgrade_server_licence_cache_dir', '' );
+	if ( ! $licence_cache_directory ) {
+		$licence_cache_directory = rtrim( sys_get_temp_dir(), '/' ) . '/ucm-licence-cache';
+	}
+	$licence = ucm_licence_check::check(
+		ucm_licence_check::codes_from_request( isset( $_REQUEST['installation_code'] ) ? $_REQUEST['installation_code'] : '' ),
+		null,
+		$licence_cache_directory
+	);
+	if ( ucm_licence_check::VALID !== $licence['status'] ) {
+		if ( ! headers_sent() ) {
+			header( 'Content-Type: application/json; charset=utf-8' );
+		}
+		// A JSON body built from fixed strings; the request only picks which of them. The
+		// status is mapped onto the class constants here so that no request value reaches the
+		// output, which is also what lets a scanner see it.
+		$refusal_status = ucm_licence_check::NONE === $licence['status']
+			? ucm_licence_check::NONE
+			: ( ucm_licence_check::INVALID === $licence['status'] ? ucm_licence_check::INVALID : ucm_licence_check::UNAVAILABLE );
+		echo json_encode( ucm_licence_check::refusal( $refusal_status, true === $return_base_system_in_zip ) );
+
+		return;
+	}
+
 	// The old one-file installer, and ucm-web/api/download_zip.php: the whole product in one
 	// zip, so a site installed from it is the same as one unzipped from CodeCanyon. It is
-	// built from the release's own file list, and nothing below applies to it.
+	// built from the release's own file list, and nothing below applies to it. Only a valid
+	// licence code gets this far; someone without one installs by hand from GitHub or
+	// CodeCanyon.
 	if ( $return_base_system_in_zip ) {
 		ucm_upgrade_server_send_release_zip( $root, $application );
 
@@ -130,7 +160,7 @@ function ucm_upgrade_server_respond() {
 
 	// The release file list, when this server was deployed from a built release. Plugin
 	// rows are built from it so that nothing the server wrote into a plugin folder at run
-	// time - dompdf's font caches, say - is offered to clients as part of the plugin.
+	// time - a cache file, say - is offered to clients as part of the plugin.
 	$release_manifest = ucm_upgrade_server::release_manifest( $root );
 
 	$plugin_list = is_array( $plugins ) ? $plugins : array();
@@ -332,7 +362,7 @@ function ucm_upgrade_server_respond() {
 			'plugins'     => $update_plugins,
 			'check_again' => $check_again_for_updates,
 		),
-		'licence_codes'     => array(),
+		'licence_codes'     => $licence['codes'],
 	);
 
 	if ( ! headers_sent() ) {

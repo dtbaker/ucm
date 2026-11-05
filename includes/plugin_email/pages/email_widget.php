@@ -31,7 +31,7 @@ ob_start();
 			<tr>
 				<td><?php echo print_date( $n['sent_time'] ); ?></td>
 				<td><?php echo htmlspecialchars( $n['subject'] ); ?></td>
-				<td><?php $headers = unserialize( $n['headers'] );
+				<td><?php $headers = unserialize( $n['headers'], array( 'allowed_classes' => false ) );
 					if ( isset( $headers['to'] ) && is_array( $headers['to'] ) ) {
 						foreach ( $headers['to'] as $to ) {
 							echo $to['email'] . ' ';

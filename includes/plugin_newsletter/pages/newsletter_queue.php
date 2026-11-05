@@ -52,7 +52,7 @@ while ( $send_member = mysqli_fetch_assoc( $send_members ) ) {
 		$first_newsletter_member_id = $send_member['newsletter_member_id'];
 	}
 	if ( isset( $send_member['data_cache'] ) && strlen( $send_member['data_cache'] ) > 1 ) {
-		$cache = unserialize( $send_member['data_cache'] );
+		$cache = unserialize( $send_member['data_cache'], array( 'allowed_classes' => false ) );
 		if ( $cache ) {
 			// we have extra fields! woo!
 			foreach ( $cache as $key => $val ) {
@@ -130,7 +130,7 @@ if ( isset( $_REQUEST['f'] ) && is_array( $_REQUEST['f'] ) ) {
 						$x = 0;
 						// list all members from thsi send.
 						foreach ( $send_members_pagination['rows'] as $send_member ) {
-							$cache = unserialize( $send_member['data_cache'] );
+							$cache = unserialize( $send_member['data_cache'], array( 'allowed_classes' => false ) );
 							?>
 							<tr class="<?php echo $x++ % 2 ? 'odd' : 'even'; ?>">
 								<td><?php echo htmlspecialchars( $send_member['company_name'] ); ?></td>

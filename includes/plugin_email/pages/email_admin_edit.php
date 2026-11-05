@@ -43,7 +43,7 @@ if ( $bcc_option = module_config::c( 'email_bcc', 1 ) ) {
 	$bcc = '';
 }
 
-$headers = @unserialize( $email['headers'] );
+$headers = @unserialize( $email['headers'], array( 'allowed_classes' => false ) );
 
 if ( $current_template && ! $email_id ) {
 	$template = module_template::get_template_by_key( $current_template );
@@ -287,7 +287,7 @@ $options = module_email::get_email_compose_options( $options );
 							foreach ( $datas as $data ) {
 								$list_data_items = $plugins['data']->get_data_items( $data['data_record_id'] );
 								foreach ( $list_fields as $list_field ) {
-									$settings = @unserialize( $list_data_items[ $list_field['data_field_id'] ]['data_field_settings'] );
+									$settings = @unserialize( $list_data_items[ $list_field['data_field_id'] ]['data_field_settings'], array( 'allowed_classes' => false ) );
 									if ( ! isset( $settings['field_type'] ) ) {
 										$settings['field_type'] = isset( $list_field['field_type'] ) ? $list_field['field_type'] : false;
 									}

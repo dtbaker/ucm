@@ -190,8 +190,11 @@ if ( isset( $_REQUEST['extra_default_id'] ) && $_REQUEST['extra_default_id'] ) {
 				// load the full customer data before displaying each row so we have access to more details
 				$row_data['id']   = $row_data['owner_table'] . ' #' . $row_data['owner_id'];
 				$row_data['name'] = 'N/A';
-				if ( is_callable( 'module_' . basename( $row_data['owner_table'] ) . '::link_open' ) && $row_data['owner_id'] ) {
-					eval( "\$row_data['name'] = module_" . basename( $row_data['owner_table'] ) . "::link_open(" . $row_data['owner_id'] . ",true);" );
+				if ( $row_data['owner_id'] ) {
+					$owner_link = module_base::call_link_open( basename( $row_data['owner_table'] ), (int) $row_data['owner_id'], true );
+					if ( false !== $owner_link ) {
+						$row_data['name'] = $owner_link;
+					}
 				}
 				$row_data['created'] = '';
 				if ( $row_data['create_user_id'] ) {

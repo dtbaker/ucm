@@ -17,6 +17,8 @@ if ( class_exists( 'module_security', false ) ) {
 }
 $module->page_title = 'System Settings';
 
+echo ucm_secret_notice_html();
+
 print_heading( array(
 		'title' => 'Basic System Settings',
 		'type'  => 'h2',

@@ -138,6 +138,43 @@ function ucm_password_verify( $password, $hash, $user_id = null ) {
 }
 
 /**
+ * A warning for the pages an administrator sees after an upgrade, when the install's
+ * secret is only its folder path.
+ *
+ * Every emailed invoice, quote, file and unsubscribe link, the cron link and PayPal's
+ * subscription callback are signed with the secret, and the install path is easy to guess
+ * on shared hosting. A new install gets a random one when it is set up. An older one
+ * keeps the path, because changing it for them would break every link they have already
+ * sent, so they are asked to do it knowingly.
+ *
+ * @param bool|null $is_install_path Whether the secret is the install path; the app's own setting when null.
+ * @param bool|null $is_demo         Whether this is the public demo; the app's own setting when null.
+ *
+ * @return string HTML, or an empty string when there is nothing to say.
+ */
+function ucm_secret_notice_html( $is_install_path = null, $is_demo = null ) {
+	if ( null === $is_install_path ) {
+		// Read from the secret itself, not from a flag set in config.php: an in-app update
+		// never replaces config.php, so a flag defined there would be missing after one.
+		$is_install_path = defined( '_UCM_SECRET' ) && defined( '_UCM_FOLDER' ) && _UCM_SECRET === _UCM_FOLDER;
+	}
+	if ( null === $is_demo ) {
+		$is_demo = defined( '_DEMO_MODE' ) && _DEMO_MODE;
+	}
+	if ( ! $is_install_path || $is_demo ) {
+		return '';
+	}
+
+	return '<div class="warning"><strong>' . htmlspecialchars( _l( 'Set a private secret for this site' ) ) . '</strong><br>'
+	       . htmlspecialchars( _l( 'Links in emails you send, and the cron link, are signed with a secret that is currently just the folder this site is installed in. Anyone who can guess that folder could make links of their own.' ) )
+	       . ' ' . htmlspecialchars( _l( 'To fix it, add a line like' ) )
+	       . ' <code>define( \'_UCM_SECRET\', \'a-long-random-string\' );</code> '
+	       . htmlspecialchars( _l( 'to includes/config.local.php.' ) ) . ' '
+	       . htmlspecialchars( _l( 'Doing this stops every link you have already emailed (invoices, quotes, files, unsubscribe links), your cron link and PayPal subscription callbacks from working, so update the cron link and expect old links to be refused.' ) )
+	       . '</div>';
+}
+
+/**
  * Is this stored value the password the install shipped with, rather than a real one?
  *
  * Any password that has actually been set is stored as a hash, so the literal string is
@@ -1069,9 +1106,33 @@ function print_header_message_popdown() {
 }
 
 
+/**
+ * A copy of request data that is safe to put in an email: anything that looks like a
+ * password, token, key, secret, cookie or card number is replaced, at any depth.
+ *
+ * @param mixed $data
+ *
+ * @return mixed
+ */
+function ucm_redact_for_email( $data ) {
+	if ( ! is_array( $data ) ) {
+		return $data;
+	}
+	$clean = array();
+	foreach ( $data as $key => $value ) {
+		if ( is_string( $key ) && preg_match( '/pass|secret|token|cookie|auth|key|hash|card|cvv|signature/i', $key ) ) {
+			$clean[ $key ] = '[removed]';
+		} else {
+			$clean[ $key ] = ucm_redact_for_email( $value );
+		}
+	}
+
+	return $clean;
+}
+
 function send_error( $message ) {
 	//echo $message;exit;
-	mail( _ERROR_EMAIL, "Admin System Notification (" . date( "Y-m-d H:i:s" ) . ")", $message . "\n\n" . var_export( $_REQUEST, true ) . "\n\n" . var_export( $_SERVER, true ) );
+	mail( _ERROR_EMAIL, "Admin System Notification (" . date( "Y-m-d H:i:s" ) . ")", $message . "\n\n" . var_export( ucm_redact_for_email( $_REQUEST ), true ) . "\n\n" . var_export( ucm_redact_for_email( $_SERVER ), true ) );
 }
 
 

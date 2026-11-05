@@ -88,7 +88,7 @@ if ( ! $template ) {
 	$restore_default_html .= '<li><strong>{XXXX+4d} or {XXXX+2m}</strong> - ' . _l( 'If XXXX is a date field, perform basic date arithmetic such as plus 4 days or plus 2 months.' ) . '</li>';
 	$restore_default_html .= '<li><strong>{XXXX-m}</strong> - ' . _l( 'If XXXX is a date field, only output the m/month portion of it. Possible values: ymdYMDjlSWFn' ) . '</li>';
 	$restore_default_html .= '<li><strong>{DAY} or {MONTH} or {YEAR}</strong> - ' . _l( 'Output the current day, month or year.' ) . '</li>';
-	if ( isset( $template['tags'] ) && strlen( $template['tags'] ) && $tags = @unserialize( $template['tags'] ) ) {
+	if ( isset( $template['tags'] ) && strlen( $template['tags'] ) && $tags = @unserialize( $template['tags'], array( 'allowed_classes' => false ) ) ) {
 		$restore_default_html .= '<li>' . _l( 'Available Template Tags:' ) . '</li>';
 		foreach ( $tags as $key => $val ) {
 			$restore_default_html .= '<li><strong>{' . htmlspecialchars( $key ) . '}</strong>';

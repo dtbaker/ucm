@@ -11,7 +11,7 @@ class module_config extends module_base
 	public function __construct() {
 		$this->module_name     = 'config';
 		$this->module_position = 40;
-		$this->version         = 2.437;
+		$this->version         = 2.439;
 	}
 
 	public static function can_i( $actions, $name = false, $category = false, $module = false ) {
@@ -956,6 +956,24 @@ public static function js_combine($version, $reinit=false){
 		return false;
 	}
 
+	/**
+	 * The licence code(s) to send with an update check, joined with "|", or an empty string.
+	 *
+	 * The setting holds a placeholder on installs made from the installer database script,
+	 * which is not a code.
+	 */
+	public static function licence_code_for_updates() {
+		$codes = array();
+		foreach ( explode( '|', (string) module_config::c( '_installation_code', '' ) ) as $code ) {
+			$code = trim( $code );
+			if ( strlen( $code ) && 'UCM_LICENCE_CODES_GO_HERE' !== $code && 'free' !== strtolower( $code ) ) {
+				$codes[] = $code;
+			}
+		}
+
+		return implode( '|', $codes );
+	}
+
 	public static function check_for_upgrades( $requested_plugin = '', $get_file_contents = 0 ) {
 
 		// compile a list of current plugins
@@ -1017,18 +1035,32 @@ public static function js_combine($version, $reinit=false){
 
 		$available_updates = array();
 
+		// Updates come from a server that only serves installations with a purchase code, so
+		// there is nothing to ask until one has been entered.
+		$licence_code = self::licence_code_for_updates();
+		if ( ! strlen( $licence_code ) ) {
+			return array(
+				'message'          => _l( 'Automated updates need a licence code. Enter the purchase code from your CodeCanyon downloads page below to receive them. You can also download the latest version from CodeCanyon and upload it by hand.' ),
+				'new_version'      => 0,
+				'plugins'          => array(),
+				'check_again'      => 0,
+				'licence_required' => true,
+			);
+		}
+
 		require_once _UCM_FOLDER . 'includes/plugin_config/class.upgrade_server.php';
 		$post_fields = array(
 			'application'           => _APPLICATION_ID,
-			'installation_code'     => module_config::c( '_installation_code' ),
+			// Both are sent so the update server can check the purchase, and for nothing else.
+			// See "What the update check sends" in Documentation/readme.html.
+			'installation_code'     => $licence_code,
+			'installation_location' => full_link( '/' ),
 			'current_version'       => module_config::c( '_admin_system_version', 2.1 ),
 			// The release, so a server that compares releases offers the core files when
 			// only they changed. An old server ignores it and still reads current_version.
 			'release_version'       => _SCRIPT_VERSION,
 			'current_plugins'       => json_encode( $current_plugins ),
 			'current_files'         => json_encode( $current_files ),
-			'client_ip'             => isset( $_SERVER['REMOTE_ADDR'] ) ? $_SERVER['REMOTE_ADDR'] : '',
-			'installation_location' => full_link( '/' ),
 			'requested_plugin'      => $requested_plugin,
 			'get_file_contents'     => $get_file_contents,
 			// Asks a server that understands it to send a checksum with every file.
@@ -1053,7 +1085,7 @@ public static function js_combine($version, $reinit=false){
 				'data'  => 'Posting to API',
 			) );
 		}
-		$user_agent = 'UCM/' . module_config::c( '_admin_system_version', 2.1 ) . ' (+' . full_link( '/' ) . ')';
+		$user_agent = 'UCM/' . _SCRIPT_VERSION;
 		if ( ! function_exists( 'curl_init' ) ) {
 			$postdata = http_build_query(
 				$post_fields

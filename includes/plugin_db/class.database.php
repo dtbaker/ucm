@@ -6,6 +6,35 @@ class iimysqli_result
 	public $nCols;
 }
 
+/**
+ * Build the argument list for mysqli_stmt_bind_result(): the statement, then one reference
+ * into $ret per column, keyed by column name (or by position when the name is unknown).
+ *
+ * The fallback below used to assemble this call as a string and eval() it, which put column
+ * names into code. Passing references through call_user_func_array() does the same job.
+ *
+ * @param mysqli_stmt|object $stmt       Prepared statement the columns belong to.
+ * @param int                $ncols      Number of columns in the result.
+ * @param array              $resultkeys Column names in order.
+ * @param array              $ret        Receives the bound values, filled in by the fetch.
+ *
+ * @return array
+ */
+function iimysqli_bind_arguments( $stmt, $ncols, array $resultkeys, &$ret ) {
+	$ret  = array();
+	$args = array( $stmt );
+	for ( $i = 0; $i < $ncols; $i++ ) {
+		$ret[ $i ] = null;
+		$key       = isset( $resultkeys[ $i ] ) ? $resultkeys[ $i ] : $i;
+		if ( ! array_key_exists( $key, $ret ) ) {
+			$ret[ $key ] = null;
+		}
+		$args[] = &$ret[ $key ];
+	}
+
+	return $args;
+}
+
 if ( ! function_exists( 'mysqli_stmt_get_result' ) ) {
 
 
@@ -40,23 +69,10 @@ if ( ! function_exists( 'mysqli_stmt_get_result' ) ) {
 			}
 		}
 
-		$ret  = array();
-		$code = "return mysqli_stmt_bind_result(\$result->stmt ";
-		for ( $i = 0; $i < $result->nCols; $i++ ) {
-			$ret[ $i ] = null;
-			if ( isset( $resultkeys[ $i ] ) ) {
-				$theValue = $resultkeys[ $i ];
-			} else {
-				$theValue = $i;
-			}
-			$code .= ", \$ret['$theValue']";
-		}
-
-
-		$code .= ");";
-		if ( ! eval( $code ) ) {
+		$ret = array();
+		if ( ! call_user_func_array( 'mysqli_stmt_bind_result', iimysqli_bind_arguments( $result->stmt, $result->nCols, $resultkeys, $ret ) ) ) {
 			return null;
-		};
+		}
 
 		// This should advance the "$stmt" cursor.
 		if ( ! mysqli_stmt_fetch( $result->stmt ) ) {

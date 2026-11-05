@@ -10,7 +10,7 @@ class module_calendar extends module_base
 	public function __construct() {
 		$this->module_name     = 'calendar';
 		$this->module_position = 100;
-		$this->version         = 2.239;
+		$this->version         = 2.240;
 	}
 
 	public static function can_i( $actions, $name = false, $category = false, $module = false ) {

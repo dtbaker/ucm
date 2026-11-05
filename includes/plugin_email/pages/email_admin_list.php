@@ -88,7 +88,7 @@ print_heading( $header );
 	$columns['email_to']      = array(
 		'title'    => 'Sent To',
 		'callback' => function ( $email ) {
-			$headers = unserialize( $email['headers'] );
+			$headers = unserialize( $email['headers'], array( 'allowed_classes' => false ) );
 			if ( isset( $headers['to'] ) && is_array( $headers['to'] ) ) {
 				foreach ( $headers['to'] as $to ) {
 					echo $to['email'] . ' ';

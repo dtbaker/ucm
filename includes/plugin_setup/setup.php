@@ -5,7 +5,7 @@ class module_setup extends module_base
 	public function __construct() {
 		$this->module_name     = 'setup';
 		$this->module_position = 20;
-		$this->version         = 2.326;
+		$this->version         = 2.327;
 	}
 
 	public static function can_i( $actions, $name = false, $category = false, $module = false ) {
