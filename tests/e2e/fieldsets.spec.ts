@@ -1156,10 +1156,20 @@ test.describe( 'Forms moved to generate_fieldset (priority support)', () => {
         // passed to generate_fieldset with 'fields' and no 'title' renders exactly that,
         // and getting it wrong would put an empty <th> in front of the text.
         const shape = await page.evaluate( () => {
-          const header = Array.from( document.querySelectorAll( 'h3, h5, .title' ) )
+          const title = Array.from( document.querySelectorAll( 'h3, h5, .title' ) )
             .find( h => ( h.textContent || '' ).includes( 'Priority Support' ) );
-          const box = header?.closest( '.box, div' );
-          const row = box?.querySelector( 'table.tableclass_form tbody tr' );
+          // Under metis the heading and the table share a .box. Under module_form's own
+          // output the table is the heading's next sibling, so walk forward to it.
+          const header = title?.closest( 'h2, h3, h4, h5' ) ?? title;
+          const box = header?.closest( '.box' );
+          let table: Element | null | undefined = box?.querySelector( 'table.tableclass_form' );
+          if ( ! box ) {
+            table = header?.nextElementSibling;
+            while ( table && ! table.matches( 'table.tableclass_form' ) ) {
+              table = table.nextElementSibling;
+            }
+          }
+          const row = table?.querySelector( 'tbody tr' );
 
           return row ? { tds: row.querySelectorAll( 'td' ).length, ths: row.querySelectorAll( 'th' ).length } : null;
         } );

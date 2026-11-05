@@ -1,5 +1,5 @@
 import { test, expect, Page } from '@playwright/test';
-import { anInvoice, login } from './seed';
+import { activeTheme, anInvoice, login } from './seed';
 
 /**
  * A fieldset with neither an id nor a heading must not invent one.
@@ -21,6 +21,12 @@ import { anInvoice, login } from './seed';
  *  - the collapsed id appeared in the markup of every screen that has such a fieldset;
  *  - those fieldsets came out editable, offering to save display settings for a fieldset
  *    with no settings row to save them in.
+ *
+ * Only metis has its own copy of that function. Every other theme prints module_form's output,
+ * where a headingless fieldset with no rows has no container at all, so the theme settings
+ * screen has nothing with an empty id. The invariants below are still checked under any theme;
+ * the "there is a headingless fieldset to look at" premise is only required of metis, which is
+ * the renderer these guards were written for.
  *
  * The theme settings screen is the duplicate-id case because it is the only screen found
  * that renders more than one headingless fieldset - the invoice edit screen renders nine
@@ -66,9 +72,13 @@ test.describe( 'Fieldsets with no id and no heading', () => {
   test( 'two headingless fieldsets on one screen do not share an id', async ( { page } ) => {
     await login( page );
     // Guard the premise: with no headingless fieldset on the page there is nothing to collide.
+    // Only metis renders them as containers (see the note at the top of the file).
+    const theme = await activeTheme( page );
     await page.goto( THEME_SETTINGS );
     const headingless = await page.locator( '[data-fieldset-id=""]' ).count();
-    expect( headingless, 'theme settings no longer renders headingless fieldsets' ).toBeGreaterThan( 1 );
+    if ( theme === 'metis' ) {
+      expect( headingless, 'theme settings no longer renders headingless fieldsets' ).toBeGreaterThan( 1 );
+    }
 
     const dupes = await duplicateFieldsetIds( page, THEME_SETTINGS );
     expect( dupes, 'fieldset ids repeated on the theme settings screen' ).toEqual( [] );
@@ -89,12 +99,19 @@ test.describe( 'Fieldsets with no id and no heading', () => {
 
   test( 'a headingless fieldset is rendered as not editable', async ( { page } ) => {
     await login( page );
+    const theme = await activeTheme( page );
     await page.goto( THEME_SETTINGS );
     // data-fieldset-settings carries editable:0 whenever the fieldset has no real id, so
     // the theme does not offer to save field display settings that have nowhere to go.
-    const settings = await page.locator( '[data-fieldset-id=""]' ).first()
-      .getAttribute( 'data-fieldset-settings' );
-    expect( settings, 'no headingless fieldset found to check' ).not.toBeNull();
-    expect( JSON.parse( settings as string ).editable ).toBe( 0 );
+    const all = await page.locator( '[data-fieldset-id=""]' ).evaluateAll(
+      els => els.map( el => el.getAttribute( 'data-fieldset-settings' ) ),
+    );
+    if ( theme === 'metis' ) {
+      expect( all.length, 'no headingless fieldset found to check' ).toBeGreaterThan( 0 );
+    }
+    for ( const settings of all ) {
+      expect( settings, 'a headingless fieldset carries no settings' ).not.toBeNull();
+      expect( JSON.parse( settings as string ).editable ).toBe( 0 );
+    }
   } );
 } );

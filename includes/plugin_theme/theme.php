@@ -214,6 +214,7 @@ class module_theme extends module_base
 	 */
 	private const THEME_NAMES = array(
 		'metis'       => 'Default Theme',
+		'shadcn'      => 'Modern (preview)',
 		'pro'         => 'Legacy Theme',
 		'whitelabel1' => 'White Label',
 	);
