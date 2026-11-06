@@ -66,7 +66,7 @@
 					<div class="body bg-gray">
 						<div class="callout callout-info" style="margin-bottom: 0">
 							<strong>Welcome to the <a
-									href="http://codecanyon.net/item/ultimate-client-manager-crm-pro-edition/2621629?ref=dtbaker&utm_source=Demo&utm_medium=Header&utm_campaign=AdminLTE&utm_content=AdminLTE"
+									href="http://codecanyon.net/item/ultimate-client-manager-pro/2621629?ref=dtbaker&utm_source=Demo&utm_medium=Header&utm_campaign=AdminLTE&utm_content=AdminLTE"
 									target="_blank">UCM Pro</a> Demo. <br/>Login details are:</strong><br/>
 							Admin: admin@example.com / password <br/>
 							Customer: user@example.com / password <br/>

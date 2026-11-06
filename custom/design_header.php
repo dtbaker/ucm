@@ -145,7 +145,7 @@ body.ucm-demo-hidden #ucm-demo-show{display:block}
 	<span class="ucm-demo-gap"></span>
 	<a class="ucm-demo-link" href="https://ultimateclientmanager.com/docs/" target="_blank" rel="noopener" title="Documentation"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 3h11a3 3 0 0 1 3 3v15H7a3 3 0 0 1-3-3V4a1 1 0 0 1 1-1zm1 15a1 1 0 0 0 1 1h10v-2H7a1 1 0 0 0-1 1zm0-3.8c.3-.1.6-.2 1-.2h10V6a1 1 0 0 0-1-1H6z"/></svg><span>Docs</span></a>
 	<a class="ucm-demo-link" href="https://github.com/dtbaker/ucm" target="_blank" rel="noopener" title="Ultimate Client Manager on GitHub"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 .5a11.5 11.5 0 0 0-3.6 22.4c.6.1.8-.3.8-.6v-2c-3.2.7-3.9-1.5-3.9-1.5-.5-1.3-1.3-1.7-1.3-1.7-1-.7.1-.7.1-.7 1.2.1 1.8 1.2 1.8 1.2 1 1.8 2.8 1.3 3.5 1 .1-.8.4-1.3.7-1.6-2.6-.3-5.3-1.3-5.3-5.7 0-1.3.5-2.3 1.2-3.1-.1-.3-.5-1.5.1-3.1 0 0 1-.3 3.2 1.2a11 11 0 0 1 5.8 0c2.2-1.5 3.2-1.2 3.2-1.2.6 1.6.2 2.8.1 3.1.8.8 1.2 1.9 1.2 3.1 0 4.4-2.7 5.4-5.3 5.7.4.4.8 1.1.8 2.2v3.2c0 .3.2.7.8.6A11.5 11.5 0 0 0 12 .5z"/></svg><span>GitHub</span></a>
-	<a class="ucm-demo-buy" href="https://codecanyon.net/item/ultimate-client-manager-crm-pro-edition/2621629?ref=dtbaker" target="_blank" rel="noopener">Buy now</a>
+	<a class="ucm-demo-buy" href="https://codecanyon.net/item/ultimate-client-manager-pro/2621629?ref=dtbaker" target="_blank" rel="noopener">Buy now</a>
 	<a class="ucm-demo-close" href="#" id="ucm-demo-hide" title="Close demo options" aria-label="Close demo options"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.4 5 5 6.4 10.6 12 5 17.6 6.4 19l5.6-5.6 5.6 5.6 1.4-1.4-5.6-5.6L19 6.4 17.6 5 12 10.6z"/></svg></a>
 </div>
 <a href="#" id="ucm-demo-show">Show demo options</a>

@@ -486,7 +486,7 @@ module_form::print_form_open_tag( array(
 			$fieldset_data['elements'][] = array(
 				'title'  => module_config::c( 'project_name_single', 'Website' ),
 				'fields' => array(
-					'(website option available in <a href="http://codecanyon.net/item/ultimate-client-manager-pro-edition/2621629?ref=dtbaker" target="_blank">UCM Pro Edition</a>)'
+					'(website option available in <a href="http://codecanyon.net/item/ultimate-client-manager-pro/2621629?ref=dtbaker" target="_blank">UCM Pro Edition</a>)'
 				),
 			);
 		}
@@ -582,7 +582,7 @@ module_form::print_form_open_tag( array(
 			$fieldset_data['elements'][] = array(
 				'title'  => 'Renewal Date',
 				'fields' => array(
-					'(recurring jobs available in <a href="http://codecanyon.net/item/ultimate-client-manager-pro-edition/2621629?ref=dtbaker" target="_blank">UCM Pro Edition</a>)'
+					'(recurring jobs available in <a href="http://codecanyon.net/item/ultimate-client-manager-pro/2621629?ref=dtbaker" target="_blank">UCM Pro Edition</a>)'
 				),
 			);
 		}
