@@ -116,15 +116,24 @@ function ucm_upgrade_server_respond() {
 	// Updates are for installations with a CodeCanyon purchase code. Everything below this
 	// point hands out files, so a request without a valid one stops here with a message the
 	// client shows. See ucm_licence_check.
-	$licence_cache_directory = module_config::c( 'upgrade_server_licence_cache_dir', '' );
-	if ( ! $licence_cache_directory ) {
-		$licence_cache_directory = rtrim( sys_get_temp_dir(), '/' ) . '/ucm-licence-cache';
+	// The public endpoint in front of this installation (ucm-web/api/upgrade.php) checks the
+	// code itself, with a database cache, and leaves a good answer here. It is a PHP variable
+	// no request can set; without it this installation checks the code on its own.
+	if ( isset( $GLOBALS['ucm_upgrade_licence']['status'], $GLOBALS['ucm_upgrade_licence']['codes'] )
+		&& ucm_licence_check::VALID === $GLOBALS['ucm_upgrade_licence']['status']
+		&& is_array( $GLOBALS['ucm_upgrade_licence']['codes'] ) ) {
+		$licence = $GLOBALS['ucm_upgrade_licence'];
+	} else {
+		$licence_cache_directory = module_config::c( 'upgrade_server_licence_cache_dir', '' );
+		if ( ! $licence_cache_directory ) {
+			$licence_cache_directory = rtrim( sys_get_temp_dir(), '/' ) . '/ucm-licence-cache';
+		}
+		$licence = ucm_licence_check::check(
+			ucm_licence_check::codes_from_request( isset( $_REQUEST['installation_code'] ) ? $_REQUEST['installation_code'] : '' ),
+			null,
+			$licence_cache_directory
+		);
 	}
-	$licence = ucm_licence_check::check(
-		ucm_licence_check::codes_from_request( isset( $_REQUEST['installation_code'] ) ? $_REQUEST['installation_code'] : '' ),
-		null,
-		$licence_cache_directory
-	);
 	if ( ucm_licence_check::VALID !== $licence['status'] ) {
 		if ( ! headers_sent() ) {
 			header( 'Content-Type: application/json; charset=utf-8' );
