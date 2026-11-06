@@ -819,7 +819,7 @@ module_form::print_form_open_tag( array(
 			$fieldset_data['elements'][] = array(
 				'title'  => 'Task CSV Data',
 				'fields' => array(
-					'(import/export available in <a href="http://codecanyon.net/item/ultimate-client-manager-pro-edition/2621629?ref=dtbaker" target="_blank">UCM Pro Edition</a>)'
+					'(import/export available in <a href="http://codecanyon.net/item/ultimate-client-manager-pro/2621629?ref=dtbaker" target="_blank">UCM Pro Edition</a>)'
 				),
 			);
 		}

@@ -628,7 +628,7 @@ module_form::print_form_open_tag( array(
 			$fieldset_data['elements'][] = array(
 				'title'  => 'Renewal Date',
 				'fields' => array(
-					'(recurring invoices available in <a href="http://codecanyon.net/item/ultimate-client-manager-pro-edition/2621629?ref=dtbaker" target="_blank">UCM Pro Edition</a>)'
+					'(recurring invoices available in <a href="http://codecanyon.net/item/ultimate-client-manager-pro/2621629?ref=dtbaker" target="_blank">UCM Pro Edition</a>)'
 				),
 			);
 		}

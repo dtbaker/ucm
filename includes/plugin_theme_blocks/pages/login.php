@@ -73,7 +73,7 @@
 					<div class="demo-welcome clearfix">
 						<div class="">
 							<strong>Welcome to the <a
-									href="http://codecanyon.net/item/ultimate-client-manager-crm-pro-edition/2621629?ref=dtbaker&utm_source=Demo&utm_medium=Header&utm_campaign=blocks&utm_content=blocks"
+									href="http://codecanyon.net/item/ultimate-client-manager-pro/2621629?ref=dtbaker&utm_source=Demo&utm_medium=Header&utm_campaign=blocks&utm_content=blocks"
 									target="_blank">UCM Pro</a> Demo. <br/>Login details are:</strong><br/>
 							Admin: admin@example.com / password <br/>
 							Customer: user@example.com / password <br/>
