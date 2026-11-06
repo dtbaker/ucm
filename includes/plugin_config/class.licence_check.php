@@ -24,7 +24,7 @@ class ucm_licence_check
 	const ITEM_IDS = array( 2621629 );
 
 	const ITEM_NAME = 'Ultimate Client Manager';
-	const ITEM_URL  = 'https://codecanyon.net/item/freelance-project-invoice-crm/2621629';
+	const ITEM_URL  = 'https://codecanyon.net/item/ultimate-client-manager-pro/2621629';
 	const API_URL   = 'https://api.envato.com/v3/market/author/sale';
 
 	const CACHE_VALID_FOR   = 86400;

@@ -5,7 +5,7 @@ Freelance project invoice CRM.
 Open source under the [MIT licence](LICENSE). Bundled third-party components keep their own
 licences; see [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md). A packaged release with
 support is also sold on
-[CodeCanyon](https://codecanyon.net/item/freelance-project-invoice-crm/2621629).
+[CodeCanyon](https://codecanyon.net/item/ultimate-client-manager-pro/2621629).
 
 ## Development Setup with Docker
 
