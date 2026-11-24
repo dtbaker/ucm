@@ -6,7 +6,7 @@
     "require": {
         "php": "^8.2",
         "ezyang/htmlpurifier": "^4.19",
-        "stripe/stripe-php": "^22.0",
+        "stripe/stripe-php": "^23.0",
         "dompdf/dompdf": "^3.1",
         "phpmailer/phpmailer": "^6.9"
     },
